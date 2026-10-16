@@ -1,0 +1,1011 @@
+/* =========================================================
+   LineHunter - styles.css
+   The whole design lives here. Both pages load this file
+   AFTER Bootstrap, so anything here wins over Bootstrap.
+   ========================================================= */
+
+
+/* ---------- 1. Design tokens ----------
+   Named values (CSS variables) used everywhere below.
+   Change one here and the whole site updates.
+
+   [data-bs-theme="dark"] = only applies in dark mode, which we
+   turn on in <html data-bs-theme="dark">. The --bs-... lines
+   override Bootstrap's own variables. */
+[data-bs-theme="dark"] {
+  /* Our colors */
+  --lh-bg: #070b16;                 /* page background: near-black navy */
+  --lh-surface: #0f1524;            /* cards */
+  --lh-surface-2: #161d31;          /* hover / raised parts */
+  --lh-border: rgba(148, 163, 184, 0.14);
+  --lh-text: #e7e9f3;
+  --lh-muted: #8a92a8;
+
+  --lh-accent: #8b5cf6;             /* violet: buttons, active tabs, highlights */
+  --lh-accent-light: #b39dfa;       /* violet text on dark backgrounds */
+  --lh-accent-rgb: 139, 92, 246;    /* same violet as numbers, for see-through versions */
+
+  --lh-grid: rgba(228, 243, 204, 0.02);  /* lime grid lines, kept very faint */
+  --lh-over: #6ae39d;               /* green: over / hit */
+  --lh-under: #ff5f7a;              /* red: under / miss */
+
+  /* Our fonts */
+  --lh-font-display: "Barlow Condensed", sans-serif;   /* big names and numbers */
+  --lh-font-label: "JetBrains Mono", monospace;        /* tiny caps labels */
+  --lh-font-body: "Inter", sans-serif;                 /* everything else */
+
+  /* Point Bootstrap at our values */
+  --bs-body-bg: var(--lh-bg);
+  --bs-body-color: var(--lh-text);
+  --bs-body-font-family: var(--lh-font-body);
+  --bs-border-color: var(--lh-border);
+  --bs-secondary-color: var(--lh-muted);   /* used by .text-muted */
+  --bs-primary-rgb: var(--lh-accent-rgb);  /* used by .text-primary */
+  --bs-link-color-rgb: 179, 157, 250;
+  --bs-link-hover-color-rgb: 210, 198, 252;
+}
+
+
+/* ---------- 2. Page background ----------
+   Three layers stacked on top of each other:
+   1) a soft violet glow at the top
+   2) horizontal lime lines every 40px
+   3) vertical lime lines every 40px  (2 + 3 = the grid) */
+body {
+  min-height: 100vh;
+  background-color: var(--lh-bg);
+  background-image:
+    radial-gradient(ellipse 70% 15% at 50% -5%, rgba(var(--lh-accent-rgb), 0.18), transparent 70%),
+    linear-gradient(var(--lh-grid) 1px, transparent 0.5px),
+    linear-gradient(90deg, var(--lh-grid) 1px, transparent 0.1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  background-attachment: fixed;   /* the grid stays still while you scroll */
+}
+
+.lh-home-page {
+  background-color: #0b0b0b;
+  background-image: none;
+}
+
+/* When a link jumps to #games, leave room for the sticky navbar */
+html {
+  scroll-padding-top: 90px;
+}
+
+
+/* ---------- 3. Type helpers ---------- */
+
+/* Big, bold, condensed: team names, player names, numbers */
+.lh-display {
+  font-family: var(--lh-font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+/* Tiny techy labels: "NBA · SCHEDULE", "LINE", "OVER" */
+.lh-label {
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--lh-muted);
+}
+
+.text-accent {
+  color: var(--lh-accent-light) !important;
+}
+
+
+/* ---------- 4. Navbar ----------
+   See-through with a blur, so the grid shows faintly behind it.
+
+   The blur goes on ::before (an invisible extra layer behind the navbar),
+   NOT on the navbar itself. A blur directly on the navbar would trap the
+   phone drawer inside the navbar and make the page scroll sideways. */
+.lh-navbar {
+  border-bottom: 1px solid var(--lh-border);
+  position: sticky;
+  top: 0;
+  z-index: 1040;
+}
+.lh-navbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(7, 11, 22, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.lh-navbar .container {
+  position: relative;
+  z-index: 1;
+}
+
+.lh-nav-toggle {
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 999px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lh-nav-toggle:focus,
+.lh-nav-toggle:hover {
+  box-shadow: 0 0 0 0.2rem rgba(var(--lh-accent-rgb), 0.18);
+}
+
+.lh-nav-toggle .navbar-toggler-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* The two-tone logo: "Line" white, "Hunter" violet */
+.lh-logo {
+  font-family: var(--lh-font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-decoration: none;
+}
+.lh-logo span {
+  color: var(--lh-accent-light);
+}
+
+.lh-navbar .nav-link {
+  font-family: var(--lh-font-label);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.lh-navbar .nav-link.active {
+  color: var(--lh-accent-light);
+}
+
+/* Drawer slides down from the top */
+.offcanvas.offcanvas-top.lh-offcanvas {
+  background: rgba(7, 11, 22, 0.96);
+  border-bottom: 1px solid var(--lh-border);
+  box-shadow: 0 16px 26px rgba(0, 0, 0, 0.28);
+  height: 260px !important;
+  max-height: 340px;
+  overflow: visible;
+}
+
+.offcanvas.lh-offcanvas .offcanvas-body {
+  overflow: visible;
+}
+
+.lh-offcanvas .offcanvas-header,
+.lh-offcanvas .offcanvas-body {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.lh-offcanvas .offcanvas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--lh-border);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.lh-offcanvas .offcanvas-header .lh-nav-toggle {
+  margin-left: auto;
+}
+
+.lh-offcanvas .offcanvas-body {
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+
+.lh-drawer-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.9);
+  background: transparent;
+  color: var(--lh-accent-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.lh-drawer-close:hover {
+  background: rgba(var(--lh-accent-rgb), 0.08);
+  color: #fff;
+}
+
+.lh-drawer-group {
+  margin-top: 0.5rem;
+}
+
+.lh-drawer-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  padding-left: 0.25rem;
+  color: var(--lh-muted);
+}
+
+.lh-drawer-link-grid {
+  margin: 0;
+}
+
+.lh-drawer-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 52px;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--lh-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  text-decoration: none;
+  color: var(--lh-text);
+  font-family: var(--lh-font-body);
+  font-weight: 500;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.lh-drawer-tile:hover,
+.lh-drawer-tile:focus-visible {
+  background: rgba(var(--lh-accent-rgb), 0.08);
+  border-color: rgba(var(--lh-accent-rgb), 0.5);
+  transform: translateY(-1px);
+  text-decoration: none;
+  color: var(--lh-text);
+}
+
+.lh-drawer-tile.active {
+  background: rgba(var(--lh-accent-rgb), 0.14);
+  border-color: rgba(var(--lh-accent-rgb), 0.75);
+  box-shadow: inset 0 0 0 1px rgba(var(--lh-accent-rgb), 0.25);
+}
+
+.lh-drawer-tile-icon {
+  font-size: 1.05rem;
+  color: var(--lh-muted);
+  transition: color 0.2s ease;
+}
+
+.lh-drawer-tile:hover .lh-drawer-tile-icon,
+.lh-drawer-tile.active .lh-drawer-tile-icon,
+.lh-drawer-tile:focus-visible .lh-drawer-tile-icon {
+  color: var(--lh-accent-light);
+}
+
+@media (max-width: 767.98px) {
+  .lh-drawer-link-grid .col-12,
+  .lh-drawer-link-grid .col-sm-6,
+  .lh-drawer-link-grid .col-md-6,
+  .lh-drawer-link-grid .col-lg-3 {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+}
+
+
+/* ---------- 5. Cards ---------- */
+.card {
+  --bs-card-bg: var(--lh-surface);
+  --bs-card-border-color: var(--lh-border);
+  --bs-card-border-radius: 16px;
+  --bs-card-inner-border-radius: 15px;
+  --bs-card-cap-bg: transparent;     /* card headers and footers blend in */
+}
+
+/* Game cards: a soft gradient from a violet shade down to dark.
+   --shade is set by .shade-1 / .shade-2 / .shade-3 below. */
+.game-card {
+  background: linear-gradient(160deg, rgba(var(--shade), 0.32) 0%, var(--lh-surface) 65%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* The 3 rotating shades: light, medium, deep violet */
+.shade-1 { --shade: 167, 139, 250; }
+.shade-2 { --shade: 139, 92, 246; }
+.shade-3 { --shade: 91, 33, 182; }
+
+/* Hover: lift up a little and glow violet */
+.game-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(var(--lh-accent-rgb), 0.55);
+  box-shadow: 0 14px 34px -12px rgba(var(--lh-accent-rgb), 0.6);
+}
+
+/* Matchup header on the game page: the one bold gradient */
+.matchup-hero {
+  background: linear-gradient(135deg,
+    rgba(var(--lh-accent-rgb), 0.5) 0%,
+    rgba(91, 33, 182, 0.18) 45%,
+    var(--lh-surface) 80%);
+}
+
+/* ---------- Homepage ---------- */
+.lh-home {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+.lh-home-hero {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.lh-home-headline {
+  font-size: clamp(3.2rem, 8vw, 6rem);
+  margin-bottom: 1rem;
+  line-height: 0.9;
+}
+
+.lh-home-copy {
+  max-width: 38rem;
+  color: var(--lh-muted);
+  font-size: 1.08rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.btn-lh-primary {
+  background: linear-gradient(135deg, var(--lh-accent) 0%, #a855f7 100%);
+  border: none;
+  border-radius: 999px;
+  padding: 0.8rem 1.4rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #fff;
+  box-shadow: 0 12px 28px -16px rgba(var(--lh-accent-rgb), 0.9);
+}
+
+.btn-lh-primary:hover,
+.btn-lh-primary:focus-visible {
+  background: linear-gradient(135deg, #a855f7 0%, var(--lh-accent) 100%);
+  color: #fff;
+}
+
+.lh-home-preview {
+  background: linear-gradient(160deg, rgba(var(--lh-accent-rgb), 0.18), rgba(15, 21, 36, 0.96));
+  border: 1px solid var(--lh-border);
+  border-radius: 22px;
+  padding: 1.2rem;
+  min-height: 100%;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+.lh-home-preview .lh-label {
+  color: var(--lh-accent-light);
+  margin-bottom: 0.9rem;
+}
+
+.lh-scan-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--lh-border);
+  border-radius: 12px;
+  margin-bottom: 0.7rem;
+}
+
+.lh-scan-row strong {
+  font-family: var(--lh-font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+}
+
+.lh-mini-odds {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.74rem;
+  font-family: var(--lh-font-label);
+  border-radius: 999px;
+  background: rgba(var(--lh-accent-rgb), 0.1);
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.38);
+  color: #fff;
+}
+
+.lh-tool-grid {
+  margin-top: 1rem;
+}
+
+.lh-carousel {
+  position: relative;
+  padding-bottom: 2.5rem;
+}
+
+.lh-carousel .carousel-inner {
+  min-height: 30rem;
+}
+
+.lh-carousel.carousel-fade .carousel-item {
+  transition-duration: 0.8s;
+  transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.lh-carousel.carousel-fade .active.carousel-item-start,
+.lh-carousel.carousel-fade .active.carousel-item-end {
+  transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.lh-carousel .carousel-item {
+  min-height: 30rem;
+}
+
+.lh-carousel-slide {
+  min-height: 30rem;
+  padding: 2rem 1.4rem 1rem;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.18);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(9, 13, 22, 0.28) 0%, rgba(9, 13, 22, 0.0) 18%, rgba(9, 13, 22, 0.1) 100%);
+}
+
+.lh-slide-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0.5rem 0.25rem 0.5rem 0;
+  color: var(--lh-text);
+}
+
+.lh-slide-kicker {
+  color: var(--lh-muted);
+  margin-bottom: 1rem;
+}
+
+.lh-slide-headline {
+  font-size: clamp(2.4rem, 4.8vw, 5rem);
+  line-height: 0.92;
+  margin: 0 0 1rem;
+}
+
+.lh-slide-headline--split .lh-hit-question {
+  display: block;
+  margin-bottom: 0.65rem;
+  color: var(--lh-accent-light);
+  font-family: var(--lh-font-label);
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.lh-slide-headline--split .lh-hit-answer {
+  display: block;
+  color: var(--lh-text);
+  font-style: normal;
+}
+
+.lh-slide-accent {
+  color: var(--lh-accent-light);
+}
+
+.lh-slide-copy p {
+  color: var(--lh-muted);
+  max-width: 28rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.lh-italic {
+  font-style: italic;
+}
+
+.lh-slide-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+  text-decoration-thickness: 1px;
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lh-coming-soon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.5);
+  border-radius: 999px;
+  color: var(--lh-accent-light);
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lh-demo-device {
+  width: min(100%, 380px);
+  background: linear-gradient(180deg, rgba(10, 15, 24, 0.98) 0%, rgba(13, 17, 31, 0.98) 100%);
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.6);
+  border-radius: 24px;
+  padding: 1rem 1rem 0.9rem;
+  box-shadow: 0 24px 50px rgba(2, 6, 23, 0.52), 0 0 0 1px rgba(var(--lh-accent-rgb), 0.12), 0 0 26px rgba(var(--lh-accent-rgb), 0.18);
+  position: relative;
+  overflow: hidden;
+}
+
+.lh-demo-device::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(var(--lh-accent-rgb), 0.18), transparent 52%);
+  pointer-events: none;
+}
+
+.lh-demo-header,
+.lh-demo-meta-row,
+.lh-demo-hero-row,
+.lh-demo-stat-grid,
+.lh-demo-row-small,
+.lh-demo-button {
+  position: relative;
+  z-index: 1;
+}
+
+.lh-demo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.45rem;
+}
+
+.lh-demo-example {
+  color: var(--lh-accent-light);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+}
+
+.lh-demo-matchup {
+  font-family: var(--lh-font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+
+.lh-demo-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.lh-demo-meta-row .bi {
+  font-size: 0.75rem;
+  color: var(--lh-accent-light);
+  margin-right: 0.2rem;
+}
+
+.lh-demo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.8);
+  border-radius: 999px;
+  color: var(--lh-accent-light);
+  font-family: var(--lh-font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.lh-demo-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.lh-team-chip {
+  width: 2.8rem;
+  height: 2.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+  color: #0c1220;
+  font-family: var(--lh-font-label);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+.lh-demo-name {
+  font-size: clamp(1.8rem, 2vw, 2.4rem);
+  line-height: 0.95;
+}
+
+.lh-demo-meta {
+  font-family: var(--lh-font-label);
+  color: var(--lh-muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.lh-demo-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+}
+
+.lh-demo-stat-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.7rem 0.65rem 0.6rem;
+}
+
+.lh-demo-stat-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--lh-muted);
+  font-family: var(--lh-font-label);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.lh-demo-stat-value {
+  font-family: var(--lh-font-display);
+  font-size: 1.7rem;
+  line-height: 1;
+  margin-bottom: 0.45rem;
+}
+
+.lh-demo-progress {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lh-demo-progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--lh-accent-light) 0%, var(--lh-accent) 100%);
+  border-radius: 999px;
+}
+
+.lh-demo-row-small {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 0.55rem;
+  font-size: 0.8rem;
+}
+
+.lh-demo-row-label {
+  color: rgba(255,255,255,0.9);
+  font-weight: 500;
+}
+
+.lh-demo-row-value {
+  color: var(--lh-accent-light);
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.lh-demo-hit-row {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0.5rem 0 0.7rem;
+}
+
+.lh-demo-button {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--lh-accent) 0%, #a855f7 100%);
+  color: white;
+  padding: 0.9rem 1rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  box-shadow: 0 12px 22px -16px rgba(var(--lh-accent-rgb), 0.8);
+}
+
+.lh-carousel-indicators {
+  bottom: 0;
+  margin-bottom: 0;
+}
+
+.lh-carousel-indicators [data-bs-target] {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.4);
+  margin: 0 0.3rem;
+  border: none;
+  opacity: 1;
+  transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+.lh-carousel-indicators .active {
+  width: 2.2rem;
+  background-color: var(--lh-accent);
+}
+
+.lh-carousel-control {
+  width: 2.5rem;
+  height: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
+  background: rgba(15, 21, 36, 0.68);
+  color: #fff;
+  opacity: 1;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.lh-carousel-control:hover,
+.lh-carousel-control:focus-visible {
+  background: rgba(15, 21, 36, 0.9);
+  border-color: rgba(var(--lh-accent-rgb), 0.7);
+}
+
+.lh-carousel-control .carousel-control-prev-icon,
+.lh-carousel-control .carousel-control-next-icon {
+  width: 1rem;
+  height: 1rem;
+  filter: brightness(0) invert(1);
+}
+
+@media (max-width: 991.98px) {
+  .lh-carousel-slide {
+    padding-top: 1.4rem;
+  }
+
+  .lh-slide-copy {
+    align-items: flex-start;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .lh-carousel .carousel-inner {
+    min-height: 33rem;
+  }
+
+  .lh-carousel-slide {
+    min-height: 33rem;
+  }
+
+  .lh-carousel-slide .row {
+    display: block;
+  }
+
+  .lh-slide-copy {
+    margin-bottom: 1.4rem;
+  }
+
+  .lh-demo-device {
+    width: min(100%, 360px);
+    margin: 0 auto;
+  }
+
+  .lh-carousel-control {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-carousel.carousel-fade .carousel-item,
+  .lh-carousel.carousel-fade .active.carousel-item-start,
+  .lh-carousel.carousel-fade .active.carousel-item-end {
+    transition: none;
+  }
+}
+
+.lh-steps {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.lh-step-card {
+  background: rgba(15, 21, 36, 0.9);
+  border: 1px solid var(--lh-border);
+  border-radius: 18px;
+  padding: 1.25rem;
+  height: 100%;
+}
+
+.lh-step-number {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(var(--lh-accent-rgb), 0.15);
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
+  color: var(--lh-accent-light);
+  font-family: var(--lh-font-label);
+  margin-bottom: 0.9rem;
+}
+
+.lh-step-card h3 {
+  font-family: var(--lh-font-display);
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.lh-step-card p {
+  color: var(--lh-muted);
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+.lh-footer {
+  border-top: 1px solid var(--lh-border);
+  padding-top: 1.25rem;
+  padding-bottom: 2rem;
+  color: var(--lh-muted);
+  font-size: 0.9rem;
+}
+
+.lh-footer strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+@media (max-width: 767.98px) {
+  .lh-home {
+    padding-top: 1rem;
+  }
+
+  .lh-home-copy {
+    font-size: 1rem;
+  }
+
+  .lh-tool-card h3 {
+    font-size: 1.6rem;
+  }
+}
+
+/* ---------- 6. Date pager (Bootstrap pagination) ---------- */
+.pagination {
+  --bs-pagination-bg: var(--lh-surface);
+  --bs-pagination-border-color: var(--lh-border);
+  --bs-pagination-color: var(--lh-muted);
+  --bs-pagination-hover-bg: var(--lh-surface-2);
+  --bs-pagination-hover-color: #fff;
+  --bs-pagination-hover-border-color: var(--lh-border);
+  --bs-pagination-focus-bg: var(--lh-surface-2);
+  --bs-pagination-focus-color: #fff;
+  --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(var(--lh-accent-rgb), 0.35);
+  --bs-pagination-active-bg: var(--lh-accent);
+  --bs-pagination-active-border-color: var(--lh-accent);
+  gap: 4px;
+  font-family: var(--lh-font-label);
+  text-transform: uppercase;
+}
+
+/* Every button becomes a separate pill (Bootstrap normally joins them).
+   white-space: nowrap = keep "Wed 14" on one line */
+.pagination .page-item .page-link {
+  border-radius: 999px;
+  margin-left: 0;
+  white-space: nowrap;
+}
+
+
+/* ---------- 7. Prop pills (Bootstrap nav-pills) ---------- */
+.nav-pills {
+  --bs-nav-pills-border-radius: 999px;
+  --bs-nav-pills-link-active-bg: var(--lh-accent);
+  --bs-nav-link-color: var(--lh-muted);
+  --bs-nav-link-hover-color: #fff;
+  gap: 6px;
+}
+.nav-pills .nav-link {
+  font-family: var(--lh-font-label);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--lh-border);
+}
+.nav-pills .nav-link.active {
+  border-color: var(--lh-accent);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--lh-accent-rgb), 0.45) transparent;
+}
+
+/* ---------- 8. Buttons ---------- */
+
+/* Quiet outlined button, like "‹ All games" */
+.btn-ghost {
+  --bs-btn-color: var(--lh-muted);
+  --bs-btn-border-color: var(--lh-border);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--lh-surface-2);
+  --bs-btn-hover-border-color: rgba(var(--lh-accent-rgb), 0.5);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--lh-surface-2);
+  border-radius: 999px;
+  font-family: var(--lh-font-label);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+
+/* ---------- 9. Tables ---------- */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: rgba(var(--lh-accent-rgb), 0.08);
+  --bs-table-border-color: var(--lh-border);
+}
+
+/* Column titles use the label style */
+.table thead th {
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--lh-muted);
+}
+
+/* The line number: big and bold */
+.table .line-value {
+  font-family: var(--lh-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+}

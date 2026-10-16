@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LineHunter</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="styles.css" rel="stylesheet">
+</head>
+
+<body class="lh-home-page">
+  <div id="site-nav"></div>
+
+  <main class="container lh-home">
+    <section class="lh-home-hero row align-items-center g-4 py-4 py-lg-5">
+      <div class="col-12">
+        <div class="lh-label mb-3">NBA research tool</div>
+        <h1 class="lh-display lh-home-headline">
+          <span class="text-white">HUNT THE</span> <span class="text-accent">LINE.</span>
+        </h1>
+        <p class="lh-home-copy">
+          LineHunter helps you compare the market, spot the angles, and scan what’s trending before a game gets underway.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a href="schedule.html" class="btn btn-lh-primary">Hunt Today's games</a>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="lh-tool-grid">
+      <div id="toolCarousel" class="carousel slide carousel-fade lh-carousel" data-bs-ride="carousel" data-bs-interval="5000" data-bs-pause="hover">
+        <div class="carousel-indicators lh-carousel-indicators">
+          <button type="button" data-bs-target="#toolCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+          <button type="button" data-bs-target="#toolCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+          <button type="button" data-bs-target="#toolCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+          <button type="button" data-bs-target="#toolCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+        </div>
+
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <div class="row g-4 align-items-center lh-carousel-slide">
+              <div class="col-lg-6 d-flex align-items-center">
+                <div class="lh-slide-copy">
+                  <div class="lh-label lh-slide-kicker">2026–27 season · NBA</div>
+                  <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">Every game.</span><span class="lh-hit-answer">Every night.</span></h3>
+                  <p>See the day’s matchups and jump straight into the lines.</p>
+                  <a href="schedule.html" class="lh-slide-link">Explore tonight's games <span>→</span></a>
+                </div>
+              </div>
+              <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
+                <div class="lh-demo-device lh-demo-device--schedule">
+                  <div class="lh-demo-header">
+                    <div class="lh-label lh-demo-example">EXAMPLE</div>
+                    <div class="lh-demo-matchup">BOS @ NYK</div>
+                  </div>
+                  <div class="lh-demo-meta-row">
+                    <span><i class="bi bi-calendar3"></i> Fri, 16 Oct</span>
+                    <span><i class="bi bi-clock"></i> 11:15 AM EDT</span>
+                    <span><i class="bi bi-graph-up-arrow"></i> O/U 40.5</span>
+                  </div>
+
+                  <div class="lh-demo-badge">TOP LINE</div>
+
+                  <div class="lh-demo-hero-row">
+                    <div class="lh-team-chip" data-team-abbr="BOS">BOS</div>
+                    <div class="lh-demo-hero-copy">
+                      <div class="lh-display lh-demo-name">Jalen Brunson</div>
+                      <div class="lh-demo-meta">PTS · 26.5</div>
+                    </div>
+                  </div>
+
+                  <div class="lh-demo-stat-grid">
+                    <div class="lh-demo-stat-box">
+                      <div class="lh-demo-stat-label">Line</div>
+                      <div class="lh-demo-stat-value">26.5</div>
+                      <div class="lh-demo-progress"><span style="width: 73%"></span></div>
+                    </div>
+                    <div class="lh-demo-stat-box">
+                      <div class="lh-demo-stat-label">Hit rate</div>
+                      <div class="lh-demo-stat-value">7/10</div>
+                      <div class="lh-demo-progress"><span style="width: 70%"></span></div>
+                    </div>
+                  </div>
+
+                  <div class="lh-demo-row-small">
+                    <div class="lh-demo-row-label">J. Hart</div>
+                    <div class="lh-demo-row-value">1.4</div>
+                  </div>
+                  <div class="lh-demo-row-small">
+                    <div class="lh-demo-row-label">T. Anunoby</div>
+                    <div class="lh-demo-row-value">4.6</div>
+                  </div>
+
+                  <button class="lh-demo-button" type="button">VIEW FULL GAME BOARD »</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="carousel-item">
+            <div class="row g-4 align-items-center lh-carousel-slide">
+              <div class="col-lg-6 d-flex align-items-center">
+                <div class="lh-slide-copy">
+                  <div class="lh-label lh-slide-kicker">Player props · NBA</div>
+                  <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">Every line.</span><span class="lh-hit-answer">One place.</span></h3>
+                  <p>Track popular stat lines like points, assists, and rebounds.</p>
+                  <a href="props.html" class="lh-slide-link">Explore player props <span>→</span></a>
+                </div>
+              </div>
+              <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
+                <div class="lh-demo-device lh-demo-device--props">
+                  <div class="lh-demo-header">
+                    <div class="lh-label lh-demo-example">EXAMPLE</div>
+                    <div class="lh-demo-matchup">BOS @ NYK</div>
+                  </div>
+                  <div class="lh-demo-meta-row">
+                    <span><i class="bi bi-calendar3"></i> Tue</span>
+                    <span><i class="bi bi-clock"></i> 8:05 PM</span>
+                    <span><i class="bi bi-graph-up-arrow"></i> PTS</span>
+                  </div>
+
+                  <div class="lh-demo-badge">PARLAY IDEA</div>
+
+                  <div class="lh-demo-hero-row">
+                    <div class="lh-team-chip" data-team-abbr="NYK">NYK</div>
+                    <div class="lh-demo-hero-copy">
+                      <div class="lh-display lh-demo-name">Jalen Brunson</div>
+                      <div class="lh-demo-meta">PTS · 26.5</div>
+                    </div>
+                  </div>
+
+                  <div class="lh-demo-stat-grid">
+                    <div class="lh-demo-stat-box">
+                      <div class="lh-demo-stat-label">Line</div>
+                      <div class="lh-demo-stat-value">26.5</div>
+                      <div class="lh-demo-progress"><span style="width: 76%"></span></div>
+                    </div>
+                    <div class="lh-demo-stat-box">
+                      <div class="lh-demo-stat-label">Last 10</div>
+                      <div class="lh-demo-stat-value">28.1</div>
+                      <div class="lh-demo-progress"><span style="width: 82%"></span></div>
+                    </div>
+                  </div>
+
+                  <div class="lh-demo-row-small">
+                    <div class="lh-demo-row-label">T. Hart</div>
+                    <div class="lh-demo-row-value">12.7</div>
+                  </div>
+                  <div class="lh-demo-row-small">
+                    <div class="lh-demo-row-label">A. Randle</div>
+                    <div class="lh-demo-row-value">18.7</div>
+                  </div>
+
+                  <button class="lh-demo-button" type="button">VIEW PLAYER PROPS »</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="carousel-item">
+            <div class="row g-4 align-items-center lh-carousel-slide">
+              <div class="col-lg-6 d-flex align-items-center">
+                <div class="lh-slide-copy">
+                  <div class="lh-label lh-slide-kicker">Insights · NBA</div>
+                  <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">Over or under?</span><span class="lh-hit-answer">Know first.</span></h3>
+                  <p>Compare recent form and rates across a small sample window.</p>
+                  <span class="lh-coming-soon">Coming soon</span>
+                </div>
+              </div>
+              <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
+                <div class="lh-demo-device lh-demo-device--hit-rates">
+                  <div class="lh-demo-header">
+                    <div class="lh-label lh-demo-example">EXAMPLE</div>
+                    <div class="lh-demo-matchup">BOS @ NYK</div>
+                  </div>
+                  <div class="lh-demo-meta-row">
+                    <span><i class="bi bi-calendar3"></i> Last 10</span>
+                    <span><i class="bi bi-bar-chart-fill"></i> 7/10</span>
+                    <span><i class="bi bi-graph-up-arrow"></i> +12%</span>
+                  </div>
+
+                  <div class="lh-demo-badge">HIT RATE</div>
+
+                  <div class="lh-demo-hero-row">
+                    <div class="lh-team-chip" data-team-abbr="BOS">BOS</div>
+                    <div class="lh-demo-hero-copy">
+                      <div class="lh-display lh-demo-name">Team trend</div>
+                      <div class="lh-demo-meta">7 of 10</div>
+                    </div>
+                  </div>
+
+                  <div class="lh-demo-stat-grid">
+                    <div class="lh-demo-stat-box">
+                      <div class="lh-demo-stat-label">Line</div>
+                      <div class="lh-demo-stat-value">7/10</div>
+                      <div class="lh-demo-progress"><span style="width: 70%"></span></div>
+                    </div>
+                    <div class="lh-demo-stat-box">
+                      <div class="lh-demo-stat-label">Trend</div>
+                      <div class="lh-demo-stat-value">+12%</div>
+                      <div class="lh-demo-progress"><span style="width: 78%"></span></div>
+                    </div>
+                  </div>
+
+                  <div class="lh-demo-hit-row">
+                    <span class="lh-hit-box over"></span>
+                    <span class="lh-hit-box over"></span>
+                    <span class="lh-hit-box over"></span>
+                    <span class="lh-hit-box under"></span>
+                    <span class="lh-hit-box over"></span>
+                    <span class="lh-hit-box over"></span>
+                    <span class="lh-hit-box under"></span>
+                    <span class="lh-hit-box over"></span>
+                    <span class="lh-hit-box over"></span>
+                    <span class="lh-hit-box neutral"></span>
+                  </div>
+
+                  <button class="lh-demo-button" type="button">VIEW HIT RATES »</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="carousel-item">
+            <div class="row g-4 align-items-center lh-carousel-slide">
+              <div class="col-lg-6 d-flex align-items-center">
+                <div class="lh-slide-copy">
+                  <div class="lh-label lh-slide-kicker">League standings · NBA</div>
+                  <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">The whole league.</span><span class="lh-hit-answer">At a glance.</span></h3>
+                  <p>Keep pace with the playoff picture and the latest table movement.</p>
+                  <a href="standings.html" class="lh-slide-link">See standings <span>→</span></a>
+                </div>
+              </div>
+              <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
+                <div class="lh-demo-device lh-demo-device--standings">
+                  <div class="lh-demo-header">
+                    <div class="lh-label lh-demo-example">EXAMPLE</div>
+                    <div class="lh-demo-matchup">EAST</div>
+                  </div>
+                  <div class="lh-demo-meta-row">
+                    <span><i class="bi bi-calendar3"></i> 2026–27</span>
+                    <span><i class="bi bi-trophy"></i> Top 4</span>
+                    <span><i class="bi bi-graph-up-arrow"></i> +7.5</span>
+                  </div>
+
+                  <div class="lh-demo-badge">TOP 4</div>
+
+                  <div class="lh-demo-hero-row">
+                    <div class="lh-team-chip" data-team-abbr="BOS">BOS</div>
+                    <div class="lh-demo-hero-copy">
+                      <div class="lh-display lh-demo-name">Celtics</div>
+                      <div class="lh-demo-meta">24-9 · +7.5</div>
+                    </div>
+                  </div>
+
+                  <div class="lh-demo-stat-grid">
+                    <div class="lh-demo-stat-box">
+                      <div class="lh-demo-stat-label">Record</div>
+                      <div class="lh-demo-stat-value">24-9</div>
+                      <div class="lh-demo-progress"><span style="width: 82%"></span></div>
+                    </div>
+                    <div class="lh-demo-stat-box">
+                      <div class="lh-demo-stat-label">Net</div>
+                      <div class="lh-demo-stat-value">+7.5</div>
+                      <div class="lh-demo-progress"><span style="width: 68%"></span></div>
+                    </div>
+                  </div>
+
+                  <div class="lh-demo-row-small">
+                    <div class="lh-demo-row-label">Knicks</div>
+                    <div class="lh-demo-row-value">22-11</div>
+                  </div>
+                  <div class="lh-demo-row-small">
+                    <div class="lh-demo-row-label">Bucks</div>
+                    <div class="lh-demo-row-value">21-13</div>
+                  </div>
+
+                  <button class="lh-demo-button" type="button">VIEW LEAGUE TABLE »</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="carousel-control-prev lh-carousel-control" type="button" data-bs-target="#toolCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next lh-carousel-control" type="button" data-bs-target="#toolCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="lh-steps">
+      <div class="lh-label mb-3">How it works</div>
+      <div class="row g-4">
+        <div class="col-12 col-md-4">
+          <div class="lh-step-card">
+            <div class="lh-step-number">01</div>
+            <h3>Pick a game</h3>
+            <p>Open today’s slate and pick the matchup that matches your read.</p>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="lh-step-card">
+            <div class="lh-step-number">02</div>
+            <h3>Compare the lines</h3>
+            <p>Look for movement, market structure, and where the price feels off.</p>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="lh-step-card">
+            <div class="lh-step-number">03</div>
+            <h3>Check the hit rates</h3>
+            <p>Use recent form and sample data to separate noise from real trends.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="lh-footer">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+        <div><strong>Data from BALLDONTLIE</strong></div>
+        <div>For research and entertainment only. Not betting advice. Please bet responsibly.</div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="api.js"></script>
+  <script>
+    (function () {
+      const carousel = document.getElementById("toolCarousel");
+      if (!carousel) return;
+
+      document.querySelectorAll(".lh-team-chip[data-team-abbr]").forEach((chip) => {
+        const abbr = chip.dataset.teamAbbr;
+        const color = getTeamColor(abbr);
+        chip.style.background = color;
+        chip.style.color = "#0c1220";
+      });
+
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      const applyMotionPreference = () => {
+        if (prefersReducedMotion.matches) {
+          carousel.classList.remove("carousel-fade");
+          carousel.setAttribute("data-bs-ride", "false");
+          carousel.setAttribute("data-bs-interval", "false");
+        } else {
+          carousel.classList.add("carousel-fade");
+          carousel.setAttribute("data-bs-ride", "carousel");
+          carousel.setAttribute("data-bs-interval", "5000");
+        }
+      };
+
+      applyMotionPreference();
+      if (typeof prefersReducedMotion.addEventListener === "function") {
+        prefersReducedMotion.addEventListener("change", applyMotionPreference);
+      }
+    })();
+  </script>
+  <script src="nav.js"></script>
+</body>
+</html>
