@@ -1,4 +1,4 @@
-// Shared team color palette for dark backgrounds.
+// Shared team color palette for dark backgrounds.Check
 // Most values use the team's primary color; a few are brighter secondary shades
 // where the main color would be too dark to read on a dark background.
 const TEAM_COLORS = {
