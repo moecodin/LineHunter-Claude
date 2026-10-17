@@ -14,7 +14,7 @@
    override Bootstrap's own variables. */
 [data-bs-theme="dark"] {
   /* Our colors */
-  --lh-bg: #070b16;                 /* page background: near-black navy */
+  --lh-bg: #0b0b0b;                 /* page background: near-black, same on every page */
   --lh-surface: #0f1524;            /* cards */
   --lh-surface-2: #161d31;          /* hover / raised parts */
   --lh-border: rgba(148, 163, 184, 0.14);
@@ -25,7 +25,6 @@
   --lh-accent-light: #b39dfa;       /* violet text on dark backgrounds */
   --lh-accent-rgb: 139, 92, 246;    /* same violet as numbers, for see-through versions */
 
-  --lh-grid: rgba(228, 243, 204, 0.02);  /* lime grid lines, kept very faint */
   --lh-over: #6ae39d;               /* green: over / hit */
   --lh-under: #ff5f7a;              /* red: under / miss */
 
@@ -47,24 +46,10 @@
 
 
 /* ---------- 2. Page background ----------
-   Three layers stacked on top of each other:
-   1) a soft violet glow at the top
-   2) horizontal lime lines every 40px
-   3) vertical lime lines every 40px  (2 + 3 = the grid) */
+   One flat near-black color on every page, no grid. */
 body {
   min-height: 100vh;
   background-color: var(--lh-bg);
-  background-image:
-    radial-gradient(ellipse 70% 15% at 50% -5%, rgba(var(--lh-accent-rgb), 0.18), transparent 70%),
-    linear-gradient(var(--lh-grid) 1px, transparent 0.5px),
-    linear-gradient(90deg, var(--lh-grid) 1px, transparent 0.1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
-  background-attachment: fixed;   /* the grid stays still while you scroll */
-}
-
-.lh-home-page {
-  background-color: #0b0b0b;
-  background-image: none;
 }
 
 /* When a link jumps to #games, leave room for the sticky navbar */
@@ -106,18 +91,27 @@ html {
    NOT on the navbar itself. A blur directly on the navbar would trap the
    phone drawer inside the navbar and make the page scroll sideways. */
 .lh-navbar {
-  border-bottom: 1px solid var(--lh-border);
+  --lh-nav-bg: 11, 11, 11;         /* matches --lh-bg so the bar blends into the page */
   position: sticky;
   top: 0;
   z-index: 1040;
 }
+/* No border: the tint and blur fade out below the bar instead of ending on a hard line */
 .lh-navbar::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 0 0 -24px 0;
   z-index: -1;
-  background: rgba(7, 11, 22, 0.72);
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--lh-nav-bg), 0.85) 0%,
+    rgba(var(--lh-nav-bg), 0.6) 65%,
+    rgba(var(--lh-nav-bg), 0) 100%
+  );
   backdrop-filter: blur(12px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+  pointer-events: none;
 }
 
 .lh-navbar .container {
@@ -152,7 +146,7 @@ html {
 .lh-logo {
   font-family: var(--lh-font-display);
   font-weight: 800;
-  font-size: 1.6rem;
+  font-size: clamp(1.9rem, 1.5rem + 1.5vw, 2.4rem);
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: #fff;
@@ -174,7 +168,7 @@ html {
 
 /* Drawer slides down from the top */
 .offcanvas.offcanvas-top.lh-offcanvas {
-  background: rgba(7, 11, 22, 0.96);
+  background: rgba(11, 11, 11, 0.96);
   border-bottom: 1px solid var(--lh-border);
   box-shadow: 0 16px 26px rgba(0, 0, 0, 0.28);
   height: 260px !important;
@@ -577,12 +571,6 @@ html {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.45rem;
-}
-
-.lh-demo-example {
-  color: var(--lh-accent-light);
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
 }
 
 .lh-demo-matchup {
