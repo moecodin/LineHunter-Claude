@@ -70,6 +70,16 @@ const HITLIST_CATEGORIES = [
     pickers: [(leg) => leg.overStreak >= 6 && leg.n10 > 0
       ? { side: "over", proof: `${leg.overStreak} str`, title: `${leg.overStreak} straight overs`, rate: leg.over10 / leg.n10, sample: leg.n10, streak: leg.overStreak } : null],
   },
+  {
+    key: "bbq",
+    bbq: true, // drawn by js/bbq.js: a full-width card, no slip and no combined odds
+    label: "BBQ Chicken 🍗",
+  },
+  {
+    key: "brick",
+    brick: true, // drawn by js/brickCity.js: no slip and no combined odds
+    label: "Brick City",
+  },
 ];
 
 let hitListSlate = null; // the slate from top-hit-rates.js: { date, rows, legs }
@@ -91,7 +101,7 @@ function compareHitListPicks(streakFirst) {
 function playerPick(leg, hit) {
   return {
     href: `game.html?id=${leg.gameId}&player=${leg.playerId}&prop=${leg.code}`,
-    name: shortName(leg.name),
+    name: `${shortName(leg.name)} ${teamBadgeForMatchup(leg.team, leg.matchup)}`,
     text: `${hit.side === "over" ? "Over" : "Under"} ${leg.line} ${leg.code.toUpperCase()}`,
     hover: `${leg.name} ${leg.matchup}`,
     proof: hit.proof,
@@ -201,6 +211,8 @@ function cardTopHtml(category, slip, shareButton) {
 
 // One small category card, with its own "Combined odds" link and share button.
 function categoryHtml(category, slip) {
+  if (category.bbq) return bbqCardHtml(); // js/bbq.js
+  if (category.brick) return brickCityCardHtml(hitListSlate); // js/brickCity.js
   const foot = slip && !category.noOdds
     ? `<div class="lh-hitlist-foot">
          <button type="button" class="lh-hitlist-link" data-hitlist-odds="${category.key}" aria-expanded="false">Combined odds</button>
@@ -209,7 +221,7 @@ function categoryHtml(category, slip) {
     : "";
 
   return `
-    <div class="col-12 col-sm-6">
+    <div class="lh-shelf-item">
       <div class="lh-hitlist-card">
         ${cardTopHtml(category, slip, Boolean(slip))}
         ${foot}
@@ -222,8 +234,10 @@ function renderHitList() {
   body.classList.remove("text-muted");
   body.removeAttribute("aria-busy");
 
-  const slips = HITLIST_CATEGORIES.map((category) => ({ category, slip: buildSlip(category, hitListSlate) }));
-  body.innerHTML = `<div class="row g-3">${slips.map(({ category, slip }) => categoryHtml(category, slip)).join("")}</div>`;
+  const slips = HITLIST_CATEGORIES.map((category) => ({ category, slip: category.bbq || category.brick ? null : buildSlip(category, hitListSlate) }));
+  body.innerHTML = `<div class="lh-shelf-track" id="hitlistShelf">${slips.map(({ category, slip }) => categoryHtml(category, slip)).join("")}</div>`;
+  refreshShelf("#hitlistShelf"); // js/shelf.js: back to the first card, arrows up to date
+  fillBbqSlots(hitListSlate); // the BBQ Chicken card downloads its own (cached) defense numbers
 
   // The share icon turns the card into a picture (see "Share as an image" below).
   slips.forEach(({ category, slip }) => {
@@ -274,8 +288,8 @@ function showHitListLoading() {
   const body = document.getElementById("hitlistBody");
   if (!body) return;
   body.setAttribute("aria-busy", "true");
-  body.innerHTML = `<div class="row g-3">${Array(6).fill(`
-    <div class="col-12 col-sm-6">
+  body.innerHTML = `<div class="lh-shelf-track">${Array(4).fill(`
+    <div class="lh-shelf-item">
       <div class="lh-hitlist-card placeholder-glow" aria-hidden="true" style="min-height: 9rem">
         <div class="lh-hitlist-head"><span class="placeholder col-6 rounded"></span></div>
         <div class="lh-hitlist-list"><span class="placeholder col-12 rounded"></span></div>

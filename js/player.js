@@ -25,6 +25,7 @@ const pageState = {
   propType: PROP_CODES[playerParams.get("prop")] || "points", // "pts" -> "points" (js/stats.js)
   windowSize: 10,
   split: "all",
+  roleMetric: "minutes", // the Role card: "minutes" or "usage"
   teammates: {}, // { teammateId: "with" | "without" }: a teammate not in here is neutral (no filter)
 };
 
@@ -35,10 +36,15 @@ let usingCurrentSeason = true;  // false = no games this season yet, so "Season"
 let nextGame = null;            // the team's next game, or null
 let sidePlayers = null;         // { team: [...], opponent: [...] } players with lines in the next game
 let sideLines = {};             // sideLines[playerId][propType] = line value
+let advancedByGame = {};        // advancedByGame[gameId] = { usage, touches, passes, secAst, rebChances } (advanced stats), filled in after the page loads
+let usageStatus = "loading";    // "loading", "ready" or "failed": the advanced stats download
 let latestView = null;          // the numbers behind the chart on screen ({ result, line, tab }): the share picture uses them
 let teammates = null;           // the top 8 teammates by minutes (see loadTeammates), or null while loading
 let sideTab = "team";           // "team" or "opponent"
 let linesByProp = {};           // linesByProp.points = that prop's line for the next game
+
+// The small Role chart under it (js/roleChart.js).
+const roleChart = createRoleChart(document.getElementById("roleChart"), { height: 160 });
 
 // The shared chart (js/propChart.js). − / + / Reset redraw the hit rate, chart and game log.
 const playerChart = createPropChart(document.getElementById("playerChart"), {
@@ -86,6 +92,9 @@ function resetPlayerLine() {
   playerChart.setLine({
     book: prop ? Number(prop.line_value) : null,
     fallback: average === null ? null : Math.round(average * 2) / 2,
+    // Research mode: the milestone starts at the season average rounded to a whole number (at least 1).
+    milestone: average === null ? null : Math.max(1, Math.round(average)),
+    average,
   });
 }
 
@@ -130,7 +139,11 @@ function renderHeader(injury) {
   document.title = `${name} · LineHunter`;
 
   const team = player.team ? player.team.abbreviation : "";
-  const meta = [team, player.position].filter(Boolean).join(" · ");
+  // The team as a badge in its color (with the next game's clash rule when there is one), then the position.
+  const awayTeam = nextGame ? nextGame.visitor_team.abbreviation : undefined;
+  const homeTeam = nextGame ? nextGame.home_team.abbreviation : undefined;
+  const meta = player.position || ""; // the team badge itself sits next to the name, below
+  const teamBadge = teamBadgeHtml(team, awayTeam, homeTeam);
 
   // "vs BOS · Tue, Oct 20" at home, "@ BOS · Tue, Oct 20" away. Links to that game's page.
   let nextGameHtml = `<span class="text-muted">No upcoming games</span>`;
@@ -146,6 +159,7 @@ function renderHeader(injury) {
     <div>
       <div class="d-flex flex-wrap align-items-center gap-2">
         <h1 class="lh-display lh-player-name mb-0">${name}${player.jersey_number ? ` <span class="lh-player-jersey">#${player.jersey_number}</span>` : ""}</h1>
+        ${teamBadge}
         ${badge ? `<button type="button" class="lh-injury-badge ${badge.className}" id="injuryBadge"
                      aria-label="Injury: ${injury.status}. Show details">${badge.label}</button>` : ""}
       </div>
@@ -219,6 +233,17 @@ function renderPropTabs() {
   });
 }
 
+function renderRoleToggle() {
+  renderToggleButtons(document.getElementById("roleMetric"), [
+    { label: "Minutes", value: "minutes" },
+    { label: "Usage %", value: "usage" },
+  ], pageState.roleMetric, (metric) => {
+    pageState.roleMetric = metric;
+    renderRoleToggle();
+    renderProps();
+  });
+}
+
 function renderToggles() {
   renderWindowButtons(document.getElementById("playerWindows"), pageState.windowSize, (size) => {
     pageState.windowSize = size;
@@ -256,12 +281,15 @@ function renderGameLog(games, result, line) {
 
   const body = document.getElementById("gameLogBody");
   body.classList.remove("placeholder-glow");
+  const more = document.getElementById("gameLogMore");
   if (games.length === 0) {
-    body.innerHTML = `<tr><td colspan="9" class="text-muted">No games for these filters.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="13" class="text-muted">No games for these filters.</td></tr>`;
+    more.innerHTML = "";
+    updateGameLogToggle(0);
     return;
   }
 
-  body.innerHTML = games.map((log, index) => {
+  const rowsHtml = games.map((log, index) => {
     const row = result.games[index]; // the same game, as calculateHitRate saw it
     const values = { min: row.minutes, pts: log.pts, reb: log.reb, ast: log.ast, fg3m: log.fg3m, pra: log.pts + log.reb + log.ast };
 
@@ -271,14 +299,279 @@ function renderGameLog(games, result, line) {
       if (line !== null) vsLine = values[key] > line ? "is-over" : values[key] < line ? "is-under" : "is-push";
       return `<td class="text-end lh-col-active ${vsLine}">${values[key]}</td>`;
     };
+    // Made / attempted: "7/18"
+    const shooting = (made, attempted) => `<td class="text-end text-nowrap">${made ?? 0}/${attempted ?? 0}</td>`;
+    const usage = (advancedFor(log) || {}).usage;
 
     return `<tr>
       <td class="text-nowrap">${monthDayDate(row.date)}</td>
       <td class="text-nowrap">${opponentLabel(row)}</td>
-      <td>${gameResultHtml(row) || "–"}</td>
-      ${["min", "pts", "reb", "ast", "fg3m", "pra"].map(cell).join("")}
+      <td class="text-nowrap">${gameResultHtml(row) || "–"}</td>
+      ${cell("min")}
+      ${shooting(log.fgm, log.fga)}
+      ${shooting(log.fg3m, log.fg3a)}
+      ${shooting(log.ftm, log.fta)}
+      ${["pts", "reb", "ast", "fg3m", "pra"].map(cell).join("")}
+      <td class="text-end">${usage === undefined ? "–" : `${usage.toFixed(1)}%`}</td>
     </tr>`;
-  }).join("");
+  });
+
+  // The 10 most recent games (within the current filters) show right away; the rest wait behind the button.
+  body.innerHTML = rowsHtml.slice(0, GAME_LOG_DEFAULT_ROWS).join("");
+  more.innerHTML = rowsHtml.slice(GAME_LOG_DEFAULT_ROWS).join("");
+  updateGameLogToggle(rowsHtml.length);
+}
+
+// "Show all games (N)" / "Show fewer". The button only exists when there are more than 10 games.
+const GAME_LOG_DEFAULT_ROWS = 10;
+let gameLogTotal = 0;
+
+function updateGameLogToggle(total) {
+  gameLogTotal = total;
+  const button = document.getElementById("gameLogToggle");
+  button.hidden = total <= GAME_LOG_DEFAULT_ROWS;
+  const isOpen = document.getElementById("gameLogMore").classList.contains("show");
+  document.getElementById("gameLogToggleText").textContent = isOpen ? "Show fewer" : `Show all games (${total})`;
+}
+
+["shown.bs.collapse", "hidden.bs.collapse"].forEach((eventName) => {
+  document.getElementById("gameLogMore").addEventListener(eventName, () => updateGameLogToggle(gameLogTotal));
+});
+
+// ---------- Advanced stats (usage, touches, passes, rebound chances) ----------
+
+const ADVANCED_URL = "https://api.balldontlie.io/nba/v2/stats/advanced";
+
+// The advanced stats for every game in the seasons we show, as { gameId: { usage, touches, passes, secAst, rebChances } }.
+// Saved in sessionStorage for 10 minutes. A game the API has no advanced stats for is simply missing,
+// and a missing field is null: the page shows "–".
+async function loadAdvanced() {
+  const season = currentSeasonYear();
+  const needPrevious = playerLogs.previous.length > 0; // same seasons as the game logs
+  const key = `lh-advanced:${playerId}:${season}:${needPrevious ? 2 : 1}`;
+
+  let saved = null;
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(key));
+    if (cached && Date.now() - cached.savedAt < TEAMMATE_CACHE_MS) saved = cached.games;
+  } catch (error) {
+    saved = null;
+  }
+
+  if (!saved) {
+    const seasons = needPrevious ? [season, season - 1] : [season];
+    const lists = await Promise.all(seasons.map((year) =>
+      bdlGetAllPages(`${ADVANCED_URL}?player_ids[]=${playerId}&seasons[]=${year}&period=0&per_page=100`)
+    ));
+
+    const number = (value) => (value === null || value === undefined || Number.isNaN(Number(value)) ? null : Number(value));
+    const rows = lists.flat().map((row) => ({
+      gameId: row.game ? row.game.id : row.game_id,
+      usage: number(row.usage_percentage),
+      touches: number(row.touches),
+      passes: number(row.passes),
+      secAst: number(row.secondary_assists),
+      // "total" if the API sends it, otherwise offensive + defensive chances
+      rebChances: number(row.rebound_chances_total) ??
+        (number(row.rebound_chances_offensive) !== null && number(row.rebound_chances_defensive) !== null
+          ? number(row.rebound_chances_offensive) + number(row.rebound_chances_defensive) : null),
+    })).filter((row) => row.gameId !== undefined);
+
+    // Usage can come as 0.284 or as 28.4. If nothing is above 1.5, it's the 0.284 kind.
+    const scale = Math.max(0, ...rows.map((row) => row.usage ?? 0)) <= 1.5 ? 100 : 1;
+    saved = {};
+    rows.forEach((row) => {
+      saved[row.gameId] = {
+        usage: row.usage === null ? null : Math.round(row.usage * scale * 10) / 10,
+        touches: row.touches,
+        passes: row.passes,
+        secAst: row.secAst,
+        rebChances: row.rebChances,
+      };
+    });
+
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), games: saved }));
+    } catch (error) {
+      // storage full or blocked: it just won't be cached
+    }
+  }
+  advancedByGame = saved;
+}
+
+// One game's advanced stats, or null if the API had none for it.
+function advancedFor(log) {
+  return advancedByGame[log.game.id] || null;
+}
+
+// ---------- Opportunity card ----------
+// Three numbers for the selected prop tab: the average over the filtered games next to the season average,
+// with an arrow (up green / down red / grey if within 5%), and one neutral sentence about what changed.
+//
+// Each metric is one of two kinds:
+//   mean:  the average of a per-game number (FGA, touches, minutes...)
+//   ratio: total top / total bottom over all the games (3P% = all threes made / all threes attempted),
+//          which is more accurate than averaging each game's percentage.
+// up / down = the phrase the sentence uses when it's higher / lower than the season average.
+
+const OPPORTUNITY_METRICS = {
+  points: [
+    { label: "FGA", decimals: 1, mean: (log) => log.fga, up: "taking more shots", down: "taking fewer shots" },
+    { label: "FTA", decimals: 1, mean: (log) => log.fta, up: "getting to the line more", down: "getting to the line less" },
+    { label: "Touches", decimals: 1, adv: true, mean: (log, adv) => adv && adv.touches, up: "seeing more touches", down: "seeing fewer touches" },
+  ],
+  rebounds: [
+    { label: "Reb chances", decimals: 1, adv: true, mean: (log, adv) => adv && adv.rebChances, up: "more rebound chances than usual", down: "fewer rebound chances than usual" },
+    { label: "Rebounds", decimals: 1, mean: (log) => log.reb, up: "grabbing more rebounds", down: "grabbing fewer rebounds" },
+    { label: "Conversion %", decimals: 1, unit: "%", adv: true, ratio: { top: (log) => log.reb, bottom: (log, adv) => adv && adv.rebChances },
+      up: "converting above the season rate", down: "converting below the season rate" },
+  ],
+  assists: [
+    { label: "Passes", decimals: 1, adv: true, mean: (log, adv) => adv && adv.passes, up: "making more passes", down: "making fewer passes" },
+    { label: "Secondary ast", decimals: 1, adv: true, mean: (log, adv) => adv && adv.secAst, up: "more secondary assists", down: "fewer secondary assists" },
+    { label: "Ast / 100 passes", decimals: 1, adv: true, ratio: { top: (log) => log.ast, bottom: (log, adv) => adv && adv.passes },
+      up: "turning passes into assists at a higher rate", down: "turning passes into assists at a lower rate" },
+  ],
+  threes: [
+    { label: "3PA", decimals: 1, mean: (log) => log.fg3a, up: "attempting more threes", down: "attempting fewer threes" },
+    { label: "3P%", decimals: 1, unit: "%", ratio: { top: (log) => log.fg3m, bottom: (log) => log.fg3a },
+      up: "shooting threes above the season rate", down: "shooting threes below the season rate" },
+    { label: "% shots from 3", decimals: 1, unit: "%", ratio: { top: (log) => log.fg3a, bottom: (log) => log.fga },
+      up: "a bigger share of shots coming from three", down: "a smaller share of shots coming from three" },
+  ],
+  points_rebounds_assists: [
+    { label: "Minutes", decimals: 1, mean: (log) => minutesDecimal(log.min), up: "playing more minutes", down: "playing fewer minutes" },
+    { label: "Touches", decimals: 1, adv: true, mean: (log, adv) => adv && adv.touches, up: "seeing more touches", down: "seeing fewer touches" },
+    { label: "Usage %", decimals: 1, unit: "%", adv: true, mean: (log, adv) => adv && adv.usage, up: "higher usage", down: "lower usage" },
+  ],
+};
+
+// One metric's number over a list of games, or null if none of them have the data.
+function opportunityValue(metric, logs) {
+  const present = (value) => value !== null && value !== undefined && !Number.isNaN(value);
+
+  if (metric.ratio) {
+    let top = 0;
+    let bottom = 0;
+    logs.forEach((log) => {
+      const adv = advancedFor(log);
+      const t = metric.ratio.top(log, adv);
+      const b = metric.ratio.bottom(log, adv);
+      if (present(t) && present(b)) {
+        top += t;
+        bottom += b;
+      }
+    });
+    return bottom > 0 ? (top / bottom) * 100 : null;
+  }
+
+  const values = logs.map((log) => metric.mean(log, advancedFor(log))).filter(present);
+  return values.length ? values.reduce((total, value) => total + value, 0) / values.length : null;
+}
+
+// "up", "down" or "flat" (within 5% of the season average, or nothing to compare).
+function opportunityDirection(filtered, season) {
+  if (filtered === null || season === null || season === 0) return "flat";
+  const change = (filtered - season) / Math.abs(season);
+  if (change > 0.05) return "up";
+  if (change < -0.05) return "down";
+  return "flat";
+}
+
+const OPPORTUNITY_ARROWS = {
+  up: `<i class="bi bi-arrow-up-short lh-opp-up" role="img" aria-label="Higher than the season average"></i>`,
+  down: `<i class="bi bi-arrow-down-short lh-opp-down" role="img" aria-label="Lower than the season average"></i>`,
+  flat: `<i class="bi bi-dash lh-opp-flat" role="img" aria-label="About the same as the season average"></i>`,
+};
+
+// "taking more shots, getting to the line less and seeing more touches than the season average."
+function opportunityInsight(metrics, directions) {
+  const changed = metrics.map((metric, index) => ({ metric, direction: directions[index] })).filter((item) => item.direction !== "flat");
+  if (changed.length === 0) return "In line with the season averages.";
+  const phrases = changed.map((item) => (item.direction === "up" ? item.metric.up : item.metric.down));
+  const joined = phrases.length > 1 ? `${phrases.slice(0, -1).join(", ")} and ${phrases[phrases.length - 1]}` : phrases[0];
+  const sentence = joined.charAt(0).toUpperCase() + joined.slice(1);
+  // The rate-style phrases already say "the season rate", so only the count phrases need the ending.
+  return /season rate|at a (higher|lower) rate/.test(joined) ? `${sentence}.` : `${sentence} than the season average.`;
+}
+
+// games = the filtered game logs (the same ones as the chart), newest first.
+function renderOpportunity(games) {
+  const box = document.getElementById("opportunityBody");
+  const tab = CHART_STAT_TABS.find((option) => option.propType === pageState.propType);
+  document.getElementById("opportunityTab").textContent = tab.label;
+  const metrics = OPPORTUNITY_METRICS[pageState.propType];
+  const seasonGames = seasonLogs();
+
+  const results = metrics.map((metric) => {
+    // Advanced stats still downloading, or failed: say so instead of guessing.
+    if (metric.adv && usageStatus === "loading") return { text: "…", season: "", direction: "flat" };
+    const filtered = games.length ? opportunityValue(metric, games) : null;
+    const season = opportunityValue(metric, seasonGames);
+    const format = (value) => (value === null ? "–" : `${value.toFixed(metric.decimals)}${metric.unit || ""}`);
+    return { text: format(filtered), season: format(season), direction: opportunityDirection(filtered, season) };
+  });
+
+  const loading = metrics.some((metric) => metric.adv) && usageStatus === "loading";
+  let insight = opportunityInsight(metrics, results.map((result) => result.direction));
+  if (games.length === 0) insight = "No games for these filters.";
+  else if (results.every((result) => result.text === "–")) insight = "No data for these games.";
+  if (loading) insight = "Loading advanced stats...";
+
+  box.innerHTML = `
+    <div class="lh-opp-grid">
+      ${metrics.map((metric, index) => `
+        <div>
+          <div class="lh-label">${metric.label}</div>
+          <div class="lh-drawer-stat">${results[index].text}${results[index].text === "–" || results[index].text === "…" ? "" : OPPORTUNITY_ARROWS[results[index].direction]}</div>
+          <div class="small text-muted">Season ${results[index].season}</div>
+        </div>`).join("")}
+    </div>
+    ${insight ? `<div class="lh-opp-insight">${insight}</div>` : ""}`;
+}
+
+// ---------- Role card (minutes / usage trend) ----------
+
+// Draws the Role chart for the same games as the main chart. games = log lines newest first,
+// rows = the same games from calculateHitRate (same order).
+function renderRole(games, rows) {
+  try {
+    drawRole(games, rows);
+  } catch (error) {
+    console.error("Role chart failed:", error);
+    roleChart.clear("Couldn't draw the Role chart.");
+  }
+}
+
+function drawRole(games, rows) {
+  const metric = pageState.roleMetric;
+  if (games.length === 0) {
+    roleChart.clear("No games for these filters.");
+    return;
+  }
+  if (metric === "usage" && usageStatus === "loading") {
+    roleChart.clear("Loading usage...");
+    return;
+  }
+  if (metric === "usage" && usageStatus === "failed") {
+    roleChart.clear("Usage data is unavailable right now.");
+    return;
+  }
+
+  // The chart reads left to right, so oldest first.
+  const points = games.map((log, index) => ({
+    row: rows[index],
+    minutes: minutesDecimal(log.min),
+    usage: ((advancedFor(log) || {}).usage ?? null),
+  })).reverse();
+
+  // The dashed line: the player's average over the whole season (not the filter), for the same metric.
+  const seasonValues = seasonLogs()
+    .map((log) => (metric === "minutes" ? minutesDecimal(log.min) : ((advancedFor(log) || {}).usage ?? null)))
+    .filter((value) => value !== null);
+  const average = seasonValues.length ? seasonValues.reduce((total, value) => total + value, 0) / seasonValues.length : null;
+
+  roleChart.draw(points, { metric, average });
 }
 
 // Hit rate, average, chart and game log for the current tab, window, split and line.
@@ -286,7 +579,9 @@ function renderProps() {
   if (!playerLogs) return; // still loading: the skeletons are showing
 
   const tab = CHART_STAT_TABS.find((option) => option.propType === pageState.propType);
-  const line = playerChart.activeLine(); // the alt line if one is picked, otherwise the book line (or fallback)
+  // The number games are scored against: the alt line / book line (lines mode), or the milestone minus 0.5 (research
+  // mode, where "25+" means >= 25: see lineForScoring in js/propChart.js).
+  const line = lineForScoring(playerChart.activeLine());
 
   // The games in this window and split, newest first (pickWindowLogs in js/stats.js),
   // scored against the line. The table below uses the very same games.
@@ -306,12 +601,15 @@ function renderProps() {
 
   if (result.totalGames === 0) {
     summary.innerHTML = "";
+    document.getElementById("playerMilestone").textContent = "";
     playerChart.clear();
     message.textContent = Object.keys(pageState.teammates).length
       ? "No games match these filters."
       : pageState.split === "all" ? "No games played yet." : `No ${pageState.split} games in this window.`;
     message.hidden = false;
     renderGameLog([], result, line);
+    renderRole([], []);
+    renderOpportunity([]);
     return;
   }
 
@@ -319,7 +617,7 @@ function renderProps() {
     ? "–"
     : `${result.hits}/${result.totalGames} <span class="text-muted">(${Math.round(result.hitRate)}%)</span>`;
   summary.innerHTML = `
-    <div>
+    <div class="lines-only">
       <div class="lh-label">Hit rate${line !== null ? ` <span class="lh-alt-tag">o${lineText(line)}</span>` : ""}</div>
       <div class="lh-drawer-stat">${hitRateText}</div>
     </div>
@@ -328,12 +626,24 @@ function renderProps() {
       <div class="lh-drawer-stat">${formatStatValue(result.average)}</div>
     </div>`;
 
+  // Research mode: "25+ PTS in 7 of last 10 · avg 24.3"
+  const milestone = playerChart.activeLine();
+  const milestoneBox = document.getElementById("playerMilestone");
+  if (milestone !== null) {
+    const outOf = typeof pageState.windowSize === "number" ? `last ${result.totalGames}` : `${result.totalGames} games`;
+    milestoneBox.innerHTML = `<strong>${milestone}+ ${propCode(pageState.propType).toUpperCase()}</strong> in <strong>${result.hits} of ${outOf}</strong> · avg ${formatStatValue(result.average)}`;
+  } else {
+    milestoneBox.textContent = "";
+  }
+
   message.hidden = !(pageState.windowSize === "season" && !usingCurrentSeason);
   message.textContent = "This season hasn't started, so Season shows last season.";
 
   // The chart reads left to right, so oldest goes first.
   playerChart.draw([...result.games].reverse(), `${pageState.propType}|${pageState.windowSize}|${pageState.split}|${JSON.stringify(pageState.teammates)}`);
   renderGameLog(games, result, line);
+  renderRole(games, result.games);
+  renderOpportunity(games);
 }
 
 // ---------- With / Without teammates ----------
@@ -460,7 +770,10 @@ function renderTeammateChips() {
     button.type = "button";
     button.className = `lh-ww-chip is-${mode}`;
     button.setAttribute("aria-label", `${mate.shortName}: ${mode === "neutral" ? "no filter" : mode}. Click to change.`);
-    button.innerHTML = `<span class="lh-ww-avatar" aria-hidden="true">${mate.initials}</span>
+    const avatarTeam = player.team ? player.team.abbreviation : "";
+    const avatarAway = nextGame ? nextGame.visitor_team.abbreviation : "";
+    const avatarHome = nextGame ? nextGame.home_team.abbreviation : "";
+    button.innerHTML = `<span class="lh-ww-avatar" data-avatar-team="${avatarTeam}" data-away="${avatarAway}" data-home="${avatarHome}" style="${teamAvatarStyle(avatarTeam, avatarAway || undefined, avatarHome || undefined)}" aria-hidden="true">${mate.initials}</span>
       <span>${mate.shortName}</span>
       ${mode === "neutral" ? "" : `<span class="lh-ww-state">${mode === "with" ? "With" : "Without"}</span>`}`;
     button.addEventListener("click", () => {
@@ -478,7 +791,13 @@ function renderTeammateChips() {
 // "6/8 (75%) · avg 27.4", or just the average when there's no line to hit.
 function rateText(result, line) {
   if (result.totalGames === 0) return "no games";
-  const rate = line === null ? "" : `${result.hits}/${result.totalGames} (${Math.round(result.hitRate)}%) · `;
+  // line is the scoring line: in research mode that is the milestone minus 0.5, so "25+ in 7/10".
+  let rate = "";
+  if (line !== null) {
+    rate = isResearchMode()
+      ? `${line + 0.5}+ in ${result.hits}/${result.totalGames} · `
+      : `${result.hits}/${result.totalGames} (${Math.round(result.hitRate)}%) · `;
+  }
   return `${rate}avg ${formatStatValue(result.average)}`;
 }
 
@@ -673,10 +992,126 @@ function renderSidePlayers() {
       <span class="lh-players-name">${p.first_name[0]}. ${p.last_name}</span>
       <span class="text-muted small">${p.position || ""}</span>
       ${line === undefined
-        ? `<span class="ms-auto text-muted small">No lines available</span>`
-        : `<span class="ms-auto lh-players-line">${line}</span>`}
+        ? `<span class="ms-auto text-muted small lines-only">No lines available</span>`
+        : `<span class="ms-auto lh-players-line lines-only">${line}</span>`}
     </a>`;
   }).join("");
+}
+
+// ---------- Injury report card (sidebar) ----------
+
+// Out first, then Doubtful, Questionable, Day-To-Day.
+function injuryOrder(status) {
+  const text = (status || "").toLowerCase();
+  if (text.startsWith("out")) return 0;
+  if (text.includes("doubt")) return 1;
+  if (text.includes("question")) return 2;
+  return 3;
+}
+
+// The badge next to the name: OUT red, DTD yellow, Q light grey (Doubtful uses yellow, anything else grey).
+function injuryStatusBadge(status) {
+  const text = (status || "").toLowerCase();
+  if (text.startsWith("out")) return { label: "OUT", className: "is-out" };
+  if (text.includes("day")) return { label: "DTD", className: "is-dtd" };
+  if (text.includes("question")) return { label: "Q", className: "is-q" };
+  if (text.includes("doubt")) return { label: "Doubtful", className: "is-dtd" };
+  return { label: status || "?", className: "is-q" };
+}
+
+// The injury reports for this team and, if there is a next game, the opponent: one request, both teams.
+async function loadInjuryCard() {
+  const box = document.getElementById("injuryList");
+  if (!player || !player.team) {
+    box.innerHTML = `<div class="text-muted small p-3">No team yet.</div>`;
+    return;
+  }
+
+  // This team first, then the opponent (if we know the next game).
+  const teams = [{ id: player.team.id, abbr: player.team.abbreviation }];
+  if (nextGame) {
+    const isHome = nextGame.home_team.id === player.team.id;
+    const other = isHome ? nextGame.visitor_team : nextGame.home_team;
+    teams.push({ id: other.id, abbr: other.abbreviation });
+  }
+
+  try {
+    const injuries = await bdlGetAllPages(`${BDL_BASE}/player_injuries?${teams.map((team) => `team_ids[]=${team.id}`).join("&")}&per_page=100`);
+    box.innerHTML = "";
+
+    teams.forEach((team) => {
+      const heading = document.createElement("div");
+      heading.className = "lh-injury-team lh-label";
+      heading.textContent = team.abbr;
+      box.appendChild(heading);
+
+      const hurt = injuries
+        .filter((item) => item.player && item.player.team_id === team.id)
+        .sort((a, b) => injuryOrder(a.status) - injuryOrder(b.status));
+      if (hurt.length === 0) {
+        const none = document.createElement("div");
+        none.className = "lh-injury-none text-muted small";
+        none.textContent = "No injuries reported.";
+        box.appendChild(none);
+        return;
+      }
+      hurt.forEach((item) => box.appendChild(injuryItem(item)));
+    });
+  } catch (error) {
+    console.warn("Injury report unavailable:", error);
+    box.innerHTML = `<div class="text-muted small p-3">Injury report is unavailable right now.</div>`;
+  }
+}
+
+// One injured player: name (links to their page), status badge, and a "Details" dropdown with the description.
+// Built with createElement / textContent, so text from the API can never turn into HTML.
+function injuryItem(item) {
+  const badge = injuryStatusBadge(item.status);
+  const detailsId = `inj-${item.player.id}`;
+
+  const wrap = document.createElement("div");
+  wrap.className = "lh-injury-item";
+
+  const head = document.createElement("div");
+  head.className = "lh-injury-head";
+
+  const name = document.createElement("a");
+  name.className = "lh-injury-name lh-player-link";
+  name.href = `player.html?id=${item.player.id}`;
+  name.textContent = `${item.player.first_name.charAt(0)}. ${item.player.last_name}`;
+
+  const status = document.createElement("span");
+  status.className = `lh-inj-badge ${badge.className}`;
+  status.textContent = badge.label;
+
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "lh-explain-toggle collapsed ms-auto";
+  toggle.setAttribute("data-bs-toggle", "collapse");
+  toggle.setAttribute("data-bs-target", `#${detailsId}`);
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-controls", detailsId);
+  toggle.setAttribute("aria-label", `Show injury details for ${item.player.first_name} ${item.player.last_name}`);
+  toggle.innerHTML = `Details <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>`;
+
+  head.append(name, status, toggle);
+
+  const details = document.createElement("div");
+  details.className = "collapse";
+  details.id = detailsId;
+  const text = document.createElement("p");
+  text.className = "lh-explain-text lh-injury-desc";
+  text.textContent = item.description || "No details yet.";
+  details.appendChild(text);
+  if (item.return_date) {
+    const back = document.createElement("p");
+    back.className = "lh-injury-back";
+    back.textContent = `Expected back: ${weekdayDate(item.return_date)}`;
+    details.appendChild(back);
+  }
+
+  wrap.append(head, details);
+  return wrap;
 }
 
 // ---------- Loading ----------
@@ -710,6 +1145,7 @@ async function loadNextGameAndLines() {
 async function loadPlayerPage() {
   renderPropTabs();
   renderToggles();
+  renderRoleToggle();
 
   if (typeof BDL_API_KEY === "undefined" || BDL_API_KEY === "paste-your-key-here") {
     showPlayerError("No API key yet. Copy config.example.js to config.js and paste your key in.");
@@ -739,6 +1175,21 @@ async function loadPlayerPage() {
 
     renderHeader(injuries[0] || null);
     renderSidePlayers();
+    // The Shot Chart is season-level (js/shotChart.js): it loads on its own and ignores the filters.
+    // Then the Zone Matchup card, which reuses the Shot Chart's numbers. Opponent = the next game's other team.
+    const opponentId = nextGame && player.team
+      ? (nextGame.home_team.id === player.team.id ? nextGame.visitor_team.id : nextGame.home_team.id)
+      : null;
+    loadInjuryCard(); // the sidebar's injury report (this team + the next opponent)
+    loadShotChart(playerId).then((shotData) => loadZoneMatchup(shotData, opponentId, player.team ? player.team.id : null));
+    // Usage % loads after the page is up: the Role card and the USG% column fill in when it arrives.
+    loadAdvanced()
+      .then(() => { usageStatus = "ready"; renderProps(); })
+      .catch((error) => {
+        console.warn("Usage unavailable:", error);
+        usageStatus = "failed";
+        renderProps();
+      });
     // The teammate chips load after everything else; the page works without them.
     loadTeammates()
       .then(() => { renderTeammateChips(); renderProps(); })
@@ -766,3 +1217,6 @@ document.getElementById("playerBack").addEventListener("click", (event) => {
 });
 
 loadPlayerPage();
+
+// Research mode switched on or off (nav.js): redraw what depends on it (the chart's line, the With / Without text).
+document.addEventListener("lh-mode-change", () => renderProps());

@@ -1,20 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; nav.js has the toggle) -->
+  <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Game · LineHunter</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
+  <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=technor@400,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=comico@400&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="styles.css" rel="stylesheet">
 </head>
 
 <body>
+  <!-- Research mode: applied before anything renders, so there's no flash (nav.js has the switch) -->
+  <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
 
   <div id="site-nav"></div>
 
@@ -23,14 +32,35 @@
     <!-- BACK BUTTON: btn-ghost = our quiet outlined pill button (styles.css) -->
     <a href="schedule.html" class="btn btn-sm btn-ghost mb-3">‹ All games</a>
 
-    <!-- MATCHUP CARD: matchup-hero = the violet gradient (styles.css). game.js fills it in. -->
-    <div id="game-header" class="card matchup-hero mb-4">
-      <div class="card-body text-center text-muted py-5">Loading game...</div>
+        <!-- MATCHUP CARD (left, col-lg-6), MATCHUP INFO (col-lg-3) and INJURY REPORT (col-lg-3), same height. Stacked on phones, header first. -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div id="game-header" class="card matchup-hero h-100">
+          <div class="card-body text-center text-muted py-5">Loading game...</div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <!-- MATCHUP INFO: arena, coaches, last 5, home / road record, rest, last meeting. js/matchupInfo.js fills it in. -->
+        <div id="matchup-info" class="card lh-tint-card h-100">
+          <div id="matchup-info-body" class="flex-grow-1">
+            <div class="card-body text-center text-muted py-5">Loading matchup info...</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <!-- INJURY REPORT: both teams, same look as the player page's card. js/gameInjuries.js fills it in. -->
+        <div class="card lh-tint-card lh-injury-card h-100">
+          <div class="card-header py-3"><div class="lh-label">Injury report</div></div>
+          <div id="gameInjuryList" class="lh-injury-list lh-game-injury-list">
+            <div class="text-muted small p-3">Loading…</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- PLAYER PROPS CARD -->
-    <div class="card mb-5">
-      <div class="card-header lh-label py-3">Player Props</div>
+    <div class="card lh-tint-card mb-4">
+      <div class="card-header lh-label py-3"><span class="lines-only">Player Props</span><span class="research-only">Player Stats</span></div>
       <div class="card-body">
 
         <!-- PROP TYPE TABS: Bootstrap "nav-underline". game.js adds one button per prop type.
@@ -43,6 +73,9 @@
           <span id="table-window-note" class="small text-muted" hidden>This season hasn't started, so Season shows last season.</span>
         </div>
 
+        <!-- Shown when the books haven't posted lines for this game or this prop yet (players are still listed) -->
+        <div id="lines-note" class="small text-muted mb-3 lines-only" hidden></div>
+
         <!-- Messages like "Loading..." or "No lines yet" appear here -->
         <div id="lines-message" class="text-muted">Loading lines...</div>
 
@@ -50,13 +83,22 @@
         <div id="lines-table" class="table-responsive d-none">
           <table class="table table-hover align-middle mb-0">
             <thead>
-              <tr>
+              <!-- Research mode: Player, Avg, Graph, and "25+ in 7/10" (a milestone instead of a line) -->
+              <tr class="research-only">
                 <th>Player</th>
-                <th class="text-end">Line</th>
+                <th class="text-end" data-sort="average">
+                  <button type="button" class="lh-sort-button">Avg <i class="bi bi-caret-down-fill"></i></button>
+                </th>
+                <th class="d-none d-md-table-cell">Graph vs milestone</th>
+                <th class="text-end">Milestone</th>
+              </tr>
+              <tr class="lines-only">
+                <th>Player</th>
+                <th class="text-end lines-only">Line</th>
                 <!-- d-none d-md-table-cell = hidden on phones so Player, Line and Hit % fit -->
                 <th class="d-none d-md-table-cell">Graph</th>
                 <!-- data-sort = which number this header sorts by. Clicking flips the direction. -->
-                <th class="text-end" data-sort="hitRate">
+                <th class="text-end lines-only" data-sort="hitRate">
                   <button type="button" class="lh-sort-button">Hit % <i class="bi bi-caret-down-fill"></i></button>
                 </th>
                 <th class="text-end d-none d-md-table-cell" data-sort="average">
@@ -65,10 +107,25 @@
               </tr>
             </thead>
             <tbody id="lines-body"></tbody>
+            <!-- Rows 6 and up: hidden until "Show all players" (Bootstrap collapse on the table body) -->
+            <tbody id="lines-more" class="collapse"></tbody>
           </table>
         </div>
 
+        <!-- Full-width button under the table; game.js shows it only when there are more than 5 players -->
+        <button type="button" id="linesToggle" class="btn btn-sm btn-outline-secondary lh-mi-toggle w-100 mt-3 collapsed" hidden
+                data-bs-toggle="collapse" data-bs-target="#lines-more" aria-expanded="false" aria-controls="lines-more">
+          <span id="linesToggleText">Show all players</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+        </button>
+
       </div>
+    </div>
+
+    <!-- MATCHUP DETAILS: the team comparison (butterfly bars), full width, always visible. js/teamCompare.js loads its data
+         when this card scrolls into view. -->
+    <div class="card lh-tint-card mb-5" id="matchupDetails">
+      <div class="card-header lh-label py-3">Matchup Details</div>
+      <div class="card-body" id="teamCompareBody"></div>
     </div>
 
   </main>
@@ -84,7 +141,7 @@
         <div class="d-flex flex-wrap gap-2 mt-2">
           <a id="playerDrawerPageLink" class="btn btn-sm lh-player-page-btn" href="player.html">Go to player page →</a>
           <!-- Share the chart as a picture (js/share.js) -->
-          <button type="button" id="playerDrawerShare" class="btn btn-sm btn-ghost" aria-label="Share this chart as an image" title="Share as image">
+          <button type="button" id="playerDrawerShare" class="btn btn-sm btn-ghost lines-only" aria-label="Share this chart as an image" title="Share as image">
             <i class="bi bi-share" aria-hidden="true"></i> Share
           </button>
         </div>
@@ -96,7 +153,9 @@
 
     <div class="offcanvas-body">
       <!-- The line and over/under odds for the selected stat -->
-      <div id="playerDrawerLine" class="lh-drawer-line mb-3"></div>
+      <div id="playerDrawerLine" class="lh-drawer-line mb-3 lines-only"></div>
+      <!-- Research mode: "25+ PTS in 7 of last 10 · avg 24.3" -->
+      <div id="playerDrawerMilestone" class="research-only mb-3"></div>
 
       <!-- Stat tabs: Points, Rebounds, Assists, 3PM, P+R+A -->
       <ul id="playerDrawerStats" class="nav nav-underline lh-tabs mb-3"></ul>
@@ -125,6 +184,10 @@
   <script src="js/stats.js"></script>
   <script src="js/propChart.js"></script>
   <script src="js/share.js"></script>
+  <script src="js/teams.js"></script>
+  <script src="js/matchupInfo.js"></script>
+  <script src="js/gameInjuries.js"></script>
+  <script src="js/teamCompare.js"></script>
   <script src="game.js"></script>
   <script src="player-drawer.js"></script>
 </body>

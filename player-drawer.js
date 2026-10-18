@@ -5,7 +5,7 @@
 // The chart, tooltip and alt line control come from js/propChart.js (shared with player.html).
 //
 // Loaded after game.js, and uses what game.js already has in memory:
-//   allLines, selectedProp, selectedWindow, showingCurrentSeason, statsLoading, windowResult
+//   allLines, playersById, selectedProp, selectedWindow, showingCurrentSeason, statsLoading, windowResult
 // So opening the drawer never downloads anything new.
 
 // What the drawer is showing right now. Changing a tab or window updates this, then redraws.
@@ -33,7 +33,16 @@ function findLine(playerId, propType) {
 // A new player or prop: start from the book's line again (clears any alt line).
 function resetDrawerLine() {
   const propLine = findLine(drawerState.playerId, drawerState.propType);
-  drawerChart.setLine({ book: propLine ? propLine.line : null });
+  // Research mode: the milestone starts at the player's season average, rounded (needs the game logs to be loaded).
+  const stat = CHART_STAT_TABS.find((tab) => tab.propType === drawerState.propType).stat;
+  const average = statsLoading || !gameLogsByPlayer[drawerState.playerId]
+    ? null
+    : windowResult(drawerState.playerId, stat, 0, "season").average;
+  drawerChart.setLine({
+    book: propLine ? propLine.line : null,
+    milestone: average === null ? null : Math.max(1, Math.round(average)),
+    average,
+  });
 }
 
 // ---------- Drawing ----------
@@ -73,6 +82,7 @@ function renderDrawerWindows() {
 // Show a message in place of the summary and chart (loading, no games, etc.).
 function showDrawerMessage(html) {
   drawerView = null;
+  document.getElementById("playerDrawerMilestone").textContent = "";
   document.getElementById("playerDrawerShare").disabled = true;
   drawerChart.clear();
   document.getElementById("playerDrawerSummary").innerHTML = "";
@@ -84,17 +94,20 @@ function showDrawerMessage(html) {
 // Redraw everything inside the drawer from drawerState.
 function renderPlayerDrawer() {
   const playerId = drawerState.playerId;
-  const anyLine = allLines.find((line) => line.playerId === playerId);
+  const anyLine = playersById[playerId]; // everyone in the game, with or without a line (game.js)
   if (!anyLine) return;
 
   const option = CHART_STAT_TABS.find((choice) => choice.propType === drawerState.propType);
   const propLine = findLine(playerId, drawerState.propType);
-  const line = drawerChart.activeLine(); // the alt line if one is picked, otherwise the book line
+  // The alt line / book line (lines mode) or the milestone minus 0.5 (research mode: "25+" means >= 25).
+  const line = lineForScoring(drawerChart.activeLine());
 
   // 1. Header: name, team, position, the player page button, and this stat's book line and odds.
-  document.getElementById("playerDrawerName").textContent = anyLine.fullName;
-  document.getElementById("playerDrawerMeta").textContent =
-    [anyLine.team, anyLine.position].filter(Boolean).join(" · ");
+  // The team badge sits right next to the name (the name is plain text, so it is escaped before the badge HTML is added).
+  const nameBox = document.getElementById("playerDrawerName");
+  nameBox.textContent = `${anyLine.fullName} `;
+  nameBox.insertAdjacentHTML("beforeend", gameTeamBadge(anyLine.team));
+  document.getElementById("playerDrawerMeta").textContent = anyLine.position || "";
   document.getElementById("playerDrawerPageLink").href =
     `player.html?id=${playerId}&prop=${propCode(drawerState.propType)}`; // propCode: "points" -> "pts" (js/stats.js)
   document.getElementById("playerDrawerLine").innerHTML = propLine
@@ -132,8 +145,15 @@ function renderPlayerDrawer() {
   const hitRateText = line === null
     ? "–"
     : `${result.hits}/${result.totalGames} <span class="text-muted">(${Math.round(result.hitRate)}%)</span>`;
+  // Research mode: "25+ PTS in 7 of last 10 · avg 24.3"
+  const milestone = drawerChart.activeLine();
+  const outOf = typeof drawerState.windowSize === "number" ? `last ${result.totalGames}` : `${result.totalGames} games`;
+  document.getElementById("playerDrawerMilestone").innerHTML = milestone === null
+    ? ""
+    : `<strong>${milestone}+ ${propCode(drawerState.propType).toUpperCase()}</strong> in <strong>${result.hits} of ${outOf}</strong> · avg ${formatStatValue(result.average)}`;
+
   document.getElementById("playerDrawerSummary").innerHTML = `
-    <div>
+    <div class="lines-only">
       <div class="lh-label">Hit rate${drawerChart.isAltLine() ? ` <span class="lh-alt-tag">o${lineText(line)}</span>` : ""}</div>
       <div class="lh-drawer-stat">${hitRateText}</div>
     </div>
@@ -168,7 +188,9 @@ function openPlayerDrawer(playerId) {
 
 // Called by game.js once the stats finish loading, in case the drawer is already open.
 function refreshPlayerDrawer() {
-  if (drawerState.playerId !== null) renderPlayerDrawer();
+  if (drawerState.playerId === null) return;
+  resetDrawerLine(); // the stats may have just arrived: the research-mode milestone starts from the season average
+  renderPlayerDrawer();
 }
 
 // The share button: a picture of the chart, with the player, prop, line, hit rate and average (js/share.js).
@@ -188,3 +210,6 @@ document.getElementById("playerDrawerShare").addEventListener("click", (event) =
     averageText: formatStatValue(result.average),
   }, event.currentTarget);
 });
+
+// Research mode switched on or off (nav.js): redraw the drawer (the chart drops or gets its line back).
+document.addEventListener("lh-mode-change", () => refreshPlayerDrawer());

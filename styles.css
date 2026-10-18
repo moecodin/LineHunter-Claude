@@ -9,32 +9,92 @@
    Named values (CSS variables) used everywhere below.
    Change one here and the whole site updates.
 
-   [data-bs-theme="dark"] = only applies in dark mode, which we
-   turn on in <html data-bs-theme="dark">. The --bs-... lines
-   override Bootstrap's own variables. */
+   [data-bs-theme="dark"] / [data-bs-theme="light"] = the two themes. An early script in every page's <head> sets
+   data-bs-theme on <html> from the saved choice (localStorage "lh-theme", default dark) before anything renders, and the
+   toggle in nav.js changes it. Both blocks define the SAME names. The --bs-... lines override Bootstrap's own variables. */
+:root,
 [data-bs-theme="dark"] {
   /* Our colors */
-  --lh-bg: #0b0b0b;                 /* page background: near-black, same on every page */
-  --lh-surface: #0f1524;            /* cards */
-  --lh-surface-2: #161d31;          /* hover / raised parts */
-  --lh-card-bg: rgba(15, 21, 36, 0.45);   /* cards: see-through navy, so the black page shows through */
-  --lh-card-tint: 0.14;                   /* how much violet the gradient cards start with (0 = none, 1 = solid) */
-  --lh-border: rgba(148, 163, 184, 0.14);
+  --lh-bg: #050b16;                 /* page background: near-black with a slight navy tint */
+  --lh-surface: #071a38;            /* cards: navy */
+  --lh-surface-2: #0b2347;          /* hover / raised parts */
+  --lh-card-bg: rgba(7, 26, 56, 0.55);   /* cards: see-through navy, so the dark page shows through */
+  --lh-card-tint: 0.14;                   /* how much blue the gradient cards start with (0 = none, 1 = solid) */
+  --lh-border: #13305e;             /* lighter navy */
   --lh-text: #e7e9f3;
   --lh-muted: #8a92a8;
+  --lh-faint: #93a0bc;              /* a touch lighter than muted (the jersey number) */
+  --lh-strong: #fff;                /* the strongest text: headings, big numbers, names (white here, near-black in light) */
+  --lh-text-rgb: 231, 233, 243;     /* --lh-text as "r, g, b" (chart lines and labels) */
 
-  --lh-accent: #8b5cf6;             /* violet: buttons, active tabs, highlights */
-  --lh-accent-light: #b39dfa;       /* violet text on dark backgrounds */
-  --lh-accent-rgb: 139, 92, 246;    /* same violet as numbers, for see-through versions */
+  /* Brand colors: navy #052350, pale blue #d2e0f8, royal indigo #2107a9.
+     --lh-accent = marks: text, links, underlines, icons, chart lines (pale blue on dark: indigo is too dark to read there).
+     --lh-fill   = filled elements: primary buttons, selected pills, active switches (indigo, white text on top). */
+  --lh-accent: #d2e0f8;             /* pale blue: text, underlines, icons, chart lines */
+  --lh-accent-2: #a9c1ee;           /* the other end of accent gradients (progress bars) */
+  --lh-accent-light: #d2e0f8;       /* accent text on dark backgrounds */
+  --lh-accent-rgb: 210, 224, 248;   /* same pale blue as numbers, for faint tints and glows */
+  --lh-logo-ink: #d2e0f8;           /* the logo's letters: pale blue */
+  --lh-fill: #2107a9;               /* indigo: filled elements */
+  --lh-fill-2: #3b22c9;             /* the other end of the fill gradient (buttons) */
+  --lh-fill-rgb: 33, 7, 169;
+  --lh-on-fill: #ffffff;            /* text on a fill */
 
-  --lh-over: #6ae39d;               /* green: over / hit */
-  --lh-under: #ff5f7a;              /* red: under / miss */
+  /* Division colors (Standings page): one per division, never the over / under teal and coral */
+  --lh-div-atlantic: #a78bfa;  --lh-div-central: #60a5fa;  --lh-div-southeast: #fbbf24;
+  --lh-div-northwest: #22d3ee; --lh-div-pacific: #f472b6;  --lh-div-southwest: #94a3b8;
+
+  /* Over / under / push. The darker values are for bars, fills and outlines; the lighter "-text"
+     values are for text and icons on the dark background. Used by the CSS below AND by the Chart.js bars (js/propChart.js). */
+  --lh-over: #1D9E75;               /* teal: over / hit */
+  --lh-over-text: #5DCAA5;
+  --lh-under: #D85A30;              /* coral: under / miss */
+  --lh-under-text: #F0997B;
+  --lh-push: #888780;               /* exactly on the line */
+  --lh-over-rgb: 29, 158, 117;      /* the same colors as "r, g, b" for see-through fills and glows */
+  --lh-under-rgb: 216, 90, 48;
+  --lh-push-rgb: 136, 135, 128;
+
+  /* Injury / status colors (the tint is the see-through version used behind the text) */
+  --lh-out: #FF3B5C;       --lh-out-rgb: 255, 59, 92;
+  --lh-dtd: #FFC83D;       --lh-dtd-rgb: 255, 200, 61;      /* day-to-day, "no line" */
+  --lh-q: #C9CEDE;         --lh-q-rgb: 201, 206, 222;       /* questionable */
+  --lh-warn: #f5c542;                                       /* small-sample warning */
+
+  /* "Ink": the color of faint fills, dividers and soft text on cards (white tints here, dark tints in light mode) */
+  --lh-ink-rgb: 255, 255, 255;
+  --lh-line-rgb: 148, 163, 184;     /* court lines, skeletons */
+  --lh-bg-rgb: 5, 11, 22;          /* the page background as "r, g, b": see-through bars and panels */
+  --lh-surface-rgb: 7, 26, 56;      /* the card surface as "r, g, b" */
+  --lh-deep-rgb: 3, 9, 20;          /* the dark wash behind the homepage carousel slides */
+  --lh-hero-rgb: 33, 7, 169;        /* indigo: second tint of the game header gradient */
+  --lh-hero-from: rgba(5, 35, 80, 0.85);   /* game header gradient: navy ... */
+  --lh-hero-to: rgba(33, 7, 169, 0.32);    /* ... to indigo */
+  --lh-popover-bg: #071a38;
+  --lh-tab-hover: #d2e0f8;
+
+  /* Glows and shadows: the colors, and a strength multiplier (1 = as designed; light mode turns them down) */
+  --lh-shadow-rgb: 0, 0, 0;
+  --lh-demo-shadow-rgb: 2, 6, 23;
+  --lh-shadow-k: 1;
+  --lh-glow-k: 1;
+  --lh-tint-k: 1;                   /* strength of the blue washes (game header, etc.) */
+  --lh-team-tint: 0.15;             /* the faint team-color wash on each side of a matchup card */
+  --lh-city-alpha: 0.16;            /* the city watermark letters */
+  --lh-city-shine-keep: 45%;        /* the sweep over the watermark: how much of the team color the light band keeps (the rest is white) */
+  --lh-city-shine-alpha: 60%;       /* ...and how strong the band is */
+
+  /* The hover lift on Hit List cards: a faint white glow in dark mode, a soft blue-gray shadow in light mode */
+  --lh-lift-shadow: 0 8px 24px rgba(var(--lh-accent-rgb), 0.10);   /* faint pale-blue glow */
+  --lh-lift-border: rgba(var(--lh-accent-rgb), 0.30);
+
+  color-scheme: dark;
 
   /* Our fonts */
   --lh-font-display: "Barlow Condensed", sans-serif;   /* big numbers, team abbreviations, logo */
   --lh-font-heading: "Technor", sans-serif;              /* headings and titles (Fontshare) */
   --lh-font-label: "JetBrains Mono", monospace;        /* tiny caps labels */
-  --lh-font-body: "Inter", sans-serif;                 /* everything else */
+  --lh-font-body: "Satoshi", sans-serif;               /* everything else (Fontshare) */
 
   /* Point Bootstrap at our values */
   --bs-body-bg: var(--lh-bg);
@@ -43,8 +103,95 @@
   --bs-border-color: var(--lh-border);
   --bs-secondary-color: var(--lh-muted);   /* used by .text-muted */
   --bs-primary-rgb: var(--lh-accent-rgb);  /* used by .text-primary */
-  --bs-link-color-rgb: 179, 157, 250;
-  --bs-link-hover-color-rgb: 210, 198, 252;
+  --bs-link-color-rgb: 210, 224, 248;
+  --bs-link-hover-color-rgb: 236, 242, 253;
+}
+
+
+/* ---------- Light theme: same names, light values ----------
+   A soft off-white page with the faintest lavender tint, white cards with thin light-blue borders, near-black headings,
+   dark gray body text, deeper blue for anything active, darker teal / coral for over / under. */
+[data-bs-theme="light"] {
+  --lh-bg: #f6f9fe;
+  --lh-surface: #ffffff;
+  --lh-surface-2: #eef3fc;
+  --lh-card-bg: rgba(255, 255, 255, 0.9);
+  --lh-card-tint: 0.08;
+  --lh-border: #d2e0f8;
+  --lh-text: #24314d;               /* body: dark navy-gray */
+  --lh-muted: #5d6b88;              /* labels: medium gray-blue */
+  --lh-faint: #7080a0;
+  --lh-strong: #052350;             /* headings, player names, team abbreviations, big numbers: navy */
+  --lh-text-rgb: 36, 49, 77;
+
+  --lh-accent: #2107a9;             /* royal indigo: links, active tabs, underlines, icons */
+  --lh-accent-2: #4a32c8;
+  --lh-accent-light: #2107a9;       /* indigo text and links: dark enough on white */
+  --lh-accent-rgb: 33, 7, 169;
+  --lh-logo-ink: #052350;           /* the logo's letters: navy */
+  --lh-fill: #2107a9;               /* filled elements: primary buttons, selected pills, switches */
+  --lh-fill-2: #3b22c9;
+  --lh-fill-rgb: 33, 7, 169;
+  --lh-on-fill: #ffffff;
+  --lh-div-atlantic: #7c3aed;  --lh-div-central: #2563eb;  --lh-div-southeast: #d97706;
+  --lh-div-northwest: #0891b2; --lh-div-pacific: #db2777;  --lh-div-southwest: #64748b;
+
+  --lh-over: #138a67;               /* darker teal / coral */
+  --lh-over-text: #0b6b4e;
+  --lh-under: #c4471f;
+  --lh-under-text: #a63a14;
+  --lh-push: #8a8982;
+  --lh-over-rgb: 19, 138, 103;
+  --lh-under-rgb: 196, 71, 31;
+  --lh-push-rgb: 138, 137, 130;
+
+  /* Status colors: text darker than the dark theme's, and no yellow text on white (day-to-day / "no line" are a deep amber) */
+  --lh-out: #c4173e;       --lh-out-rgb: 196, 23, 62;
+  --lh-dtd: #8a5a00;       --lh-dtd-rgb: 224, 164, 0;
+  --lh-q: #5a6178;         --lh-q-rgb: 90, 97, 120;
+  --lh-warn: #8a5a00;
+
+  --lh-ink-rgb: 5, 35, 80;
+  --lh-line-rgb: 90, 120, 190;
+  --lh-bg-rgb: 246, 249, 254;
+  --lh-surface-rgb: 255, 255, 255;
+  --lh-deep-rgb: 238, 243, 252;
+  --lh-hero-rgb: 210, 224, 248;
+  --lh-hero-from: rgba(210, 224, 248, 0.75);   /* game header gradient: faint pale blue ... */
+  --lh-hero-to: rgba(255, 255, 255, 0.55);     /* ... to white */
+  --lh-popover-bg: #ffffff;
+  --lh-tab-hover: #052350;
+
+  --lh-shadow-rgb: 5, 35, 80;
+  --lh-demo-shadow-rgb: 5, 35, 80;
+  --lh-shadow-k: 0.25;              /* softer shadows */
+  --lh-glow-k: 0.35;                /* much softer glows */
+  --lh-tint-k: 0.45;
+  --lh-team-tint: 0.2;              /* 15% is much fainter on white: these are clearly visible but still subtle */
+  --lh-city-alpha: 0.26;
+  --lh-city-shine-keep: 100%;       /* light page: a lighter band would vanish, so the band is the team color itself, a bit stronger */
+  --lh-city-shine-alpha: 70%;
+
+  --lh-lift-shadow: 0 8px 24px rgba(var(--lh-shadow-rgb), 0.18);
+  --lh-lift-border: rgba(var(--lh-line-rgb), 0.45);
+
+  color-scheme: light;
+
+  /* Our fonts */
+  --lh-font-display: "Barlow Condensed", sans-serif;   /* big numbers, team abbreviations, logo */
+  --lh-font-heading: "Technor", sans-serif;              /* headings and titles (Fontshare) */
+  --lh-font-label: "JetBrains Mono", monospace;        /* tiny caps labels */
+  --lh-font-body: "Satoshi", sans-serif;               /* everything else (Fontshare) */
+
+  /* Point Bootstrap at our values */
+  --bs-body-bg: var(--lh-bg);
+  --bs-body-color: var(--lh-text);
+  --bs-body-font-family: var(--lh-font-body);
+  --bs-border-color: var(--lh-border);
+  --bs-secondary-color: var(--lh-muted);   /* used by .text-muted */
+  --bs-primary-rgb: var(--lh-accent-rgb);  /* used by .text-primary */
+  --bs-link-color-rgb: 33, 7, 169;
+  --bs-link-hover-color-rgb: 5, 35, 80;
 }
 
 
@@ -101,7 +248,7 @@ html {
    NOT on the navbar itself. A blur directly on the navbar would trap the
    phone drawer inside the navbar and make the page scroll sideways. */
 .lh-navbar {
-  --lh-nav-bg: 11, 11, 11;         /* matches --lh-bg so the bar blends into the page */
+  --lh-nav-bg: var(--lh-bg-rgb);         /* matches --lh-bg so the bar blends into the page */
   position: sticky;
   top: 0;
   z-index: 1040;
@@ -131,7 +278,7 @@ html {
 
 .lh-nav-toggle {
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--lh-ink-rgb), 0.02);
   border-radius: 999px;
   width: 42px;
   height: 42px;
@@ -152,19 +299,23 @@ html {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* The two-tone logo: "Line" white, "Hunter" violet */
-.lh-logo {
-  font-family: var(--lh-font-display);
-  font-weight: 800;
-  font-size: clamp(1.9rem, 1.5rem + 1.5vw, 2.4rem);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: #fff;
+/* The logo: the inlined lockup (nav.js lhLockupHtml). Letters are currentColor = --lh-logo-ink; the mark keeps its own colors. */
+.lh-brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  color: var(--lh-logo-ink);
   text-decoration: none;
 }
-.lh-logo span {
-  color: var(--lh-accent-light);
+.lh-lockup-svg {
+  display: block;
+  height: 32px;
+  width: auto;
 }
+@media (max-width: 767.98px) {
+  .lh-lockup-svg { height: 28px; }
+}
+.lh-offcanvas .lh-lockup-svg { height: 28px; }
 
 .lh-navbar .nav-link {
   font-family: var(--lh-font-label);
@@ -178,9 +329,9 @@ html {
 
 /* Drawer slides down from the top */
 .offcanvas.offcanvas-top.lh-offcanvas {
-  background: rgba(11, 11, 11, 0.96);
+  background: rgba(var(--lh-bg-rgb), 0.96);
   border-bottom: 1px solid var(--lh-border);
-  box-shadow: 0 16px 26px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 16px 26px rgba(var(--lh-shadow-rgb), calc(0.28 * var(--lh-shadow-k)));
   height: 260px !important;
   max-height: 340px;
   overflow: visible;
@@ -229,7 +380,7 @@ html {
 
 .lh-drawer-close:hover {
   background: rgba(var(--lh-accent-rgb), 0.08);
-  color: #fff;
+  color: var(--lh-strong);
 }
 
 .lh-drawer-group {
@@ -257,7 +408,7 @@ html {
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--lh-border);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--lh-ink-rgb), 0.02);
   text-decoration: none;
   color: var(--lh-text);
   font-family: var(--lh-font-body);
@@ -313,31 +464,28 @@ html {
   --bs-card-cap-bg: transparent;     /* card headers and footers blend in */
 }
 
-/* Game cards: a light violet hint in the corner, fading into the see-through card color.
+/* Game cards: a light blue hint in the corner, fading into the see-through card color.
    --shade is set by .shade-1 / .shade-2 / .shade-3 below. */
 .game-card {
   background: linear-gradient(160deg, rgba(var(--shade), var(--lh-card-tint)) 0%, var(--lh-card-bg) 60%);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* The 3 rotating shades: light, medium, deep violet */
-.shade-1 { --shade: 167, 139, 250; }
-.shade-2 { --shade: 139, 92, 246; }
-.shade-3 { --shade: 91, 33, 182; }
+/* The 3 rotating shades: pale blue, mid indigo, royal indigo */
+.shade-1 { --shade: 210, 224, 248; }
+.shade-2 { --shade: 74, 60, 200; }
+.shade-3 { --shade: 33, 7, 169; }
 
-/* Hover: lift up a little and glow violet */
+/* Hover: lift up a little and glow blue */
 .game-card:hover {
   transform: translateY(-4px);
   border-color: rgba(var(--lh-accent-rgb), 0.45);
-  box-shadow: 0 14px 34px -12px rgba(var(--lh-accent-rgb), 0.35);
+  box-shadow: 0 14px 34px -14px rgba(var(--lh-accent-rgb), calc(0.18 * var(--lh-glow-k)));
 }
 
 /* Matchup header on the game page: the strongest gradient on the site, still see-through */
 .matchup-hero {
-  background: linear-gradient(135deg,
-    rgba(var(--lh-accent-rgb), 0.24) 0%,
-    rgba(91, 33, 182, 0.08) 45%,
-    var(--lh-card-bg) 80%);
+  background: linear-gradient(135deg, var(--lh-hero-from) 0%, var(--lh-hero-to) 50%, var(--lh-card-bg) 90%);
 }
 
 /* ---------- Homepage ---------- */
@@ -366,7 +514,7 @@ html {
 }
 
 .btn-lh-primary {
-  background: linear-gradient(135deg, var(--lh-accent) 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--lh-fill) 0%, var(--lh-fill-2) 100%);
   border: none;
   border-radius: 999px;
   padding: 0.8rem 1.4rem;
@@ -374,14 +522,14 @@ html {
   font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #fff;
-  box-shadow: 0 12px 28px -16px rgba(var(--lh-accent-rgb), 0.9);
+  color: var(--lh-on-fill);
+  box-shadow: 0 12px 28px -16px rgba(var(--lh-fill-rgb), 0.9);
 }
 
 .btn-lh-primary:hover,
 .btn-lh-primary:focus-visible {
-  background: linear-gradient(135deg, #a855f7 0%, var(--lh-accent) 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--lh-fill-2) 0%, var(--lh-fill) 100%);
+  color: var(--lh-on-fill);
 }
 
 .lh-home-preview {
@@ -390,7 +538,7 @@ html {
   border-radius: 22px;
   padding: 1.2rem;
   min-height: 100%;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow: inset 0 0 0 1px rgba(var(--lh-ink-rgb), 0.04);
 }
 
 .lh-home-preview .lh-label {
@@ -404,7 +552,7 @@ html {
   align-items: center;
   gap: 0.75rem;
   padding: 0.7rem 0.8rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--lh-ink-rgb), 0.02);
   border: 1px solid var(--lh-border);
   border-radius: 12px;
   margin-bottom: 0.7rem;
@@ -427,7 +575,7 @@ html {
   border-radius: 999px;
   background: rgba(var(--lh-accent-rgb), 0.1);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.38);
-  color: #fff;
+  color: var(--lh-strong);
 }
 
 .lh-tool-grid {
@@ -462,7 +610,7 @@ html {
   padding: 2rem 1.4rem 1rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.18);
   border-radius: 22px;
-  background: linear-gradient(180deg, rgba(9, 13, 22, 0.28) 0%, rgba(9, 13, 22, 0.0) 18%, rgba(9, 13, 22, 0.1) 100%);
+  background: linear-gradient(180deg, rgba(var(--lh-deep-rgb), 0.28) 0%, rgba(var(--lh-deep-rgb), 0.0) 18%, rgba(var(--lh-deep-rgb), 0.1) 100%);
 }
 
 .lh-slide-copy {
@@ -521,7 +669,7 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: #fff;
+  color: var(--lh-strong);
   text-decoration: underline;
   text-underline-offset: 0.25rem;
   text-decoration-thickness: 1px;
@@ -552,7 +700,7 @@ html {
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
   border-radius: 24px;
   padding: 1rem 1rem 0.9rem;
-  box-shadow: 0 24px 50px rgba(2, 6, 23, 0.4), 0 0 0 1px rgba(var(--lh-accent-rgb), 0.08), 0 0 26px rgba(var(--lh-accent-rgb), 0.1);
+  box-shadow: 0 24px 50px rgba(var(--lh-demo-shadow-rgb), calc(0.4 * var(--lh-shadow-k))), 0 0 0 1px rgba(var(--lh-accent-rgb), 0.08), 0 0 26px rgba(var(--lh-accent-rgb), calc(0.1 * var(--lh-glow-k)));
   position: relative;
   overflow: hidden;
 }
@@ -596,7 +744,7 @@ html {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem 0.9rem;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(var(--lh-ink-rgb), 0.72);
   font-size: 0.75rem;
   margin-bottom: 0.75rem;
 }
@@ -665,8 +813,8 @@ html {
 }
 
 .lh-demo-stat-box {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(var(--lh-ink-rgb), 0.02);
+  border: 1px solid rgba(var(--lh-ink-rgb), 0.08);
   border-radius: 12px;
   padding: 0.7rem 0.65rem 0.6rem;
 }
@@ -694,7 +842,7 @@ html {
 .lh-demo-progress {
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--lh-ink-rgb), 0.08);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -712,15 +860,15 @@ html {
   align-items: center;
   gap: 0.8rem;
   padding: 0.7rem 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--lh-ink-rgb), 0.08);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--lh-ink-rgb), 0.02);
   margin-bottom: 0.55rem;
   font-size: 0.8rem;
 }
 
 .lh-demo-row-label {
-  color: rgba(255,255,255,0.9);
+  color: rgba(var(--lh-ink-rgb), 0.9);
   font-weight: 500;
 }
 
@@ -743,8 +891,8 @@ html {
   width: 100%;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(90deg, var(--lh-accent) 0%, #a855f7 100%);
-  color: white;
+  background: linear-gradient(90deg, var(--lh-fill) 0%, var(--lh-fill-2) 100%);
+  color: var(--lh-on-fill);
   padding: 0.9rem 1rem;
   font-family: var(--lh-font-label);
   font-size: 0.7rem;
@@ -763,7 +911,7 @@ html {
   width: 0.7rem;
   height: 0.7rem;
   border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(var(--lh-ink-rgb), 0.4);
   margin: 0 0.3rem;
   border: none;
   opacity: 1;
@@ -782,15 +930,15 @@ html {
   transform: translateY(-50%);
   border-radius: 999px;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
-  background: rgba(15, 21, 36, 0.68);
-  color: #fff;
+  background: rgba(var(--lh-surface-rgb), 0.68);
+  color: var(--lh-strong);
   opacity: 1;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .lh-carousel-control:hover,
 .lh-carousel-control:focus-visible {
-  background: rgba(15, 21, 36, 0.9);
+  background: rgba(var(--lh-surface-rgb), 0.9);
   border-color: rgba(var(--lh-accent-rgb), 0.7);
 }
 
@@ -896,7 +1044,7 @@ html {
 }
 
 .lh-footer strong {
-  color: #fff;
+  color: var(--lh-strong);
   font-weight: 600;
 }
 
@@ -927,8 +1075,8 @@ html {
    the Top Hit Rates filters, and the schedule date pager. Markup: <ul class="nav nav-underline lh-tabs"> with <button class="nav-link">. */
 .lh-tabs {
   --bs-nav-link-color: var(--lh-muted);           /* inactive: muted gray */
-  --bs-nav-link-hover-color: #c9cede;             /* hover: lighter gray */
-  --bs-nav-underline-link-active-color: #fff;     /* active: white text */
+  --bs-nav-link-hover-color: var(--lh-tab-hover);             /* hover: lighter gray */
+  --bs-nav-underline-link-active-color: var(--lh-strong);     /* active: white text */
   --bs-nav-underline-border-width: 2px;
   --bs-nav-underline-gap: 1.25rem;
 
@@ -957,7 +1105,7 @@ html {
 .lh-tabs .nav-link:focus-visible:not(.active) {
   border-bottom-color: transparent;
 }
-/* The active tab's underline is the violet accent, not white */
+/* The active tab's underline is the blue accent, not white */
 .lh-tabs .nav-link.active {
   border-bottom-color: var(--lh-accent);
 }
@@ -973,10 +1121,10 @@ html {
 .btn-ghost {
   --bs-btn-color: var(--lh-muted);
   --bs-btn-border-color: var(--lh-border);
-  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-color: var(--lh-strong);
   --bs-btn-hover-bg: var(--lh-surface-2);
   --bs-btn-hover-border-color: rgba(var(--lh-accent-rgb), 0.5);
-  --bs-btn-active-color: #fff;
+  --bs-btn-active-color: var(--lh-strong);
   --bs-btn-active-bg: var(--lh-surface-2);
   border-radius: 999px;
   font-family: var(--lh-font-label);
@@ -1087,19 +1235,19 @@ html {
   border-radius: 0 999px 999px 0;
 }
 .lh-window-toggle .btn-ghost.active {
-  color: #fff;
-  background: rgba(var(--lh-accent-rgb), 0.2);
-  border-color: rgba(var(--lh-accent-rgb), 0.6);
+  color: var(--lh-on-fill);
+  background: var(--lh-fill);
+  border-color: rgba(var(--lh-accent-rgb), 0.45);
 }
 
-/* "Open player page →": violet outline so it stands out from the grey ghost buttons */
+/* "Open player page →": blue outline so it stands out from the grey ghost buttons */
 .lh-player-page-btn {
   --bs-btn-color: var(--lh-accent-light);
   --bs-btn-border-color: rgba(var(--lh-accent-rgb), 0.6);
-  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-color: var(--lh-strong);
   --bs-btn-hover-bg: rgba(var(--lh-accent-rgb), 0.18);
   --bs-btn-hover-border-color: var(--lh-accent);
-  --bs-btn-active-color: #fff;
+  --bs-btn-active-color: var(--lh-strong);
   --bs-btn-active-bg: rgba(var(--lh-accent-rgb), 0.25);
   border-radius: 999px;
   font-family: var(--lh-font-label);
@@ -1134,7 +1282,7 @@ html {
 .lh-alt-btn:hover:not(:disabled),
 .lh-alt-btn:focus-visible {
   background: rgba(var(--lh-accent-rgb), 0.18);
-  color: #fff;
+  color: var(--lh-strong);
 }
 .lh-alt-btn:disabled {
   color: var(--lh-muted);
@@ -1146,7 +1294,7 @@ html {
   font-family: var(--lh-font-display);
   font-size: 1.4rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--lh-strong);
 }
 /* Bar tooltip in the drawer chart: "@BOS · Oct 22" / "31 PTS · 34 min" / "W 112–105" */
 .lh-chart-tooltip {
@@ -1154,7 +1302,7 @@ html {
   z-index: 2;
   pointer-events: none;           /* never blocks hovering the bars underneath */
   padding: 0.5rem 0.65rem;
-  background: rgba(11, 11, 11, 0.95);
+  background: rgba(var(--lh-bg-rgb), 0.95);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.45);
   border-radius: 8px;
   font-size: 0.78rem;
@@ -1178,8 +1326,8 @@ html {
   font-weight: 600;
   white-space: nowrap;
 }
-.lh-result.is-win  { color: #2BFF88; }
-.lh-result.is-loss { color: #FF3B5C; }
+.lh-result.is-win  { color: var(--lh-over-text); }
+.lh-result.is-loss { color: var(--lh-under-text); }
 
 /* "o29.5" next to "Hit rate" while an alt line is used */
 .lh-alt-tag {
@@ -1213,9 +1361,10 @@ html {
   min-width: 1px;
   border-radius: 2px 2px 0 0;
 }
-.lh-mini-bar--over  { background: #2BFF88; }
-.lh-mini-bar--under { background: #FF3B5C; }
-.lh-mini-bar--push  { background: #6B7280; }
+.lh-mini-bar--over  { background: var(--lh-over); }
+.lh-mini-bar--under { background: var(--lh-under); }
+.lh-mini-bar--push  { background: var(--lh-push); }
+.lh-mini-bar--none  { background: var(--lh-accent); opacity: 0.7; } /* no line yet: blue, like the drawer chart */
 
 /* Hit %: neon green when good, red when bad, white in between */
 .lh-hit {
@@ -1223,10 +1372,10 @@ html {
   font-size: 1.35rem;
   font-weight: 700;
   line-height: 1.1;
-  color: #fff;
+  color: var(--lh-strong);
 }
-.lh-hit--good { color: #2BFF88; }
-.lh-hit--bad  { color: #FF3B5C; }
+.lh-hit--good { color: var(--lh-over-text); }
+.lh-hit--bad  { color: var(--lh-under-text); }
 
 .lh-avg {
   font-family: var(--lh-font-display);
@@ -1254,7 +1403,7 @@ html {
 }
 .lh-sort-button:hover,
 .lh-sort-button:focus-visible {
-  color: #fff;
+  color: var(--lh-strong);
 }
 .lh-sort-button i {
   font-size: 0.6rem;
@@ -1269,7 +1418,7 @@ html {
   margin-bottom: 3rem;
 }
 
-/* The card title: big condensed letters, like the page headings, with a violet icon and date */
+/* The card title: big condensed letters, like the page headings, with a blue icon and date */
 .lh-top-title {
   display: flex;
   align-items: center;
@@ -1281,7 +1430,7 @@ html {
   text-transform: uppercase;
   letter-spacing: 0.02em;
   line-height: 1;
-  color: #fff;
+  color: var(--lh-strong);
 }
 .lh-top-title i {
   color: var(--lh-accent-light);
@@ -1337,10 +1486,10 @@ a.lh-top-row:focus-visible {
   font-size: 1.3rem;
   font-weight: 700;
   white-space: nowrap;
-  color: #fff;
+  color: var(--lh-strong);
 }
-.lh-top-hit.lh-hit--good { color: #2BFF88; }
-.lh-top-hit.lh-hit--bad  { color: #FF3B5C; }
+.lh-top-hit.lh-hit--good { color: var(--lh-over-text); }
+.lh-top-hit.lh-hit--bad  { color: var(--lh-under-text); }
 .lh-top-hit span {
   font-size: 0.95rem;
   opacity: 0.8;
@@ -1371,7 +1520,7 @@ a.lh-top-row:focus-visible {
   line-height: 1;
 }
 .lh-player-jersey {
-  color: var(--lh-text-muted, #9a93b0);
+  color: var(--lh-faint);
   font-weight: 600;
 }
 .lh-skeleton-title {
@@ -1391,11 +1540,11 @@ a.lh-top-row:focus-visible {
   text-transform: uppercase;
   cursor: help;
 }
-.lh-injury-badge.is-out { color: #FF3B5C; background: rgba(255, 59, 92, 0.12); }
-.lh-injury-badge.is-q   { color: #FFC83D; background: rgba(255, 200, 61, 0.12); }
+.lh-injury-badge.is-out { color: var(--lh-out); background: rgba(var(--lh-out-rgb), 0.12); }
+.lh-injury-badge.is-q   { color: var(--lh-dtd); background: rgba(var(--lh-dtd-rgb), 0.12); }
 .lh-popover {
   --bs-popover-max-width: 320px;
-  --bs-popover-bg: #12161f;
+  --bs-popover-bg: var(--lh-popover-bg);
   --bs-popover-border-color: rgba(var(--lh-accent-rgb), 0.45);
   --bs-popover-header-bg: transparent;
   font-size: 0.85rem;
@@ -1407,7 +1556,7 @@ a.lh-top-row:focus-visible {
   font-size: 1.2rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--lh-strong);
   text-decoration: none;
 }
 .lh-next-game:hover,
@@ -1444,7 +1593,7 @@ a.lh-top-row:focus-visible {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #FFC83D;
+  color: var(--lh-dtd);
 }
 
 /* The chart's box while loading: the same height as the chart, and fainter than a text placeholder
@@ -1452,31 +1601,38 @@ a.lh-top-row:focus-visible {
 .lh-chart-skeleton {
   display: block;
   height: 340px;
-  background-color: rgba(148, 163, 184, 0.18);
+  background-color: rgba(var(--lh-line-rgb), 0.18);
 }
 
 /* Game log table. min-width = on phones the table scrolls sideways (table-responsive) instead of squishing. */
 .lh-game-log {
-  min-width: 640px;
+  font-size: 0.78rem; /* compact, so all 13 columns fit the card without a sideways scroll on desktop */
   font-variant-numeric: tabular-nums; /* numbers line up in their columns */
+}
+.lh-game-log th,
+.lh-game-log td {
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
+}
+@media (max-width: 767.98px) {
+  .lh-game-log { min-width: 640px; } /* phones: scroll sideways instead of squishing */
 }
 .lh-game-log .lh-col-active {
   background: rgba(var(--lh-accent-rgb), 0.1);
-  color: #fff;
+  color: var(--lh-strong);
   font-weight: 600;
 }
 .lh-game-log th.lh-col-active {
   color: var(--lh-accent-light);
 }
-.lh-game-log td.is-over  { color: #2BFF88; }
-.lh-game-log td.is-under { color: #FF3B5C; }
-.lh-game-log td.is-push  { color: #9CA3AF; }
+.lh-game-log td.is-over  { color: var(--lh-over-text); }
+.lh-game-log td.is-under { color: var(--lh-under-text); }
+.lh-game-log td.is-push  { color: var(--lh-push); }
 
 
 /* Player page: other players sidebar (right column on desktop, below the page on phones) */
 .lh-players-card {
-  position: sticky;
-  top: 90px; /* below the sticky navbar */
+  position: static; /* not sticky: the Injury report card sits right below it and both scroll with the page */
 }
 .lh-players-list {
   max-height: calc(100vh - 220px);
@@ -1490,7 +1646,7 @@ a.lh-top-row:focus-visible {
   font-size: 0.9rem;
 }
 .lh-players-row.is-current {
-  background: rgba(139, 92, 246, 0.15);
+  background: rgba(var(--lh-accent-rgb), 0.15);
 }
 .lh-players-line {
   font-family: var(--lh-font-mono, "JetBrains Mono", monospace);
@@ -1523,7 +1679,7 @@ a.lh-top-row:focus-visible {
   padding: 0 1rem 0 2.4rem;
   border-radius: 999px;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--lh-ink-rgb), 0.02);
   color: var(--lh-text);
   font-size: 0.9rem;
 }
@@ -1542,7 +1698,7 @@ a.lh-top-row:focus-visible {
   border: 1px solid var(--lh-border);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 32px rgba(var(--lh-shadow-rgb), calc(0.5 * var(--lh-shadow-k)));
 }
 .lh-search-row {
   display: flex;
@@ -1586,7 +1742,7 @@ a.lh-top-row:focus-visible {
 
 /* Player page: Game log scroll box (keeps it level with the With / Without card) */
 .lh-gamelog-scroll {
-  max-height: 420px;
+  max-height: 600px; /* the card is full width now, so only a long Season list needs to scroll */
   overflow: auto;
 }
 .lh-gamelog-scroll thead th {
@@ -1616,7 +1772,7 @@ a.lh-top-row:focus-visible {
 .lh-ww-chip:hover { background: var(--lh-surface-2); }
 .lh-ww-chip.is-with {
   border-color: var(--lh-over);
-  box-shadow: 0 0 0 1px var(--lh-over), 0 0 10px rgba(106, 227, 157, 0.35); /* the neon glow */
+  box-shadow: 0 0 0 1px var(--lh-over), 0 0 10px rgba(var(--lh-over-rgb), calc(0.4 * var(--lh-glow-k))); /* soft teal glow */
 }
 .lh-ww-chip.is-without {
   border-color: var(--lh-under);
@@ -1641,8 +1797,8 @@ a.lh-top-row:focus-visible {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.is-with .lh-ww-state { color: var(--lh-over); }
-.is-without .lh-ww-state { color: var(--lh-under); }
+.is-with .lh-ww-state { color: var(--lh-over-text); }
+.is-without .lh-ww-state { color: var(--lh-under-text); }
 .lh-ww-clear { color: var(--lh-accent-light); text-decoration: none; }
 .lh-ww-row { margin-bottom: 0.35rem; }
 .lh-ww-label {
@@ -1657,8 +1813,8 @@ a.lh-top-row:focus-visible {
   margin-top: 0.25rem;
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid #f5c542;
-  color: #f5c542;
+  border: 1px solid var(--lh-warn);
+  color: var(--lh-warn);
   font-size: 0.75rem;
 }
 
@@ -1698,17 +1854,19 @@ h3.lh-display,
 .lh-card-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--lh-strong);
 }
 
 /* Schedule page: smaller card titles ("Top Hit Rates", "Hit List") and a smaller date next to them */
 .lh-top-compact .lh-top-title,
-#hitlist .lh-top-title {
+#hitlist .lh-top-title,
+#streaks .lh-top-title {
   font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
   gap: 0.4rem;
 }
 .lh-top-compact .lh-top-title-date,
-#hitlist .lh-top-title-date {
+#hitlist .lh-top-title-date,
+#streaks .lh-top-title-date {
   font-size: 0.75em;
 }
 
@@ -1721,15 +1879,15 @@ h3.lh-display,
   height: 100%;
   border: 1px solid var(--lh-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--lh-ink-rgb), 0.02);
   overflow: hidden;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-/* Hover (or keyboard focus inside) = a soft violet glow */
+/* Hover (or keyboard focus inside) = a soft blue glow */
 .lh-hitlist-card:hover,
 .lh-hitlist-card:focus-within {
   border-color: rgba(var(--lh-accent-rgb), 0.6);
-  box-shadow: 0 0 0 1px rgba(var(--lh-accent-rgb), 0.35), 0 0 18px rgba(var(--lh-accent-rgb), 0.3);
+  box-shadow: 0 0 0 1px rgba(var(--lh-accent-rgb), calc(0.25 * var(--lh-glow-k))), 0 0 12px rgba(var(--lh-accent-rgb), calc(0.12 * var(--lh-glow-k)));
 }
 @media (prefers-reduced-motion: reduce) {
   .lh-hitlist-card { transition: none; }
@@ -1809,9 +1967,9 @@ h3.lh-display,
   font-family: var(--lh-font-label);
   font-size: 0.72rem;
   white-space: nowrap;
-  color: #2BFF88;
+  color: var(--lh-over-text);
 }
-.lh-hitlist-proof.is-under { color: var(--lh-under); }
+.lh-hitlist-proof.is-under { color: var(--lh-under-text); }
 
 .lh-hitlist-empty {
   padding: 0.75rem;
@@ -1853,7 +2011,8 @@ h3.lh-display,
   align-items: baseline;
   margin-bottom: 1rem;
 }
-.lh-share-card .lh-logo { font-size: 1.7rem; }
+.lh-share-card .lh-lockup-svg { height: 36px; }
+.lh-brand-share { display: inline-flex; }
 .lh-share-card .lh-hitlist-head { font-size: 1rem; padding: 0.75rem 1rem; }
 .lh-share-card .lh-hitlist-blurb { font-size: 0.85rem; padding: 0.6rem 1rem 0; }
 .lh-share-card .lh-hitlist-leg { font-size: 1rem; padding: 0.5rem 1rem; }
@@ -1917,3 +2076,1731 @@ body > main {
   letter-spacing: 0.08em;
   color: var(--lh-accent-light);
 }
+
+
+/* Player page: Role card (minutes / usage trend) */
+.lh-role-message { padding: 2.5rem 0; text-align: center; }
+
+/* Game log: Date and Opp stay in view while the table scrolls sideways */
+.lh-game-log th:nth-child(1),
+.lh-game-log td:nth-child(1),
+.lh-game-log th:nth-child(2),
+.lh-game-log td:nth-child(2) {
+  position: sticky;
+  background: var(--lh-surface); /* solid, so scrolled columns don't show through */
+  z-index: 1;
+}
+.lh-game-log th:nth-child(1),
+.lh-game-log td:nth-child(1) {
+  left: 0;
+  min-width: 3.75rem;
+}
+.lh-game-log th:nth-child(2),
+.lh-game-log td:nth-child(2) {
+  left: 3.75rem; /* the width of the Date column */
+  min-width: 3rem;
+  box-shadow: 1px 0 0 var(--lh-border);
+}
+/* In the header row they must also stay above the other header cells while scrolling up and down */
+.lh-gamelog-scroll thead th:nth-child(1),
+.lh-gamelog-scroll thead th:nth-child(2) {
+  z-index: 3;
+}
+
+/* Player page: Opportunity card (three metrics, arrow vs the season average, one insight line) */
+.lh-opp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); /* three across; wraps if the card is narrow */
+  gap: 0.75rem;
+}
+.lh-opp-grid .lh-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lh-opp-grid .lh-drawer-stat { white-space: nowrap; }
+.lh-opp-up { color: var(--lh-over-text); }
+.lh-opp-down { color: var(--lh-under-text); }
+.lh-opp-flat { color: var(--lh-muted); }
+.lh-opp-insight {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--lh-border);
+  font-size: 0.85rem;
+  color: var(--lh-muted);
+}
+
+
+/* ---------- Schedule page: games carousel ---------- */
+
+.lh-games-carousel {
+  position: relative;
+}
+/* A row of cards you scroll sideways; each page snaps into place. The scrollbar is hidden: the ‹ › buttons do the paging. */
+.lh-games-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  /* room above and below, so the hover lift and glow aren't clipped by the scroll box */
+  padding: 8px 0 18px;
+  margin: -8px 0 -18px;
+}
+.lh-games-track::-webkit-scrollbar { display: none; }
+
+.lh-game-slot {
+  flex: 0 0 calc((100% - 2rem) / 3); /* 3 per page */
+  scroll-snap-align: start;
+  display: flex;                      /* so the card inside is as tall as the slot */
+}
+.lh-game-slot > .game-card { width: 100%; }
+@media (max-width: 991.98px) {
+  .lh-game-slot { flex-basis: calc((100% - 1rem) / 2); } /* tablets: 2 per page */
+}
+@media (max-width: 575.98px) {
+  .lh-game-slot { flex-basis: 100%; }                    /* phones: 1 per page */
+}
+.lh-games-message { flex: 0 0 100%; }
+
+/* The round ‹ › buttons, like the homepage carousel's: thin blue border */
+.lh-games-nav {
+  position: absolute;
+  top: calc(50% - 1.5rem);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.5);
+  background: rgba(var(--lh-bg-rgb), 0.85);
+  color: var(--lh-accent-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.lh-games-nav:hover:not(:disabled),
+.lh-games-nav:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba(var(--lh-accent-rgb), 0.18);
+}
+.lh-games-nav:disabled { opacity: 0.35; }
+.lh-games-prev { left: -12px; }
+.lh-games-next { right: -12px; }
+@media (max-width: 575.98px) {
+  .lh-games-prev { left: 4px; }
+  .lh-games-next { right: 4px; }
+}
+
+
+/* ---------- Homepage carousel: sample cards for Top Hit Rates, Hit List, Opportunity and Role ---------- */
+
+.lh-demo-list,
+.lh-demo-slips,
+.lh-demo-opp,
+.lh-demo-tabs,
+.lh-demo-role-chart,
+.lh-demo-role-note,
+.lh-opp-insight {
+  position: relative;
+  z-index: 1;
+}
+
+/* Top Hit Rates sample: name + matchup, prop, mini bars, hit rate */
+.lh-demo-toprow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "player hit"
+    "prop   graph";
+  align-items: center;
+  gap: 0.15rem 0.75rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--lh-border);
+  font-size: 0.85rem;
+}
+.lh-demo-toprow:last-child { border-bottom: 0; }
+.lh-demo-toprow-player { grid-area: player; min-width: 0; }
+.lh-demo-toprow-prop {
+  grid-area: prop;
+  font-family: var(--lh-font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.lh-demo-toprow .lh-mini-graph { grid-area: graph; justify-self: end; width: 96px; }
+.lh-demo-toprow-hit {
+  grid-area: hit;
+  text-align: right;
+  font-family: var(--lh-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--lh-over-text);
+  white-space: nowrap;
+}
+.lh-demo-toprow-hit span { font-size: 0.85rem; opacity: 0.8; }
+.lh-demo-list { margin-bottom: 0.75rem; }
+
+/* Hit List sample: two small slip cards (the real card styles, section "Hit List") */
+.lh-demo-slips {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+.lh-demo-slip { height: auto; }
+.lh-demo-slip .lh-hitlist-leg { cursor: default; }
+
+/* Opportunity sample */
+.lh-demo-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+  border-bottom: 1px solid var(--lh-border);
+  font-family: var(--lh-font-label);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-demo-tabs span { padding-bottom: 0.45rem; }
+.lh-demo-tabs .active {
+  color: var(--lh-strong);
+  border-bottom: 2px solid var(--lh-accent);
+}
+.lh-demo-opp { gap: 0.5rem; }
+.lh-demo-opp .lh-drawer-stat { font-size: 1.35rem; }
+
+/* Role sample */
+.lh-demo-toggle {
+  display: inline-flex;
+  border: 1px solid var(--lh-border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--lh-font-label);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-demo-toggle span { padding: 0.3rem 0.6rem; }
+.lh-demo-toggle .active { background: var(--lh-fill); color: var(--lh-on-fill); }
+.lh-demo-role-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.lh-demo-role-note {
+  margin-top: 0.4rem;
+  text-align: center;
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  color: var(--lh-muted);
+}
+
+/* The sample cards' buttons are links now */
+a.lh-demo-button {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+a.lh-demo-button:hover,
+a.lh-demo-button:focus-visible {
+  color: #fff;
+  filter: brightness(1.12);
+}
+
+
+/* ---------- Player page: Shot Chart card ---------- */
+
+.lh-shot-wrap { position: relative; }
+.lh-shot-court {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Thin, muted court lines */
+.lh-court-lines path,
+.lh-court-lines circle {
+  fill: none;
+  stroke: rgba(var(--lh-line-rgb), 0.35);
+  stroke-width: 1.5;
+}
+/* Zones: a light tint of the over / under / push color plus a thin outline of the same color */
+.lh-shot-zone { cursor: pointer; outline: none; }
+.lh-shot-zone > * {
+  fill-opacity: 0.25;
+  stroke-width: 1.5;
+  transition: fill-opacity 0.15s ease;
+}
+.lh-shot-zone:hover > *,
+.lh-shot-zone:focus-visible > * { fill-opacity: 0.4; }
+.lh-shot-zone.is-over > *    { fill: var(--lh-over);  stroke: var(--lh-over); }
+.lh-shot-zone.is-under > *   { fill: var(--lh-under); stroke: var(--lh-under); }
+.lh-shot-zone.is-neutral > * { fill: var(--lh-push);  stroke: var(--lh-push); }
+.lh-shot-pct,
+.lh-shot-made {
+  text-anchor: middle;
+  pointer-events: none; /* hovering the numbers still hovers the zone under them */
+}
+.lh-shot-pct {
+  fill: var(--lh-text);
+  font-family: var(--lh-font-display);
+  font-weight: 700;
+}
+.lh-shot-made {
+  fill: var(--lh-muted);
+  font-family: var(--lh-font-label);
+}
+
+/* Shot diet: one stacked bar, same colors at full strength */
+.lh-diet {
+  display: flex;
+  height: 2.6rem;
+  border-radius: 8px;
+  overflow: hidden;
+  gap: 2px;
+}
+.lh-diet-seg {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  font-size: 0.62rem;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.lh-diet-seg strong { font-family: var(--lh-font-label); font-size: 0.72rem; }
+.lh-diet-seg.is-over    { background: var(--lh-over); }
+.lh-diet-seg.is-under   { background: var(--lh-under); }
+.lh-diet-seg.is-neutral { background: var(--lh-push); }
+.lh-shot-legend {
+  margin-top: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--lh-muted);
+}
+
+
+/* Player page: three equal cards (With / Without, Opportunity, Role) at one-third width */
+.lh-ww-chips { gap: 0.4rem; }
+.lh-ww-chip { font-size: 0.8rem; }
+
+/* Player page: Zone Matchup card */
+.lh-zm-select {
+  width: auto;
+  max-width: 11rem;
+}
+.lh-zm-verdict {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+.lh-zm-pill {
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid;
+  font-family: var(--lh-font-label);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lh-zm-pill.is-over    { color: var(--lh-over-text);  border-color: var(--lh-over);  background: rgba(var(--lh-over-rgb), 0.15); }
+.lh-zm-pill.is-under   { color: var(--lh-under-text); border-color: var(--lh-under); background: rgba(var(--lh-under-rgb), 0.15); }
+.lh-zm-pill.is-neutral { color: var(--lh-text);       border-color: var(--lh-push);  background: rgba(var(--lh-push-rgb), 0.15); }
+
+.lh-zm-head,
+.lh-zm-row {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 1.1fr) minmax(5.5rem, 1fr) minmax(6rem, 1fr) 2.75rem;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+.lh-zm-head {
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--lh-border);
+  font-family: var(--lh-font-label);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-zm-row {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--lh-border);
+  font-size: 0.82rem;
+}
+.lh-zm-row.is-dim { opacity: 0.45; } /* the player rarely shoots there, so it matters less */
+.lh-zm-share {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.72rem;
+}
+.lh-zm-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(var(--lh-ink-rgb), 0.08);
+  overflow: hidden;
+}
+.lh-zm-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--lh-accent-light) 0%, var(--lh-accent) 100%);
+}
+.lh-zm-allowed { font-family: var(--lh-font-label); font-size: 0.75rem; white-space: nowrap; }
+.lh-zm-allowed.is-over    { color: var(--lh-over-text); }
+.lh-zm-allowed.is-under   { color: var(--lh-under-text); }
+.lh-zm-allowed.is-neutral { color: var(--lh-muted); }
+.lh-zm-rank {
+  justify-self: end;
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--lh-push);
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  color: var(--lh-muted);
+  cursor: help;
+}
+.lh-zm-rank.is-over  { border-color: var(--lh-over);  color: var(--lh-over-text); }
+.lh-zm-rank.is-under { border-color: var(--lh-under); color: var(--lh-under-text); }
+
+/* ---------- Game page: Matchup Info card ---------- */
+
+.lh-mi-top {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+.lh-mi-top i { color: var(--lh-accent-light); margin-right: 0.25rem; }
+.lh-mi-teams,
+.lh-mi-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+.lh-mi-teams {
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--lh-border);
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--lh-muted);
+}
+.lh-mi-teams span:first-child,
+.lh-mi-away { text-align: right; }
+.lh-mi-teams span:last-child,
+.lh-mi-home { text-align: left; }
+.lh-mi-row {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--lh-border);
+  font-size: 0.82rem;
+}
+.lh-mi-label {
+  text-align: center;
+  font-family: var(--lh-font-label);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-mi-note { display: block; font-size: 0.5rem; color: var(--lh-accent-light); }
+.lh-mi-dots { display: inline-flex; gap: 3px; vertical-align: middle; }
+.lh-mi-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+.lh-mi-dot.is-win  { background: var(--lh-over); }
+.lh-mi-dot.is-loss { background: var(--lh-under); }
+.lh-mi-record { font-family: var(--lh-font-label); font-size: 0.72rem; margin-left: 0.2rem; }
+.lh-mi-b2b {
+  display: inline-block;
+  padding: 0 0.35rem;
+  border: 1px solid var(--lh-under);
+  border-radius: 6px;
+  font-family: var(--lh-font-label);
+  font-size: 0.6rem;
+  color: var(--lh-under-text);
+}
+.lh-mi-bottom {
+  margin-top: 0.6rem;
+  text-align: center;
+  font-size: 0.82rem;
+}
+.lh-mi-bottom .lh-label { margin-right: 0.4rem; }
+.lh-mi-bottom .lh-mi-note { display: inline; margin-left: 0.3rem; font-size: 0.65rem; }
+
+/* "View matchup details" button on the Matchup Info card: the chevron flips when the panel is open */
+.lh-mi-toggle {
+  font-family: var(--lh-font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lh-mi-chevron { display: inline-block; transition: transform 0.2s ease; }
+.lh-mi-toggle[aria-expanded="true"] .lh-mi-chevron { transform: rotate(180deg); }
+
+/* ---------- Game page: Team Comparison panel (butterfly bars) ---------- */
+
+.lh-tc-teams {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.25rem 0.4rem;
+  border-bottom: 1px solid var(--lh-border);
+  font-family: var(--lh-font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.lh-tc-grid {
+  display: grid;
+  grid-template-columns: 1fr;               /* phones: one column of 12 */
+  column-gap: 2rem;
+}
+@media (min-width: 992px) {
+  .lh-tc-grid { grid-template-columns: 1fr 1fr; } /* wide screens: two columns of 6 */
+}
+/* [away value + rank] [away bar <-] [label] [-> home bar] [rank + home value] */
+.lh-tc-row {
+  display: grid;
+  grid-template-columns: minmax(4.6rem, auto) minmax(0, 1fr) 4.2rem minmax(0, 1fr) minmax(4.6rem, auto);
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--lh-border);
+  font-size: 0.8rem;
+}
+.lh-tc-val {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.lh-tc-val.is-away { justify-content: flex-end; }
+.lh-tc-val.is-home { justify-content: flex-start; }
+.lh-tc-label {
+  text-align: center;
+  font-family: var(--lh-font-label);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-tc-bar {
+  display: flex;
+  height: 0.7rem;
+  border-radius: 4px;
+  background: rgba(var(--lh-ink-rgb), 0.05);
+}
+.lh-tc-bar.is-away { justify-content: flex-end; } /* grows LEFT from the center */
+.lh-tc-bar.is-home { justify-content: flex-start; } /* grows RIGHT from the center */
+.lh-tc-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+}
+.lh-tc-bar > .is-over    { background: var(--lh-over); }
+.lh-tc-bar > .is-under   { background: var(--lh-under); }
+.lh-tc-bar > .is-neutral { background: var(--lh-push); }
+.lh-tc-rank {
+  padding: 0 0.35rem;
+  border: 1px solid var(--lh-push);
+  border-radius: 6px;
+  font-size: 0.62rem;
+  color: var(--lh-muted);
+  cursor: help;
+}
+.lh-tc-rank.is-over  { border-color: var(--lh-over);  color: var(--lh-over-text); }
+.lh-tc-rank.is-under { border-color: var(--lh-under); color: var(--lh-under-text); }
+
+/* Game header card: the Last 5 dots under each team's name */
+.lh-hdr-form {
+  margin-top: 0.35rem;
+  min-height: 1rem;
+  font-size: 0.8rem;
+}
+
+
+/* "How to read this": a small muted link that expands a short explanation */
+.lh-explain { margin-top: 1rem; }
+.lh-explain-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--lh-muted);
+  font-size: 0.75rem;
+}
+.lh-explain-toggle:hover,
+.lh-explain-toggle:focus-visible { color: var(--lh-accent-light); text-decoration: underline; }
+.lh-explain-toggle[aria-expanded="true"] .lh-mi-chevron { transform: rotate(180deg); }
+.lh-explain-text {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--lh-muted);
+}
+
+/* Schedule page game cards: "Quick look" toggle and its expanded details */
+.lh-games-track { align-items: flex-start; } /* opening one card doesn't stretch the others */
+.lh-ql { position: relative; z-index: 2; padding: 0 1rem 0.75rem; text-align: center; } /* above the card's click-through link */
+.lh-ql-body {
+  margin-top: 0.6rem;
+  text-align: left;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--lh-text);
+}
+.lh-ql-body .lh-label { margin-right: 0.35rem; }
+.lh-ql-injury { padding-left: 0.5rem; }
+.lh-ql-injury strong { font-family: var(--lh-font-label); font-size: 0.7rem; margin-right: 0.3rem; }
+
+/* Player page: Injury report card (sidebar, under the Players card) */
+.lh-injury-team {
+  padding: 0.6rem 1rem 0.3rem;
+  border-top: 1px solid var(--lh-border);
+}
+.lh-injury-team:first-child { border-top: 0; }
+.lh-injury-none { padding: 0.25rem 1rem 0.6rem; }
+.lh-injury-item { padding: 0.35rem 1rem; }
+.lh-injury-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.lh-injury-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lh-inj-badge {
+  padding: 0.05rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--lh-font-label);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.lh-inj-badge.is-out { color: var(--lh-out); background: rgba(var(--lh-out-rgb), 0.12); }   /* out: red */
+.lh-inj-badge.is-dtd { color: var(--lh-dtd); background: rgba(var(--lh-dtd-rgb), 0.12); }  /* day-to-day: yellow */
+.lh-inj-badge.is-q   { color: var(--lh-q); background: rgba(var(--lh-q-rgb), 0.1); }  /* questionable: light grey */
+.lh-injury-desc { margin-top: 0.4rem; }
+.lh-injury-back {
+  margin: 0.25rem 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--lh-text);
+}
+
+
+/* ---------- Research mode ---------- */
+
+/* One rule: everything about betting lines carries "lines-only", and research mode hides it. */
+.research-mode .lines-only { display: none !important; }
+
+/* The mirror image: research-only things are hidden in lines mode */
+body:not(.research-mode) .research-only { display: none !important; }
+
+/* Research mode has milestones, not lines: reaching it is the over color, missing it is neutral gray (never red) */
+.research-mode .lh-mini-bar--over  { background: var(--lh-over); }
+.research-mode .lh-mini-bar--under { background: var(--lh-push); }
+.research-mode .lh-game-log td.is-over  { color: var(--lh-over-text); }
+.research-mode .lh-game-log td.is-under,
+.research-mode .lh-game-log td.is-push  { color: var(--lh-muted); }
+
+/* The switch in the navbar and the menu */
+.lh-mode-nav {
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0.75rem 0 auto;
+  white-space: nowrap;
+}
+.lh-search + .lh-mode-nav { margin-left: 0; }
+.lh-mode-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--lh-muted);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lh-mode-link:hover,
+.lh-mode-link:focus-visible { color: var(--lh-accent-light); }
+.lh-mode-badge {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.6);
+  border-radius: 999px;
+  background: rgba(var(--lh-accent-rgb), 0.15);
+  color: var(--lh-accent-light);
+  font-family: var(--lh-font-label);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lh-mode-drawer {
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--lh-muted);
+}
+
+/* Research mode: Hot Players rows (schedule page) */
+.lh-fan-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "player graph"
+    "stat   graph";
+  align-items: center;
+  gap: 0.15rem 0.75rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--lh-border);
+  color: inherit;
+  text-decoration: none;
+}
+.lh-fan-row:last-child { border-bottom: 0; }
+.lh-fan-row:hover,
+.lh-fan-row:focus-visible { background: rgba(var(--lh-accent-rgb), 0.08); color: inherit; }
+.lh-fan-player { grid-area: player; min-width: 0; }
+.lh-fan-stat { grid-area: stat; font-family: var(--lh-font-label); font-size: 0.72rem; letter-spacing: 0.02em; }
+.lh-fan-up { color: var(--lh-over-text); font-weight: 700; }
+.lh-fan-graph { grid-area: graph; }
+.lh-fan-graph .lh-mini-graph { width: 96px; }
+
+/* Two-line legs (BBQ Chicken, Brick City): name + number on top, a small detail line underneath */
+.lh-hitlist-leg.is-stacked { flex-wrap: wrap; row-gap: 0; }
+.lh-hitlist-sub {
+  flex: 0 0 100%;
+  font-size: 0.7rem;
+  color: var(--lh-muted);
+}
+.lh-hitlist-proof.is-cold { color: var(--lh-muted); } /* shooting cold: a neutral gray, not red */
+
+/* "New" badge next to the research mode link */
+.lh-new-badge {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--lh-fill);
+  color: var(--lh-on-fill);
+  font-family: var(--lh-font-label);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+
+/* ---------- Team colors ---------- */
+
+/* Matchup cards (a schedule game card, the game page header): a faint tint of each team's color, split by a thin diagonal
+   slash, plus a soft glow of each team's color along its own side. --away / --home are "r, g, b" set by js/teams.js. */
+.lh-team-card {
+  isolation: isolate; /* the tint below sits behind the card's content but above its background */
+  box-shadow: -10px 0 24px -18px rgba(var(--away), calc(0.28 * var(--lh-glow-k))), 10px 0 24px -18px rgba(var(--home), calc(0.28 * var(--lh-glow-k)));
+}
+.lh-team-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(106deg,
+    rgba(var(--away), var(--lh-team-tint)) 0%, rgba(var(--away), var(--lh-team-tint)) 49.8%,
+    rgba(var(--lh-ink-rgb), 0.16) 49.8%, rgba(var(--lh-ink-rgb), 0.16) 50.2%,   /* the thin slash */
+    rgba(var(--home), var(--lh-team-tint)) 50.2%, rgba(var(--home), var(--lh-team-tint)) 100%);
+}
+.game-card.lh-team-card:hover {
+  /* keep the team glows on hover, and add the usual blue lift glow underneath */
+  box-shadow: -10px 0 26px -16px rgba(var(--away), calc(0.35 * var(--lh-glow-k))), 10px 0 26px -16px rgba(var(--home), calc(0.35 * var(--lh-glow-k))), 0 14px 34px -14px rgba(var(--lh-accent-rgb), calc(0.18 * var(--lh-glow-k)));
+}
+
+/* The team abbreviation next to a player's name: plain display-font letters in a softened team color with a 2px team-color underline
+   (no pill, no fill). --tc = the team color as "r, g, b" (already lightened if it is very dark, e.g. BKN or SAS, and the away
+   team's secondary color where the clash rule applies); --tc-text = that color brightened for text. js/teams.js sets both. */
+.lh-team-badge {
+  display: inline-block;
+  font-family: var(--lh-font-display); /* Barlow Condensed, like the team abbreviations on the matchup cards */
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  vertical-align: middle;
+  /* the team color softened: half team color, half the site's muted text color, so it reads without glowing */
+  color: color-mix(in srgb, var(--tc-text) 50%, var(--lh-muted));
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(var(--tc), 0.7);
+  text-underline-offset: 3px;      /* a small gap below the letters */
+}
+
+/* Initials circles take the team's color (set inline); keep their text centered and crisp */
+.lh-ww-avatar { border: 1px solid transparent; }
+
+
+/* City watermarks: each team's word runs vertically along its own outer edge of a matchup card (js/teams.js, addCityWatermarks).
+   Away = left edge (reads bottom to top), home = right edge (reads top to bottom). The card keeps 3.25rem of side padding,
+   so the word never sits under the team name text. */
+.lh-team-card.has-city-marks { overflow: hidden; }
+.lh-team-card.has-city-marks > .card-body {
+  padding-left: 3.25rem !important;   /* beats Bootstrap's p-3 */
+  padding-right: 3.25rem !important;
+}
+.lh-city-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3.25rem;
+  display: flex;
+  align-items: center;       /* vertically centered */
+  justify-content: center;
+  overflow: hidden;
+  z-index: -1;               /* behind all the card's content (the card isolates its own stacking, see .lh-team-card) */
+  pointer-events: none;      /* clicks go to the card */
+  user-select: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%); /* soft fade at both ends */
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%);
+}
+.lh-city-mark.is-away { left: 0; }
+.lh-city-mark.is-home { right: 0; }
+.lh-city-text {
+  font-family: "Comico", sans-serif;
+  font-size: 24px;           /* js/teams.js refits it so the whole word fits the card height */
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: pre;          /* keep the spaces in "MOTOR CITY" */
+  writing-mode: vertical-rl; /* top to bottom */
+}
+.lh-city-mark.is-away .lh-city-text {
+  transform: rotate(180deg); /* bottom to top */
+  color: rgba(var(--away), var(--lh-city-alpha));
+}
+.lh-city-mark.is-home .lh-city-text { color: rgba(var(--home), var(--lh-city-alpha)); }
+@media (max-width: 575.98px) {
+  .lh-city-mark { width: 2.75rem; }
+  .lh-team-card.has-city-marks > .card-body { padding-left: 2.75rem !important; padding-right: 2.75rem !important; }
+}
+
+
+/* ---------- Logo shine: a soft light band sweeps across the inlined lockup on page load ----------
+   The band is a gradient rect inside the SVG, clipped to the mark and the letters (see lhLockupHtml in nav.js), so it only lights
+   the logo's own shapes. 3 sweeps of 1s with 1.5s between them (one 2.5s cycle: sweep in the first 40%, then it waits off the
+   right edge), then it stops. Hidden for reduced motion. */
+.lh-logo-band {
+  transform: translateX(0) skewX(-20deg);
+  animation: lh-logo-shine 2.5s ease-out 3;
+  pointer-events: none;
+}
+@keyframes lh-logo-shine {
+  0%   { transform: translateX(0) skewX(-20deg); }
+  40%  { transform: translateX(1150px) skewX(-20deg); }
+  100% { transform: translateX(1150px) skewX(-20deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-logo-band { display: none; }
+}
+
+
+/* ---------- Schedule page on phones (under 576px). Desktop and tablet are not touched by anything below. ---------- */
+
+/* "Show more" under a list that js/moreRows.js limits to 3 rows on phones; the link itself only exists on phones */
+.lh-more-link { display: none; }
+@media (max-width: 575.98px) {
+  .lh-schedule-page { overflow-x: clip; } /* nothing here may scroll the whole page sideways */
+
+  /* 1. Game cards: a horizontal swipe row, 85% wide cards so the next one peeks in, snapping into place. The ‹ › buttons go. */
+  .lh-schedule-page .lh-game-slot { flex-basis: 85%; scroll-snap-align: start; }
+  .lh-schedule-page .lh-games-nav { display: none; }
+  .lh-schedule-page .lh-games-track { gap: 0.75rem; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+
+  /* 2. Smaller cards (about 150px): smaller abbreviations, tighter padding. Side padding stays for the city watermarks. */
+  .lh-schedule-page .game-card .lh-display { font-size: 1.6rem; }
+  .lh-schedule-page .game-card .small { font-size: 0.7rem; }
+  .lh-schedule-page .game-card.lh-team-card > .card-body { padding-top: 0.5rem !important; padding-bottom: 0.35rem !important; }
+  .lh-schedule-page .game-card .card-body .lh-label { margin-bottom: 0.15rem !important; }
+  .lh-schedule-page .lh-ql { padding: 0 0.75rem 0.25rem; }
+  .lh-schedule-page .game-card .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* 3. Top Hit Rates / Hot Players: rows 4 and up wait behind "Show more". Hit List / Streaks: cards 3 and up do. */
+  .lh-clip:not(.is-expanded) .lh-more-row { display: none; }
+  .lh-more-link {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--lh-accent-light);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  /* 4. Thumb-sized: buttons, tabs and links are at least 40px tall */
+  .lh-schedule-page .lh-tabs .nav-link,
+  .lh-schedule-page .lh-mi-toggle,
+  .lh-schedule-page .lh-hitlist-link,
+  .lh-schedule-page .lh-explain-toggle,
+  .lh-schedule-page .btn-ghost { min-height: 40px; }
+  .lh-schedule-page .lh-tabs .nav-link { display: flex; align-items: center; }
+  .lh-schedule-page .lh-hitlist-share { min-width: 40px; min-height: 40px; }
+  .lh-schedule-page .lh-hitlist-head { min-height: 40px; }
+}
+
+
+/* ---------- Schedule page: the Hit List / Streaks shelf ----------
+   A section heading (no outer card), then every category card in ONE row that scrolls sideways by itself: about 3 cards show
+   on desktop with the next one peeking in, 85% of the screen on phones. Only the shelf scrolls, never the page. */
+.lh-shelf { min-width: 0; }
+.lh-shelf-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.lh-shelf-arrows { gap: 0.5rem; }      /* shown on desktop only (d-none d-lg-flex in the markup) */
+.lh-shelf-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.5);
+  background: rgba(var(--lh-bg-rgb), 0.85);
+  color: var(--lh-accent-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.lh-shelf-arrow:hover:not(:disabled),
+.lh-shelf-arrow:focus-visible { box-shadow: 0 0 0 0.2rem rgba(var(--lh-accent-rgb), 0.18); }
+.lh-shelf-arrow:disabled { opacity: 0.35; }
+.lh-shelf-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;               /* hidden scrollbar */
+  -webkit-overflow-scrolling: touch;
+  /* room for the hover lift and glow (a scrolling box clips whatever pokes out of it); the negative margins give the
+     space back, so the cards still line up with the heading */
+  padding: 1rem 1rem 1.75rem;
+  margin: -0.75rem -1rem -1.25rem;
+  scroll-padding-left: 1rem;           /* a snapped card lines up with the heading, not the padding */
+}
+.lh-shelf-track::-webkit-scrollbar { display: none; }
+.lh-shelf-item {
+  flex: 0 0 32%;
+  min-width: 0;
+  display: flex;                       /* the card inside is as tall as the tallest one */
+  scroll-snap-align: start;
+}
+.lh-shelf-item > .lh-hitlist-card { width: 100%; }
+@media (max-width: 1199.98px) { .lh-shelf-item { flex-basis: 40%; } }
+@media (max-width: 991.98px) { .lh-shelf-item { flex-basis: 48%; } }
+@media (max-width: 575.98px) {
+  .lh-shelf-track { gap: 0.75rem; }
+  .lh-shelf-item { flex-basis: 85%; }
+}
+
+/* Desktop only (992px and up, where the ← → buttons show): the shelf's title and description are centered, buttons stay on the right */
+@media (min-width: 992px) {
+  .lh-shelf-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+  .lh-shelf-head > div:first-child { grid-column: 2; text-align: center; }
+  .lh-shelf-head .lh-top-title { justify-content: center; } /* the title is a flex row with its icon */
+  .lh-shelf-arrows { grid-column: 3; justify-self: end; }
+}
+@media (min-width: 992px) {
+  .lh-search-slot .lh-search { margin-left: auto; margin-right: auto; } /* the Schedule page's search bar is centered too */
+}
+
+
+/* ---------- Phone bottom tab bar (under 768px; nav.js builds it) ----------
+   Fixed to the bottom: Today, Hit List, Search, Players, More. "Search" and "More" open bottom sheets. The top bar keeps just
+   the logo. Desktop and tablet never show any of this. */
+.lh-tabbar { display: none; }
+@media (max-width: 767.98px) {
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); } /* content never hides behind the bar */
+
+  .lh-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1030;
+    display: flex;
+    background: rgba(var(--lh-bg-rgb), 0.96);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--lh-border);
+    padding-bottom: env(safe-area-inset-bottom); /* the phone's home indicator area */
+  }
+  .lh-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0.35rem 0;
+    border: 0;
+    background: none;
+    color: var(--lh-muted);
+    font-family: var(--lh-font-label);
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+  }
+  .lh-tab i { font-size: 1.25rem; line-height: 1; }
+  .lh-tab.is-active { color: var(--lh-accent-light); box-shadow: inset 0 2px 0 var(--lh-accent); } /* site accent */
+
+  /* The top bar: just the logo (the search, menu button and research link live in the tab bar now) */
+  .lh-navbar .lh-nav-toggle,
+  .lh-navbar .lh-search,
+  .lh-navbar .lh-mode-nav { display: none !important; }
+}
+
+/* The two bottom sheets (Bootstrap offcanvas from the bottom) */
+.lh-sheet {
+  --bs-offcanvas-height: auto;
+  --bs-offcanvas-bg: var(--lh-bg);
+  --bs-offcanvas-border-color: var(--lh-border);
+  max-height: 80vh;
+  border-radius: 16px 16px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.lh-sheet .lh-search-results { position: static; margin-top: 0.5rem; box-shadow: none; } /* the results list sits in the page flow here */
+.lh-sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 56px;
+  padding: 0.6rem 0.25rem;
+  border-bottom: 1px solid var(--lh-border);
+  color: var(--lh-text);
+  text-decoration: none;
+}
+.lh-sheet-row small { display: block; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-sheet-row.is-soon { opacity: 0.6; }
+.lh-soon-badge {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--lh-border);
+  border-radius: 999px;
+  font-family: var(--lh-font-label);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+  white-space: nowrap;
+}
+@media (min-width: 768px) {
+  .lh-sheet { display: none; } /* wider screens never use the sheets */
+}
+
+
+/* ---------- Light / dark toggle and light-theme touch-ups ---------- */
+
+/* The sun / moon button in the navbar (desktop; phones use the switch in the More sheet) */
+.lh-theme-toggle {
+  width: 36px;
+  height: 36px;
+  margin: 0 0.75rem 0 0;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--lh-border);
+  border-radius: 50%;
+  background: rgba(var(--lh-ink-rgb), 0.02);
+  color: var(--lh-muted);
+}
+.lh-theme-toggle:hover,
+.lh-theme-toggle:focus-visible { color: var(--lh-accent-light); border-color: rgba(var(--lh-accent-rgb), 0.5); }
+.lh-mode-nav + .lh-theme-toggle { margin-left: 0; }
+.lh-search + .lh-theme-toggle { margin-left: 0; }
+@media (max-width: 767.98px) {
+  .lh-navbar .lh-theme-toggle { display: none !important; }
+}
+
+/* ---------- Matchup card abbreviations (BOS, DET...): one gray shade each, a set per theme, no inline styles ----------
+   The shade (0 = strongest) is picked by api.js (getNeutralTeamIndex). Dark: white to gray with a soft white glow and a hairline
+   stroke. Light: near-black to gray, no glow. */
+.lh-abbr {
+  text-shadow: 0 0 1px rgba(var(--lh-ink-rgb), 0.8), 0 0 12px rgba(var(--lh-ink-rgb), 0.12);
+  -webkit-text-stroke: 0.4px rgba(var(--lh-ink-rgb), 0.35);
+}
+.lh-abbr-0 { color: #FFFFFF; } .lh-abbr-1 { color: #F3F4F6; } .lh-abbr-2 { color: #E5E7EB; } .lh-abbr-3 { color: #D1D5DB; } .lh-abbr-4 { color: #C0C7D1; }
+.lh-abbr-5 { color: #AAB3BE; } .lh-abbr-6 { color: #919BA9; } .lh-abbr-7 { color: #7A8394; } .lh-abbr-8 { color: #626C7A; } .lh-abbr-9 { color: #4B5563; }
+[data-bs-theme="light"] .lh-abbr { text-shadow: none; -webkit-text-stroke: 0; }
+[data-bs-theme="light"] .lh-abbr-0 { color: #0F0E17; } [data-bs-theme="light"] .lh-abbr-1 { color: #1B1A26; } [data-bs-theme="light"] .lh-abbr-2 { color: #262532; }
+[data-bs-theme="light"] .lh-abbr-3 { color: #31303F; } [data-bs-theme="light"] .lh-abbr-4 { color: #3C3B4C; } [data-bs-theme="light"] .lh-abbr-5 { color: #484758; }
+[data-bs-theme="light"] .lh-abbr-6 { color: #545364; } [data-bs-theme="light"] .lh-abbr-7 { color: #605F70; } [data-bs-theme="light"] .lh-abbr-8 { color: #6C6B7C; }
+[data-bs-theme="light"] .lh-abbr-9 { color: #78778A; }
+
+/* The homepage headline's first words ("HUNT THE"): the strongest text color of the theme */
+.text-strong { color: var(--lh-strong) !important; }
+
+/* The sample Role chart on the homepage (inline SVG): colors from the theme */
+.lh-demo-role-avg { stroke: rgba(var(--lh-line-rgb), 0.55); }
+.lh-demo-role-label { fill: var(--lh-muted); }
+.lh-demo-role-line { stroke: var(--lh-accent); }
+.lh-demo-role-dots { fill: var(--lh-accent); }
+
+
+
+/* ---------- League switcher (NBA | NFL) and the NFL "coming soon" page ---------- */
+
+/* Pill tabs: the same segmented pills as the window toggles (.lh-window-toggle). Navbar: left side, right after the logo. */
+.lh-league { margin-left: 0.25rem; } /* the search / mode link / theme button after it push themselves to the right */
+.lh-league .btn,
+.lh-league-sheet .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; }
+.lh-league-sheet .btn { flex: 1 1 0; min-height: 44px; }
+.lh-soon-tag {
+  padding: 0 0.35rem;
+  border: 1px solid var(--lh-border);
+  border-radius: 999px;
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  color: var(--lh-muted);
+}
+
+.lh-nfl-card { max-width: 640px; }
+.lh-nfl-icon { font-size: 3rem; line-height: 1; margin-bottom: 0.75rem; }
+.lh-nfl-headline {
+  margin: 0 0 0.5rem;
+  font-family: "Comico", var(--lh-font-heading), sans-serif;
+  font-size: clamp(2.4rem, 1.6rem + 3.5vw, 3.8rem);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--lh-strong);
+}
+.lh-nfl-sub { margin-bottom: 1.75rem; font-size: 1.05rem; color: var(--lh-muted); }
+.lh-nfl-list { max-width: 30rem; margin: 0 auto 1.5rem; padding: 0; list-style: none; }
+.lh-nfl-list li {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--lh-border);
+}
+.lh-nfl-list li:last-child { border-bottom: 0; }
+.lh-nfl-list i { margin-top: 0.15rem; font-size: 1.2rem; color: var(--lh-accent-light); }
+.lh-nfl-list strong { display: block; color: var(--lh-strong); }
+.lh-nfl-list span { font-size: 0.9rem; color: var(--lh-muted); }
+
+/* On the NFL page the NBA-only extras stay out of the way: the research mode switch and the NBA player search.
+   (The phone tab bar keeps its tabs, which all lead to the NBA pages.) */
+.lh-nfl-page .lh-mode-nav,
+.lh-nfl-page .lh-mode-drawer,
+.lh-nfl-page .lh-mode-row,
+.lh-nfl-page .lh-navbar .lh-search { display: none !important; }
+
+
+/* City watermark shine: a soft band of light sweeps along each word. The same technique as .lh-shine (a copy of the text,
+   clipped to the letters, with a moving gradient), but along the vertical word and in a tint of the team color: a lighter tint
+   on the dark theme, the team color itself (a bit stronger) on the light theme. One sweep takes 2s (slow enough to follow), then it rests 3s
+   (a 5s cycle: the sweep is the first 40%), repeating while the card is on screen (.is-shining, set in js/teams.js).
+   The home word starts 0.3s after the away word. The word itself never changes. */
+.lh-city-mark.is-away { --city-rgb: var(--away); }
+.lh-city-mark.is-home { --city-rgb: var(--home); }
+.lh-city-text { position: relative; }
+.lh-city-text::before {
+  content: attr(data-text);
+  content: attr(data-text) / "";   /* read by no screen reader, where the browser supports it */
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  --city-band: color-mix(in srgb, color-mix(in srgb, rgb(var(--city-rgb)) var(--lh-city-shine-keep), white) var(--lh-city-shine-alpha), transparent);
+  background: linear-gradient(172deg, transparent 36%, var(--city-band) 47%, var(--city-band) 53%, transparent 64%) no-repeat;
+  background-size: 100% 250%;
+  background-position: 0 150%;     /* parked above the word */
+  -webkit-background-clip: text;
+  background-clip: text;
+  pointer-events: none;
+  white-space: pre;
+}
+.lh-team-card.is-shining .lh-city-mark.is-away .lh-city-text::before { animation: lh-city-sweep 5s linear infinite; }
+.lh-team-card.is-shining .lh-city-mark.is-home .lh-city-text::before { animation: lh-city-sweep 5s linear 0.3s infinite; }
+@keyframes lh-city-sweep {
+  0%      { background-position: 0 150%;  animation-timing-function: ease-out; }
+  40%     { background-position: 0 -50%; }   /* the 2s sweep... */
+  100%    { background-position: 0 -50%; }   /* ...then 3s resting below the word */
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-city-text::before { display: none; } /* no sweep: the word stays still */
+}
+
+
+/* ---------- Marquee strip (TEST, schedule page): a thin scrolling ticker under the navbar ---------- */
+.lh-marquee {
+  height: 30px;
+  margin: -1rem 0 1rem;              /* sits right under the navbar (which has its own bottom margin) */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--lh-border);
+  border-bottom: 1px solid var(--lh-border);
+  background: rgba(var(--lh-ink-rgb), 0.02);
+  font-family: var(--lh-font-label);
+  font-size: 0.72rem;
+  color: var(--lh-muted);            /* gray monospace */
+  white-space: nowrap;
+}
+.lh-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: lh-marquee-scroll 60s linear infinite;   /* slow and continuous */
+}
+.lh-marquee:hover .lh-marquee-track { animation-play-state: paused; }
+.lh-marquee-group { display: flex; flex-shrink: 0; align-items: center; }
+.lh-marquee-item::after { content: "•"; margin: 0 1.1rem; opacity: 0.45; } /* the divider between items (and between the two groups) */
+.lh-marquee-hot { color: var(--lh-over-text); }     /* the streak item (the site's over / green) */
+@keyframes lh-marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }             /* exactly one group: then it jumps back to 0, which looks identical */
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-marquee { overflow-x: auto; scrollbar-width: none; }  /* no scrolling by itself: drag / swipe to read */
+  .lh-marquee-track { animation: none; }
+  .lh-marquee-group[aria-hidden="true"] { display: none; }
+}
+
+
+/* ---------- Hit List shelf cards: lift + faint glow on hover (and keyboard focus) ----------
+   Only the hovered card reacts. Only on devices that can hover, so a tap on a phone never leaves a card stuck mid-lift.
+   Reduced motion keeps the glow and skips the lift and scale. The shadow / border colors are tokens (--lh-lift-*): a faint
+   white glow on the dark theme, a soft blue-gray shadow on the light theme. */
+.lh-shelf-item > .lh-hitlist-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+@media (hover: hover) {
+  .lh-shelf-item > .lh-hitlist-card:hover,
+  .lh-shelf-item > .lh-hitlist-card:has(:focus-visible) {
+    position: relative;
+    z-index: 1;                         /* above its neighbours while it grows */
+    transform: translateY(-4px) scale(1.02);
+    border-color: var(--lh-lift-border);
+    box-shadow: var(--lh-lift-shadow);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  .lh-shelf-item > .lh-hitlist-card:hover,
+  .lh-shelf-item > .lh-hitlist-card:has(:focus-visible) { transform: none; }
+}
+
+/* ---------- Top Hit Rates (and Hot Players) rows: the same look and hover as the Hit List shelf cards ----------
+   Each row is a small card: the shelf cards' faint tint and border, and on hover (hover devices only) the same lift and glow
+   (--lh-lift-shadow / --lh-lift-border) plus a hint of blue in its background. Reduced motion keeps the glow, skips the lift. */
+#top-hit-rates .lh-top-row,
+#hotPlayers .lh-fan-row {
+  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--lh-border);   /* (replaces the old thin divider between rows) */
+  border-radius: 12px;
+  background: rgba(var(--lh-ink-rgb), 0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+#top-hit-rates .lh-top-row:last-child,
+#hotPlayers .lh-fan-row:last-child { margin-bottom: 0; border-bottom: 1px solid var(--lh-border); }
+@media (hover: hover) {
+  #top-hit-rates a.lh-top-row:hover,
+  #top-hit-rates a.lh-top-row:focus-visible,
+  #hotPlayers a.lh-fan-row:hover,
+  #hotPlayers a.lh-fan-row:focus-visible {
+    position: relative;
+    z-index: 1;                          /* above the rows around it while it lifts */
+    transform: translateY(-4px) scale(1.01);
+    border-color: var(--lh-lift-border);
+    box-shadow: var(--lh-lift-shadow);
+    background: rgba(var(--lh-accent-rgb), 0.06); /* the hint of blue */
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  #top-hit-rates a.lh-top-row:hover,
+  #top-hit-rates a.lh-top-row:focus-visible,
+  #hotPlayers a.lh-fan-row:hover,
+  #hotPlayers a.lh-fan-row:focus-visible { transform: none; }
+}
+
+/* The Top Hit Rates card (and Hot Players) itself, in the Hit List shelf cards' style: the same faint tint, border, corner radius
+   and hover glow (--lh-lift-shadow / --lh-lift-border). The big card only glows (no lift): its rows already lift on hover. */
+#top-hit-rates.card,
+#top-hit-rates > .card,
+#hotPlayers.card {
+  --bs-card-bg: rgba(var(--lh-ink-rgb), 0.02);
+  --bs-card-border-radius: 12px;
+  --bs-card-inner-border-radius: 11px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+@media (hover: hover) {
+  #top-hit-rates.card:hover,
+  #top-hit-rates > .card:hover,
+  #hotPlayers.card:hover {
+    border-color: var(--lh-lift-border);
+    box-shadow: var(--lh-lift-shadow);
+  }
+}
+
+
+/* ---------- Schedule page: Top Hit Rates rows built around the prop and its hit rate (+ window toggle, Filter and Sort) ---------- */
+.lh-top-controls {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.lh-top-controls[hidden], .lh-top-chips[hidden] { display: none; }
+.lh-top-controls .dropdown { position: relative; }
+.lh-top-ctl { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 999px; }
+
+/* Filter / Sort dropdowns (Bootstrap dropdown menus, anchored under their own button): frosted glass in the card's colors.
+   The card background (--lh-bg-rgb) at 78%, blurred behind; browsers without backdrop-filter get it fully opaque. */
+.lh-top-panel {
+  --bs-dropdown-min-width: 16rem;
+  --bs-dropdown-padding-x: 0.75rem;
+  --bs-dropdown-padding-y: 0.75rem;
+  --bs-dropdown-color: var(--lh-strong);
+  --bs-dropdown-border-color: var(--lh-border);
+  --bs-dropdown-border-radius: 12px;
+  --bs-dropdown-box-shadow: var(--lh-lift-shadow);
+  --bs-dropdown-zindex: 1050;
+  min-width: 16rem;
+  background-color: rgb(var(--lh-bg-rgb));   /* the card's own (page) background, not the old navy surface */
+  border: 1px solid var(--lh-border);
+  border-radius: 12px;
+  box-shadow: var(--lh-lift-shadow);
+}
+@supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
+  .lh-top-panel,
+  #topHitRatesSheet {
+    background-color: rgba(var(--lh-bg-rgb), 0.78);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+#topHitRatesSheet { border-top: 1px solid var(--lh-border); }
+.lh-top-field { margin-bottom: 0.75rem; }
+.lh-top-field:last-child { margin-bottom: 0; }
+.lh-top-field .lh-label { display: block; margin-bottom: 0.25rem; }
+.lh-top-field .form-select {
+  color: var(--lh-strong);
+  background-color: rgba(var(--lh-ink-rgb), 0.04);
+  border-color: var(--lh-border);
+}
+.lh-top-opts { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.lh-top-opts--list { flex-direction: column; }
+.lh-top-opt {
+  flex: 1 1 auto;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--lh-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--lh-text, inherit);
+  font-size: 0.85rem;
+  text-align: center;
+}
+.lh-top-opts--list .lh-top-opt { text-align: left; border-radius: 8px; padding: 0.5rem 0.75rem; }
+.lh-top-opt.active {
+  color: var(--lh-on-fill);
+  background: var(--lh-fill);
+  border-color: rgba(var(--lh-accent-rgb), 0.45);
+}
+.lh-sheet .lh-top-field { margin-bottom: 1rem; }
+.lh-sheet .lh-top-opt { min-height: 40px; }
+
+/* Removable filter chips */
+.lh-top-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-bottom: 0.75rem; }
+.lh-top-chip {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.5);
+  border-radius: 999px;
+  background: rgba(var(--lh-accent-rgb), 0.12);
+  color: var(--lh-strong);
+  font-size: 0.78rem;
+}
+.lh-top-chip span { opacity: 0.7; margin-left: 0.15rem; }
+.lh-top-clear { border: 0; background: none; padding: 0 0.25rem; color: var(--lh-accent-light); font-size: 0.78rem; text-decoration: underline; }
+
+/* Filter / Sort menus: the Hide injured switch uses the accent, not Bootstrap blue */
+.lh-top-panel .form-check-input:checked {
+  background-color: var(--lh-fill);
+  border-color: rgba(var(--lh-accent-rgb), 0.5);
+}
+.lh-top-panel .form-check-input:focus {
+  border-color: var(--lh-accent);
+  box-shadow: 0 0 0 0.2rem rgba(var(--lh-accent-rgb), 0.25);
+}
+
+/* Hover / keyboard focus on menu options: soft accent tint and slightly brighter text (no lift, no scale). Selected options keep their fill. */
+.lh-top-opt,
+.lh-top-panel .form-select {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+@media (hover: hover) {
+  .lh-top-opt:not(.active):hover,
+  .lh-top-panel .form-select:hover {
+    background-color: rgba(var(--lh-accent-rgb), 0.1);
+    color: var(--lh-strong);
+  }
+}
+.lh-top-opt:not(.active):focus-visible,
+.lh-top-panel .form-select:focus-visible {
+  background-color: rgba(var(--lh-accent-rgb), 0.1);
+  color: var(--lh-strong);
+  outline: 2px solid rgba(var(--lh-accent-rgb), 0.6);
+  outline-offset: 1px;
+}
+
+/* ---------- Top Hit Rates rows as "bet tickets" ----------
+   .lh-top-row (the link) = the lift. .lh-ticket inside it = the ticket: border, card tint, and a mask that punches a half-circle notch
+   into the top and bottom edges (phones: left and right edges) where the dashed perforation meets them. The mask shows the card's
+   background behind the ticket; a thin ring drawn in the border color outlines each notch. */
+#top-hit-rates a.lh-top-row.lh-top-row--v2 {
+  --tk-stub: 160px;      /* stub width (desktop) */
+  --tk-stub-h: 3.6rem;   /* stub height (phones) */
+  --tk-r: 8px;           /* notch radius */
+  --tk-line: var(--lh-border);
+  --tk-fill: rgba(var(--lh-ink-rgb), 0.02);
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+}
+.lh-ticket {
+  --tk-n1x: calc(var(--tk-stub) + 0.5px); --tk-n1y: 0;
+  --tk-n2x: calc(var(--tk-stub) + 0.5px); --tk-n2y: 100%;
+  display: grid;
+  grid-template-columns: var(--tk-stub) minmax(0, 1fr);
+  align-items: stretch;
+  border: 1px solid var(--tk-line);
+  border-radius: 12px;
+  background-origin: border-box;
+  background-image:
+    radial-gradient(circle at var(--tk-n1x) var(--tk-n1y), transparent var(--tk-r), var(--tk-line) var(--tk-r), var(--tk-line) calc(var(--tk-r) + 1px), transparent calc(var(--tk-r) + 1px)),
+    radial-gradient(circle at var(--tk-n2x) var(--tk-n2y), transparent var(--tk-r), var(--tk-line) var(--tk-r), var(--tk-line) calc(var(--tk-r) + 1px), transparent calc(var(--tk-r) + 1px)),
+    linear-gradient(var(--tk-fill), var(--tk-fill));
+  -webkit-mask-image:
+    radial-gradient(circle at var(--tk-n1x) var(--tk-n1y), transparent var(--tk-r), #000 var(--tk-r)),
+    radial-gradient(circle at var(--tk-n2x) var(--tk-n2y), transparent var(--tk-r), #000 var(--tk-r));
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(circle at var(--tk-n1x) var(--tk-n1y), transparent var(--tk-r), #000 var(--tk-r)),
+    radial-gradient(circle at var(--tk-n2x) var(--tk-n2y), transparent var(--tk-r), #000 var(--tk-r));
+  mask-composite: intersect;
+  transition: background-color 0.2s ease;
+}
+
+/* Left stub: side + line + prop, then the hit rate */
+.lh-ticket-stub {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border-right: 1px dashed var(--tk-line);
+}
+.lh-top-row--v2 .lh-top-prop {
+  font-family: var(--lh-font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--lh-strong);
+}
+.lh-top-side { font-weight: 700; }
+.lh-top-side--over  { color: var(--lh-over-text); }
+.lh-top-side--under { color: var(--lh-under-text); }
+.lh-top-row--v2 .lh-top-rate {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-family: var(--lh-font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--lh-strong);
+  white-space: nowrap;
+}
+.lh-top-row--v2 .lh-top-rate span {
+  font-family: var(--lh-font-label);
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--lh-muted);
+}
+.lh-top-row--v2 .lh-top-rate.lh-hit--good { color: var(--lh-over-text); }
+.lh-top-row--v2 .lh-top-rate.lh-hit--bad  { color: var(--lh-under-text); }
+
+/* Right of the perforation: player (name, then badge + matchup under it) | hit count | graph | empty reserved space.
+   Every item gets its own named area. (The old shared rules `.lh-top-player { grid-area: player }` etc. used to point at area
+   names this grid didn't have, which threw the items into stray columns on top of each other.) */
+.lh-ticket-main {
+  display: grid;
+  grid-template-columns: minmax(0, 16rem) 3rem 140px minmax(0, 1fr);
+  grid-template-areas: "player count graph .";
+  align-items: center;
+  gap: 0.25rem 1rem;
+  padding: 0.6rem 1rem;
+}
+.lh-top-row--v2 .lh-top-player {
+  grid-area: player;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.lh-top-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.25rem 0.5rem; min-width: 0; }
+.lh-top-name {
+  max-width: 100%;
+  font-size: 1.1rem; font-weight: 600; color: var(--lh-strong); opacity: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lh-top-matchup { font-size: 0.85rem; color: var(--lh-muted); }
+.lh-top-cushion { font-size: 0.8rem; font-weight: 600; color: var(--lh-over-text); }
+.lh-top-row--v2 .lh-top-graph { grid-area: graph; justify-self: start; }
+
+.lh-top-row--v2 .lh-top-graph .lh-mini-bar { max-width: 18px; }
+.lh-top-row--v2 .lh-top-count {
+  grid-area: count;
+  text-align: left;
+  font-family: var(--lh-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--lh-strong);
+}
+.lh-top-row--v2 .lh-top-count.lh-hit--good { color: var(--lh-over-text); }
+.lh-top-row--v2 .lh-top-count.lh-hit--bad  { color: var(--lh-under-text); }
+
+/* Hover / focus (desktop): the link lifts as before (rules earlier in this file); here the glow follows the notched shape
+   (drop-shadow, since a box-shadow would be cut by the mask), the border and ring brighten, and the blue hint tints the ticket. */
+@media (hover: hover) {
+  #top-hit-rates a.lh-top-row.lh-top-row--v2:hover,
+  #top-hit-rates a.lh-top-row.lh-top-row--v2:focus-visible {
+    --tk-line: var(--lh-lift-border);
+    --tk-fill: rgba(var(--lh-accent-rgb), 0.06);
+    border-color: transparent;
+    box-shadow: none;
+    background: none;
+    filter: drop-shadow(0 6px 10px rgba(var(--lh-ink-rgb), 0.12));
+  }
+}
+#top-hit-rates a.lh-top-row.lh-top-row--v2:focus-visible { outline: 2px solid rgba(var(--lh-accent-rgb), 0.6); outline-offset: 2px; }
+
+@media (max-width: 991.98px) {
+  #top-hit-rates a.lh-top-row.lh-top-row--v2 { --tk-stub: 140px; }
+  .lh-ticket-main { grid-template-columns: minmax(0, 12rem) 2.75rem 96px minmax(0, 1fr); gap: 0.25rem 0.6rem; }
+}
+
+/* Phones: the stub sits on top, the perforation runs across, the notches are on the left and right edges.
+   Below it: the player line, then the graph with the hit count next to it. */
+@media (max-width: 575.98px) {
+  .lh-ticket {
+    --tk-n1x: 0;    --tk-n1y: calc(var(--tk-stub-h) + 0.5px);
+    --tk-n2x: 100%; --tk-n2y: calc(var(--tk-stub-h) + 0.5px);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lh-ticket-stub {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    height: var(--tk-stub-h);
+    padding: 0 1rem;
+    border-right: 0;
+    border-bottom: 1px dashed var(--tk-line);
+  }
+  .lh-top-row--v2 .lh-top-prop { font-size: 0.9rem; }
+  .lh-ticket-main {
+    grid-template-columns: minmax(0, 1fr) auto 84px;
+    grid-template-areas:
+      "player player player"
+      ".      count  graph";
+    padding: 0.6rem 1rem;
+  }
+  .lh-top-row--v2 .lh-top-player { flex-direction: row; align-items: center; gap: 0.5rem; overflow: hidden; }
+  .lh-top-row--v2 .lh-top-meta { flex-wrap: nowrap; flex: 0 0 auto; }
+  .lh-top-row--v2 .lh-top-name { flex: 0 1 auto; }
+  .lh-top-row--v2 .lh-top-graph { justify-self: end; }
+  .lh-top-row--v2 .lh-top-graph .lh-mini-graph { width: 84px; }
+}
+
+
+/* ---------- Standings page (standings.html, js/standings.js) ---------- */
+.lh-div-dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--div-color, var(--lh-muted));
+}
+.lh-div-atlantic  { --div-color: var(--lh-div-atlantic); }
+.lh-div-central   { --div-color: var(--lh-div-central); }
+.lh-div-southeast { --div-color: var(--lh-div-southeast); }
+.lh-div-northwest { --div-color: var(--lh-div-northwest); }
+.lh-div-pacific   { --div-color: var(--lh-div-pacific); }
+.lh-div-southwest { --div-color: var(--lh-div-southwest); }
+
+.lh-st-heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--lh-font-heading);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--lh-strong);
+}
+
+/* Conference view: borderless rows, hairline dividers */
+.lh-st-scroll { overflow-x: auto; }
+.lh-st-table { width: max-content; min-width: 100%; }
+.lh-st-row {
+  display: grid;
+  grid-template-columns: 2rem minmax(10rem, 1fr) 4.25rem 3.25rem 3rem 3.75rem 3.75rem 3.25rem 3.25rem;
+  align-items: center;
+  gap: 0 0.5rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--lh-border);
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.15s ease;
+}
+.lh-st-row > span:not(.c-team) { text-align: right; }
+.lh-st-row .c-rank { text-align: left; color: var(--lh-muted); }
+.lh-st-row .c-team { display: flex; align-items: center; gap: 0.5rem; min-width: 0; text-align: left; }
+.lh-st-name { color: var(--lh-strong); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lh-st-head {
+  padding-top: 0.25rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+@media (hover: hover) {
+  .lh-st-row:not(.lh-st-head):hover, .lh-st-card-row:hover { background: rgba(var(--lh-accent-rgb), 0.07); }
+}
+.lh-st-streak { font-weight: 700; }
+.lh-st-streak--win  { color: var(--lh-over-text); }
+.lh-st-streak--loss { color: var(--lh-under-text); }
+
+/* Dashed play-in / out lines with a small label */
+.lh-st-sep {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.25rem;
+}
+.lh-st-sep::before, .lh-st-sep::after { content: ""; flex: 1; border-top: 1px dashed var(--lh-muted); opacity: 0.6; }
+.lh-st-sep::before { flex: 0 0 0.75rem; }
+.lh-st-sep span {
+  font-family: var(--lh-font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+
+.lh-st-legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin-top: 0.75rem; font-size: 0.8rem; color: var(--lh-muted); }
+.lh-st-legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+/* Division view: sharp little cards with a corner tab in the division color */
+.lh-st-cards { display: grid; gap: 1rem; }
+.lh-st-card {
+  position: relative;
+  padding: 0.75rem 0.9rem 0.5rem;
+  border: 1px solid var(--lh-border);
+  border-radius: 3px;
+  background: rgba(var(--lh-ink-rgb), 0.02);
+}
+.lh-st-card::before {          /* the triangle tab, top-left */
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  border-top: 22px solid var(--div-color);
+  border-right: 22px solid transparent;
+}
+.lh-st-card-title {
+  margin: 0 0 0.5rem 1rem;
+  font-family: var(--lh-font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--lh-strong);
+}
+.lh-st-card-head, .lh-st-card-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.25rem 3rem 3rem;
+  gap: 0 0.5rem;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.lh-st-card-head {
+  padding-bottom: 0.3rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-st-card-head span:not(:first-child), .lh-st-card-row span:not(:first-child) { text-align: right; }
+.lh-st-card-row { padding: 0.4rem 0.25rem; margin: 0 -0.25rem; border-top: 1px solid var(--lh-border); transition: background-color 0.15s ease; }
+
+/* Phones: stacked conferences. Rank, team, W-L, GB and Streak come first; PCT, Home, Road and L10 follow after a sideways scroll. */
+@media (max-width: 575.98px) {
+  .lh-st-row {
+    grid-template-columns: 1.5rem 9rem 3.75rem 2.5rem 2.75rem 3rem 3.5rem 3.5rem 3rem;
+  }
+  .lh-st-row .c-rank   { order: 1; }
+  .lh-st-row .c-team   { order: 2; }
+  .lh-st-row .c-wl     { order: 3; }
+  .lh-st-row .c-gb     { order: 4; }
+  .lh-st-row .c-streak { order: 5; }
+  .lh-st-row .c-pct    { order: 6; }
+  .lh-st-row .c-home   { order: 7; }
+  .lh-st-row .c-road   { order: 8; }
+  .lh-st-row .c-l10    { order: 9; }
+}
+
+/* Discord links: navbar icon button (shares the theme toggle's look), and the muted note under the Hit List */
+.lh-discord-btn { margin-right: 0.5rem; text-decoration: none; }
+.lh-discord-btn:hover { color: var(--lh-accent-light); }
+.lh-discord-note { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.lh-discord-note:hover { color: var(--lh-accent-light); }
+
+/* Switches and checkboxes everywhere (Research mode, Light mode, Hide injured): indigo fill, not Bootstrap blue */
+.form-check-input:checked {
+  background-color: var(--lh-fill);
+  border-color: rgba(var(--lh-accent-rgb), 0.5);
+}
+.form-check-input:focus {
+  border-color: rgba(var(--lh-accent-rgb), 0.6);
+  box-shadow: 0 0 0 0.2rem rgba(var(--lh-accent-rgb), 0.2);
+}
+
+/* Same faint card tint as the Top Hit Rates card (2% ink over the page): Matchup Info and the props card on the game page,
+   every card on the player page, and the player drawer. */
+.lh-tint-card,
+.lh-tint-cards .card {
+  --bs-card-bg: rgba(var(--lh-ink-rgb), 0.02);
+}
+.lh-player-drawer {
+  background-image: linear-gradient(rgba(var(--lh-ink-rgb), 0.02), rgba(var(--lh-ink-rgb), 0.02));
+}
+
+/* Game page: the Injury report card sits beside Matchup Info; a long report scrolls instead of stretching the row */
+.lh-game-injury-list { max-height: 22rem; overflow-y: auto; }
+.lh-brand:hover, .lh-brand:focus-visible { color: var(--lh-logo-ink); }

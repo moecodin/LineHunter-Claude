@@ -19,7 +19,7 @@ const SHARE_NOTE_HTML = `
 function shareBrandHtml(rightText) {
   return `
     <div class="lh-share-brand">
-      <span class="lh-logo">Line<span>Hunter</span></span>
+      <span class="lh-brand-share" aria-label="LineHunter">${lhLockupHtml({ color: cssVar("--lh-logo-ink") })}</span>
       <span class="lh-label text-muted">${rightText}</span>
     </div>`;
 }
@@ -51,12 +51,12 @@ async function shareNodeAsImage(innerHtml, { filename, title, text, button }) {
 
   const holder = document.createElement("div");
   holder.className = "lh-share-card";
-  holder.innerHTML = innerHtml;
+  holder.innerHTML = innerHtml; // no theme of its own: the picture follows the page's theme (light page = light picture)
   document.body.appendChild(holder);
 
   try {
     const [html2canvas] = await Promise.all([loadHtml2Canvas(), document.fonts ? document.fonts.ready : null]);
-    const canvas = await html2canvas(holder, { backgroundColor: "#0b0b0b", scale: 2, useCORS: true, logging: false });
+    const canvas = await html2canvas(holder, { backgroundColor: cssVar("--lh-bg", holder), scale: 2, useCORS: true, logging: false });
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) throw new Error("Couldn't make the image.");
 

@@ -13,7 +13,7 @@
 //
 // How a page uses it:
 //   const chart = createPropChart(document.getElementById("someBox"), { height: 260, onLineChange: redraw });
-//   chart.setLine({ book: 26.5 });        // when the player or prop changes (also clears any alt line)
+//   chart.setLine({ book: 26.5, milestone: 25, average: 24.3 }); // when the player or prop changes (also clears any alt line); milestone + average are for research mode
 //   const line = chart.activeLine();      // the alt line if one is picked, otherwise the book line
 //   chart.draw(gamesOldestFirst, "key");  // the games, scored against activeLine()
 //   onLineChange runs when − / + / Reset is clicked: recalculate with activeLine() and draw again.
@@ -39,12 +39,21 @@ const WINDOWS = [
 // Short names for tooltips and tables: "18 PTS · 7 REB · 6 AST = 31"
 const STAT_SHORT_NAMES = { pts: "PTS", reb: "REB", ast: "AST", fg3m: "3PM", stl: "STL", blk: "BLK", turnover: "TO" };
 
-const BAR_COLORS = {
-  over: "#2BFF88",
-  under: "#FF3B5C",
-  push: "#6B7280",   // exactly on the line
-  noLine: "#8b5cf6", // violet when there's no line at all
-};
+// Every color on a chart comes from the CSS variables in styles.css, read each time the chart draws (so the theme can change).
+function chartColors() {
+  const value = (name) => cssVar(name);
+  return {
+    over: value("--lh-over"),
+    under: value("--lh-under"),
+    push: value("--lh-push"),     // exactly on the line
+    noLine: value("--lh-accent"), // blue when there's no line at all
+    line: value("--lh-accent"),   // the dashed line and its arrow ends
+    text: value("--lh-text"),     // the numbers above the bars
+    textRgb: value("--lh-text-rgb"),
+    muted: value("--lh-muted"),   // axis labels
+    lineRgb: value("--lh-line-rgb"), // grid lines
+  };
+}
 
 // While one bar is hovered, the others fade to this see-through version of their color
 // (a hex color + "4D" = 30% opacity), and their numbers to this opacity.
@@ -53,6 +62,7 @@ const DIMMED_TEXT_OPACITY = 0.35;
 
 const ALT_STEP = 0.5;  // each − / + click moves the line this much
 const ALT_MIN = 0.5;   // the line never goes below this
+const MILESTONE_MIN = 1; // research mode: the milestone never goes below this
 
 // ---------- Buttons ----------
 
@@ -119,6 +129,13 @@ function tooltipStatLines(game) {
   return [`${breakdown} = ${game.value}`, minutes];
 }
 
+// The number a game's stat is compared with. A betting line is compared as "over" (value > line); a research-mode
+// milestone "25+" means value >= 25, and every stat is a whole number, so that is the same as value > 24.5.
+function lineForScoring(line) {
+  if (line === null || line === undefined) return null;
+  return isResearchMode() ? line - 0.5 : line;
+}
+
 // ---------- Chart.js plugin: the dashed lines and the numbers on the bars ----------
 // A Chart.js plugin is an object with functions that Chart.js calls while drawing.
 // afterDatasetsDraw runs right after the bars are drawn, so we draw on top of them.
@@ -144,24 +161,37 @@ const lineAndValuesPlugin = {
     const { ctx, chartArea } = chart;
     ctx.save();
 
-    // 1. The book's line as a faint marker, only while an alt line is picked. Labeled "Book 29.5".
+    // 1. A faint second marker: the book's line while an alt line is picked ("Book 29.5"), or in research mode the
+    //    season average ("Avg 24.3").
     if (options.bookLine !== null && options.bookLine !== options.line) {
-      const y = drawDashedLine(chart, options.bookLine, { color: "rgba(231, 233, 243, 0.3)", dash: [3, 4], width: 1 });
-      ctx.fillStyle = "rgba(231, 233, 243, 0.55)";
+      const y = drawDashedLine(chart, options.bookLine, { color: `rgba(${options.colors.textRgb}, 0.3)`, dash: [3, 4], width: 1 });
+      ctx.fillStyle = `rgba(${options.colors.textRgb}, 0.55)`;
       ctx.font = "500 10px 'JetBrains Mono', monospace";
       ctx.textAlign = "right";
       ctx.textBaseline = "bottom";
-      ctx.fillText(`Book ${lineText(options.bookLine)}`, chartArea.right - 2, y - 3);
+      ctx.fillText(`${options.bookLabel || "Book"} ${lineText(options.bookLine)}`, chartArea.right - 2, y - 3);
     }
 
-    // 2. The line we're measuring against (book or alt): brighter, 6px dash, 4px gap.
+    // 2. The line we're measuring against (book or alt): dashed blue (the site accent), 6px dash, 4px gap,
+    //    with a small arrow marker at each end pointing in at the line, like a handle.
     if (options.line !== null) {
-      drawDashedLine(chart, options.line, { color: "rgba(231, 233, 243, 0.75)", dash: [6, 4], width: 1.5 });
+      const y = drawDashedLine(chart, options.line, { color: options.colors.line, dash: [6, 4], width: 2 });
+      ctx.fillStyle = options.colors.line;
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, y - 5);          // left end: triangle pointing right
+      ctx.lineTo(chartArea.left + 8, y);
+      ctx.lineTo(chartArea.left, y + 5);
+      ctx.closePath();
+      ctx.moveTo(chartArea.right, y - 5);         // right end: triangle pointing left
+      ctx.lineTo(chartArea.right - 8, y);
+      ctx.lineTo(chartArea.right, y + 5);
+      ctx.closePath();
+      ctx.fill();
     }
 
     // 3. Each bar's number, just above the bar. While a bar is hovered, the other numbers fade too.
-    ctx.fillStyle = "#e7e9f3";
-    ctx.font = "600 12px Inter, sans-serif";
+    ctx.fillStyle = options.colors.text;
+    ctx.font = "700 12px Satoshi, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
     const values = chart.data.datasets[0].data;
@@ -190,7 +220,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
         <div class="lh-chart-tooltip" hidden></div>
       </div>
     </div>
-    <div class="lh-alt-line mt-3" hidden>
+    <div class="lh-alt-line mt-3 lines-only" hidden>
       <span class="lh-label">Alt line</span>
       <div class="lh-alt-stepper" role="group" aria-label="Change the line">
         <button type="button" class="lh-alt-btn" data-alt="down" aria-label="Lower the line by 0.5">−</button>
@@ -198,6 +228,16 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
         <button type="button" class="lh-alt-btn" data-alt="up" aria-label="Raise the line by 0.5">+</button>
       </div>
       <button type="button" class="btn btn-sm btn-ghost" data-alt="reset" hidden>Reset</button>
+    </div>
+    <!-- Research mode: a milestone ("25+") instead of a betting line. Same look, steps of 1. -->
+    <div class="lh-alt-line lh-milestone mt-3 research-only" hidden>
+      <span class="lh-label">Milestone</span>
+      <div class="lh-alt-stepper" role="group" aria-label="Change the milestone">
+        <button type="button" class="lh-alt-btn" data-ms="down" aria-label="Lower the milestone by 1">−</button>
+        <output class="lh-alt-value" data-ms="value" aria-live="polite"></output>
+        <button type="button" class="lh-alt-btn" data-ms="up" aria-label="Raise the milestone by 1">+</button>
+      </div>
+      <button type="button" class="btn btn-sm btn-ghost" data-ms="reset" hidden>Reset</button>
     </div>`;
 
   const parts = {
@@ -210,6 +250,11 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     altDown: container.querySelector('[data-alt="down"]'),
     altUp: container.querySelector('[data-alt="up"]'),
     altReset: container.querySelector('[data-alt="reset"]'),
+    ms: container.querySelector(".lh-milestone"),
+    msValue: container.querySelector('[data-ms="value"]'),
+    msDown: container.querySelector('[data-ms="down"]'),
+    msUp: container.querySelector('[data-ms="up"]'),
+    msReset: container.querySelector('[data-ms="reset"]'),
   };
 
   let chart = null;    // the current Chart.js chart, so we can destroy it before drawing the next
@@ -218,10 +263,15 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
   let bookLine = null; // the sportsbook's line (null if there is none)
   let baseLine = null; // where the line starts: the book line, or the page's fallback (player page: their average)
   let altLine = null;  // null = no alt line. A number = the line picked with − / +
+  let milestoneBase = null; // research mode: where the milestone starts (the season average, rounded), or null
+  let milestoneAlt = null;  // research mode: the milestone picked with − / +, or null
+  let averageMarker = null; // research mode: the season average, for the faint "Avg 24.3" marker
   let hoveredIndex = null; // which bar the pointer is on (null = none): the others are dimmed
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const activeLine = () => altLine ?? baseLine;
+  // The number the chart measures against: the betting line (lines mode) or the milestone (research mode).
+  const activeLine = () => (isResearchMode() ? milestoneAlt ?? milestoneBase : altLine ?? baseLine);
+  const shownLine = activeLine;
 
   // Our own tooltip box, drawn by Chart.js's "external" option.
   // Chart.js's built-in tooltip picks its colors before it knows which bar is hovered, so the
@@ -250,11 +300,14 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     parts.tooltip.style.top = `${top}px`;
   }
 
-  // Each bar's color: green / red / gray against the line (violet with no line).
+  // Each bar's color: green / red / gray against the line (blue with no line).
   // While a bar is hovered, every other bar gets the faded version.
   function barColors(line) {
+    const palette = chartColors();
     return games.map((game, index) => {
-      const color = line === null ? BAR_COLORS.noLine : BAR_COLORS[game.overUnder];
+      // Research mode has no "under": a bar that misses the milestone is neutral gray, never red.
+      const result = isResearchMode() && game.overUnder === "under" ? "push" : game.overUnder;
+      const color = line === null ? palette.noLine : palette[result];
       return hoveredIndex === null || hoveredIndex === index ? color : color + DIMMED_BAR_ALPHA;
     });
   }
@@ -270,7 +323,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     if (index === hoveredIndex) return;
     hoveredIndex = index;
     chart.$lhHovered = index; // read by the plugin to fade the other numbers
-    chart.data.datasets[0].backgroundColor = barColors(activeLine());
+    chart.data.datasets[0].backgroundColor = barColors(shownLine());
     chart.update("lhHover");
   }
 
@@ -295,24 +348,42 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     }
   }
 
-  // The "−  29.5  +" control and the Reset button.
+  // The "−  29.5  +" control and the Reset button (lines mode), and the "−  25+  +" one (research mode).
+  // Both are always kept up to date; the CSS class on each shows only the one for the current mode.
   function updateAltControl() {
-    const line = activeLine();
+    const line = altLine ?? baseLine;
     parts.alt.hidden = line === null; // no line at all = nothing to move
-    if (line === null) return;
+    if (line !== null) {
+      parts.altValue.textContent = lineText(line);
+      parts.altDown.disabled = line <= ALT_MIN;
+      parts.altReset.hidden = altLine === null;
+    }
 
-    parts.altValue.textContent = lineText(line);
-    parts.altDown.disabled = line <= ALT_MIN;
-    parts.altReset.hidden = altLine === null;
+    const milestone = milestoneAlt ?? milestoneBase;
+    parts.ms.hidden = milestone === null;
+    if (milestone !== null) {
+      parts.msValue.textContent = `${milestone}+`;
+      parts.msDown.disabled = milestone <= MILESTONE_MIN;
+      parts.msReset.hidden = milestoneAlt === null;
+    }
   }
 
   // − / +: move the line by 0.5 (never below 0.5). Landing back on the starting line = no alt line.
   function changeAltLine(change) {
-    const current = activeLine();
+    const current = altLine ?? baseLine;
     if (current === null) return;
     // Math.round(x * 2) / 2 keeps it on a clean .0 / .5 step, even after many clicks.
     const next = Math.max(ALT_MIN, Math.round((current + change) * 2) / 2);
     altLine = next === baseLine ? null : next;
+    onLineChange();
+  }
+
+  // Research mode: − / + move the milestone by 1 (never below 1). Landing back on the starting milestone = no change.
+  function changeMilestone(change) {
+    const current = milestoneAlt ?? milestoneBase;
+    if (current === null) return;
+    const next = Math.max(MILESTONE_MIN, current + change);
+    milestoneAlt = next === milestoneBase ? null : next;
     onLineChange();
   }
 
@@ -324,15 +395,34 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     altLine = null;
     onLineChange();
   });
+  parts.msDown.addEventListener("click", () => changeMilestone(-1));
+  parts.msUp.addEventListener("click", () => changeMilestone(1));
+  parts.msReset.addEventListener("click", () => {
+    milestoneAlt = null;
+    onLineChange();
+  });
+
+  let lastDraw = null; // the last draw() arguments, so switching modes or themes can redraw
+  document.addEventListener("lh-mode-change", () => {
+    if (lastDraw && chart) draw(...lastDraw);
+  });
+  document.addEventListener("lh-theme-change", () => {
+    if (lastDraw && chart) draw(...lastDraw); // new colors for the bars, line, numbers, axes and grid
+  });
 
   // gamesOldestFirst: rows from calculateHitRate (already scored against activeLine()), oldest first.
   // key: what these games are, e.g. "237|points|10". Same key as last time = only the line moved.
   function draw(gamesOldestFirst, key) {
     games = gamesOldestFirst;
-    const line = activeLine();
-    const highest = Math.max(...games.map((game) => game.value), line ?? 0, bookLine ?? 0);
+    lastDraw = [gamesOldestFirst, key];
+    const line = shownLine();
+    // The faint marker: the book's line while an alt line is picked, or in research mode the season average.
+    const research = isResearchMode();
+    const book = research ? averageMarker : (altLine !== null ? bookLine : null);
+    const palette = chartColors();
+    const markerOptions = { line, bookLine: book, bookLabel: research ? "Avg" : "Book", colors: palette };
+    const highest = Math.max(...games.map((game) => game.value), line ?? 0, research ? averageMarker ?? 0 : bookLine ?? 0);
     const yMax = Math.ceil(highest * 1.1); // a little headroom above the tallest bar or the line
-    const book = altLine !== null ? bookLine : null; // the faint marker only shows while the line is moved
 
     parts.scroll.hidden = false;
     updateAltControl();
@@ -341,8 +431,11 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     // Then just recolor the bars and move the dashed line. update("none") = no animation, so it's instant.
     if (chart && chartKey === key) {
       chart.data.datasets[0].backgroundColor = barColors(line);
-      chart.options.plugins.lhLineAndValues = { line, bookLine: book };
+      chart.options.plugins.lhLineAndValues = markerOptions;
       chart.options.scales.y.suggestedMax = yMax;
+      chart.options.scales.x.ticks.color = palette.muted;                    // axis labels and grid follow the theme too
+      chart.options.scales.y.ticks.color = palette.muted;
+      chart.options.scales.y.grid.color = `rgba(${palette.lineRgb}, 0.12)`;
       chart.update("none");
       return;
     }
@@ -389,13 +482,13 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
           legend: { display: false },
           // Hover (or tap on a phone) shows the game's details in our own HTML box (showTooltip).
           tooltip: { enabled: false, external: showTooltip },
-          lhLineAndValues: { line, bookLine: book }, // passed to our plugin as "options"
+          lhLineAndValues: markerOptions, // passed to our plugin as "options"
         },
         scales: {
           x: {
             grid: { display: false },
             ticks: {
-              color: "#8a92a8",
+              color: palette.muted,
               autoSkip: false, // show every label; the scroll gives them room
               maxRotation: 0,
               font: { family: "JetBrains Mono, monospace", size: 10 },
@@ -404,8 +497,8 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
           y: {
             beginAtZero: true,
             suggestedMax: yMax,
-            grid: { color: "rgba(148, 163, 184, 0.12)" },
-            ticks: { color: "#8a92a8", precision: 0 },
+            grid: { color: `rgba(${palette.lineRgb}, 0.12)` },
+            ticks: { color: palette.muted, precision: 0 },
           },
         },
       },
@@ -419,25 +512,32 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
 
   return {
     // The chart as a PNG (for the share picture), or null if nothing is drawn.
+    // The chart as a PNG for the share picture (it has the colors of the theme the page is in).
     toImage() {
       return chart ? chart.toBase64Image("image/png", 1) : null;
     },
 
     // A new player or prop: set the book line (null if none) and an optional fallback starting line.
-    // Clears any alt line.
-    setLine({ book = null, fallback = null } = {}) {
+    // Research mode: milestone = where the milestone starts (the season average rounded, at least 1, or null)
+    // and average = the season average for the faint "Avg" marker. Clears any alt line / picked milestone.
+    setLine({ book = null, fallback = null, milestone = null, average = null } = {}) {
       bookLine = book;
       baseLine = book ?? fallback;
       altLine = null;
+      milestoneBase = milestone;
+      milestoneAlt = null;
+      averageMarker = average;
     },
     activeLine,
-    isAltLine: () => altLine !== null,
+    isAltLine: () => (isResearchMode() ? milestoneAlt !== null : altLine !== null),
     draw,
     // Hide the chart and alt control (while loading, or when there are no games).
     clear() {
+      lastDraw = null;
       destroyChart();
       parts.scroll.hidden = true;
       parts.alt.hidden = true;
+      parts.ms.hidden = true;
     },
   };
 }

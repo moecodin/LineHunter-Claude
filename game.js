@@ -5,6 +5,7 @@
 // The shared stats code (requests, game logs, hit rates) lives in js/stats.js.
 
 let allLines = [];       // every line for this game, cleaned up and with player names added
+let playersById = {};    // EVERY player in this game (both rosters), with or without a line: playersById[237] = { playerId, playerName, fullName, team, position }
 let selectedProp = null; // which prop type the pills are showing, like "points"
 
 // Game logs for every player in the table, filled in by loadPlayerStats().
@@ -17,7 +18,7 @@ let showingCurrentSeason = true; // false when nobody has played this season yet
 let selectedWindow = 10; // the table's window; the drawer starts on the same one
 
 // Which column the table is sorted by ("hitRate" or "average"), and which way.
-let sortKey = "hitRate";
+let sortKey = isResearchMode() ? "average" : "hitRate"; // hit rates are measured against a line, so research mode sorts by average
 let sortDescending = true;
 
 // L20 (in the player drawer) is the biggest window, so a player needs at least this many played games.
@@ -77,16 +78,23 @@ function hitRateCell(result) {
 }
 
 // Sort rows by the chosen column. Rows with no games always go last, whichever way we sort.
+// Rows without a line have no hit rate, so they sit after the rows that have one (best average first).
 // Ties are broken by the bigger line first.
 function compareRows(a, b) {
   const valueA = a.result[sortKey];
   const valueB = b.result[sortKey];
+  const lineSize = (row) => (row.line ? row.line.line : 0);
 
-  if (valueA === null && valueB === null) return b.line.line - a.line.line;
+  if (valueA === null && valueB === null) {
+    if (a.line && !b.line) return -1;
+    if (!a.line && b.line) return 1;
+    if (!a.line && !b.line) return (b.result.average ?? -1) - (a.result.average ?? -1);
+    return lineSize(b) - lineSize(a);
+  }
   if (valueA === null) return 1;
   if (valueB === null) return -1;
   if (valueA !== valueB) return sortDescending ? valueB - valueA : valueA - valueB;
-  return b.line.line - a.line.line;
+  return lineSize(b) - lineSize(a);
 }
 
 // Show which header is sorted, and which way, with a small arrow.
@@ -101,8 +109,24 @@ function updateSortHeaders() {
   });
 }
 
-// "points" -> "Points", "points_rebounds_assists" -> "Points + Rebounds + Assists"
+// The order of the prop pills. Any prop type not listed here goes after these, in the order the API sent it.
+const PROP_PILL_ORDER = [
+  "points", "rebounds", "assists", "threes",
+  "points_assists", "rebounds_assists", "points_rebounds", "points_rebounds_assists",
+  "blocks", "steals",
+];
+
+// Short names for the combo props, matching the player page tabs ("P+R+A").
+const COMBO_PILL_LABELS = {
+  points_assists: "P+A",
+  rebounds_assists: "R+A",
+  points_rebounds: "P+R",
+  points_rebounds_assists: "P+R+A",
+};
+
+// "points" -> "Points", "threes" -> "Threes", "points_rebounds_assists" -> "P+R+A"
 function propLabel(propType) {
+  if (COMBO_PILL_LABELS[propType]) return COMBO_PILL_LABELS[propType];
   return propType
     .split("_")
     .map((word) => word[0].toUpperCase() + word.slice(1))
@@ -115,6 +139,7 @@ function bookLabel(vendor) {
 }
 
 function showLinesMessage(text, colorClass) {
+  document.getElementById("linesToggle").hidden = true;
   const message = document.getElementById("lines-message");
   message.className = colorClass;
   message.textContent = text;
@@ -124,29 +149,42 @@ function showLinesMessage(text, colorClass) {
 
 // ---------- Drawing on the page ----------
 
+let currentGame = null; // the game on this page (set by renderGameHeader): the team badges use its away / home pair
+
+// A team abbreviation badge in the team's color, with the matchup's clash rule applied.
+function gameTeamBadge(team) {
+  return currentGame
+    ? teamBadgeHtml(team, currentGame.visitor_team.abbreviation, currentGame.home_team.abbreviation)
+    : teamBadgeHtml(team);
+}
+
 function renderGameHeader(game) {
+  currentGame = game;
   document.title = `${game.visitor_team.abbreviation} @ ${game.home_team.abbreviation} · LineHunter`;
 
   // lh-label / lh-display / display-3 = our label font and big condensed font (styles.css)
-  const visitorColor = getNeutralTeamColor(game.visitor_team.abbreviation);
-  const homeColor = getNeutralTeamColor(game.home_team.abbreviation);
+  const visitorShade = getNeutralTeamIndex(game.visitor_team.abbreviation); // which gray (.lh-abbr-N, one set per theme)
+  const homeShade = getNeutralTeamIndex(game.home_team.abbreviation);
 
   document.getElementById("game-header").innerHTML = `
-    <div class="card-body p-3 p-md-4">
-      <div class="lh-label text-center mb-3">${describeTime(game)}</div>
+    <div class="card-body p-3 d-flex flex-column justify-content-center">
+      <div class="lh-label text-center mb-2">${describeTime(game)}</div>
       <div class="d-flex justify-content-between align-items-center text-center gap-2">
         <div class="flex-fill">
-          <div class="lh-display display-5 mb-1" style="color: ${visitorColor}; text-shadow: 0 0 1px rgba(255,255,255,0.8), 0 0 12px rgba(255,255,255,0.12); -webkit-text-stroke: 0.4px rgba(255,255,255,0.35);">${game.visitor_team.abbreviation}</div>
-          <div class="text-muted small">${game.visitor_team.full_name}</div>
+          <div class="lh-display display-6 lh-abbr lh-abbr-${visitorShade}">${game.visitor_team.abbreviation}</div>
+          <div class="small text-muted mt-1">${game.visitor_team.full_name}</div>
+          <div class="lh-hdr-form" id="formAway"></div>
         </div>
         <div class="lh-label px-2">@</div>
         <div class="flex-fill">
-          <div class="lh-display display-5 mb-1" style="color: ${homeColor}; text-shadow: 0 0 1px rgba(255,255,255,0.8), 0 0 12px rgba(255,255,255,0.12); -webkit-text-stroke: 0.4px rgba(255,255,255,0.35);">${game.home_team.abbreviation}</div>
-          <div class="text-muted small">${game.home_team.full_name}</div>
+          <div class="lh-display display-6 lh-abbr lh-abbr-${homeShade}">${game.home_team.abbreviation}</div>
+          <div class="small text-muted mt-1">${game.home_team.full_name}</div>
+          <div class="lh-hdr-form" id="formHome"></div>
         </div>
       </div>
     </div>
   `;
+  applyMatchupColors(document.getElementById("game-header"), game.visitor_team.abbreviation, game.home_team.abbreviation);
 }
 
 // One pill button per prop type. Clicking one shows that prop's lines.
@@ -203,64 +241,202 @@ function setUpSortHeaders() {
   });
 }
 
+// ---------- Top 5 rows, "Show all players" ----------
+// Both modes' tables put the first 5 rows (in the current sort / prop tab / window order) in #lines-body and the rest in
+// a second table body that a Bootstrap collapse shows. The collapse keeps its open / closed state when the tab, window or
+// sort changes, because only the rows inside it are replaced.
+const LINES_DEFAULT_ROWS = 5;
+let linesTotal = 0;
+
+function updateLinesToggle(total) {
+  linesTotal = total;
+  const button = document.getElementById("linesToggle");
+  button.hidden = total <= LINES_DEFAULT_ROWS;
+  const isOpen = document.getElementById("lines-more").classList.contains("show");
+  document.getElementById("linesToggleText").textContent = isOpen ? "Show fewer" : `Show all players (${total})`;
+}
+
+["shown.bs.collapse", "hidden.bs.collapse"].forEach((eventName) => {
+  document.getElementById("lines-more").addEventListener(eventName, () => updateLinesToggle(linesTotal));
+});
+
+// rowElements = every <tr>, already in order.
+function placeRows(rowElements) {
+  const body = document.getElementById("lines-body");
+  const more = document.getElementById("lines-more");
+  body.innerHTML = "";
+  more.innerHTML = "";
+  rowElements.forEach((row, index) => (index < LINES_DEFAULT_ROWS ? body : more).appendChild(row));
+  updateLinesToggle(rowElements.length);
+}
+
+// ---------- Research mode: "Player Stats" ----------
+// Same table, but about stats instead of lines: the top 8 players per team by minutes, each with a milestone
+// (their season average for the selected stat, rounded to a whole number, at least 1) and "25+ in 7/10".
+
+// "34" or "34:12" -> 34 (or 34.2)
+function logMinutes(min) {
+  const [minutes, seconds] = String(min || "0").split(":");
+  return (Number(minutes) || 0) + (Number(seconds) || 0) / 60;
+}
+
+// Average minutes in the season the table is using (this season, or last season if it hasn't started).
+function minutesPerGame(playerId) {
+  const logs = gameLogsByPlayer[playerId];
+  if (!logs) return 0;
+  const played = (showingCurrentSeason ? logs.current : logs.previous).filter(playedInGame);
+  return played.length ? played.reduce((total, log) => total + logMinutes(log.min), 0) / played.length : 0;
+}
+
+// The 8 players with the most minutes on each team (anyone with no minutes is left out).
+function topPlayersByMinutes(people, perTeam) {
+  const byTeam = {};
+  people.forEach((player) => {
+    (byTeam[player.team] = byTeam[player.team] || []).push(player);
+  });
+  return Object.values(byTeam).flatMap((team) =>
+    team.map((player) => ({ player, minutes: minutesPerGame(player.playerId) }))
+      .filter((item) => item.minutes > 0)
+      .sort((a, b) => b.minutes - a.minutes)
+      .slice(0, perTeam)
+      .map((item) => item.player)
+  );
+}
+
+function renderResearchTable() {
+  const stat = propStatKey(selectedProp);
+  const people = statsLoading ? Object.values(playersById) : topPlayersByMinutes(Object.values(playersById), 8);
+
+  const rows = people.map((player) => {
+    let result = { hits: 0, totalGames: 0, hitRate: null, average: null, games: [] };
+    let milestone = null;
+    if (stat && !statsLoading && gameLogsByPlayer[player.playerId]) {
+      const seasonAverage = windowResult(player.playerId, stat, 0, "season").average;
+      milestone = seasonAverage === null ? null : Math.max(1, Math.round(seasonAverage));
+      // "25+" means >= 25: every stat is a whole number, so that is "above 24.5".
+      result = windowResult(player.playerId, stat, milestone === null ? 0 : milestone - 0.5, selectedWindow);
+    }
+    return { player, line: null, milestone, result };
+  });
+
+  rows.sort(compareRows); // by Avg, highest first (the default sort in research mode)
+
+  const body = document.getElementById("lines-body");
+  body.setAttribute("aria-busy", String(statsLoading));
+  const rowElements = [];
+
+  rows.forEach(({ player, milestone, result }) => {
+    const row = document.createElement("tr");
+    row.className = "lh-clickable-row";
+    row.tabIndex = 0;
+    row.setAttribute("aria-label", `Show ${player.fullName}'s recent games`);
+    row.innerHTML = `
+      <td>
+        <a class="lh-player-link fw-semibold" href="player.html?id=${player.playerId}">${player.playerName}</a>
+        ${gameTeamBadge(player.team)}
+      </td>
+      <td class="text-end lh-avg">${statsLoading ? STAT_PLACEHOLDER : formatStatValue(result.average)}</td>
+      <td class="d-none d-md-table-cell">${statsLoading ? STAT_PLACEHOLDER : miniGraph(result.games)}</td>
+      <td class="text-end">${statsLoading ? STAT_PLACEHOLDER : (milestone === null || result.totalGames === 0 ? `<span class="text-muted">–</span>` : `<strong>${milestone}+</strong> in ${result.hits}/${result.totalGames}`)}</td>
+    `;
+    row.addEventListener("click", (event) => {
+      if (event.target.closest("a")) return;
+      openPlayerDrawer(player.playerId);
+    });
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && event.target === row) openPlayerDrawer(player.playerId);
+    });
+    rowElements.push(row);
+  });
+
+  placeRows(rowElements);
+  document.getElementById("lines-message").classList.add("d-none");
+  document.getElementById("lines-table").classList.remove("d-none");
+}
+
 // Fill the table with the lines for the selected prop and window.
 function renderTable() {
   renderTableWindows();
   updateSortHeaders();
+  if (isResearchMode()) {
+    renderResearchTable();
+    return;
+  }
 
-  // 1. Work out the numbers for every row first, so we can sort by them.
-  const rows = allLines
-    .filter((line) => line.propType === selectedProp)
-    .map((line) => {
-      const stat = propStatKey(line.propType); // "points_assists" -> "pts+ast"
-      const result = stat && !statsLoading
-        ? windowResult(line.playerId, stat, line.line, selectedWindow) // each player's own line
-        : { hits: 0, totalGames: 0, hitRate: null, average: null, games: [] };
-      return { line, result };
-    });
+  // 1. One row for EVERY player in the game, whether or not the books have posted a line for this prop yet.
+  //    Work out the numbers first, so we can sort by them. A player without a line still gets their
+  //    graph and average (the same game logs); only the hit rate needs a line.
+  const stat = propStatKey(selectedProp); // "points_assists" -> "pts+ast"
+  const rows = Object.values(playersById).map((player) => {
+    const line = allLines.find((item) => item.playerId === player.playerId && item.propType === selectedProp) || null;
+    let result = { hits: 0, totalGames: 0, hitRate: null, average: null, games: [] };
+    if (stat && !statsLoading && gameLogsByPlayer[player.playerId]) {
+      result = windowResult(player.playerId, stat, line ? line.line : 0, selectedWindow); // each player's own line
+      if (!line) {
+        // No line: no hits to count, and the graph bars are all one color (calculateHitRate scored them against 0).
+        result = { ...result, hits: 0, hitRate: null, games: result.games.map((game) => ({ ...game, overUnder: "none" })) };
+      }
+    }
+    return { player, line, result };
+  });
+
+  // Say so above the table when the books haven't posted this prop yet.
+  const note = document.getElementById("lines-note");
+  if (allLines.length === 0) {
+    note.textContent = "No prop lines posted for this game yet. Books usually post them the day before or the day of the game.";
+    note.hidden = false;
+  } else if (!allLines.some((item) => item.propType === selectedProp)) {
+    note.textContent = "No lines posted for this prop yet.";
+    note.hidden = false;
+  } else {
+    note.hidden = true;
+  }
 
   // 2. Sort. While stats are loading every number is null, so this falls back to biggest line first.
   rows.sort(compareRows);
 
   const body = document.getElementById("lines-body");
-  body.innerHTML = "";
   body.setAttribute("aria-busy", String(statsLoading)); // tells screen readers the numbers are still coming
+  const rowElements = [];
 
   // 3. One <tr> per row. d-none d-md-table-cell = hidden on phones, shown from tablets up.
-  rows.forEach(({ line, result }) => {
+  rows.forEach(({ player, line, result }) => {
     const row = document.createElement("tr");
 
     // Clicking the row opens the player drawer (player-drawer.js).
     // tabindex="0" lets keyboard users reach the row with Tab and open it with Enter.
     row.className = "lh-clickable-row";
     row.tabIndex = 0;
-    row.setAttribute("aria-label", `Show ${line.fullName}'s recent games`);
+    row.setAttribute("aria-label", `Show ${player.fullName}'s recent games`);
     row.innerHTML = `
       <td>
-        <a class="lh-player-link fw-semibold" href="player.html?id=${line.playerId}">${line.playerName}</a>
-        <div class="small text-muted">${line.team}</div>
+        <a class="lh-player-link fw-semibold" href="player.html?id=${player.playerId}">${player.playerName}</a>
+        ${gameTeamBadge(player.team)}
       </td>
-      <td class="text-end">
-        <div class="line-value">${line.line}</div>
-        <div class="lh-odds small text-muted">${oddsText(line)}</div>
+      <td class="text-end lines-only">
+        ${line
+          ? `<div class="line-value">${line.line}</div>
+             <div class="lh-odds small text-muted">${oddsText(line)}</div>`
+          : `<span class="small text-muted">No line yet</span>`}
       </td>
       <td class="d-none d-md-table-cell">${statsLoading ? STAT_PLACEHOLDER : miniGraph(result.games)}</td>
-      <td class="text-end">${statsLoading ? STAT_PLACEHOLDER : hitRateCell(result)}</td>
+      <td class="text-end lines-only">${statsLoading ? STAT_PLACEHOLDER : hitRateCell(result)}</td>
       <td class="text-end d-none d-md-table-cell lh-avg">${statsLoading ? STAT_PLACEHOLDER : formatStatValue(result.average)}</td>
     `;
 
     row.addEventListener("click", (event) => {
       // The name is a link to player.html: let the link do its own thing instead of opening the drawer.
       if (event.target.closest("a")) return;
-      openPlayerDrawer(line.playerId);
+      openPlayerDrawer(player.playerId);
     });
     row.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && event.target === row) openPlayerDrawer(line.playerId);
+      if (event.key === "Enter" && event.target === row) openPlayerDrawer(player.playerId);
     });
 
-    body.appendChild(row);
+    rowElements.push(row);
   });
 
+  placeRows(rowElements);
   document.getElementById("lines-message").classList.add("d-none");
   document.getElementById("lines-table").classList.remove("d-none");
 }
@@ -279,7 +455,7 @@ async function loadPlayerStats(playerIds) {
 // Opened from a link like game.html?id=1&player=237&prop=pts (the homepage's Top Hit Rates):
 // switch the table to that prop and open that player's drawer.
 function openLinkedPlayer(propTypes) {
-  if (!linkedPlayerId || !allLines.some((line) => line.playerId === linkedPlayerId)) return;
+  if (!linkedPlayerId || !playersById[linkedPlayerId]) return;
 
   if (linkedPropType && propTypes.includes(linkedPropType)) {
     selectedProp = linkedPropType;
@@ -302,44 +478,66 @@ async function loadPage() {
   try {
     // 1. The game itself, for the header card.
     const gameJson = await bdlGet(`${BDL_BASE}/games/${gameId}`);
-    renderGameHeader(gameJson.data);
+    const game = gameJson.data;
+    renderGameHeader(game);
+    setUpTeamComparison(game); // the Team Comparison panel (js/teamCompare.js): closed unless the visitor left it open
+    loadGameInjuries(game); // the Injury report card beside it (js/gameInjuries.js)
+    loadMatchupInfo(game); // the Matchup Info card next to it (js/matchupInfo.js): loads on its own and never blocks the table
 
-    // 2. Every prop line for this game, from every sportsbook.
-    const propsJson = await bdlGet(`${PROPS_URL}?game_id=${gameId}`);
+    // 2. Every prop line for this game (from every sportsbook), and both teams' active players, at the same time.
+    //    The roster is how we show players the books haven't posted a line for yet. If it fails, we still show the lines.
+    const teamParams = `team_ids[]=${game.home_team.id}&team_ids[]=${game.visitor_team.id}`;
+    const [propsJson, roster] = await Promise.all([
+      bdlGet(`${PROPS_URL}?game_id=${gameId}`),
+      bdlGetAllPages(`${BDL_BASE}/players/active?${teamParams}&per_page=100`).catch((error) => {
+        console.warn("Rosters unavailable:", error);
+        return [];
+      }),
+    ]);
 
     // 3. Keep ONE over/under line per player per prop type (pickOneLinePerPlayer in js/stats.js).
     const chosen = pickOneLinePerPlayer(propsJson.data);
 
-    if (chosen.length === 0) {
-      showLinesMessage("No prop lines posted for this game yet. Books usually post them the day before or the day of the game.", "text-muted");
+    // 4. Everyone in the game: the rosters, plus anyone with a line who isn't on them (a just-traded player).
+    //    The props only have player ids, so those are looked up by id (up to 100 players per request).
+    const people = {};
+    roster.forEach((person) => { people[person.id] = person; });
+    const missingIds = [...new Set(chosen.map((prop) => prop.player_id))].filter((id) => !people[id]);
+    if (missingIds.length > 0) Object.assign(people, await fetchPlayers(missingIds));
+
+    playersById = {};
+    Object.values(people).forEach((person) => {
+      playersById[person.id] = {
+        playerId: person.id,
+        playerName: `${person.first_name.charAt(0)}. ${person.last_name}`,
+        fullName: `${person.first_name} ${person.last_name}`,
+        team: person.team ? person.team.abbreviation : "",
+        position: person.position,
+      };
+    });
+    const playerIds = Object.keys(playersById).map(Number);
+
+    if (playerIds.length === 0) {
+      showLinesMessage("No players found for this game yet.", "text-muted");
       return;
     }
 
-    // 4. The props only have player ids, so ask for the names (up to 100 players per request).
-    // new Set(...) removes duplicate ids; [... ] turns it back into a list.
-    const playerIds = [...new Set(chosen.map((prop) => prop.player_id))];
-    const players = await fetchPlayers(playerIds); // players[237] = { first_name: ..., team: ... }
-
-    // 5. Build clean rows for the table. The stat columns are worked out later, in renderTable.
-    allLines = chosen.map((prop) => {
-      const player = players[prop.player_id];
-
-      return {
-        playerId: prop.player_id,
-        playerName: player ? `${player.first_name.charAt(0)}. ${player.last_name}` : `Player #${prop.player_id}`,
-        fullName: player ? `${player.first_name} ${player.last_name}` : `Player #${prop.player_id}`,
-        team: player && player.team ? player.team.abbreviation : "",
-        position: player ? player.position : "",
-        propType: prop.prop_type,
-        line: Number(prop.line_value), // the API sends "24.5" as text; Number() makes it 24.5
-        overOdds: prop.market.over_odds,
-        underOdds: prop.market.under_odds,
-      };
-    });
+    // 5. The lines, as clean rows. The stat columns are worked out later, in renderTable.
+    allLines = chosen.filter((prop) => playersById[prop.player_id]).map((prop) => ({
+      ...playersById[prop.player_id],
+      propType: prop.prop_type,
+      line: Number(prop.line_value), // the API sends "24.5" as text; Number() makes it 24.5
+      overOdds: prop.market.over_odds,
+      underOdds: prop.market.under_odds,
+    }));
 
     // 6. Pills for every prop type found. Start on Points if there is one.
     // The table shows right away with loading bars in the stat columns.
-    const propTypes = [...new Set(allLines.map((line) => line.propType))];
+    // Pills: every prop the books posted, plus the main five, so a game with no lines yet still has its tabs.
+    const CORE_PROPS = ["points", "rebounds", "assists", "threes", "points_rebounds_assists"];
+    const found = [...new Set([...allLines.map((line) => line.propType), ...CORE_PROPS])];
+    const rank = (propType) => (PROP_PILL_ORDER.includes(propType) ? PROP_PILL_ORDER.indexOf(propType) : PROP_PILL_ORDER.length);
+    const propTypes = found.sort((a, b) => rank(a) - rank(b)); // sort is stable: unlisted types keep the API's order
     selectedProp = propTypes.includes("points") ? "points" : propTypes[0];
 
     setUpSortHeaders();
@@ -359,3 +557,10 @@ async function loadPage() {
 }
 
 loadPage();
+
+// Research mode switched on or off (nav.js): the Hit % column appears or disappears, so move the sort off (or back to) it.
+document.addEventListener("lh-mode-change", () => {
+  if (isResearchMode() && sortKey === "hitRate") { sortKey = "average"; sortDescending = true; }
+  if (!isResearchMode() && sortKey === "average") { sortKey = "hitRate"; sortDescending = true; }
+  renderTable();
+});

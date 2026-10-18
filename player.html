@@ -1,20 +1,28 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; nav.js has the toggle) -->
+  <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Player · LineHunter</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
+  <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=technor@400,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="styles.css" rel="stylesheet">
 </head>
-<body>
+<body class="lh-tint-cards">
+  <!-- Research mode: applied before anything renders, so there's no flash (nav.js has the switch) -->
+  <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
 
   <div id="site-nav"></div>
 
@@ -61,13 +69,15 @@
           <!-- All / Home / Away -->
           <div id="playerSplits" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="Home or away games"></div>
           <!-- Share the chart as a picture (js/share.js) -->
-          <button type="button" id="playerShare" class="btn btn-sm btn-ghost ms-auto" aria-label="Share this chart as an image" title="Share as image" disabled>
+          <button type="button" id="playerShare" class="btn btn-sm btn-ghost ms-auto lines-only" aria-label="Share this chart as an image" title="Share as image" disabled>
             <i class="bi bi-share" aria-hidden="true"></i> Share
           </button>
         </div>
 
         <!-- "Points line 26.5  O -110  U -115", or "No line" -->
-        <div id="playerLine" class="lh-drawer-line mb-3"></div>
+        <div id="playerLine" class="lh-drawer-line mb-3 lines-only"></div>
+        <!-- Research mode: "25+ PTS in 7 of last 10 · avg 24.3" -->
+        <div id="playerMilestone" class="research-only mb-3"></div>
 
         <!-- Hit rate and average -->
         <div id="playerSummary" class="d-flex gap-4 mb-3"></div>
@@ -82,44 +92,53 @@
       </div>
     </section>
 
-    <!-- 5. GAME LOG + WITH / WITHOUT, side by side on desktop (stacked on tablets and phones).
-         h-100 = both cards as tall as the row. The game log scrolls inside its card so they line up. -->
-    <div class="row g-4 mb-5">
-    <div class="col-lg-6">
-    <!-- GAME LOG: follows the window, home/away and teammate filters. Scrolls sideways and up/down inside the card. -->
-    <section class="card h-100">
+    <!-- 5. GAME LOG: full width, follows the window, home/away and teammate filters. -->
+    <!-- GAME LOG: follows the window, home/away and teammate filters. Full width; scrolls sideways on narrow screens, and up/down for long lists. -->
+    <section class="card mb-4">
       <div class="card-header lh-label py-3">Game log</div>
       <div class="card-body">
         <div class="table-responsive lh-gamelog-scroll">
-          <table class="table align-middle mb-0 lh-game-log">
+          <table class="table table-sm align-middle mb-0 lh-game-log">
             <thead>
               <tr>
                 <th>Date</th>
                 <th>Opp</th>
                 <th>Result</th>
                 <th class="text-end" data-col="min">MIN</th>
+                <th class="text-end">FG</th>
+                <th class="text-end">3P</th>
+                <th class="text-end">FT</th>
                 <th class="text-end" data-col="pts">PTS</th>
                 <th class="text-end" data-col="reb">REB</th>
                 <th class="text-end" data-col="ast">AST</th>
                 <th class="text-end" data-col="fg3m">3PM</th>
                 <th class="text-end" data-col="pra">PRA</th>
+                <th class="text-end">USG%</th>
               </tr>
             </thead>
             <tbody id="gameLogBody" class="placeholder-glow">
-              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
-              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
-              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
-              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
-              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="13"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="13"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="13"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="13"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="13"><span class="placeholder col-12 rounded"></span></td></tr>
             </tbody>
+            <!-- Games 11 and up: hidden until "Show all games" (Bootstrap collapse on the table body) -->
+            <tbody id="gameLogMore" class="collapse"></tbody>
           </table>
+        </div>
+        <div class="text-center mt-3">
+          <button type="button" id="gameLogToggle" class="btn btn-sm btn-outline-secondary lh-mi-toggle collapsed" hidden
+                  data-bs-toggle="collapse" data-bs-target="#gameLogMore" aria-expanded="false" aria-controls="gameLogMore">
+            <span id="gameLogToggleText">Show all games</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
     </section>
 
-    </div>
-
-    <div class="col-lg-6">
+    <!-- 6. THREE EQUAL CARDS: With / Without, Opportunity, Role. h-100 = same height; stacked on tablets and phones. -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-4">
     <!-- WITH / WITHOUT: click a teammate chip to cycle neutral -> with -> without. js/player.js fills it in. -->
     <section class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center py-3">
@@ -133,7 +152,85 @@
         <div id="withoutSummary" class="mt-3"></div>
       </div>
     </section>
+      </div>
+
+      <div class="col-lg-4">
+        <!-- OPPORTUNITY: three numbers for the selected prop tab, filtered games vs the season. js/player.js fills it in. -->
+        <section class="card h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
+              <h2 class="lh-label mb-0">Opportunity</h2>
+              <span class="lh-label text-muted"><span id="opportunityTab">Points</span> · filtered vs season</span>
+            </div>
+            <div id="opportunityBody" class="text-muted">Loading...</div>
+            <!-- "How to read this": a small muted link that expands a plain-language explanation (Bootstrap collapse) -->
+            <div class="lh-explain">
+              <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainOpp" aria-expanded="false" aria-controls="explainOpp">
+                Why this matters <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+              </button>
+              <div class="collapse" id="explainOpp"><p class="lh-explain-text">Chances such as shots, rebound chances and touches tend to hold steadier from game to game than results like points or rebounds, which also depend on shots falling. If volume is up while a recent streak is cold, or the reverse, that gap is worth noticing. It adds context to a streak and does not guarantee what comes next.</p></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-lg-4">
+        <!-- ROLE: minutes or usage % per game, for the same games as the chart above (js/roleChart.js) -->
+        <section class="card h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+              <h2 class="lh-label mb-0">Role</h2>
+              <!-- Minutes / Usage % -->
+              <div id="roleMetric" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="Minutes or usage"></div>
+            </div>
+            <div id="roleChart"></div>
+          </div>
+        </section>
+      </div>
     </div>
+
+    <!-- 7. TWO EQUAL CARDS: Shot Chart and Zone Matchup. Season-level: the window / home-away / teammate filters don't change them. -->
+    <div class="row g-4 mb-5">
+      <div class="col-lg-6">
+        <section class="card h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
+              <h2 class="lh-label mb-0">Shot Chart</h2>
+              <span id="shotChartSeason" class="lh-label text-muted"></span>
+            </div>
+            <div id="shotChartBody" class="text-muted small">Loading shot data...</div>
+            <!-- "How to read this": a small muted link that expands a plain-language explanation (Bootstrap collapse) -->
+            <div class="lh-explain">
+              <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainShot" aria-expanded="false" aria-controls="explainShot">
+                What this tells us <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+              </button>
+              <div class="collapse" id="explainShot"><p class="lh-explain-text">Where a player shoots, and how efficiently they shoot there, shows how they score. A big share of attempts at the rim points to a paint-and-finishing style, while a big above-the-break share points to a perimeter-shooting one. The colours compare each zone with the league average, so this is season-level context, not a prediction.</p></div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="col-lg-6">
+        <!-- ZONE MATCHUP: the player's shot zones against an opponent's defense. js/zoneMatchup.js fills it in. -->
+        <section class="card h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+              <h2 class="lh-label mb-0">Zone Matchup</h2>
+              <div class="d-flex align-items-center gap-2">
+                <span id="zoneMatchupNote" class="small text-muted"></span>
+                <select id="zoneMatchupTeam" class="form-select form-select-sm lh-zm-select" aria-label="Opponent team" disabled></select>
+              </div>
+            </div>
+            <div id="zoneMatchupBody" class="text-muted small">Loading matchup...</div>
+            <!-- "How to read this": a small muted link that expands a plain-language explanation (Bootstrap collapse) -->
+            <div class="lh-explain">
+              <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainZone" aria-expanded="false" aria-controls="explainZone">
+                How to use this <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+              </button>
+              <div class="collapse" id="explainZone"><p class="lh-explain-text">Look at which zones the player shoots from most, then check how the chosen team defends those same zones. For a points or 3PM <span class="lines-only">prop</span><span class="research-only">stat</span>, a team that allows a high field-goal percentage in the player's busiest zones may leave more room, and one that ranks among the best there may leave less. It is one input among many and does not predict the game.</p></div>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
     </div>
 
@@ -145,6 +242,14 @@
           <div id="playerSideTabs" class="btn-group btn-group-sm lh-window-toggle w-100" role="group" aria-label="Team or opponent"></div>
         </div>
         <div id="playerSideList" class="list-group list-group-flush lh-players-list">
+          <div class="text-muted small p-3">Loading…</div>
+        </div>
+      </div>
+
+      <!-- INJURY REPORT: who is hurt on this team and the next opponent. Each name opens its description. js/player.js fills it in. -->
+      <div class="card lh-injury-card mt-3">
+        <div class="card-header py-3"><div class="lh-label">Injury report</div></div>
+        <div id="injuryList" class="lh-injury-list">
           <div class="text-muted small p-3">Loading…</div>
         </div>
       </div>
@@ -175,8 +280,12 @@
   <script src="api.js"></script>
   <script src="nav.js"></script>
   <script src="config.js"></script>
+  <script src="js/teams.js"></script>
   <script src="js/stats.js"></script>
   <script src="js/propChart.js"></script>
+  <script src="js/roleChart.js"></script>
+  <script src="js/shotChart.js"></script>
+  <script src="js/zoneMatchup.js"></script>
   <script src="js/share.js"></script>
   <script src="js/player.js"></script>
 </body>

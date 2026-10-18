@@ -1,16 +1,23 @@
 <!DOCTYPE html>
-<!-- data-bs-theme="dark" = Bootstrap 5.3 dark mode for the whole page -->
-<html lang="en" data-bs-theme="dark">
+<!-- data-bs-theme (dark or light) is set on <html> by the script in <head>: Bootstrap 5.3 themes the whole page from it -->
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; nav.js has the toggle) -->
+  <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Schedule · LineHunter</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
+  <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
 
-  <!-- Google Fonts: Barlow Condensed (display), Inter (body), JetBrains Mono (labels) -->
+  <!-- Google Fonts: Barlow Condensed (display), JetBrains Mono (labels). Fontshare: Technor (headings), Satoshi (body), Comico (city watermarks) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=technor@400,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=comico@400&display=swap" rel="stylesheet">
 
   <!-- Bootstrap 5 CSS, loaded from a CDN (someone else's server), so there's nothing to install -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,11 +28,22 @@
 </head>
 
 <body>
+  <!-- Research mode: applied before anything renders, so there's no flash (nav.js has the switch) -->
+  <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
 
   <div id="site-nav"></div>
 
+  <!-- TEST: scrolling marquee strip (sample items, no API yet). Two identical groups side by side; the CSS slides the track left
+       by exactly one group, so the loop has no jump. The second group is hidden from screen readers. -->
+  <div class="lh-marquee" role="region" aria-label="Sample scores and streaks">
+    <div class="lh-marquee-track">
+      <div class="lh-marquee-group"><span class="lh-marquee-item">LAL @ BOS · 7:30 PM · ESPN</span><span class="lh-marquee-item lh-marquee-hot lines-only">Brunson O24.5 PTS · 9/10 L10</span><span class="lh-marquee-item">NYK vs PHI · 8:00 PM · TNT</span><span class="lh-marquee-item">OKC @ SAS · 9:30 PM · NBA TV</span><span class="lh-marquee-item">LAL @ BOS · 7:30 PM · ESPN</span><span class="lh-marquee-item lh-marquee-hot lines-only">Brunson O24.5 PTS · 9/10 L10</span><span class="lh-marquee-item">NYK vs PHI · 8:00 PM · TNT</span><span class="lh-marquee-item">OKC @ SAS · 9:30 PM · NBA TV</span></div>
+      <div class="lh-marquee-group" aria-hidden="true"><span class="lh-marquee-item">LAL @ BOS · 7:30 PM · ESPN</span><span class="lh-marquee-item lh-marquee-hot lines-only">Brunson O24.5 PTS · 9/10 L10</span><span class="lh-marquee-item">NYK vs PHI · 8:00 PM · TNT</span><span class="lh-marquee-item">OKC @ SAS · 9:30 PM · NBA TV</span><span class="lh-marquee-item">LAL @ BOS · 7:30 PM · ESPN</span><span class="lh-marquee-item lh-marquee-hot lines-only">Brunson O24.5 PTS · 9/10 L10</span><span class="lh-marquee-item">NYK vs PHI · 8:00 PM · TNT</span><span class="lh-marquee-item">OKC @ SAS · 9:30 PM · NBA TV</span></div>
+    </div>
+  </div>
+
   <!-- container = centers the content and adds side padding -->
-  <main class="container-fluid lh-container px-3 px-lg-4">
+  <main class="container-fluid lh-container px-3 px-lg-4 lh-schedule-page">
 
     <!-- GAMES HEADER: the title on the left, the date pager on the right.
          d-flex = line things up in a row. flex-wrap = drop to a new line on narrow screens.
@@ -47,42 +65,98 @@
 
     <!-- row = a Bootstrap grid row. g-3 = gap between cards. mb-5 = space below.
          The id stays "games-list" so app.js can still find it. -->
-    <div id="games-list" class="row g-3 mb-5">
-      <div class="col-12 text-muted">Loading games...</div>
+    <!-- GAMES CAROUSEL: 3 cards per page on desktop (2 on tablets, 1 on phones). The ‹ › buttons page through
+         the rest. app.js fills #games-list and sets up the buttons and the "1-3 of 8" counter. -->
+    <div class="lh-games-carousel mb-5">
+      <button type="button" id="gamesPrev" class="lh-games-nav lh-games-prev" aria-label="Previous games" hidden>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </button>
+      <div id="games-list" class="lh-games-track">
+        <div class="lh-games-message text-muted">Loading games...</div>
+      </div>
+      <button type="button" id="gamesNext" class="lh-games-nav lh-games-next" aria-label="Next games" hidden>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+      <div id="gamesCount" class="lh-label text-center mt-2" aria-live="polite" hidden></div>
     </div>
 
     <!-- Player search: nav.js puts the search bar here instead of in the navbar -->
     <div id="lh-search-slot" class="lh-search-slot mb-3"></div>
 
-    <!-- TOP HIT RATES (left) and HIT LIST (right) for the picked day, side by side on desktop, stacked below.
-         h-100 = both cards as tall as the row. js/top-hit-rates.js fills both when app.js loads the day's games. -->
-    <div class="row g-4 mb-5">
-      <div class="col-lg-6">
-        <div id="top-hit-rates" class="card h-100 lh-top-compact">
-          <div class="card-header d-flex justify-content-between align-items-center gap-2 py-3">
-            <h2 class="lh-top-title mb-0"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i><span id="topHitRatesTitle">Top Hit Rates</span></h2>
-            <span class="lh-label text-muted">L10 · Over</span>
-          </div>
-          <div class="card-body">
-            <!-- Filter tabs: All / PTS / REB / AST / 3PM / PRA -->
-            <ul id="topHitRatesPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
-            <div id="topHitRatesList" class="text-muted">Loading hit rates...</div>
-          </div>
+    <!-- HIT LIST (lines mode) / STREAKS (research mode): a horizontal shelf of category cards, full width. Only the shelf
+         scrolls sideways; the arrows (desktop) move it one card. js/hit-list.js and js/fanCards.js draw the cards. -->
+    <section id="hitlist" class="lh-shelf mb-5 lines-only">
+      <div class="lh-shelf-head">
+        <div>
+          <h2 class="lh-top-title mb-1"><i class="bi bi-bullseye" aria-hidden="true"></i><span id="hitlistTitle">Hit List</span></h2>
+          <div class="small text-muted">Props that hit in 100% of recent games</div>
+        </div>
+        <div class="lh-shelf-arrows d-none d-lg-flex">
+          <button type="button" class="lh-shelf-arrow" data-shelf-target="#hitlistShelf" data-shelf-dir="-1" aria-label="Previous cards"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+          <button type="button" class="lh-shelf-arrow" data-shelf-target="#hitlistShelf" data-shelf-dir="1" aria-label="Next cards"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
         </div>
       </div>
+      <div id="hitlistBody" class="text-muted">Loading picks...</div>
+      <!-- "How to read this": a small muted link that expands a plain-language explanation (Bootstrap collapse) -->
+      <div class="lh-explain">
+        <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainHitList" aria-expanded="false" aria-controls="explainHitList">
+          Why these made the list <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+        </button>
+        <div class="collapse" id="explainHitList"><p class="lh-explain-text">Each card is built from past results. Perfect Five needs a prop over the line in all of the last 5 games (5/5) and Under the Weather the same for unders. Home Cookin' / Road Warriors needs every one of the last 5+ games at tonight's venue over the line, Bad Blood every game against tonight's opponent (2+), BBQ Chicken (slang for an easy matchup) players facing one of the five weakest defenses for their main stat, Brick City players shooting well below their season rate over the last 5 games, Heat Check lists current over streaks of 6 or more, and Light It Up lists teams that scored at least a set number of points in each of their last 3 to 5 games. These are past results only, so they do not guarantee the next game.</p></div>
+      </div>
+      <div class="small text-muted mt-2">Spot a bug or have an idea? <a class="lh-discord-note" href="#" target="_blank" rel="noopener" data-discord-link>Tell us on Discord →</a></div>
+      <div class="small text-muted mt-2">Based on past results — not guarantees.</div>
+    </section>
 
-      <div class="col-lg-6">
-        <div id="hitlist" class="card h-100">
-          <div class="card-header py-3">
-            <h2 class="lh-top-title mb-1"><i class="bi bi-bullseye" aria-hidden="true"></i><span id="hitlistTitle">Hit List</span></h2>
-            <div class="small text-muted">Props that hit in 100% of recent games</div>
-          </div>
-          <div class="card-body">
-            <!-- A 2x2 grid of small cards, one per category. js/hit-list.js fills it in. -->
-            <div id="hitlistBody" class="text-muted">Loading picks...</div>
-          </div>
-          <div class="card-footer small text-muted">Based on past results — not guarantees.</div>
+    <section id="streaks" class="lh-shelf mb-5 research-only">
+      <div class="lh-shelf-head">
+        <div>
+          <h2 class="lh-top-title mb-1"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span id="streaksTitle">Streaks</span></h2>
+          <div class="small text-muted">Players on tonight's slate on a run</div>
         </div>
+        <div class="lh-shelf-arrows d-none d-lg-flex">
+          <button type="button" class="lh-shelf-arrow" data-shelf-target="#streaksShelf" data-shelf-dir="-1" aria-label="Previous cards"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+          <button type="button" class="lh-shelf-arrow" data-shelf-target="#streaksShelf" data-shelf-dir="1" aria-label="Next cards"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <div id="streaksBody" class="text-muted">Loading streaks...</div>
+      <div class="lh-explain">
+        <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainStreaks" aria-expanded="false" aria-controls="explainStreaks">
+          Why these made the list <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+        </button>
+        <div class="collapse" id="explainStreaks"><p class="lh-explain-text">Most cards list players on tonight's slate who have reached the same mark in a row: 10+ rebounds, 8+ assists or 3+ three-pointers (3 games or more), and 30+ points for the Chicken Nuggets (2 or more). The streak counts back from their latest game and stops at the first game that falls short. BBQ Chicken, hoops slang for an easy matchup, lists players facing one of the five defenses that allow the most of the stat they produce the most of. Brick City lists players whose field-goal percentage over their last 5 games is at least 5 points below their season rate, on at least 30 attempts. These describe recent form and matchups only, and shooting rates swing from game to game, so they do not say what will happen next.</p></div>
+      </div>
+      <div class="small text-muted mt-2">Based on past results.</div>
+    </section>
+
+    <!-- TOP HIT RATES (lines mode) / HOT PLAYERS (research mode): full width, below the shelf. js/top-hit-rates.js and js/fanCards.js fill them in. -->
+    <div id="top-hit-rates" class="card lh-top-compact lines-only mb-5">
+      <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
+        <div>
+          <h2 class="lh-top-title mb-1"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i><span id="topHitRatesTitle">Top Hit Rates</span></h2>
+          <div class="small text-muted">Players who went over their line most often in their last 10 games</div>
+        </div>
+        <span class="lh-label text-muted">L10 · Over</span>
+      </div>
+      <div class="card-body">
+        <!-- Filter tabs: All / PTS / REB / AST / 3PM / PRA -->
+        <ul id="topHitRatesPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
+        <div id="topHitRatesList" class="text-muted">Loading hit rates...</div>
+      </div>
+    </div>
+
+    <div id="hotPlayers" class="card lh-top-compact research-only mb-5">
+      <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
+        <div>
+          <h2 class="lh-top-title mb-1"><i class="bi bi-fire" aria-hidden="true"></i><span id="hotPlayersTitle">Hot Players</span></h2>
+          <div class="small text-muted">Players whose last 5 games are furthest above their season average</div>
+        </div>
+        <span class="lh-label text-muted">L5 vs season</span>
+      </div>
+      <div class="card-body">
+        <!-- Filter tabs: PTS / REB / AST / 3PM / PRA -->
+        <ul id="hotPlayersPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
+        <div id="hotPlayersList" class="text-muted">Loading players...</div>
       </div>
     </div>
 
@@ -96,10 +170,17 @@
   <script src="api.js"></script>
   <script src="nav.js"></script>
   <script src="config.js"></script>
+  <script src="js/teams.js"></script>
   <script src="js/stats.js"></script>
+  <script src="js/moreRows.js"></script>
+  <script src="js/shelf.js"></script>
   <script src="js/share.js"></script>
   <script src="js/top-hit-rates.js"></script>
   <script src="js/hit-list.js"></script>
+  <script src="js/bbq.js"></script>
+  <script src="js/brickCity.js"></script>
+  <script src="js/fanCards.js"></script>
+  <script src="js/quickLook.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
