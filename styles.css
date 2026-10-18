@@ -17,6 +17,8 @@
   --lh-bg: #0b0b0b;                 /* page background: near-black, same on every page */
   --lh-surface: #0f1524;            /* cards */
   --lh-surface-2: #161d31;          /* hover / raised parts */
+  --lh-card-bg: rgba(15, 21, 36, 0.45);   /* cards: see-through navy, so the black page shows through */
+  --lh-card-tint: 0.14;                   /* how much violet the gradient cards start with (0 = none, 1 = solid) */
   --lh-border: rgba(148, 163, 184, 0.14);
   --lh-text: #e7e9f3;
   --lh-muted: #8a92a8;
@@ -29,7 +31,8 @@
   --lh-under: #ff5f7a;              /* red: under / miss */
 
   /* Our fonts */
-  --lh-font-display: "Barlow Condensed", sans-serif;   /* big names and numbers */
+  --lh-font-display: "Barlow Condensed", sans-serif;   /* big numbers, team abbreviations, logo */
+  --lh-font-heading: "Technor", sans-serif;              /* headings and titles (Fontshare) */
   --lh-font-label: "JetBrains Mono", monospace;        /* tiny caps labels */
   --lh-font-body: "Inter", sans-serif;                 /* everything else */
 
@@ -50,6 +53,13 @@
 body {
   min-height: 100vh;
   background-color: var(--lh-bg);
+}
+
+/* Page width: full screen (container-fluid) with a small side gutter (px-3 / px-lg-4 in the HTML),
+   capped at 1600px and centered on very wide monitors so tables and charts don't stretch too far.
+   Used by the navbar, the menu drawer, and every page's <main>. */
+.lh-container {
+  max-width: 1600px;
 }
 
 /* When a link jumps to #games, leave room for the sticky navbar */
@@ -114,7 +124,7 @@ html {
   pointer-events: none;
 }
 
-.lh-navbar .container {
+.lh-navbar .lh-container {
   position: relative;
   z-index: 1;
 }
@@ -296,17 +306,17 @@ html {
 
 /* ---------- 5. Cards ---------- */
 .card {
-  --bs-card-bg: var(--lh-surface);
+  --bs-card-bg: var(--lh-card-bg);
   --bs-card-border-color: var(--lh-border);
   --bs-card-border-radius: 16px;
   --bs-card-inner-border-radius: 15px;
   --bs-card-cap-bg: transparent;     /* card headers and footers blend in */
 }
 
-/* Game cards: a soft gradient from a violet shade down to dark.
+/* Game cards: a light violet hint in the corner, fading into the see-through card color.
    --shade is set by .shade-1 / .shade-2 / .shade-3 below. */
 .game-card {
-  background: linear-gradient(160deg, rgba(var(--shade), 0.32) 0%, var(--lh-surface) 65%);
+  background: linear-gradient(160deg, rgba(var(--shade), var(--lh-card-tint)) 0%, var(--lh-card-bg) 60%);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
@@ -318,16 +328,16 @@ html {
 /* Hover: lift up a little and glow violet */
 .game-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(var(--lh-accent-rgb), 0.55);
-  box-shadow: 0 14px 34px -12px rgba(var(--lh-accent-rgb), 0.6);
+  border-color: rgba(var(--lh-accent-rgb), 0.45);
+  box-shadow: 0 14px 34px -12px rgba(var(--lh-accent-rgb), 0.35);
 }
 
-/* Matchup header on the game page: the one bold gradient */
+/* Matchup header on the game page: the strongest gradient on the site, still see-through */
 .matchup-hero {
   background: linear-gradient(135deg,
-    rgba(var(--lh-accent-rgb), 0.5) 0%,
-    rgba(91, 33, 182, 0.18) 45%,
-    var(--lh-surface) 80%);
+    rgba(var(--lh-accent-rgb), 0.24) 0%,
+    rgba(91, 33, 182, 0.08) 45%,
+    var(--lh-card-bg) 80%);
 }
 
 /* ---------- Homepage ---------- */
@@ -375,7 +385,7 @@ html {
 }
 
 .lh-home-preview {
-  background: linear-gradient(160deg, rgba(var(--lh-accent-rgb), 0.18), rgba(15, 21, 36, 0.96));
+  background: linear-gradient(160deg, rgba(var(--lh-accent-rgb), var(--lh-card-tint)), var(--lh-card-bg));
   border: 1px solid var(--lh-border);
   border-radius: 22px;
   padding: 1.2rem;
@@ -538,11 +548,11 @@ html {
 
 .lh-demo-device {
   width: min(100%, 380px);
-  background: linear-gradient(180deg, rgba(10, 15, 24, 0.98) 0%, rgba(13, 17, 31, 0.98) 100%);
-  border: 1px solid rgba(var(--lh-accent-rgb), 0.6);
+  background: var(--lh-card-bg);
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
   border-radius: 24px;
   padding: 1rem 1rem 0.9rem;
-  box-shadow: 0 24px 50px rgba(2, 6, 23, 0.52), 0 0 0 1px rgba(var(--lh-accent-rgb), 0.12), 0 0 26px rgba(var(--lh-accent-rgb), 0.18);
+  box-shadow: 0 24px 50px rgba(2, 6, 23, 0.4), 0 0 0 1px rgba(var(--lh-accent-rgb), 0.08), 0 0 26px rgba(var(--lh-accent-rgb), 0.1);
   position: relative;
   overflow: hidden;
 }
@@ -551,7 +561,7 @@ html {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top, rgba(var(--lh-accent-rgb), 0.18), transparent 52%);
+  background: radial-gradient(circle at top, rgba(var(--lh-accent-rgb), var(--lh-card-tint)), transparent 52%);
   pointer-events: none;
 }
 
@@ -843,7 +853,7 @@ html {
 }
 
 .lh-step-card {
-  background: rgba(15, 21, 36, 0.9);
+  background: var(--lh-card-bg);
   border: 1px solid var(--lh-border);
   border-radius: 18px;
   padding: 1.25rem;
@@ -904,50 +914,52 @@ html {
   }
 }
 
-/* ---------- 6. Date pager (Bootstrap pagination) ---------- */
-.pagination {
-  --bs-pagination-bg: var(--lh-surface);
-  --bs-pagination-border-color: var(--lh-border);
-  --bs-pagination-color: var(--lh-muted);
-  --bs-pagination-hover-bg: var(--lh-surface-2);
-  --bs-pagination-hover-color: #fff;
-  --bs-pagination-hover-border-color: var(--lh-border);
-  --bs-pagination-focus-bg: var(--lh-surface-2);
-  --bs-pagination-focus-color: #fff;
-  --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(var(--lh-accent-rgb), 0.35);
-  --bs-pagination-active-bg: var(--lh-accent);
-  --bs-pagination-active-border-color: var(--lh-accent);
-  gap: 4px;
-  font-family: var(--lh-font-label);
-  text-transform: uppercase;
-}
-
-/* Every button becomes a separate pill (Bootstrap normally joins them).
-   white-space: nowrap = keep "Wed 14" on one line */
-.pagination .page-item .page-link {
-  border-radius: 999px;
-  margin-left: 0;
-  white-space: nowrap;
+/* ---------- 6. Date pager (schedule.html) ----------
+   Uses the tab styles in section 7 (lh-tabs). Only the spacing is tighter, so ‹ five days › fit. */
+.lh-date-tabs {
+  --bs-nav-underline-gap: 0.9rem;
+  max-width: 100%;
 }
 
 
-/* ---------- 7. Prop pills (Bootstrap nav-pills) ---------- */
-.nav-pills {
-  --bs-nav-pills-border-radius: 999px;
-  --bs-nav-pills-link-active-bg: var(--lh-accent);
-  --bs-nav-link-color: var(--lh-muted);
-  --bs-nav-link-hover-color: #fff;
-  gap: 6px;
+/* ---------- 7. Tab rows (Bootstrap nav-underline) ----------
+   Every tab/filter row: the game page's prop tabs, the drawer's stat tabs,
+   the Top Hit Rates filters, and the schedule date pager. Markup: <ul class="nav nav-underline lh-tabs"> with <button class="nav-link">. */
+.lh-tabs {
+  --bs-nav-link-color: var(--lh-muted);           /* inactive: muted gray */
+  --bs-nav-link-hover-color: #c9cede;             /* hover: lighter gray */
+  --bs-nav-underline-link-active-color: #fff;     /* active: white text */
+  --bs-nav-underline-border-width: 2px;
+  --bs-nav-underline-gap: 1.25rem;
+
+  /* One line that scrolls sideways when it doesn't fit, with the scrollbar hidden */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;                          /* Firefox */
+  border-bottom: 1px solid var(--lh-border);      /* faint baseline under the row */
 }
-.nav-pills .nav-link {
+.lh-tabs::-webkit-scrollbar {
+  display: none;                                  /* Chrome, Safari, Edge */
+}
+
+.lh-tabs .nav-link {
   font-family: var(--lh-font-label);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  border: 1px solid var(--lh-border);
+  white-space: nowrap;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
 }
-.nav-pills .nav-link.active {
-  border-color: var(--lh-accent);
+/* Bootstrap underlines hovered tabs too; we only lighten the text */
+.lh-tabs .nav-link:hover:not(.active),
+.lh-tabs .nav-link:focus-visible:not(.active) {
+  border-bottom-color: transparent;
+}
+/* The active tab's underline is the violet accent, not white */
+.lh-tabs .nav-link.active {
+  border-bottom-color: var(--lh-accent);
 }
 
 * {
@@ -996,4 +1008,912 @@ html {
   font-family: var(--lh-font-display);
   font-size: 1.35rem;
   font-weight: 700;
+}
+
+
+/* ---------- 10. Player drawer (game.html) ---------- */
+
+/* Rows in the props table open the drawer, so they get a pointer */
+.lh-clickable-row {
+  cursor: pointer;
+}
+.lh-clickable-row:focus-visible {
+  outline: 2px solid rgba(var(--lh-accent-rgb), 0.7);
+  outline-offset: -2px;
+}
+
+/* The player's name links to player.html: same look as the text, underline on hover */
+.lh-player-link {
+  color: inherit;
+  text-decoration: none;
+}
+.lh-player-link:hover,
+.lh-player-link:focus-visible {
+  color: var(--lh-accent-light);
+  text-decoration: underline;
+}
+
+/* The drawer slides in from the right. Full width on phones. */
+.lh-player-drawer {
+  --bs-offcanvas-width: 520px;
+  --bs-offcanvas-bg: var(--lh-bg); /* the same near-black as the player page's game pop-up */
+  --bs-offcanvas-border-color: var(--lh-border);
+}
+@media (max-width: 575.98px) {
+  .lh-player-drawer {
+    --bs-offcanvas-width: 100%;
+  }
+}
+
+.lh-player-drawer .offcanvas-header {
+  border-bottom: 1px solid var(--lh-border);
+}
+
+/* "Points line  26.5  O -110  U -115" */
+.lh-drawer-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+}
+.lh-drawer-line-value {
+  font-family: var(--lh-font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.lh-drawer-odds {
+  font-family: var(--lh-font-label);
+  font-size: 0.8rem;
+  color: var(--lh-muted);
+}
+
+/* Hit rate and average numbers */
+.lh-drawer-stat {
+  font-family: var(--lh-font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+/* L5 / L10 / L20 / Season: the buttons sit together as one pill-shaped group
+   (above the props table and inside the drawer) */
+.lh-window-toggle .btn-ghost {
+  border-radius: 0;
+}
+.lh-window-toggle .btn-ghost:first-child {
+  border-radius: 999px 0 0 999px;
+}
+.lh-window-toggle .btn-ghost:last-child {
+  border-radius: 0 999px 999px 0;
+}
+.lh-window-toggle .btn-ghost.active {
+  color: #fff;
+  background: rgba(var(--lh-accent-rgb), 0.2);
+  border-color: rgba(var(--lh-accent-rgb), 0.6);
+}
+
+/* "Open player page →": violet outline so it stands out from the grey ghost buttons */
+.lh-player-page-btn {
+  --bs-btn-color: var(--lh-accent-light);
+  --bs-btn-border-color: rgba(var(--lh-accent-rgb), 0.6);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: rgba(var(--lh-accent-rgb), 0.18);
+  --bs-btn-hover-border-color: var(--lh-accent);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: rgba(var(--lh-accent-rgb), 0.25);
+  border-radius: 999px;
+  font-family: var(--lh-font-label);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Alt line: "ALT LINE  ( −  29.5  + )  RESET" under the chart */
+.lh-alt-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.lh-alt-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.45);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.lh-alt-btn {
+  width: 2.5rem;
+  height: 2.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--lh-accent-light);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.lh-alt-btn:hover:not(:disabled),
+.lh-alt-btn:focus-visible {
+  background: rgba(var(--lh-accent-rgb), 0.18);
+  color: #fff;
+}
+.lh-alt-btn:disabled {
+  color: var(--lh-muted);
+  opacity: 0.4;
+}
+.lh-alt-value {
+  min-width: 3.5rem;
+  text-align: center;
+  font-family: var(--lh-font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+}
+/* Bar tooltip in the drawer chart: "@BOS · Oct 22" / "31 PTS · 34 min" / "W 112–105" */
+.lh-chart-tooltip {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;           /* never blocks hovering the bars underneath */
+  padding: 0.5rem 0.65rem;
+  background: rgba(11, 11, 11, 0.95);
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.45);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--lh-text);
+  white-space: nowrap;
+}
+.lh-tip-title {
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--lh-muted);
+  margin-bottom: 0.15rem;
+}
+.lh-tip-result {
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+/* "W 112–105" / "L 98–101": in the chart tooltip and the player page's game log */
+.lh-result {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lh-result.is-win  { color: #2BFF88; }
+.lh-result.is-loss { color: #FF3B5C; }
+
+/* "o29.5" next to "Hit rate" while an alt line is used */
+.lh-alt-tag {
+  color: var(--lh-accent-light);
+  text-transform: none; /* keep the lowercase "o" (over), so it doesn't read as a zero */
+}
+
+/* The chart box: scrolls sideways when there are more bars than fit */
+.lh-chart-scroll {
+  overflow-x: auto;
+}
+.lh-chart-inner {
+  position: relative; /* Chart.js needs this to size the canvas to the box */
+  height: 260px;
+}
+
+
+/* ---------- 11. Props table: graph, hit %, sorting ---------- */
+
+/* Mini bar graph: plain spans in a row, lined up along the bottom */
+.lh-mini-graph {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 140px;
+  height: 32px;
+}
+.lh-mini-bar {
+  flex: 1 1 0;          /* every bar gets an equal share of the width */
+  max-width: 10px;
+  min-width: 1px;
+  border-radius: 2px 2px 0 0;
+}
+.lh-mini-bar--over  { background: #2BFF88; }
+.lh-mini-bar--under { background: #FF3B5C; }
+.lh-mini-bar--push  { background: #6B7280; }
+
+/* Hit %: neon green when good, red when bad, white in between */
+.lh-hit {
+  font-family: var(--lh-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #fff;
+}
+.lh-hit--good { color: #2BFF88; }
+.lh-hit--bad  { color: #FF3B5C; }
+
+.lh-avg {
+  font-family: var(--lh-font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* Odds under the line, in the small label font */
+.lh-odds {
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+/* The Hit % and Avg headers are buttons that look like the other header text */
+.lh-sort-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  white-space: nowrap;
+}
+.lh-sort-button:hover,
+.lh-sort-button:focus-visible {
+  color: #fff;
+}
+.lh-sort-button i {
+  font-size: 0.6rem;
+  margin-left: 0.15rem;
+}
+
+
+/* ---------- 12. Homepage: Top Hit Rates card ---------- */
+
+.lh-top-hit-rates {
+  margin-top: 2rem;    /* clear of the carousel's dot indicators */
+  margin-bottom: 3rem;
+}
+
+/* The card title: big condensed letters, like the page headings, with a violet icon and date */
+.lh-top-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: var(--lh-font-display);
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: #fff;
+}
+.lh-top-title i {
+  color: var(--lh-accent-light);
+  font-size: 0.85em;
+}
+.lh-top-title-date {
+  color: var(--lh-accent-light);
+}
+
+/* One row = one link. Four parts side by side on wider screens. */
+.lh-top-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.5rem 140px 7.5rem;
+  grid-template-areas: "player prop graph hit";
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--lh-border);
+  color: inherit;
+  text-decoration: none;
+}
+.lh-top-row:last-child {
+  border-bottom: 0;
+}
+a.lh-top-row:hover,
+a.lh-top-row:focus-visible {
+  background: rgba(var(--lh-accent-rgb), 0.08);
+  color: inherit;
+}
+
+.lh-top-player { grid-area: player; min-width: 0; }
+.lh-top-prop   { grid-area: prop; }
+.lh-top-graph  { grid-area: graph; }
+.lh-top-hit    { grid-area: hit; text-align: right; }
+
+.lh-top-team {
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  color: var(--lh-muted);
+}
+
+/* "PTS o24.5" */
+.lh-top-prop {
+  font-family: var(--lh-font-label);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* "8/10 (80%)": colors come from .lh-hit--good / .lh-hit--bad (section 11) */
+.lh-top-hit {
+  font-family: var(--lh-font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #fff;
+}
+.lh-top-hit.lh-hit--good { color: #2BFF88; }
+.lh-top-hit.lh-hit--bad  { color: #FF3B5C; }
+.lh-top-hit span {
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.lh-top-message {
+  padding: 0.5rem 0;
+}
+
+/* Phones: two lines per row. Name and hit rate on top, prop and graph underneath. */
+@media (max-width: 575.98px) {
+  .lh-top-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "player hit"
+      "prop   graph";
+  }
+  .lh-top-graph {
+    justify-self: end;
+  }
+}
+
+
+/* ---------- 13. Player page (player.html) ---------- */
+
+.lh-player-name {
+  font-size: clamp(1.1rem, 0.8rem + 1.25vw, 1.8rem);
+  line-height: 1;
+}
+.lh-player-jersey {
+  color: var(--lh-text-muted, #9a93b0);
+  font-weight: 600;
+}
+.lh-skeleton-title {
+  height: 1.4rem;
+}
+
+/* Injury badge: red OUT, yellow Q / Doubtful. A button, so tap and keyboard open the details. */
+.lh-injury-badge {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  padding: 0.2rem 0.65rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: help;
+}
+.lh-injury-badge.is-out { color: #FF3B5C; background: rgba(255, 59, 92, 0.12); }
+.lh-injury-badge.is-q   { color: #FFC83D; background: rgba(255, 200, 61, 0.12); }
+.lh-popover {
+  --bs-popover-max-width: 320px;
+  --bs-popover-bg: #12161f;
+  --bs-popover-border-color: rgba(var(--lh-accent-rgb), 0.45);
+  --bs-popover-header-bg: transparent;
+  font-size: 0.85rem;
+}
+
+/* "vs BOS · Tue, Oct 20 ›": links to that game */
+.lh-next-game {
+  font-family: var(--lh-font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+}
+.lh-next-game:hover,
+.lh-next-game:focus-visible {
+  color: var(--lh-accent-light);
+}
+
+/* Season averages: five boxes in a row, which wrap on phones */
+.lh-avg-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+@media (max-width: 575.98px) {
+  .lh-avg-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.lh-avg-box {
+  background: var(--lh-card-bg);
+  border: 1px solid var(--lh-border);
+  border-radius: 14px;
+  padding: 0.75rem 0.9rem;
+  min-height: 4.4rem;
+}
+.lh-avg-value {
+  font-family: var(--lh-font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* "No line" next to the stat name */
+.lh-no-line {
+  font-family: var(--lh-font-label);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #FFC83D;
+}
+
+/* The chart's box while loading: the same height as the chart, and fainter than a text placeholder
+   (a big solid block would be much louder than the small bars elsewhere) */
+.lh-chart-skeleton {
+  display: block;
+  height: 340px;
+  background-color: rgba(148, 163, 184, 0.18);
+}
+
+/* Game log table. min-width = on phones the table scrolls sideways (table-responsive) instead of squishing. */
+.lh-game-log {
+  min-width: 640px;
+  font-variant-numeric: tabular-nums; /* numbers line up in their columns */
+}
+.lh-game-log .lh-col-active {
+  background: rgba(var(--lh-accent-rgb), 0.1);
+  color: #fff;
+  font-weight: 600;
+}
+.lh-game-log th.lh-col-active {
+  color: var(--lh-accent-light);
+}
+.lh-game-log td.is-over  { color: #2BFF88; }
+.lh-game-log td.is-under { color: #FF3B5C; }
+.lh-game-log td.is-push  { color: #9CA3AF; }
+
+
+/* Player page: other players sidebar (right column on desktop, below the page on phones) */
+.lh-players-card {
+  position: sticky;
+  top: 90px; /* below the sticky navbar */
+}
+.lh-players-list {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+.lh-players-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  background: transparent;
+  font-size: 0.9rem;
+}
+.lh-players-row.is-current {
+  background: rgba(139, 92, 246, 0.15);
+}
+.lh-players-line {
+  font-family: var(--lh-font-mono, "JetBrains Mono", monospace);
+  font-size: 0.85rem;
+}
+@media (max-width: 991.98px) {
+  .lh-players-card { position: static; }
+  .lh-players-list { max-height: 360px; }
+}
+
+
+/* Navbar player search (built in nav.js) */
+.lh-search {
+  position: relative;
+  flex: 1 1 auto;
+  max-width: 380px;
+  margin: 0 0.75rem 0 auto;
+}
+.lh-search-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--lh-muted);
+  pointer-events: none;
+}
+.lh-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 1rem 0 2.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--lh-text);
+  font-size: 0.9rem;
+}
+.lh-search-input::placeholder { color: var(--lh-muted); }
+.lh-search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(var(--lh-accent-rgb), 0.18);
+}
+.lh-search-results {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: var(--lh-surface);
+  border: 1px solid var(--lh-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+.lh-search-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  color: var(--lh-text);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.lh-search-row:hover,
+.lh-search-row:focus-visible {
+  background: var(--lh-surface-2);
+  color: var(--lh-text);
+}
+.lh-search-meta {
+  color: var(--lh-muted);
+  font-family: var(--lh-font-label);
+  font-size: 0.72rem;
+  align-self: center;
+}
+.lh-search-note {
+  padding: 0.75rem 1rem;
+  color: var(--lh-muted);
+  font-size: 0.85rem;
+}
+
+/* Search bar placed in a page (schedule.html) instead of the navbar: under half the content width */
+.lh-search-slot .lh-search {
+  max-width: 40%;
+  margin: 0;
+}
+@media (max-width: 767.98px) {
+  .lh-search-slot .lh-search { max-width: 100%; } /* phones: too narrow for 40% */
+}
+
+/* Game summary pop-up (player page): the viewed player's row in the box score */
+.lh-box-current td {
+  background: rgba(var(--lh-accent-rgb), 0.15);
+}
+
+/* Player page: Game log scroll box (keeps it level with the With / Without card) */
+.lh-gamelog-scroll {
+  max-height: 420px;
+  overflow: auto;
+}
+.lh-gamelog-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--lh-surface);
+}
+
+/* Player page: With / Without teammate chips */
+.lh-ww-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.lh-ww-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.3rem;
+  border-radius: 999px;
+  border: 1px solid var(--lh-border);
+  background: transparent;
+  color: var(--lh-text);
+  font-size: 0.85rem;
+}
+.lh-ww-chip:hover { background: var(--lh-surface-2); }
+.lh-ww-chip.is-with {
+  border-color: var(--lh-over);
+  box-shadow: 0 0 0 1px var(--lh-over), 0 0 10px rgba(106, 227, 157, 0.35); /* the neon glow */
+}
+.lh-ww-chip.is-without {
+  border-color: var(--lh-under);
+  box-shadow: 0 0 0 1px var(--lh-under);
+}
+.lh-ww-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: rgba(var(--lh-accent-rgb), 0.25);
+  color: var(--lh-accent-light);
+  font-family: var(--lh-font-label);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.lh-ww-state {
+  font-family: var(--lh-font-label);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.is-with .lh-ww-state { color: var(--lh-over); }
+.is-without .lh-ww-state { color: var(--lh-under); }
+.lh-ww-clear { color: var(--lh-accent-light); text-decoration: none; }
+.lh-ww-row { margin-bottom: 0.35rem; }
+.lh-ww-label {
+  font-family: var(--lh-font-label);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 0.35rem;
+}
+.lh-ww-warn {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #f5c542;
+  color: #f5c542;
+  font-size: 0.75rem;
+}
+
+
+/* ---------- Schedule page: tighter Top Hit Rates card (half width) + Hit List ---------- */
+
+.lh-top-compact .card-body { padding-top: 0.75rem; padding-bottom: 0.5rem; }
+.lh-top-compact .lh-top-row {
+  grid-template-columns: minmax(0, 1fr) 5.5rem 96px 6rem;
+  gap: 0.25rem 0.75rem;
+  padding: 0.5rem 0.25rem;
+}
+.lh-top-compact .lh-top-hit { font-size: 1.15rem; }
+/* Below very wide screens the half-width card gets the two-line row, like phones */
+@media (max-width: 1399.98px) {
+  .lh-top-compact .lh-top-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "player hit"
+      "prop   graph";
+  }
+  .lh-top-compact .lh-top-graph { justify-self: end; }
+}
+
+/* ---------- Headings: Technor ----------
+   Page titles, card titles and section headings. Team abbreviations (div.lh-display), the logo, big stat
+   numbers, labels and body text keep their own fonts. Placed late in the file, so it wins over the earlier rules. */
+h1.lh-display,
+h2.lh-display,
+h3.lh-display,
+.lh-top-title,
+.lh-step-card h3,
+.lh-tool-card h3,
+.lh-card-title {
+  font-family: var(--lh-font-heading);
+}
+.lh-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Schedule page: smaller card titles ("Top Hit Rates", "Hit List") and a smaller date next to them */
+.lh-top-compact .lh-top-title,
+#hitlist .lh-top-title {
+  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
+  gap: 0.4rem;
+}
+.lh-top-compact .lh-top-title-date,
+#hitlist .lh-top-title-date {
+  font-size: 0.75em;
+}
+
+
+/* ---------- Hit List (schedule page): a 2x2 grid of small category cards ---------- */
+
+.lh-hitlist-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--lh-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+/* Hover (or keyboard focus inside) = a soft violet glow */
+.lh-hitlist-card:hover,
+.lh-hitlist-card:focus-within {
+  border-color: rgba(var(--lh-accent-rgb), 0.6);
+  box-shadow: 0 0 0 1px rgba(var(--lh-accent-rgb), 0.35), 0 0 18px rgba(var(--lh-accent-rgb), 0.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-hitlist-card { transition: none; }
+}
+.lh-hitlist-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--lh-border);
+  font-family: var(--lh-font-label);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.lh-hitlist-head { position: relative; }
+.lh-hitlist-head i { color: var(--lh-accent-light); }
+.lh-hitlist-share {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.2rem 0.35rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--lh-muted);
+}
+.lh-hitlist-share:hover,
+.lh-hitlist-share:focus-visible { color: var(--lh-accent-light); }
+.lh-hitlist-share:disabled { opacity: 0.6; }
+.lh-hitlist-head span { overflow: hidden; text-overflow: ellipsis; }
+
+.lh-hitlist-blurb {
+  padding: 0.35rem 0.75rem 0;
+  text-align: center;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--lh-muted);
+}
+.lh-hitlist-list {
+  flex: 1;
+  padding: 0.25rem 0;
+}
+.lh-hitlist-leg {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: inherit;
+  text-decoration: none;
+}
+.lh-hitlist-leg:hover,
+.lh-hitlist-leg:focus-visible {
+  background: rgba(var(--lh-accent-rgb), 0.08);
+  color: inherit;
+}
+.lh-hitlist-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.lh-hitlist-pick {
+  flex: 1 0 auto;
+  white-space: nowrap;
+  color: var(--lh-muted);
+}
+.lh-hitlist-proof {
+  margin-left: auto;
+  font-family: var(--lh-font-label);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  color: #2BFF88;
+}
+.lh-hitlist-proof.is-under { color: var(--lh-under); }
+
+.lh-hitlist-empty {
+  padding: 0.75rem;
+  font-size: 0.8rem;
+}
+.lh-hitlist-foot {
+  padding: 0.35rem 0.75rem 0.5rem;
+  border-top: 1px solid var(--lh-border);
+  font-size: 0.75rem;
+}
+.lh-hitlist-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--lh-accent-light);
+  font-size: 0.75rem;
+}
+.lh-hitlist-link:hover { text-decoration: underline; }
+.lh-hitlist-odds { margin-top: 0.25rem; }
+.lh-hitlist-odds strong {
+  font-family: var(--lh-font-display);
+  font-size: 1rem;
+}
+
+/* The picture made by the share button: built off-screen, same look as the site */
+.lh-share-card {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 560px;
+  padding: 1.5rem;
+  background: radial-gradient(circle at 50% 0%, rgba(var(--lh-accent-rgb), 0.22), transparent 60%), var(--lh-bg);
+  color: var(--lh-text);
+  font-family: var(--lh-font-body);
+}
+.lh-share-brand {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+.lh-share-card .lh-logo { font-size: 1.7rem; }
+.lh-share-card .lh-hitlist-head { font-size: 1rem; padding: 0.75rem 1rem; }
+.lh-share-card .lh-hitlist-blurb { font-size: 0.85rem; padding: 0.6rem 1rem 0; }
+.lh-share-card .lh-hitlist-leg { font-size: 1rem; padding: 0.5rem 1rem; }
+.lh-share-card .lh-hitlist-proof { font-size: 0.85rem; }
+.lh-share-note {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--lh-muted);
+  text-align: center;
+}
+
+
+/* ---------- Responsible gaming footer (added to every page by nav.js) ---------- */
+
+/* Short pages (the placeholders) still push the footer toward the bottom of the screen */
+body > main {
+  min-height: calc(100vh - 300px);
+}
+.lh-footer {
+  margin-top: 3rem;
+  padding: 1.5rem 0 2rem;
+  border-top: 1px solid var(--lh-border);
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--lh-muted);
+}
+.lh-footer p {
+  max-width: 46rem;
+  margin: 0 auto 0.5rem;
+}
+.lh-footer-title {
+  margin-bottom: 0.5rem;
+  color: var(--lh-text);
+}
+.lh-footer a {
+  color: var(--lh-accent-light);
+}
+.lh-footer-copy {
+  margin-top: 1rem;
+  opacity: 0.7;
+}
+
+/* Share picture for a prop chart (player page and drawer) */
+.lh-share-card:has(.lh-share-panel) { width: 640px; }
+.lh-share-panel { padding: 1.25rem 1.5rem; }
+.lh-share-name {
+  margin: 0 0 0.25rem;
+  font-size: 2rem;
+}
+.lh-share-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.lh-share-url {
+  margin-bottom: 0.35rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  color: var(--lh-accent-light);
 }

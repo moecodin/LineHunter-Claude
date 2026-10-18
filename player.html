@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player · LineHunter</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=technor@400,600,700&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+
+  <div id="site-nav"></div>
+
+  <!-- player.html?id=PLAYER_ID&prop=pts. js/player.js fills in every section.
+       placeholder-glow / placeholder = Bootstrap's grey loading bars, shown until the data arrives. -->
+  <main class="container-fluid lh-container px-3 px-lg-4 my-4">
+
+    <!-- 1. BACK: goes to the previous page (or the schedule if there isn't one) -->
+    <a href="schedule.html" id="playerBack" class="btn btn-sm btn-ghost mb-3">‹ Back</a>
+
+    <!-- 2. HEADER: name, team, position, jersey, injury badge, next game -->
+    <section id="playerHeader" class="mb-4">
+      <div class="placeholder-glow" aria-busy="true">
+        <span class="placeholder col-6 col-md-3 rounded lh-skeleton-title"></span>
+        <div class="mt-2"><span class="placeholder col-4 col-md-2 rounded"></span></div>
+        <div class="mt-3"><span class="placeholder col-5 col-md-2 rounded"></span></div>
+      </div>
+    </section>
+
+    <div class="row g-4">
+    <div class="col-lg-9 lh-player-main">
+
+    <!-- 3. SEASON AVERAGES: PTS, REB, AST, 3PM, MIN -->
+    <section class="mb-4">
+      <div id="playerAveragesLabel" class="lh-label mb-2">Season averages</div>
+      <div id="playerAverages" class="lh-avg-strip placeholder-glow" aria-busy="true">
+        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+      </div>
+    </section>
+
+    <!-- 4. PROPS: stat tabs, window + home/away toggles, hit rate, chart with the alt line -->
+    <section class="card mb-4">
+      <div class="card-body">
+        <!-- Stat tabs: Points, Rebounds, Assists, 3PM, P+R+A -->
+        <ul id="playerPropTabs" class="nav nav-underline lh-tabs mb-3"></ul>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <!-- L5 / L10 / L20 / Season -->
+          <div id="playerWindows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to use"></div>
+          <!-- All / Home / Away -->
+          <div id="playerSplits" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="Home or away games"></div>
+          <!-- Share the chart as a picture (js/share.js) -->
+          <button type="button" id="playerShare" class="btn btn-sm btn-ghost ms-auto" aria-label="Share this chart as an image" title="Share as image" disabled>
+            <i class="bi bi-share" aria-hidden="true"></i> Share
+          </button>
+        </div>
+
+        <!-- "Points line 26.5  O -110  U -115", or "No line" -->
+        <div id="playerLine" class="lh-drawer-line mb-3"></div>
+
+        <!-- Hit rate and average -->
+        <div id="playerSummary" class="d-flex gap-4 mb-3"></div>
+
+        <!-- Grey box while loading; then the chart and the alt line − / + control (js/propChart.js) -->
+        <div id="playerChartSkeleton" class="placeholder-glow" aria-hidden="true">
+          <span class="placeholder w-100 rounded lh-chart-skeleton"></span>
+        </div>
+        <div id="playerChart"></div>
+
+        <div id="playerMessage" class="text-muted small mt-2" hidden></div>
+      </div>
+    </section>
+
+    <!-- 5. GAME LOG + WITH / WITHOUT, side by side on desktop (stacked on tablets and phones).
+         h-100 = both cards as tall as the row. The game log scrolls inside its card so they line up. -->
+    <div class="row g-4 mb-5">
+    <div class="col-lg-6">
+    <!-- GAME LOG: follows the window, home/away and teammate filters. Scrolls sideways and up/down inside the card. -->
+    <section class="card h-100">
+      <div class="card-header lh-label py-3">Game log</div>
+      <div class="card-body">
+        <div class="table-responsive lh-gamelog-scroll">
+          <table class="table align-middle mb-0 lh-game-log">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Opp</th>
+                <th>Result</th>
+                <th class="text-end" data-col="min">MIN</th>
+                <th class="text-end" data-col="pts">PTS</th>
+                <th class="text-end" data-col="reb">REB</th>
+                <th class="text-end" data-col="ast">AST</th>
+                <th class="text-end" data-col="fg3m">3PM</th>
+                <th class="text-end" data-col="pra">PRA</th>
+              </tr>
+            </thead>
+            <tbody id="gameLogBody" class="placeholder-glow">
+              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
+              <tr><td colspan="9"><span class="placeholder col-12 rounded"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    </div>
+
+    <div class="col-lg-6">
+    <!-- WITH / WITHOUT: click a teammate chip to cycle neutral -> with -> without. js/player.js fills it in. -->
+    <section class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center py-3">
+        <span class="lh-label">With / Without</span>
+        <button type="button" id="withoutClear" class="btn btn-link btn-sm p-0 lh-ww-clear" hidden>Clear</button>
+      </div>
+      <div class="card-body">
+        <div id="withoutChips" class="lh-ww-chips placeholder-glow">
+          <span class="placeholder col-3 rounded"></span> <span class="placeholder col-3 rounded"></span> <span class="placeholder col-3 rounded"></span>
+        </div>
+        <div id="withoutSummary" class="mt-3"></div>
+      </div>
+    </section>
+    </div>
+    </div>
+    </div>
+
+    <!-- 6. OTHER PLAYERS: this team / the opponent in the next game. Switches player without going back a page. -->
+    <aside class="col-lg-3">
+      <div class="card lh-players-card">
+        <div class="card-header py-3">
+          <div class="lh-label mb-2">Players</div>
+          <div id="playerSideTabs" class="btn-group btn-group-sm lh-window-toggle w-100" role="group" aria-label="Team or opponent"></div>
+        </div>
+        <div id="playerSideList" class="list-group list-group-flush lh-players-list">
+          <div class="text-muted small p-3">Loading…</div>
+        </div>
+      </div>
+    </aside>
+    </div>
+  </main>
+
+  <!-- Game summary pop-up: js/player.js fills it when a chart bar is clicked -->
+  <div class="modal fade" id="gameModal" tabindex="-1" aria-labelledby="gameModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title lh-display fs-4" id="gameModalTitle">Game</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="gameModalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js draws the prop chart -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
+          crossorigin="anonymous"></script>
+  <!-- ORDER MATTERS: config.js has the key, js/stats.js the shared data code,
+       js/propChart.js the shared chart, then js/player.js uses them all -->
+  <script src="api.js"></script>
+  <script src="nav.js"></script>
+  <script src="config.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/propChart.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/player.js"></script>
+</body>
+</html>

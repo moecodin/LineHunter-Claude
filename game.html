@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=technor@400,600,700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="styles.css" rel="stylesheet">
@@ -17,7 +18,7 @@
 
   <div id="site-nav"></div>
 
-  <main class="container">
+  <main class="container-fluid lh-container px-3 px-lg-4">
 
     <!-- BACK BUTTON: btn-ghost = our quiet outlined pill button (styles.css) -->
     <a href="schedule.html" class="btn btn-sm btn-ghost mb-3">‹ All games</a>
@@ -32,9 +33,15 @@
       <div class="card-header lh-label py-3">Player Props</div>
       <div class="card-body">
 
-        <!-- PROP TYPE PILLS: Bootstrap "nav-pills". game.js adds one button per prop type.
-             flex-nowrap + overflow-auto = one row that scrolls sideways on phones -->
-        <ul id="prop-pills" class="nav nav-pills flex-nowrap overflow-auto pb-1 mb-3"></ul>
+        <!-- PROP TYPE TABS: Bootstrap "nav-underline". game.js adds one button per prop type.
+             lh-tabs (styles.css) = one row that scrolls sideways on phones, no wrapping -->
+        <ul id="prop-pills" class="nav nav-underline lh-tabs mb-3"></ul>
+
+        <!-- WINDOW TOGGLE: how many recent games the whole table uses. game.js adds the buttons. -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <div id="table-windows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to use"></div>
+          <span id="table-window-note" class="small text-muted" hidden>This season hasn't started, so Season shows last season.</span>
+        </div>
 
         <!-- Messages like "Loading..." or "No lines yet" appear here -->
         <div id="lines-message" class="text-muted">Loading lines...</div>
@@ -45,11 +52,16 @@
             <thead>
               <tr>
                 <th>Player</th>
-                <th>Team</th>
                 <th class="text-end">Line</th>
-                <th class="text-end">Avg. This Season</th>
-                <th class="text-end">Last 5 (L5)</th>
-                <th class="text-end">Last 10 (L10)</th>
+                <!-- d-none d-md-table-cell = hidden on phones so Player, Line and Hit % fit -->
+                <th class="d-none d-md-table-cell">Graph</th>
+                <!-- data-sort = which number this header sorts by. Clicking flips the direction. -->
+                <th class="text-end" data-sort="hitRate">
+                  <button type="button" class="lh-sort-button">Hit % <i class="bi bi-caret-down-fill"></i></button>
+                </th>
+                <th class="text-end d-none d-md-table-cell" data-sort="average">
+                  <button type="button" class="lh-sort-button">Avg <i class="bi bi-caret-down-fill"></i></button>
+                </th>
               </tr>
             </thead>
             <tbody id="lines-body"></tbody>
@@ -61,10 +73,59 @@
 
   </main>
 
+  <!-- PLAYER DRAWER: Bootstrap offcanvas that slides in from the right (offcanvas-end).
+       player-drawer.js fills it in when a row in the props table is clicked. -->
+  <div class="offcanvas offcanvas-end lh-player-drawer" tabindex="-1" id="playerDrawer" aria-labelledby="playerDrawerName">
+    <div class="offcanvas-header align-items-start">
+      <div>
+        <h2 class="lh-display h3 mb-1" id="playerDrawerName">Player</h2>
+        <div class="lh-label" id="playerDrawerMeta"></div>
+        <!-- player-drawer.js sets the link: player.html?id=PLAYER_ID&prop=pts -->
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          <a id="playerDrawerPageLink" class="btn btn-sm lh-player-page-btn" href="player.html">Go to player page →</a>
+          <!-- Share the chart as a picture (js/share.js) -->
+          <button type="button" id="playerDrawerShare" class="btn btn-sm btn-ghost" aria-label="Share this chart as an image" title="Share as image">
+            <i class="bi bi-share" aria-hidden="true"></i> Share
+          </button>
+        </div>
+      </div>
+      <button type="button" class="lh-drawer-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="offcanvas-body">
+      <!-- The line and over/under odds for the selected stat -->
+      <div id="playerDrawerLine" class="lh-drawer-line mb-3"></div>
+
+      <!-- Stat tabs: Points, Rebounds, Assists, 3PM, P+R+A -->
+      <ul id="playerDrawerStats" class="nav nav-underline lh-tabs mb-3"></ul>
+
+      <!-- Window toggle: L5 / L10 / L20 / Season -->
+      <div id="playerDrawerWindows" class="btn-group btn-group-sm lh-window-toggle mb-3" role="group" aria-label="How many games to show"></div>
+
+      <!-- Hit rate and average -->
+      <div id="playerDrawerSummary" class="d-flex gap-4 mb-3"></div>
+
+      <!-- The chart, its hover tooltip, and the alt line − / + control: built by js/propChart.js -->
+      <div id="playerDrawerChart"></div>
+
+      <div id="playerDrawerMessage" class="text-muted small mt-2" hidden></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js draws the bar chart in the player drawer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
+          crossorigin="anonymous"></script>
   <script src="api.js"></script>
   <script src="nav.js"></script>
   <script src="config.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/propChart.js"></script>
+  <script src="js/share.js"></script>
   <script src="game.js"></script>
+  <script src="player-drawer.js"></script>
 </body>
 </html>

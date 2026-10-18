@@ -57,16 +57,20 @@ function showMessage(text, colorClass) {
   gamesList.innerHTML = `<div class="col-12 ${colorClass}">${text}</div>`;
 }
 
-// Add one button to the date pager.
+// Add one tab to the date pager (same underline tabs as the rest of the site: lh-tabs in styles.css).
 // When clicked, it makes "date" the selected day and loads that day's games.
-// extraClass is optional: extra Bootstrap classes for this one button.
-function addPagerItem(pager, text, date, isActive, extraClass = "") {
+// extraClass is optional: extra Bootstrap classes for this one tab.
+// ariaLabel is optional: what screen readers say instead of the text (for the ‹ › arrows).
+function addPagerItem(pager, text, date, isActive, extraClass = "", ariaLabel = "") {
   const item = document.createElement("li");
-  // active = Bootstrap highlights this page as the current one
-  item.className = `page-item ${isActive ? "active" : ""} ${extraClass}`;
+  item.className = `nav-item ${extraClass}`;
 
   const button = document.createElement("button");
-  button.className = "page-link";
+  button.type = "button";
+  // active = white text with the violet underline
+  button.className = isActive ? "nav-link active" : "nav-link";
+  if (isActive) button.setAttribute("aria-current", "date"); // tells screen readers this is the picked day
+  if (ariaLabel) button.setAttribute("aria-label", ariaLabel);
   button.textContent = text;
   button.addEventListener("click", () => {
     selectedDate = date;
@@ -82,7 +86,7 @@ function renderPager() {
   const pager = document.getElementById("date-pager");
   pager.innerHTML = "";
 
-  addPagerItem(pager, "‹", addDays(selectedDate, -1), false);
+  addPagerItem(pager, "‹", addDays(selectedDate, -1), false, "", "Previous day");
 
   for (let offset = -2; offset <= 2; offset++) {
     const day = addDays(selectedDate, offset);
@@ -95,7 +99,7 @@ function renderPager() {
     addPagerItem(pager, text, day, offset === 0, extraClass);
   }
 
-  addPagerItem(pager, "›", addDays(selectedDate, 1), false);
+  addPagerItem(pager, "›", addDays(selectedDate, 1), false, "", "Next day");
 }
 
 // ---------- Loading games ----------
@@ -144,6 +148,13 @@ async function loadGames() {
       games = json.data;
       gamesCache[day] = games; // save for next time
     }
+
+    // Clicked to another day while this one was downloading? Then this answer is old news:
+    // the newer click's loadGames() will draw its own day, so stop here.
+    if (day !== toApiDate(selectedDate)) return;
+
+    // The Top Hit Rates card under the games follows the same day (js/top-hit-rates.js).
+    showTopHitRatesForDay(day, games);
 
     if (games.length === 0) {
       showMessage("No games scheduled for this day.", "text-muted");
@@ -198,6 +209,7 @@ async function loadGames() {
       gamesList.appendChild(col);
     });
   } catch (error) {
+    if (day !== toApiDate(selectedDate)) return; // an old day's error, the user has moved on
     console.error(error); // full details go to the browser console (F12)
     showMessage(`Couldn't load games: ${error.message}`, "text-danger");
   }
