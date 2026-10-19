@@ -62,6 +62,20 @@ const LOGO = `<svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
   <path fill="#d2e0f8" d="M223.9,35.0 243.7,35.0 219.8,125.0 200.0,125.0ZM203.3,112.4 259.1,112.4 255.8,125.0 200.0,125.0ZM293.2,35.0 313.0,35.0 289.1,125.0 269.3,125.0ZM326.5,35.0 346.3,35.0 322.4,125.0 302.6,125.0ZM369.7,35.0 389.5,35.0 365.6,125.0 345.8,125.0ZM326.5,35.0 346.3,35.0 365.6,125.0 345.8,125.0ZM403.0,35.0 422.8,35.0 398.9,125.0 379.1,125.0ZM403.0,35.0 457.0,35.0 453.6,47.6 399.6,47.6ZM392.7,73.7 439.5,73.7 436.2,86.3 389.4,86.3ZM382.4,112.4 436.4,112.4 433.1,125.0 379.1,125.0ZM483.1,35.0 502.9,35.0 479.0,125.0 459.2,125.0ZM526.3,35.0 546.1,35.0 522.2,125.0 502.4,125.0ZM491.7,77.3 515.1,77.3 513.6,82.7 490.2,82.7ZM559.6,35.0 579.4,35.0 555.5,125.0 535.7,125.0ZM602.8,35.0 622.6,35.0 598.7,125.0 578.9,125.0ZM539.0,112.4 602.0,112.4 598.7,125.0 535.7,125.0ZM636.1,35.0 655.9,35.0 632.0,125.0 612.2,125.0ZM679.3,35.0 699.1,35.0 675.2,125.0 655.4,125.0ZM636.1,35.0 655.9,35.0 675.2,125.0 655.4,125.0ZM712.6,35.0 772.0,35.0 768.6,47.6 709.2,47.6ZM732.4,35.0 752.2,35.0 728.3,125.0 708.5,125.0ZM785.5,35.0 805.3,35.0 781.4,125.0 761.6,125.0ZM785.5,35.0 839.5,35.0 836.1,47.6 782.1,47.6ZM775.2,73.7 822.0,73.7 818.7,86.3 771.9,86.3ZM764.9,112.4 818.9,112.4 815.6,125.0 761.6,125.0ZM853.0,35.0 872.8,35.0 848.9,125.0 829.1,125.0ZM853.0,35.0 908.8,35.0 905.4,47.6 849.6,47.6ZM892.6,35.0 912.4,35.0 899.0,85.4 879.2,85.4ZM842.9,72.8 902.3,72.8 899.0,85.4 839.6,85.4ZM864.8,85.4 884.6,85.4 890.3,125.0 870.5,125.0Z"/>
 </svg>`;
 
+// ---------- decorative background rows (hardcoded samples: the page loads no real data) ----------
+
+// City nicknames (the same words as the city watermarks in js/data/teams.js), split between the two city rows.
+const CITIES_A = ["PHILLY", "MOTOR CITY", "VICE CITY", "THE BAY", "BIG APPLE", "H-TOWN", "THE LAND", "MILE HIGH", "NOLA", "THE 6IX", "SACTOWN", "BUZZ CITY", "THE VALLEY", "PDX", "INDY"];
+const CITIES_B = ["CHI-TOWN", "GRIND CITY", "CREAM CITY", "TWIN CITIES", "HOLLYWOOD", "THE DISTRICT", "THE A", "BOSTON", "SATX", "OKC", "ORLANDO", "MAVS", "CLIPPERS", "BKN", "UTA"];
+const OVER_SAMPLES = ["OVER 24.5 POINTS · 9/10", "OVER 8.5 REBOUNDS · 8/10", "OVER 6.5 ASSISTS · 7/10", "OVER 2.5 THREES MADE · 9/10", "OVER 35.5 PRA · 8/10", "OVER 18.5 POINTS · 10/10", "OVER 11.5 REBOUNDS · 7/10", "OVER 9.5 ASSISTS · 8/10"];
+const UNDER_SAMPLES = ["UNDER 10.5 POINTS · 5/5", "UNDER 4.5 REBOUNDS · 4/5", "UNDER 3.5 ASSISTS · 5/5", "UNDER 1.5 THREES MADE · 4/5", "UNDER 22.5 PRA · 5/5", "UNDER 12.5 POINTS · 4/5", "UNDER 5.5 REBOUNDS · 5/5", "UNDER 2.5 ASSISTS · 4/5"];
+
+// One row = a track holding the same group twice; sliding the track by exactly one group (-50%) loops with no gap or jump.
+function marqueeRow(items, className) {
+  const group = `<span class="group">${items.map((text) => `<span class="item">${text}</span>`).join("")}</span>`;
+  return `<div class="row ${className}"><div class="track">${group}${group}</div></div>`;
+}
+
 function gatePage({ next, error }) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -69,13 +83,13 @@ function gatePage({ next, error }) {
   <meta charset="UTF-8">
   <meta name="robots" content="noindex">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>LineHunter · Private preview</title>
+  <title>LineHunter · Enter password to start the hunt</title>
   <link rel="icon" type="image/svg+xml" href="/assets/img/lh-mark.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/lh-mark-32.png">
   <link rel="apple-touch-icon" href="/assets/img/lh-mark-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
@@ -88,6 +102,32 @@ function gatePage({ next, error }) {
       font-family: "Satoshi", system-ui, sans-serif;
     }
     main { width: 100%; max-width: 20rem; text-align: center; }
+    /* Decorative rows: two at the top, two at the bottom, the middle stays clear. Hidden on short screens (phones on their side). */
+    .rows { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; user-select: none; }
+    .row { position: absolute; left: 0; right: 0; overflow: hidden; white-space: nowrap; }
+    .row .track { display: flex; width: max-content; will-change: transform; animation-timing-function: linear; animation-iteration-count: infinite; }
+    .row .group { display: flex; flex: none; }
+    .row .item { flex: none; padding-right: 3rem; }
+    .row .item::after { content: "·"; padding-left: 3rem; }
+    .row--city { font-family: "Barlow Condensed", sans-serif; font-style: italic; font-weight: 700; font-size: clamp(2.6rem, 8vw, 4.5rem); line-height: 1.1; text-transform: uppercase; color: rgba(210, 224, 248, 0.07); }
+    .row--over, .row--under { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: clamp(0.8rem, 2.2vw, 1.05rem); letter-spacing: 0.08em; line-height: 1.6; }
+    .row--over { color: rgba(29, 158, 117, 0.12); }
+    .row--under { color: rgba(216, 90, 48, 0.12); }
+    .row--1 { top: 0.75rem; }
+    .row--2 { top: calc(0.75rem + clamp(2.6rem, 8vw, 4.5rem) * 1.1 + 0.5rem); }
+    .row--4 { bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
+    .row--3 { bottom: calc(0.75rem + env(safe-area-inset-bottom) + 1.7rem + 0.5rem); }
+    .row--left .track  { animation-name: slide-left; }
+    .row--right .track { animation-name: slide-right; }
+    .row--1 .track { animation-duration: 52s; }
+    .row--2 .track { animation-duration: 42s; }
+    .row--3 .track { animation-duration: 48s; }
+    .row--4 .track { animation-duration: 44s; }
+    @keyframes slide-left  { from { transform: translateX(0); }    to { transform: translateX(-50%); } }
+    @keyframes slide-right { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+    @media (prefers-reduced-motion: reduce) { .row .track { animation: none; } }
+    @media (max-height: 560px) { .rows { display: none; } }
+    main { position: relative; z-index: 1; }
     .logo { display: block; width: 100%; max-width: 15rem; height: auto; margin: 0 auto 2rem; }
     .label { margin: 0 0 1rem; font-family: "JetBrains Mono", monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #8fa3c4; }
     input, button { width: 100%; padding: 0.8rem 1rem; border-radius: 12px; font: inherit; font-size: 1rem; /* 16px: no zoom on iPhone */ }
@@ -100,9 +140,16 @@ function gatePage({ next, error }) {
   </style>
 </head>
 <body>
+  <!-- Decorative only: hardcoded samples, no data is loaded before login -->
+  <div class="rows" aria-hidden="true">
+    ${marqueeRow(CITIES_A, "row--city row--1 row--left")}
+    ${marqueeRow(OVER_SAMPLES, "row--over row--2 row--right")}
+    ${marqueeRow(CITIES_B, "row--city row--3 row--right")}
+    ${marqueeRow(UNDER_SAMPLES, "row--under row--4 row--left")}
+  </div>
   <main>
     ${LOGO}
-    <p class="label">Private preview</p>
+    <p class="label">Enter password to start the hunt</p>
     <form method="post" action="${GATE_PATH}">
       <input type="hidden" name="next" value="${escapeHtml(next)}">
       <input type="password" name="password" placeholder="Password" autocomplete="current-password" autofocus required aria-label="Password">
