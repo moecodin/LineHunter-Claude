@@ -4383,3 +4383,29 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   .lh-prow--noline .lh-prow-prop { grid-column: prop; }
   .lh-prow-graph .lh-mini-graph { width: 96px; }
 }
+
+/* My Hunts: Share hunt / Post to @Playbook (drawer foot), the toast, and the shared hunt page (hunt.html) */
+.lh-hunts-share-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.85rem; }
+.lh-hunts-sharebtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  min-height: 38px; padding: 0 0.4rem; border: 1px solid var(--lh-slip-line); border-radius: 0; background: none;
+  color: var(--lh-text); font-family: var(--lh-font-label); font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap;
+}
+.lh-hunts-sharebtn:hover, .lh-hunts-sharebtn:focus-visible { color: var(--lh-strong); border-color: rgba(var(--lh-accent-rgb), 0.6); }
+.lh-hunts-sharenote { margin-top: 0.4rem; text-align: center; font-size: 0.68rem; color: var(--lh-muted); }
+.lh-toast {
+  position: fixed; left: 50%; bottom: calc(1.75rem + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 2000;
+  max-width: calc(100vw - 2rem); padding: 0.55rem 0.95rem; border: 1px solid var(--lh-slip-line); background: var(--lh-slip-bg); color: var(--lh-strong);
+  font-family: var(--lh-font-label); font-size: 0.78rem; letter-spacing: 0.03em; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+.lh-toast[hidden] { display: none; }
+@media (max-width: 767.98px) { .lh-toast { bottom: calc(64px + env(safe-area-inset-bottom) + 1rem); } }
+.lh-shared { max-width: 36rem; }
+.lh-shared-date { font-family: var(--lh-font-label); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-shared-date:empty { display: none; }
+.lh-shared-foot { margin-top: 1rem; padding: 0.9rem 1rem; border: 1px solid var(--lh-slip-line); background: var(--lh-slip-bg); }
+.lh-hleg--link { cursor: pointer; transition: transform 0.15s ease; }
+.lh-hleg--link:hover { transform: translateX(2px); }
+.lh-hleg--link:focus-visible { outline: 2px solid rgba(var(--lh-accent-rgb), 0.6); outline-offset: 2px; }
+.lh-hleg-gone { padding: 0 0.35rem; text-align: center; font-size: 0.7rem; line-height: 1.2; color: var(--lh-muted); }
+@media (prefers-reduced-motion: reduce) { .lh-hleg--link { transition: none; } .lh-hleg--link:hover { transform: none; } }

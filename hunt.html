@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; js/components/nav.js has the toggle) -->
+  <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
+  <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Shared hunt · LineHunter</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
+  <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=technor@400,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="css/styles.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Research mode: applied before anything renders, so there's no flash (js/components/nav.js has the switch) -->
+  <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
+
+  <div id="site-nav"></div>
+
+  <main class="container-fluid lh-container px-3 px-lg-4 my-4">
+    <div class="lh-shared mx-auto">
+      <!-- SHARED HUNT: the legs come from ?h=gameId.playerId.pts.o.19.5_... (js/core/hunts.js parseShare); js/pages/hunt.js loads
+           the games, players and CURRENT odds and draws them as the same bet tickets as the My Hunts drawer. -->
+      <div class="lh-label mb-2">NBA · <span class="text-accent">Shared hunt</span></div>
+      <h1 class="lh-display display-6 mb-1">Shared hunt</h1>
+      <div class="lh-shared-date" id="huntDate"></div>
+
+      <p class="text-muted my-4 lines-only" id="huntLoading">Loading hunt...</p>
+
+      <!-- Lines mode, valid legs -->
+      <section id="huntView" class="lines-only" hidden>
+        <ul class="lh-hunts-list" id="huntList"></ul>
+        <div class="lh-shared-foot">
+          <div class="lh-hunts-total">
+            <span class="lh-hunts-type" id="huntType">Single</span>
+            <span class="lh-hunts-total-odds" id="huntOdds">–</span>
+          </div>
+          <div class="lh-hunts-note" id="huntNote" hidden></div>
+          <button type="button" class="btn btn-lh-primary w-100 mt-3" id="huntAdd"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add to My Hunts</button>
+          <div class="lh-hunts-legal">Odds are current best odds, not the odds when this was shared · Bet within your limits · 21+ · 1-800-GAMBLER</div>
+        </div>
+      </section>
+
+      <!-- Nothing valid in the link -->
+      <section id="huntBroken" class="lines-only" hidden>
+        <p class="my-4">This hunt link doesn't work anymore.</p>
+        <a href="schedule.html" class="btn btn-lh-primary">Back to the schedule</a>
+      </section>
+
+      <!-- Research mode: slips are about lines -->
+      <section id="huntResearch" class="research-only my-4">
+        <p>This is a shared slip. Switch to line mode to view it.</p>
+        <!-- data-lh-mode: js/components/nav.js switches the mode for any button that has it -->
+        <button type="button" class="btn btn-lh-primary" data-lh-mode="lines">Switch to line mode</button>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js draws the chart in the player drawer (js/components/schedule-drawer.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
+          crossorigin="anonymous"></script>
+  <script src="js/core/api.js"></script>
+  <script src="js/core/hunts.js"></script>
+  <script src="js/components/nav.js"></script>
+  <script src="js/components/hunt-button.js"></script>
+  <script src="js/components/my-hunts.js"></script>
+  <script src="js/data/odds.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/components/propChart.js"></script>
+  <script src="js/components/prop-toolbar.js"></script>
+  <script src="js/data/teams.js"></script>
+  <script src="js/components/schedule-drawer.js"></script>
+  <script src="js/pages/hunt.js"></script>
+</body>
+</html>

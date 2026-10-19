@@ -64,6 +64,11 @@
           <span class="lh-hunts-win-amount" id="lhHuntsWin">–</span>
         </div>
       </div>
+      <div class="lh-hunts-share-row">
+        <button type="button" class="lh-hunts-sharebtn" id="lhHuntsShare"><i class="bi bi-share" aria-hidden="true"></i> Share hunt</button>
+        <button type="button" class="lh-hunts-sharebtn" id="lhHuntsPost"><i class="bi bi-twitter-x" aria-hidden="true"></i> Post to @Playbook</button>
+      </div>
+      <div class="lh-hunts-sharenote">Posts publicly from your X account.</div>
       <button type="button" class="lh-hunts-clear" id="lhHuntsClear">Clear all</button>
       <div class="lh-hunts-legal">Bet within your limits · 21+ · 1-800-GAMBLER</div>
     </div>`;
@@ -92,6 +97,54 @@
     openMyHunts();
   });
 
+  // ---------- game info: "AWY @ HME" and the date of the games ----------
+  // A leg only knows its team and opponent, not who is home, so the matchup comes from the game itself (one small request per game,
+  // shared by the CDN, kept in sessionStorage). Until it arrives the matchup is left out; if it can't be loaded the old "PHI · NYK" shows.
+  const gameInfo = {};      // gameId -> { away, home, datetime } | false (could not load)
+  const gameLoading = {};
+  const GAME_KEY = "lh-game:";
+  function readGameInfo(id) {
+    if (id in gameInfo) return gameInfo[id];
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(GAME_KEY + id));
+      if (saved && saved.away && saved.home) return (gameInfo[id] = saved);
+    } catch (error) { /* storage blocked: ask the API */ }
+    return undefined;
+  }
+  function loadGameInfo(legs) {
+    const ids = [...new Set(legs.map((leg) => leg.gameId).filter(Boolean))].filter((id) => readGameInfo(id) === undefined && !gameLoading[id]);
+    if (!ids.length) return;
+    Promise.all(ids.map((id) => {
+      gameLoading[id] = true;
+      return fetch(`/api/bdl/v1/games/${id}`)
+        .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
+        .then(({ data }) => {
+          const iso = data.datetime || (/^\d{4}-\d{2}-\d{2}T/.test(data.status || "") ? data.status : data.date);
+          gameInfo[id] = { away: data.visitor_team.abbreviation, home: data.home_team.abbreviation, datetime: iso || null };
+          try { sessionStorage.setItem(GAME_KEY + id, JSON.stringify(gameInfo[id])); } catch (error) { /* fine */ }
+        })
+        .catch(() => { gameInfo[id] = false; })
+        .finally(() => { delete gameLoading[id]; });
+    })).then(render);
+  }
+  const matchupFor = (leg) => {
+    const info = leg.gameId ? readGameInfo(leg.gameId) : undefined;
+    if (info) return `${info.away} @ ${info.home}`;
+    return info === false ? [leg.team, leg.opp].filter(Boolean).join(" · ") : "";
+  };
+  // The date of the games in the slip: the earliest tip-off (a leg's own, or the game's).
+  function slipDate(legs) {
+    const times = legs.map((leg) => {
+      const info = leg.gameId ? readGameInfo(leg.gameId) : undefined;
+      return Date.parse(leg.tipoff || (info && info.datetime) || "");
+    }).filter(Number.isFinite);
+    return times.length ? new Date(Math.min(...times)) : null;
+  }
+  const dateText = (date, comma = true) => {
+    const text = date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    return comma ? text : text.replace(",", "");
+  };
+
   // ---------- drawing ----------
 
   function legHtml(leg) {
@@ -99,7 +152,7 @@
     const time = leg.tipoff && !started
       ? new Date(leg.tipoff).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
       : "";
-    const matchup = [leg.team, leg.opp].filter(Boolean).join(" · ");
+    const matchup = matchupFor(leg);
     const side = leg.side === "under" ? "Under" : "Over";
     return `
       <li class="lh-hleg lh-hleg--${leg.side}">
@@ -110,7 +163,7 @@
             <button type="button" class="lh-hleg-remove" data-hunt-remove="${escapeText(leg.id)}" aria-label="Remove ${escapeText(leg.player)} ${side} ${leg.line} from My Hunts"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
           </div>
           <div class="lh-hleg-prop"><span class="lh-hleg-side">${side}</span> ${leg.line} ${escapeText(huntStatName(leg.stat))}${leg.isAlt ? ` <span class="lh-hleg-tag">Alt</span>` : ""}</div>
-          <div class="lh-hleg-match">${escapeText(matchup)}${time ? ` · ${time}` : ""}</div>
+          <div class="lh-hleg-match">${escapeText([matchup, time].filter(Boolean).join(" · "))}</div>
         </div>
         <div class="lh-hleg-stub">
           <span class="lh-hleg-odds">${formatAmerican(leg.odds)}</span>
@@ -142,8 +195,10 @@
     list.innerHTML = legs.map(legHtml).join("");
     drawer.querySelector("#lhHuntsEmpty").hidden = legs.length > 0;
     drawer.querySelector("#lhHuntsFoot").hidden = legs.length === 0;
-    drawer.querySelector("#lhHuntsDate").textContent = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    const when = slipDate(legs);
+    drawer.querySelector("#lhHuntsDate").textContent = when ? dateText(when) : ""; // the date of the games, not today
     renderTotals(legs);
+    loadGameInfo(legs);
 
     // The count on the phone tab's badge and on the floating pill.
     document.querySelectorAll("[data-hunts-count]").forEach((badge) => {
@@ -173,6 +228,87 @@
 
   drawer.querySelector("#lhHuntsClear").addEventListener("click", () => {
     if (window.confirm("Clear every leg from My Hunts?")) lhHunts.clear();
+  });
+
+  // ---------- toast ----------
+  // window.lhToast("Link copied"): a small message at the bottom of the screen for 2.5 s (also used by hunt.html).
+  const toast = document.createElement("div");
+  toast.className = "lh-toast";
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.hidden = true;
+  document.body.appendChild(toast);
+  let toastTimer = null;
+  window.lhToast = (message) => {
+    toast.textContent = message;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.hidden = true; }, 2500);
+  };
+
+  // ---------- Share hunt / Post to @Playbook ----------
+  const sidePhrase = (leg) => `${leg.player} ${leg.side === "under" ? "Under" : "Over"} ${leg.line} ${huntStatName(leg.stat)}`;
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((resolve, reject) => {           // older browsers / plain http: a hidden textarea and execCommand
+      const box = document.createElement("textarea");
+      box.value = text;
+      box.setAttribute("readonly", "");
+      box.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+      document.body.appendChild(box);
+      box.select();
+      let done = false;
+      try { done = document.execCommand("copy"); } catch (error) { done = false; }
+      box.remove();
+      done ? resolve() : reject(new Error("copy failed"));
+    });
+  }
+
+  drawer.querySelector("#lhHuntsShare").addEventListener("click", async () => {
+    const legs = lhHunts.getAll();
+    const link = lhHunts.shareLink(legs);
+    if (!link) { window.lhToast("These picks can't be shared yet"); return; }
+    const shareable = legs.filter((leg) => leg.gameId && link.includes(`${leg.gameId}.${leg.playerId}.`));
+    const when = slipDate(legs);
+    let summary;
+    if (shareable.length > 1) {
+      const priced = shareable.filter((leg) => leg.odds !== null && leg.odds !== undefined);
+      const odds = priced.length === shareable.length ? lhHunts.combinedOdds(priced.map((leg) => leg.odds)) : null;
+      summary = `${shareable.length}-leg parlay${odds === null ? "" : ` ${formatAmerican(odds)}`}`;
+    } else {
+      summary = `Single: ${sidePhrase(shareable[0])}`;
+    }
+    const text = ["My Hunts", when ? dateText(when, false) : "", summary].filter(Boolean).join(" · ");
+
+    // Phones open the share sheet. Desktop (or a browser without one) copies the link.
+    if (navigator.share && window.matchMedia(PHONE).matches) {
+      try {
+        await navigator.share({ text, url: link });
+        return;
+      } catch (error) {
+        if (error && error.name === "AbortError") return; // closed the sheet: nothing to do
+      }
+    }
+    try {
+      await copyText(link);
+      window.lhToast("Link copied");
+    } catch (error) {
+      window.prompt("Copy this link", link);
+    }
+  });
+
+  // X's own share page in a new tab; the visitor posts it themselves. The book is the Sportsbook filter's, else FanDuel.
+  drawer.querySelector("#lhHuntsPost").addEventListener("click", () => {
+    const legs = lhHunts.getAll();
+    if (!legs.length) return;
+    let book = "FanDuel";
+    try {
+      const vendor = localStorage.getItem("lh-odds-book");
+      if (vendor) book = typeof lhOdds !== "undefined" ? lhOdds.vendorName(vendor) : vendor.replace(/^./, (letter) => letter.toUpperCase());
+    } catch (error) { /* storage blocked: FanDuel */ }
+    const text = [`@Playbook ${book}`, ...legs.map(sidePhrase), "via LineHunter"].join("\n");
+    window.open(`https://x.com/intent/post?text=${encodeURIComponent(text)}`, "_blank", "noopener");
   });
 
   // ---------- the floating pill and the "ADDED" mini ticket ----------
@@ -223,7 +359,7 @@
   document.addEventListener("lh-hunts-change", (event) => {
     render();
     const { action, leg, replaced } = event.detail || {};
-    if (action === "add" && leg && !document.body.classList.contains("lh-hunts-open")) showAdded(leg, replaced);
+    if (action === "add" && leg && !(event.detail && event.detail.silent) && !document.body.classList.contains("lh-hunts-open")) showAdded(leg, replaced);
   });
 
   // Research mode hides My Hunts: close it if it is open (the slip stays saved).
