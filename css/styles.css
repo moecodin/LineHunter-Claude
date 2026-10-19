@@ -15,7 +15,7 @@
 :root,
 [data-bs-theme="dark"] {
   /* Our colors */
-  --lh-bg: #050b16;                 /* page background: near-black with a slight navy tint */
+  --lh-bg: #050506;                 /* page background: near-black */
   --lh-surface: #071a38;            /* cards: navy */
   --lh-surface-2: #0b2347;          /* hover / raised parts */
   --lh-card-bg: rgba(7, 26, 56, 0.55);   /* cards: see-through navy, so the dark page shows through */
@@ -64,7 +64,7 @@
   /* "Ink": the color of faint fills, dividers and soft text on cards (white tints here, dark tints in light mode) */
   --lh-ink-rgb: 255, 255, 255;
   --lh-line-rgb: 148, 163, 184;     /* court lines, skeletons */
-  --lh-bg-rgb: 5, 11, 22;          /* the page background as "r, g, b": see-through bars and panels */
+  --lh-bg-rgb: 5, 5, 6;             /* the page background as "r, g, b": see-through bars and panels */
   --lh-surface-rgb: 7, 26, 56;      /* the card surface as "r, g, b" */
   --lh-deep-rgb: 3, 9, 20;          /* the dark wash behind the homepage carousel slides */
   --lh-hero-rgb: 33, 7, 169;        /* indigo: second tint of the game header gradient */

@@ -98,7 +98,7 @@ function gatePage({ next, error }) {
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; min-height: 100dvh;
       padding: 1.5rem; padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
-      background: #050b16; color: #d2e0f8;
+      background: #050506; color: #d2e0f8;
       font-family: "Satoshi", system-ui, sans-serif;
     }
     main { width: 100%; max-width: 20rem; text-align: center; }
