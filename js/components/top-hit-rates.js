@@ -20,14 +20,7 @@ const TOP_SORTS = [
 ];
 
 // The filter pills. "all" mixes every prop; the others match PROP_CODES in js/core/stats.js.
-const TOP_FILTERS = [
-  { code: "all", label: "All" },
-  { code: "pts", label: "PTS" },
-  { code: "reb", label: "REB" },
-  { code: "ast", label: "AST" },
-  { code: "3pm", label: "3PM" },
-  { code: "pra", label: "PRA" },
-];
+const TOP_FILTERS = PL_STAT_TABS;
 
 // sessionStorage = a small storage box in the browser that lasts until the tab is closed.
 // We save the finished rows there, so coming back to the homepage within 10 minutes shows them
@@ -39,17 +32,7 @@ const TOP_CACHE_MINUTES = 10;
 
 let topSlate = null;       // { date: "2026-10-20", rows: [...] } once loaded
 let topFilter = "all";     // which pill is selected
-let topWindow = 10;        // which of L5 / L10 / L20 is selected (schedule page)
-let topSort = "rate";      // which sort is selected (schedule page)
-// Filters (schedule page). Nothing is saved: every visit starts from these defaults.
-let topSide = "both";          // "over" | "under" | "both" (both = each line shows its stronger side)
-let topGame = "all";           // "all" or one game id
-let topHideInjured = true;     // hides players listed Out / Questionable (and similar) in the injury data
-let topMinGames = 0;           // 0 = off, 5, 10
-let topOpenPanel = null;       // "filter" | "sort" | "book" | null (desktop dropdown)
-let topQuery = "";             // the search box (not saved)
-// The Sportsbook filter lives in lhOdds (js/data/odds.js): lhOdds.getBook() = "fanduel" etc., null = Best odds. Saved in localStorage,
-// so the drawer, player page and game page use it too.
+// The window / Sort / Side / Game / Hide injured / Min games / search / sportsbook choices live in topUi.state (js/components/prop-list.js).
 let topRequestNumber = 0;  // goes up with every load, so a slow old load can't overwrite a newer one
 
 // ---------- Dates ----------
@@ -160,7 +143,7 @@ async function buildTopHitRates(slate) {
   ));
 
   // 2. One line per player per prop, only the five props this card covers (Points, Rebounds, Assists, 3PM, P+R+A).
-  const lines = pickOneLinePerPlayer(propLists.flat()).filter((prop) => propCode(prop.prop_type));
+  let lines = pickOneLinePerPlayer(propLists.flat()).filter((prop) => propCode(prop.prop_type));
   if (lines.length === 0) return { date: slate.date, rows: [], legs: [], teamLegs: [], fan: [], injuries: {} };
 
   // 3. Names and game logs for every player, both at the same time.
@@ -185,8 +168,17 @@ async function buildTopHitRates(slate) {
     gamesById[game.id] = game;
   });
 
+  // The props feed sometimes pins a book's line on the wrong player id (FanDuel's Shai Gilgeous-Alexander PRA 40.5 arrived as
+  // Trey Alexander of the Jazz, who is not in the game). A prop only counts when its player's current team is one of the game's two teams.
+  const inGame = (prop) => {
+    const player = players[prop.player_id];
+    const game = gamesById[prop.game_id];
+    return Boolean(player && player.team && game) && [game.home_team.id, game.visitor_team.id].includes(player.team.id);
+  };
+  lines = lines.filter(inGame);
+
   // Every sportsbook's lines, for the best odds on each row (js/data/odds.js).
-  lhOdds.ingest(propLists.flat());
+  lhOdds.ingest(propLists.flat().filter(inGame));
 
   // 4. L10 hit rate for every line, against that player's own line.
   const rows = lines.map((prop) => {
@@ -268,7 +260,7 @@ async function buildTopHitRates(slate) {
   }).filter(Boolean);
 
   return {
-    date: slate.date, rows, injuries, legs, teamLegs: buildTeamLegs(slate, loaded.logsByPlayer),
+    date: slate.date, rows, injuries, legs, incomplete: loaded.incomplete, teamLegs: buildTeamLegs(slate, loaded.logsByPlayer),
     fan: buildFanPlayers(lines, players, loaded, gamesById), // for research mode's Hot Players and Streaks cards
   };
 }
@@ -486,12 +478,7 @@ function renderTopSkeleton() {
 
 function renderTopMessage(html) {
   document.getElementById("topHitRatesPills").hidden = true;
-  const controls = document.getElementById("topHitRatesControls");
-  if (controls) controls.hidden = true;
-  const chipBox = document.getElementById("topHitRatesChips");
-  if (chipBox) chipBox.hidden = true;
-  const searchBox = document.getElementById("topHitRatesSearch");
-  if (searchBox) searchBox.hidden = true;
+  if (topUi) topUi.hide();
   const list = document.getElementById("topHitRatesList");
   list.removeAttribute("aria-busy");
   list.innerHTML = `<div class="lh-top-message">${html}</div>`;
@@ -501,239 +488,46 @@ function renderTopMessage(html) {
 
 // ---------- Schedule page: controls (window, Filter, Sort), chips and the rows ----------
 
-const TOP_SORT_LABELS = Object.fromEntries(TOP_SORTS.map((sort) => [sort.code, sort.label]));
+// The controls bar, chips, Filter / Sort / Sportsbook panels and the search box are shared with the game page (js/components/prop-list.js).
 const isPhone = () => window.matchMedia("(max-width: 575.98px)").matches;
 
 // Hidden by "Hide injured": anyone on the report except players listed as probable / available.
 function isInjuredOut(playerId) {
-  const status = topSlate && topSlate.injuries ? topSlate.injuries[playerId] : null;
-  return Boolean(status) && !/probable|available/i.test(status);
+  return plIsInjuredOut(topSlate && topSlate.injuries ? topSlate.injuries[playerId] : null);
 }
 
-// The filter chips: [{ label, remove() }]
-function activeTopChips() {
-  const chips = [];
-  if (topSide !== "both") chips.push({ label: topSide === "over" ? "Overs only" : "Unders only", remove: () => { topSide = "both"; } });
-  if (topGame !== "all") {
-    const match = topSlate.rows.find((row) => String(row.gameId) === String(topGame));
-    chips.push({ label: match ? match.gameLabel : "One game", remove: () => { topGame = "all"; } });
-  }
-  if (lhOdds.getBook()) chips.push({ label: `Book: ${lhOdds.vendorName(lhOdds.getBook())}`, remove: () => { setTopBook(null); } });
-  if (topHideInjured) chips.push({ label: "Hiding injured", remove: () => { topHideInjured = false; } });
-  if (topMinGames) chips.push({ label: `${topMinGames}+ games`, remove: () => { topMinGames = 0; } });
-  return chips;
-}
-
-function renderTopChips() {
-  const box = document.getElementById("topHitRatesChips");
-  const chips = activeTopChips();
-  box.hidden = chips.length === 0;
-  box.innerHTML = chips.map((chip, index) => `<button type="button" class="lh-top-chip" data-chip="${index}" aria-label="Remove: ${chip.label}">${chip.label} <span aria-hidden="true">✕</span></button>`).join("")
-    + (chips.length ? `<button type="button" class="lh-top-clear" data-clear>Clear all</button>` : "");
-  box.querySelectorAll("[data-chip]").forEach((button) => button.addEventListener("click", () => {
-    chips[Number(button.dataset.chip)].remove();
-    refreshTopUi();
-  }));
-  const clear = box.querySelector("[data-clear]");
-  if (clear) clear.addEventListener("click", () => {
-    topSide = "both"; topGame = "all"; topHideInjured = false; topMinGames = 0;
-    setTopBook(null);
-    refreshTopUi();
-  });
-}
-
-// Option buttons for the panels: [{ value, label }], with the active one marked.
-function topOptions(name, options, active) {
-  return `<div class="lh-top-opts" role="group">${options.map((option) =>
-    `<button type="button" class="lh-top-opt${String(option.value) === String(active) ? " active" : ""}" data-set="${name}" data-value="${option.value}" aria-pressed="${String(option.value) === String(active)}">${option.label}</button>`).join("")}</div>`;
-}
-
-// The Sportsbook list, built from the books in the odds data. "Best odds" first.
-function topBookOptionsHtml() {
-  const options = [{ value: "best", label: "Best odds" }, ...lhOdds.vendors().map((vendor) => ({ value: vendor, label: lhOdds.vendorName(vendor) }))];
-  const active = lhOdds.getBook() || "best";
-  return `<div class="lh-top-opts lh-top-opts--list">${options.map((option) =>
-    `<button type="button" class="lh-top-opt${option.value === active ? " active" : ""}" data-set="book" data-value="${option.value}" aria-pressed="${option.value === active}">${option.label}</button>`).join("")}</div>`;
-}
-
-// Choosing a book moves every row to that book's own line, so any stepped lines start over.
-function setTopBook(vendor) {
-  if ((lhOdds.getBook() || null) === (vendor || null)) return;
-  lhOdds.setBook(vendor);
-  Object.keys(topRowEdits).forEach((key) => delete topRowEdits[key]);
-}
-
-function topPanelHtml(kind) {
-  if (kind === "book") return topBookOptionsHtml();
-  if (kind === "sort") {
-    return `<div class="lh-top-opts lh-top-opts--list">${TOP_SORTS.map((sort) =>
-      `<button type="button" class="lh-top-opt${sort.code === topSort ? " active" : ""}" data-set="sort" data-value="${sort.code}">${sort.label}</button>`).join("")}</div>`;
-  }
-  const games = [];
-  topSlate.rows.forEach((row) => {
-    if (row.gameLabel && !games.some((game) => String(game.value) === String(row.gameId))) games.push({ value: row.gameId, label: row.gameLabel, tip: row.tip });
-  });
-  games.sort((a, b) => new Date(a.tip) - new Date(b.tip));
-  return `
-    <div class="lh-top-field"><span class="lh-label text-muted">Side</span>
-      ${topOptions("side", [{ value: "over", label: "Over" }, { value: "under", label: "Under" }, { value: "both", label: "Both" }], topSide)}</div>
-    <div class="lh-top-field"><span class="lh-label text-muted">Game</span>
-      <select class="form-select form-select-sm" data-set="game" aria-label="Game">
-        <option value="all">All games</option>
-        ${games.map((game) => `<option value="${game.value}"${String(game.value) === String(topGame) ? " selected" : ""}>${game.label}</option>`).join("")}
-      </select></div>
-    <div class="lh-top-field"><label class="form-check form-switch mb-0">
-      <input class="form-check-input" type="checkbox" role="switch" data-set="injured"${topHideInjured ? " checked" : ""}>
-      <span class="form-check-label">Hide injured</span></label></div>
-    <div class="lh-top-field"><span class="lh-label text-muted">Minimum games</span>
-      ${topOptions("min", [{ value: 0, label: "Off" }, { value: 5, label: "5+" }, { value: 10, label: "10+" }], topMinGames)}</div>
-    <div class="lh-top-field lh-top-field--phone"><span class="lh-label text-muted">Sportsbook</span>${topBookOptionsHtml()}</div>`;
-}
-
-// A change inside a panel (desktop dropdown or phone sheet).
-function onTopPanelChange(element) {
-  const value = element.type === "checkbox" ? element.checked : element.dataset.value ?? element.value;
-  const name = element.dataset.set;
-  if (name === "side") topSide = value;
-  if (name === "game") topGame = value;
-  if (name === "injured") topHideInjured = value;
-  if (name === "min") topMinGames = Number(value);
-  if (name === "sort") { topSort = value; closeTopPanel(); }
-  if (name === "book") { setTopBook(value === "best" ? null : value); if (topOpenPanel === "book") closeTopPanel(); }
-  refreshTopUi();
-}
-
-function fillTopPanel(host, kind) {
-  host.innerHTML = topPanelHtml(kind);
-  host.querySelectorAll("button[data-set]").forEach((button) => button.addEventListener("click", () => onTopPanelChange(button)));
-  host.querySelectorAll("select[data-set], input[data-set]").forEach((input) => input.addEventListener("change", () => onTopPanelChange(input)));
-}
-
-// Closes the open dropdown (desktop) or bottom sheet (phones).
-function closeTopPanel() {
-  topOpenPanel = null;
-  document.querySelectorAll("#topHitRatesControls [data-bs-toggle='dropdown']").forEach((toggle) => bootstrap.Dropdown.getInstance(toggle)?.hide());
-  const sheet = document.getElementById("topHitRatesSheet");
-  if (sheet) bootstrap.Offcanvas.getInstance(sheet)?.hide();
-}
-
-// Phones: the same panel content in a bottom sheet.
-function openTopSheet(kind) {
-  let sheet = document.getElementById("topHitRatesSheet");
-  if (!sheet) {
-    sheet = document.createElement("div");
-    sheet.id = "topHitRatesSheet";
-    sheet.className = "offcanvas offcanvas-bottom lh-sheet";
-    sheet.tabIndex = -1;
-    sheet.innerHTML = `<div class="offcanvas-header"><h2 class="offcanvas-title lh-label" id="topHitRatesSheetTitle"></h2>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
-      <div class="offcanvas-body"></div>`;
-    sheet.setAttribute("aria-labelledby", "topHitRatesSheetTitle");
-    document.body.appendChild(sheet);
-  }
-  topOpenPanel = kind;
-  sheet.querySelector(".offcanvas-title").textContent = kind === "sort" ? "Sort" : kind === "book" ? "Sportsbook" : "Filter";
-  fillTopPanel(sheet.querySelector(".offcanvas-body"), kind);
-  bootstrap.Offcanvas.getOrCreateInstance(sheet).show();
-}
-
-// Redraw everything that depends on the controls (after any change).
-function refreshTopUi() {
-  renderTopControls();
-  renderTopChips();
-  renderTopRows();
-  const menu = topOpenPanel && !isPhone() ? document.getElementById(`topHitRatesMenu-${topOpenPanel}`) : null;
-  if (menu) fillTopPanel(menu, topOpenPanel);
-  const sheet = document.getElementById("topHitRatesSheet");
-  if (topOpenPanel && isPhone() && sheet) fillTopPanel(sheet.querySelector(".offcanvas-body"), topOpenPanel);
-}
-
-// The controls row: L5 / L10 / L20 with the Filter and Sort buttons right beside it, as one group.
-function renderTopControls() {
-  const pills = document.getElementById("topHitRatesPills");
-  let bar = document.getElementById("topHitRatesControls");
-  if (!bar) {
-    bar = document.createElement("div");
-    bar.id = "topHitRatesControls";
-    bar.className = "lh-top-controls";
-    // Each button is its own Bootstrap dropdown: the menu opens right under it, with its right edge on the button's right edge.
-    const dropdown = (kind, icon, label) => `
-      <div class="dropdown">
-        <button type="button" class="btn btn-ghost btn-sm lh-top-ctl" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-                data-bs-offset="0,6" data-panel="${kind}" aria-expanded="false"><i class="bi ${icon}" aria-hidden="true"></i> ${label}</button>
-        <div class="dropdown-menu dropdown-menu-start lh-top-panel" id="topHitRatesMenu-${kind}"></div>
-      </div>`;
-    bar.innerHTML = `
-      <div class="lh-window-toggle btn-group" role="group" aria-label="Window"></div>
-      ${dropdown("filter", "bi-funnel", "Filter")}
-      ${dropdown("sort", "bi-arrow-down-up", `<span data-sort-label></span>`)}
-      <span class="lh-top-bookpill">${dropdown("book", "bi-bank", `<span data-book-label></span>`)}</span>`;
-    // The search bar sits right under the pills: filters the rows as you type (no suggestion list).
-    const search = document.createElement("div");
-    search.id = "topHitRatesSearch";
-    search.className = "lh-top-search";
-    search.innerHTML = `
-      <i class="bi bi-search lh-top-search-icon" aria-hidden="true"></i>
-      <input type="search" class="lh-top-search-input" placeholder="Search players" aria-label="Search players" autocomplete="off" spellcheck="false" value="${huntAttr(topQuery)}">
-      <button type="button" class="lh-top-search-clear" aria-label="Clear search" hidden><i class="bi bi-x-lg" aria-hidden="true"></i></button>`;
-    const input = search.querySelector("input");
-    const clearButton = search.querySelector("button");
-    const sync = () => { clearButton.hidden = input.value === ""; };
-    input.addEventListener("input", () => { topQuery = input.value; sync(); renderTopRows(); });
-    input.addEventListener("keydown", (event) => { if (event.key === "Escape" && input.value) { input.value = ""; topQuery = ""; sync(); renderTopRows(); } });
-    clearButton.addEventListener("click", () => { input.value = ""; topQuery = ""; sync(); renderTopRows(); input.focus(); });
-    sync();
-    const chips = document.createElement("div");
-    chips.id = "topHitRatesChips";
-    chips.className = "lh-top-chips";
-    pills.parentNode.insertBefore(bar, pills);
-    pills.parentNode.insertBefore(search, pills);
-    pills.parentNode.insertBefore(chips, pills);
-    bar.querySelectorAll("[data-panel]").forEach((button) => {
-      const kind = button.dataset.panel;
-      const menu = document.getElementById(`topHitRatesMenu-${kind}`);
-      // Phones use the bottom sheet instead of the dropdown.
-      button.addEventListener("show.bs.dropdown", (event) => {
-        if (isPhone()) { event.preventDefault(); openTopSheet(kind); return; }
-        topOpenPanel = kind;
-        fillTopPanel(menu, kind);
-      });
-      button.addEventListener("hidden.bs.dropdown", () => { if (topOpenPanel === kind) topOpenPanel = null; });
+const topUi = TOP_NEW_LAYOUT ? createPropListBar({
+  idPrefix: "topHitRates",
+  anchor: document.getElementById("topHitRatesPills"),
+  windows: TOP_WINDOWS,
+  window: TOP_WINDOW,
+  sorts: TOP_SORTS,
+  sort: "rate",
+  withGame: true,
+  getGames: () => {
+    const games = [];
+    (topSlate ? topSlate.rows : []).forEach((row) => {
+      if (row.gameLabel && !games.some((game) => String(game.value) === String(row.gameId))) games.push({ value: row.gameId, label: row.gameLabel, tip: row.tip });
     });
-  }
-  bar.hidden = false;
-  bar.querySelector("[data-sort-label]").textContent = `Sort: ${TOP_SORT_LABELS[topSort]}`;
-  bar.querySelector("[data-book-label]").textContent = lhOdds.getBook() ? lhOdds.vendorName(lhOdds.getBook()) : "Sportsbook";
-  const searchBox = document.getElementById("topHitRatesSearch");
-  if (searchBox) searchBox.hidden = false;
-
-  const group = bar.querySelector(".lh-window-toggle");
-  group.innerHTML = "";
-  TOP_WINDOWS.forEach((size) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = size === topWindow ? "btn btn-ghost active" : "btn btn-ghost";
-    button.setAttribute("aria-pressed", String(size === topWindow));
-    button.textContent = `L${size}`;
-    button.addEventListener("click", () => {
-      topWindow = size;
-      refreshTopUi();
-    });
-    group.appendChild(button);
-  });
-  // The card's subtitle and corner label follow the window.
-  const card = document.getElementById("top-hit-rates");
-  const subtitle = card.querySelector(".card-header .small");
-  if (subtitle) subtitle.textContent = `Players who hit their line most often in their last ${topWindow} games`;
-  const corner = card.querySelector(".card-header .lh-label");
-  if (corner) corner.textContent = `L${topWindow}`;
-}
+    return games;
+  },
+  isInjured: isInjuredOut,
+  onChange: () => renderTopRows(),
+  onBar: (state) => {
+    // The card's subtitle and corner label follow the window.
+    const card = document.getElementById("top-hit-rates");
+    const subtitle = card.querySelector(".card-header .small");
+    if (subtitle) subtitle.textContent = `Players who hit their line most often in their last ${state.window} games`;
+    const corner = card.querySelector(".card-header .lh-label");
+    if (corner) corner.textContent = `L${state.window}`;
+  },
+}) : null;
 
 function renderTopPills() {
   const pills = document.getElementById("topHitRatesPills");
   pills.hidden = false;
   pills.innerHTML = "";
-  if (TOP_NEW_LAYOUT) { renderTopControls(); renderTopChips(); }
+  if (TOP_NEW_LAYOUT) topUi.render();
 
   TOP_FILTERS.forEach((filter) => {
     const item = document.createElement("li");
@@ -754,44 +548,23 @@ function renderTopPills() {
   });
 }
 
-// Search box: every typed word must be the start of some word in the player's name. Case and accents are ignored ("jok" finds Jokić).
-const topPlain = (text) => String(text).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-function topNameMatches(name, query) {
-  const tokens = topPlain(query).split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return true;
-  const words = topPlain(name).split(/[^a-z0-9]+/).filter(Boolean);
-  return tokens.every((token) => words.some((word) => word.startsWith(token)));
-}
-
 // Schedule page: the rows for the selected window, filtered and sorted. Full samples (a player with the whole window of games)
 // always rank above short ones. Hit rate ties: larger sample first, then longer streak.
+// Each row is resolved at the chosen sportsbook's own line (or the consensus line): see plResolve in js/components/prop-list.js.
 function sortedWindowRows() {
+  const ui = topUi.state;
   const items = topSlate.rows
     .filter((row) => topFilter === "all" || row.code === topFilter)
-    .filter((row) => topGame === "all" || String(row.gameId) === String(topGame))
-    .filter((row) => !(topHideInjured && isInjuredOut(row.playerId)))
-    .filter((row) => topNameMatches(row.name, topQuery))
+    .filter((row) => topUi.rowAllowed(row.name, row.playerId, row.gameId))
     .map((row) => {
-      // A sportsbook is chosen: the row moves to THAT book's own line (or is hidden when the book has none) and everything is
-      // recalculated from the games already in memory. Same stronger-side rule as below.
-      const vendor = lhOdds.getBook();
-      if (vendor) {
-        const own = lhOdds.bookLine(row.playerId, PROP_CODES[row.code] || row.code, vendor);
-        if (!own) return null;
-        const over = topStatsAtLine(row, own.line, "over");
-        const under = topStatsAtLine(row, own.line, "under");
-        const side = topSide === "both" ? (under.hitRate > over.hitRate ? "under" : "over") : topSide;
-        return { row, side, line: own.line, stats: side === "under" ? under : over };
-      }
-      const win = row.w[topWindow];
-      // "Both": each line shows the side that hit more often (the over on a tie).
-      const side = topSide === "both" ? (win.under.hitRate > win.over.hitRate ? "under" : "over") : topSide;
-      return { row, side, line: row.line, stats: { ...win[side], totalGames: win.totalGames, games: side === "under" ? win.underGames : win.games } };
+      const spec = topSpec(row);
+      const resolved = plResolve(spec, ui.side);
+      return resolved ? { row, side: resolved.side, line: resolved.line, stats: resolved.stats } : null;
     })
     .filter(Boolean)
-    .filter((item) => item.stats.totalGames >= Math.max(TOP_MIN_SAMPLE, topMinGames));
+    .filter((item) => item.stats.totalGames >= Math.max(TOP_MIN_SAMPLE, ui.minGames));
 
-  const full = (item) => (item.stats.totalGames >= topWindow ? 1 : 0);
+  const full = (item) => (item.stats.totalGames >= ui.window ? 1 : 0);
   const byRate = (a, b) => (b.stats.hitRate - a.stats.hitRate)
     || (b.stats.totalGames - a.stats.totalGames)
     || (b.stats.streak - a.stats.streak);
@@ -800,128 +573,67 @@ function sortedWindowRows() {
     streak: (a, b) => (b.stats.streak - a.stats.streak) || byRate(a, b),
     cushion: (a, b) => (b.stats.cushion - a.stats.cushion) || byRate(a, b),
     game: byRate,
-  }[topSort];
+  }[ui.sort];
   items.sort((a, b) => (full(b) - full(a)) || compare(a, b));
 
   const top = items.slice(0, TOP_ROW_COUNT);
-  if (topSort === "game") {
+  if (ui.sort === "game") {
     // Same top rows, grouped by matchup in tip-off order (best hit rate first inside a game).
     top.sort((a, b) => (new Date(a.row.tip) - new Date(b.row.tip)) || (a.row.gameId - b.row.gameId) || (full(b) - full(a)) || byRate(a, b));
   }
   return top;
 }
 
-// Prop names in full words for the ticket stub (the combo stays "PRA").
-const TOP_PROP_WORDS = { pts: "Points", reb: "Rebounds", ast: "Assists", "3pm": "Threes Made", pra: "PRA" };
+// The shared row spec (js/components/prop-list.js) for one slate row, using the selected window's games.
+function topSpec(row) {
+  return {
+    playerId: row.playerId, name: row.name, team: row.team,
+    opp: row.opp || (row.matchup || "").split(" ").pop(),
+    gameId: row.gameId, tipoff: row.tip || null,
+    propType: PROP_CODES[row.code] || row.code, code: row.code,
+    games: row.w[topUi.state.window].games, line: row.line,
+  };
+}
 
-// Per-row line / side the visitor picked with the desktop stepper: "gameId|playerId|code" -> { line, side }. side null = nothing picked.
-const topRowEdits = {};
+// Prop names in full words for the ticket stub (the combo stays "PRA").
+const TOP_PROP_WORDS = PL_PROP_WORDS;
+
 const topRowKey = (row) => `${row.gameId}|${row.playerId}|${row.code}`;
 
-// The numbers for one row at any line, from the games already in memory (no new requests): each game's stat value against the
-// line. Over = value above the line, Under = below it, equal = a push (neither). Newest game first, like calculateHitRate.
-function topStatsAtLine(row, line, side) {
-  const raw = row.w[topWindow].games;
-  const games = raw.map((game) => ({ ...game, overUnder: game.value > line ? "over" : game.value < line ? "under" : "push" }));
-  const name = side || "over";
-  const hits = games.filter((game) => game.overUnder === name).length;
-  let streak = 0;
-  for (const game of games) {
-    if (game.overUnder !== name) break;
-    streak += 1;
-  }
-  const total = games.length;
-  const average = total ? games.reduce((sum, game) => sum + game.value, 0) / total : null;
-  // The mini graph swaps the colors for the under side, so a colored bar always means "hit".
-  const shown = name === "under" ? games.map((game) => ({ ...game, overUnder: game.overUnder === "over" ? "under" : game.overUnder === "under" ? "over" : game.overUnder })) : games;
-  return {
-    hits, streak, totalGames: total, games: shown,
-    hitRate: total ? Math.round((hits / total) * 1000) / 10 : 0,
-    cushion: total ? Math.round((name === "over" ? average - line : line - average) * 10) / 10 : null,
-  };
-}
-
-const topOddsText = (odds) => (odds > 0 ? `+${odds}` : `${odds}`);
-
-// The drawer link data for a row (js/components/schedule-drawer.js): what to open, and on which prop, line and side.
-function topDrawerData(row, line, side) {
-  return {
-    playerId: row.playerId, player: row.name, team: row.team,
-    opp: row.opp || (row.matchup || "").split(" ").pop(),
-    gameId: row.gameId, tipoff: row.tip || null, code: row.code, line, side,
-  };
-}
-
-// Desktop controls, one group at the right of the ticket: [ - 17.5 + ] [ Over | Under ] [ odds chip ] [ + ADD ].
-// Same rules as the drawer's toolbar: stepping keeps the chosen side; odds only show when a book posts that line + side, otherwise Add is disabled.
-function topControlsHtml(row, line, side, baseLine = row.line) {
-  const stat = PROP_CODES[row.code] || row.code;
-  const books = side ? lhOdds.getOdds(row.playerId, stat, line, side) : []; // one book only when a sportsbook is chosen
-  const best = books[0] || null;
-  let status = "";
-  if (!side) status = `<span class="lh-top-hint">Pick over or under</span>`;
-  else if (best) {
-    const others = books.slice(1).map((entry) => `${entry.book} ${topOddsText(entry.odds)}`).join(", ");
-    status = `<a class="lh-odds-chip" href="${topHref(row, side)}" data-lh-drawer="${huntAttr(JSON.stringify(topDrawerData(row, line, side)))}" title="Best odds: ${best.vendor}"><b>${topOddsText(best.odds)}</b> ${best.book}</a>`
-      + (books.length > 1 && !lhOdds.getBook() ? `<span class="lh-odds-chip lh-odds-more" title="${others}">+${books.length - 1}</span>` : "");
-  }
-  const add = best ? huntButtonHtml({
-    playerId: row.playerId, player: row.name, team: row.team,
-    opp: row.opp || (row.matchup || "").split(" ").pop(),
-    gameId: row.gameId, tipoff: row.tip || null, stat, side, line,
-    odds: best.odds, book: best.vendor, isAlt: line !== baseLine,
-  }, { labelOut: "ADD", labelIn: "ADDED", iconFirst: true, className: "lh-top-add" })
-    : side ? `<button type="button" class="lh-add lines-only lh-top-add" disabled aria-disabled="true"><i class="lh-add-icon bi bi-plus-lg" aria-hidden="true"></i><span class="lh-add-label">ADD</span></button>` : "";
-  return `
-    <div class="lh-top-linectl" role="group" aria-label="Line for ${huntAttr(row.name)}">
-      <div class="lh-top-step">
-        <button type="button" class="lh-top-stepbtn" data-top-step="-1" aria-label="Lower the line by 1"${line <= 0.5 ? " disabled" : ""}>−</button>
-        <output class="lh-top-line">${lineText(line)}</output>
-        <button type="button" class="lh-top-stepbtn" data-top-step="1" aria-label="Raise the line by 1">+</button>
-      </div>
-      <div class="lh-top-sides">
-        <button type="button" class="lh-top-sidebtn lh-top-sidebtn--over${side === "over" ? " is-on" : ""}" data-top-side="over" aria-pressed="${side === "over"}">Over</button>
-        <button type="button" class="lh-top-sidebtn lh-top-sidebtn--under${side === "under" ? " is-on" : ""}" data-top-side="under" aria-pressed="${side === "under"}">Under</button>
-      </div>
-      <div class="lh-top-oddsbox">${status}</div>
-      ${add}
-    </div>`;
-}
-
-const topHref = (row, side) => `game.html?id=${row.gameId}&player=${row.playerId}&prop=${row.code}${side ? `&side=${side}` : ""}`;
-
 // One row = one "bet ticket". Desktop: a stub (side, line, prop, hit rate) | perforation | player, hit count, graph; the controls
-// (stepper, Over / Under, best odds + "+ Add" as one group) sit at the right. Phones (under 768px): a compact ticket with a 3px
-// teal / coral edge and the stub on the right (odds chip, hit rate, window); no stepper there. Clicking a row opens the player
-// drawer on this page (js/components/schedule-drawer.js); the href stays as the fallback (middle click, no script).
+// (stepper, Over / Under, best odds + "+ Add" as one group, js/components/prop-list.js) sit right after the graph. Phones (under 768px): a
+// compact ticket with a 3px teal / coral edge and the stub on the right (odds chip, hit rate, window); no stepper there. Clicking a row opens
+// the player drawer on this page (js/components/schedule-drawer.js); the href stays as the fallback (middle click, no script).
 // edit = { line, side } from the stepper (side null = nothing picked yet: the numbers show the Over side).
-function topRowHtml({ row, side, stats, line: baseLine = row.line }, edit = topRowEdits[topRowKey(row)]) {
+function topRowHtml({ row, side, stats, line: baseLine }, edit = topUi.edits[topRowKey(row)]) {
+  const spec = topSpec(row);
   const line = edit ? edit.line : baseLine;
   const shownSide = edit ? edit.side : side;
-  if (edit) stats = { ...stats, ...topStatsAtLine(row, line, shownSide) };
+  if (edit) stats = { ...stats, ...plStatsAtLine(spec.games, line, shownSide) };
 
   let hitClass = "";
   if (stats.hitRate >= 60) hitClass = "lh-hit--good";
   if (stats.hitRate <= 40) hitClass = "lh-hit--bad";
-  const cushion = topSort === "cushion" && stats.cushion !== null
+  const sort = topUi.state.sort;
+  const cushion = sort === "cushion" && stats.cushion !== null
     ? `<span class="lh-top-cushion" title="Average margin past the line">${stats.cushion > 0 ? "+" : ""}${stats.cushion.toFixed(1)}</span>` : "";
-  const streak = topSort === "streak" ? `<span class="lh-top-cushion" title="Current run of hits">${stats.streak}🔥</span>` : "";
+  const streak = sort === "streak" ? `<span class="lh-top-cushion" title="Current run of hits">${stats.streak}🔥</span>` : "";
   const mobileSide = shownSide || "over";
   const sideWord = mobileSide === "under" ? "Under" : "Over";
-  const vendor = lhOdds.getBook();
-  const best = row.bestOdds && !edit && !vendor ? row.bestOdds[side] : (shownSide ? lhOdds.getOdds(row.playerId, PROP_CODES[row.code] || row.code, line, shownSide)[0] || null : null);
-  const oddsText = best ? topOddsText(best.odds) : "";
-  const href = topHref(row, shownSide);
+  const best = shownSide ? plBooks(spec, line, shownSide)[0] || null : null;
+  const oddsText = best ? plOddsText(best.odds) : "";
+  const href = `game.html?id=${row.gameId}&player=${row.playerId}&prop=${row.code}${shownSide ? `&side=${shownSide}` : ""}`;
   const statWord = TOP_PROP_WORDS[row.code] || row.code.toUpperCase();
-  const drawer = `data-lh-drawer="${huntAttr(JSON.stringify(topDrawerData(row, line, shownSide)))}"`;
+  const drawer = `data-lh-drawer="${huntAttr(JSON.stringify(plDrawerData(spec, line, shownSide)))}"`;
+  const windowLabel = `L${topUi.state.window}`;
 
   return `
-    <div class="lh-top-addwrap" data-top-row="${topRowKey(row)}">
+    <div class="lh-top-addwrap" data-pl-row="${topRowKey(row)}">
     <a class="lh-top-row lh-top-row--v2" href="${href}" ${drawer}>
       <div class="lh-ticket">
         <div class="lh-ticket-stub">
           <div class="lh-top-prop"><strong class="lh-top-side lh-top-side--${mobileSide}">${sideWord}</strong> ${lineText(line)} ${statWord}</div>
-          <div class="lh-top-rate ${hitClass}">${Math.round(stats.hitRate)}%<span>L${topWindow}</span></div>
+          <div class="lh-top-rate ${hitClass}">${Math.round(stats.hitRate)}%<span>${windowLabel}</span></div>
         </div>
         <div class="lh-ticket-main">
           <div class="lh-top-player">
@@ -942,29 +654,11 @@ function topRowHtml({ row, side, stats, line: baseLine = row.line }, edit = topR
       <div class="lh-mrow-stub">
         ${best ? `<span class="lh-odds-chip"><b>${oddsText}</b> ${best.book}</span>` : `<span class="lh-odds-chip lh-odds-chip--none">–</span>`}
         <span class="lh-mrow-rate ${hitClass}">${Math.round(stats.hitRate)}%</span>
-        <span class="lh-mrow-window">L${topWindow}</span>
+        <span class="lh-mrow-window">${windowLabel}</span>
       </div>
     </a>
-    ${topControlsHtml(row, line, shownSide, baseLine)}
+    ${plControlsHtml(spec, line, shownSide, baseLine)}
     </div>`;
-}
-
-// Stepper and Over / Under clicks on a desktop row. Re-draws just that row from the stored choice.
-function onTopControlClick(event) {
-  const step = event.target.closest("[data-top-step]");
-  const sideButton = event.target.closest("[data-top-side]");
-  if (!step && !sideButton) return;
-  const wrap = event.target.closest("[data-top-row]");
-  const item = wrap && sortedWindowRows().find((entry) => topRowKey(entry.row) === wrap.dataset.topRow);
-  if (!item) return;
-  const key = topRowKey(item.row);
-  const current = topRowEdits[key] || { line: item.line, side: item.side };
-  if (step) topRowEdits[key] = { line: Math.max(0.5, current.line + Number(step.dataset.topStep)), side: current.side }; // stepping keeps the side
-  else topRowEdits[key] = { line: current.line, side: sideButton.dataset.topSide };
-  wrap.outerHTML = topRowHtml(item);
-  const fresh = document.querySelector(`[data-top-row="${key}"]`);
-  const again = fresh && fresh.querySelector(step ? `[data-top-step="${step.dataset.topStep}"]` : `[data-top-side="${sideButton.dataset.topSide}"]`);
-  if (again && !again.disabled) again.focus();
 }
 
 function renderTopRows() {
@@ -979,15 +673,20 @@ function renderTopRows() {
     const items = sortedWindowRows();
     if (items.length === 0) {
       const book = lhOdds.getBook();
-      list.innerHTML = topQuery.trim()
-        ? `<div class="lh-top-message text-muted">No players match “${huntAttr(topQuery.trim())}”.</div>`
+      const query = topUi.state.query.trim();
+      list.innerHTML = query
+        ? `<div class="lh-top-message text-muted">No players match “${huntAttr(query)}”.</div>`
         : book
           ? `<div class="lh-top-message text-muted">${lhOdds.vendorName(book)} has no lines for these filters.</div>`
           : `<div class="lh-top-message text-muted">No players with ${TOP_MIN_SAMPLE}+ games for this prop yet.</div>`;
       return;
     }
     list.innerHTML = items.map((item) => topRowHtml(item)).join("");
-    if (!list.dataset.controls) { list.dataset.controls = "1"; list.addEventListener("click", onTopControlClick); }
+    plBindControls(list, {
+      edits: topUi.edits,
+      find: (key) => sortedWindowRows().find((entry) => topRowKey(entry.row) === key) || null,
+      render: (item) => topRowHtml(item),
+    });
     if (typeof limitRowsOnPhones === "function") limitRowsOnPhones(list, ".lh-top-addwrap");
     return;
   }
@@ -1039,7 +738,7 @@ async function ensureTopOdds(slate) {
   const lists = await Promise.all(gameIds.map((id) => bdlGet(`${PROPS_URL}?game_id=${id}`).then((json) => json.data).catch(() => [])));
   lhOdds.ingest(lists.flat());
   if (topSlate === slate && lhOdds.vendors().length > 0) {
-    if (TOP_NEW_LAYOUT) { renderTopControls(); renderTopChips(); }
+    if (TOP_NEW_LAYOUT) topUi.render();
     renderTopRows();
   }
 }
@@ -1059,7 +758,7 @@ function showTopSlate(slate) {
     return;
   }
 
-  if (topGame !== "all" && !slate.rows.some((row) => String(row.gameId) === String(topGame))) topGame = "all"; // another day was picked
+  if (TOP_NEW_LAYOUT && topUi.state.game !== "all" && !slate.rows.some((row) => String(row.gameId) === String(topUi.state.game))) topUi.state.game = "all"; // another day was picked
   renderTopPills();
   renderTopRows();
   ensureTopOdds(slate);
@@ -1099,8 +798,12 @@ async function loadTopHitRates({ cacheKey, titleDate, getSlate }) {
     // If a newer load has started since, drop this result instead of showing the wrong day.
     if (requestNumber !== topRequestNumber) return;
 
-    writeTopCache(cacheKey, result);
-    if (result.date && result.date !== cacheKey) writeTopCache(result.date, result); // the homepage's slate, saved by date too
+    // A slate with players whose games failed to download (busy API) is shown but not saved: the next visit asks again instead of
+    // showing the same gaps for 10 minutes.
+    if (!result.incomplete) {
+      writeTopCache(cacheKey, result);
+      if (result.date && result.date !== cacheKey) writeTopCache(result.date, result); // the homepage's slate, saved by date too
+    }
     showTopSlate(result);
   } catch (error) {
     if (requestNumber !== topRequestNumber) return;

@@ -56,14 +56,6 @@ function windowResult(playerId, stat, line, windowSize) {
 // While stats load, each stat cell shows a small glowing bar instead of a dash.
 const STAT_PLACEHOLDER = `<span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>`;
 
-// "O -110 · U +105" under the line. Empty if the book didn't send odds.
-function oddsText(line) {
-  const parts = [];
-  if (line.overOdds !== null && line.overOdds !== undefined) parts.push(`O ${formatOdds(line.overOdds)}`);
-  if (line.underOdds !== null && line.underOdds !== undefined) parts.push(`U ${formatOdds(line.underOdds)}`);
-  return parts.join(" · ");
-}
-
 // One side of a line as a My Hunts leg (js/core/hunts.js). lineValue / isAlt: the drawer can pass an alt line (no odds then).
 function huntLegFor(item, side, lineValue = item.line, isAlt = false) {
   const game = currentGame;
@@ -83,48 +75,6 @@ function huntLegFor(item, side, lineValue = item.line, isAlt = false) {
     book: isAlt ? "" : item.book,
     isAlt,
   };
-}
-
-// The compact ticket a phone shows instead of the table columns (under 768px; the other cells are hidden there).
-// 3px teal edge (the table's hit rate is the over's), name + matchup, the prop line, hit count + a small graph, and on the right
-// a stub with the best odds chip, the hit rate and the window. No + button on phones: tapping the row opens the drawer.
-function mobileRowHtml(player, line, result) {
-  const best = line ? lhOdds.getOdds(player.playerId, line.propType, line.line, "over")[0] : null;
-  const rate = result.hitRate === null ? null : Math.round(result.hitRate);
-  const windowText = selectedWindow === "season" ? "SEASON" : `L${selectedWindow}`;
-  let hitClass = "";
-  if (result.hitRate >= 60) hitClass = "lh-hit--good";
-  if (result.hitRate !== null && result.hitRate <= 40) hitClass = "lh-hit--bad";
-  const opp = currentGame ? (player.team === currentGame.home_team.abbreviation ? currentGame.visitor_team.abbreviation : currentGame.home_team.abbreviation) : "";
-  const homeAway = currentGame && player.team === currentGame.home_team.abbreviation ? "vs" : "@";
-  const statName = line ? huntStatName(line.propType) : "";
-  return `
-    <div class="lh-mrow lh-mrow--over">
-      <div class="lh-mrow-main">
-        <div class="lh-mrow-name"><span>${player.fullName}</span> <span class="lh-mrow-match">${player.team}${opp ? ` ${homeAway} ${opp}` : ""}</span></div>
-        <div class="lh-mrow-prop">${line ? `<b>Over</b> ${line.line} ${statName}` : `<span class="text-muted">No line yet</span>`}</div>
-        <div class="lh-mrow-graph">${statsLoading ? "" : `<span class="lh-mrow-count ${hitClass}">${result.totalGames ? `${result.hits}/${result.totalGames}` : "–"}</span>${miniGraph(result.games)}`}</div>
-      </div>
-      <div class="lh-mrow-stub">
-        ${best ? `<span class="lh-odds-chip"><b>${best.odds > 0 ? "+" : ""}${best.odds}</b> ${best.book}</span>` : `<span class="lh-odds-chip lh-odds-chip--none">–</span>`}
-        <span class="lh-mrow-rate ${hitClass}">${rate === null ? "–" : `${rate}%`}</span>
-        <span class="lh-mrow-window">${windowText}</span>
-      </div>
-    </div>`;
-}
-
-// "70%" in neon green (60%+), red (40% or less), or white, with "7/10" underneath.
-function hitRateCell(result) {
-  if (result.hitRate === null) return `<span class="text-muted">–</span>`;
-
-  let colorClass = "";
-  if (result.hitRate >= 60) colorClass = "lh-hit--good";
-  if (result.hitRate <= 40) colorClass = "lh-hit--bad";
-
-  return `
-    <div class="lh-hit ${colorClass}">${Math.round(result.hitRate)}%</div>
-    <div class="small text-muted">${result.hits}/${result.totalGames}</div>
-  `;
 }
 
 // Sort rows by the chosen column. Rows with no games always go last, whichever way we sort.
@@ -195,6 +145,7 @@ function showLinesMessage(text, colorClass) {
   message.textContent = text;
   message.classList.remove("d-none");
   document.getElementById("lines-table").classList.add("d-none");
+  document.getElementById("propList").classList.add("d-none");
 }
 
 // ---------- Drawing on the page ----------
@@ -404,94 +355,237 @@ function renderResearchTable() {
   document.getElementById("lines-table").classList.remove("d-none");
 }
 
-// Fill the table with the lines for the selected prop and window.
-function renderTable() {
-  renderTableWindows();
-  updateSortHeaders();
-  if (isResearchMode()) {
-    renderResearchTable();
-    return;
-  }
+// ---------- Lines mode: the Player Props rows (same controls and behavior as Top Hit Rates, plain rows) ----------
+// The controls bar (L5 / L10 / L20, Filter, Sportsbook, search, chips), the stepper / Over-Under / odds / Add row controls and the math come
+// from js/components/prop-list.js, the same code Top Hit Rates uses. This file only decides which rows exist and how a plain row looks.
 
-  // 1. One row for EVERY player in the game, whether or not the books have posted a line for this prop yet.
-  //    Work out the numbers first, so we can sort by them. A player without a line still gets their
-  //    graph and average (the same game logs); only the hit rate needs a line.
-  const stat = propStatKey(selectedProp); // "points_assists" -> "pts+ast"
-  const rows = Object.values(playersById).map((player) => {
-    const line = allLines.find((item) => item.playerId === player.playerId && item.propType === selectedProp) || null;
-    let result = { hits: 0, totalGames: 0, hitRate: null, average: null, games: [] };
-    if (stat && !statsLoading && gameLogsByPlayer[player.playerId]) {
-      result = windowResult(player.playerId, stat, line ? line.line : 0, selectedWindow); // each player's own line
-      if (!line) {
-        // No line: no hits to count, and the graph bars are all one color (calculateHitRate scored them against 0).
-        result = { ...result, hits: 0, hitRate: null, games: result.games.map((game) => ({ ...game, overUnder: "none" })) };
+const PROP_ROWS_SHOWN = 8;                        // rows before "Show all"
+const PROP_CODES_ALL = PL_STAT_TABS.filter((tab) => tab.code !== "all").map((tab) => tab.code);
+let propTab = "all";                              // "all" | "pts" | "reb" | ...
+
+// playerId -> status from the injury report (js/components/gameInjuries.js), for "Hide injured".
+const propBar = createPropListBar({
+  idPrefix: "gameProps",
+  anchor: document.getElementById("propTabs"),
+  windows: [5, 10, 20],
+  window: selectedWindow,
+  sorts: null,                                    // no Sort control on this page for now
+  withGame: false,                                // one game: no Game dropdown
+  isInjured: (playerId) => plIsInjuredOut((window.gameInjuryStatus || {})[playerId]),
+  onChange: () => renderPropRows(),
+  onBar: (state) => { if (!isResearchMode()) selectedWindow = state.window; }, // the drawer starts on the same window
+  modeClass: "lines-only",
+});
+
+function onGameInjuriesLoaded() {
+  if (!isResearchMode() && Object.keys(playersById).length) renderPropRows();
+}
+
+function renderPropTabs() {
+  const tabs = document.getElementById("propTabs");
+  tabs.innerHTML = "";
+  propBar.render();
+  PL_STAT_TABS.forEach((tab) => {
+    const item = document.createElement("li");
+    item.className = "nav-item";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = tab.code === propTab ? "nav-link active text-nowrap" : "nav-link text-nowrap";
+    button.textContent = tab.label;
+    button.addEventListener("click", () => {
+      propTab = tab.code;
+      if (tab.code !== "all") selectedProp = PROP_CODES[tab.code]; // the drawer starts on the table's prop
+      renderPropTabs();
+      renderPropRows();
+    });
+    item.appendChild(button);
+    tabs.appendChild(item);
+  });
+}
+
+// The rows that exist for the current tab, window, Filter, Sportsbook and search, in order. Each is
+//   { key, spec, line, side, stats }   a row at its line (the chosen sportsbook's own line, or the consensus line)
+//   { key, spec, noLine: true, games } a player the books haven't posted this prop for (specific stat tabs only)
+function buildPropEntries() {
+  const ui = propBar.state;
+  const vendor = lhOdds.getBook();
+  const codes = propTab === "all" ? PROP_CODES_ALL : [propTab];
+  const game = currentGame;
+  const entries = [];
+  Object.values(playersById).forEach((player) => {
+    if (!propBar.rowAllowed(player.fullName, player.playerId, gameId)) return;
+    const opp = game ? (player.team === game.home_team.abbreviation ? game.visitor_team.abbreviation : game.home_team.abbreviation) : "";
+    codes.forEach((code) => {
+      const propType = PROP_CODES[code];
+      const stat = propStatKey(propType);
+      const consensus = allLines.find((item) => item.playerId === player.playerId && item.propType === propType) || null;
+      const games = !statsLoading && gameLogsByPlayer[player.playerId] ? windowResult(player.playerId, stat, 0, ui.window).games : [];
+      const spec = {
+        playerId: player.playerId, name: player.fullName, team: player.team, opp,
+        gameId: game ? game.id : Number(gameId), tipoff: game ? game.datetime || null : null,
+        propType, code, games, line: consensus ? consensus.line : null,
+      };
+      const key = `${player.playerId}|${code}`;
+      const resolved = plResolve(spec, ui.side);
+      if (resolved) {
+        if (!statsLoading && resolved.stats.totalGames < ui.minGames) return;
+        entries.push({ key, spec, line: resolved.line, side: resolved.side, stats: resolved.stats });
+      } else if (propTab !== "all" && !vendor && ui.side === "both" && !consensus) {
+        if (!statsLoading && games.length < ui.minGames) return;
+        entries.push({ key, spec, noLine: true, games });
       }
-    }
-    return { player, line, result };
+    });
   });
 
-  // Say so above the table when the books haven't posted this prop yet.
+  const full = (entry) => (entry.stats.totalGames >= ui.window ? 1 : 0);
+  const average = (entry) => (entry.games.length ? entry.games.reduce((sum, item) => sum + item.value, 0) / entry.games.length : -1);
+  entries.sort((a, b) => {
+    if (a.noLine || b.noLine) return a.noLine === b.noLine ? average(b) - average(a) : (a.noLine ? 1 : -1); // no-line rows last, best average first
+    if (statsLoading) return b.line - a.line;                                                                // nothing to rank by yet: biggest line first
+    return (full(b) - full(a)) || (b.stats.hitRate - a.stats.hitRate) || (b.stats.totalGames - a.stats.totalGames) || (b.stats.streak - a.stats.streak);
+  });
+  return entries;
+}
+
+const PROP_PLACEHOLDER = `<span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>`;
+
+// One plain row. Desktop (768px and up): player | prop + hit % | count | graph | controls. Phones: a compact two-line row, no stepper; tap opens the drawer.
+function propRowHtml(entry, edit = propBar.edits[entry.key]) {
+  const { spec } = entry;
+  const windowLabel = `L${propBar.state.window}`;
+  const open = (line, side) => huntAttr(JSON.stringify(plDrawerData(spec, line, side)));
+  const label = `Show ${spec.name}'s recent games`;
+  const player = `
+    <div class="lh-prow-player">
+      <a class="lh-player-link fw-semibold" href="player.html?id=${spec.playerId}">${spec.name}</a>
+      ${gameTeamBadge(spec.team)}
+      <span class="lh-prow-match">${spec.opp ? `${currentGame && spec.team === currentGame.home_team.abbreviation ? "vs" : "@"} ${spec.opp}` : ""}</span>
+    </div>`;
+
+  if (entry.noLine) {
+    const avg = entry.games.length ? entry.games.reduce((sum, game) => sum + game.value, 0) / entry.games.length : null;
+    const bars = entry.games.map((game) => ({ ...game, overUnder: "none" })); // one color: no line to score against
+    return `
+      <div class="lh-prow lh-prow--noline" data-pl-row="${entry.key}" data-lh-open="${open(null, null)}" tabindex="0" role="button" aria-label="${label}">
+        ${player}
+        <div class="lh-prow-prop"><span class="text-muted">No line yet</span> <span class="lh-prow-propname">${PL_PROP_WORDS[spec.code]}</span></div>
+        <div class="lh-prow-count">${statsLoading ? PROP_PLACEHOLDER : `<span class="lh-prow-avg">${avg === null ? "–" : `avg ${formatStatValue(avg)}`}</span>`}</div>
+        <div class="lh-prow-graph">${statsLoading ? PROP_PLACEHOLDER : miniGraph(bars)}</div>
+      </div>`;
+  }
+
+  const baseLine = entry.line;
+  const line = edit ? edit.line : baseLine;
+  const side = edit ? edit.side : entry.side;
+  const stats = edit ? { ...entry.stats, ...plStatsAtLine(spec.games, line, side) } : entry.stats;
+  let hitClass = "";
+  if (stats.hitRate >= 60) hitClass = "lh-hit--good";
+  if (stats.hitRate <= 40) hitClass = "lh-hit--bad";
+  const shownSide = side || "over";
+  const best = side ? plBooks(spec, line, side)[0] || null : null;
+  const loading = statsLoading;
+  return `
+    <div class="lh-prow" data-pl-row="${entry.key}" data-lh-open="${open(line, side)}" tabindex="0" role="button" aria-label="${label}">
+      ${player}
+      <div class="lh-prow-prop"><strong class="lh-top-side lh-top-side--${shownSide}">${shownSide === "under" ? "Under" : "Over"}</strong> ${lineText(line)} <span class="lh-prow-propname">${PL_PROP_WORDS[spec.code]}</span></div>
+      <div class="lh-prow-rate ${hitClass}">${loading ? "" : `${Math.round(stats.hitRate)}%<span>${windowLabel}</span>`}</div>
+      <div class="lh-prow-count ${hitClass}">${loading ? PROP_PLACEHOLDER : `${stats.hits}/${stats.totalGames}<span class="lh-prow-avg">avg ${formatStatValue(stats.average)}</span>`}</div>
+      <div class="lh-prow-graph">${loading ? PROP_PLACEHOLDER : miniGraph(stats.games)}</div>
+      <div class="lh-prow-chip">${best ? `<span class="lh-odds-chip"><b>${plOddsText(best.odds)}</b> ${best.book}</span>` : `<span class="lh-odds-chip lh-odds-chip--none">–</span>`}</div>
+      <div class="lh-prow-controls">${plControlsHtml(spec, line, side, baseLine)}</div>
+    </div>`;
+}
+
+function setLinesMessage(html) {
+  const message = document.getElementById("lines-message");
+  message.className = "text-muted";
+  message.innerHTML = html;
+  message.classList.remove("d-none");
+  document.getElementById("propList").classList.add("d-none");
+}
+
+function renderPropRows() {
+  if (isResearchMode()) return;
   const note = document.getElementById("lines-note");
   if (allLines.length === 0) {
     note.textContent = "No prop lines posted for this game yet. Books usually post them the day before or the day of the game.";
     note.hidden = false;
-  } else if (!allLines.some((item) => item.propType === selectedProp)) {
+  } else if (propTab !== "all" && !allLines.some((item) => item.propType === PROP_CODES[propTab])) {
     note.textContent = "No lines posted for this prop yet.";
     note.hidden = false;
   } else {
     note.hidden = true;
   }
 
-  // 2. Sort. While stats are loading every number is null, so this falls back to biggest line first.
-  rows.sort(compareRows);
+  const book = lhOdds.getBook();
+  if (book && lhOdds.vendors().length === 0) { setLinesMessage("Loading odds..."); return; }
+  const entries = buildPropEntries();
+  const toggle = document.getElementById("propsToggle");
+  if (entries.length === 0) {
+    const query = propBar.state.query.trim();
+    setLinesMessage(query ? `No players match “${huntAttr(query)}”.`
+      : book ? `${lhOdds.vendorName(book)} has no lines for these filters.` : "No players for these filters.");
+    toggle.hidden = true;
+    return;
+  }
 
-  const body = document.getElementById("lines-body");
-  body.setAttribute("aria-busy", String(statsLoading)); // tells screen readers the numbers are still coming
-  const rowElements = [];
-
-  // 3. One <tr> per row. d-none d-md-table-cell = hidden on phones, shown from tablets up.
-  rows.forEach(({ player, line, result }) => {
-    const row = document.createElement("tr");
-
-    // Clicking the row opens the player drawer (js/components/player-drawer.js).
-    // tabindex="0" lets keyboard users reach the row with Tab and open it with Enter.
-    row.className = "lh-clickable-row";
-    row.tabIndex = 0;
-    row.setAttribute("aria-label", `Show ${player.fullName}'s recent games`);
-    // Phones show one compact ticket (the .lh-mcell cell); the other cells are hidden there and the ticket is hidden from tablets up.
-    row.innerHTML = `
-      <td class="lh-mcell d-md-none lines-only" colspan="5">${mobileRowHtml(player, line, result)}</td>
-      <td class="d-none d-md-table-cell">
-        <a class="lh-player-link fw-semibold" href="player.html?id=${player.playerId}">${player.playerName}</a>
-        ${gameTeamBadge(player.team)}
-      </td>
-      <td class="text-end lines-only d-none d-md-table-cell">
-        ${line
-          ? `<div class="line-value">${line.line}</div>
-             <div class="lh-odds small text-muted">${oddsText(line)}</div>
-             <div class="lh-add-pair">${huntButtonHtml(huntLegFor(line, "over"), { label: "O", iconFirst: true })}${huntButtonHtml(huntLegFor(line, "under"), { label: "U", iconFirst: true })}</div>`
-          : `<span class="small text-muted">No line yet</span>`}
-      </td>
-      <td class="d-none d-md-table-cell">${statsLoading ? STAT_PLACEHOLDER : miniGraph(result.games)}</td>
-      <td class="text-end lines-only d-none d-md-table-cell">${statsLoading ? STAT_PLACEHOLDER : hitRateCell(result)}</td>
-      <td class="text-end d-none d-md-table-cell lh-avg">${statsLoading ? STAT_PLACEHOLDER : formatStatValue(result.average)}</td>
-    `;
-
-    row.addEventListener("click", (event) => {
-      // The name is a link to player.html: let the link do its own thing instead of opening the drawer.
-      if (event.target.closest("a")) return;
-      openPlayerDrawer(player.playerId);
-    });
-    row.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && event.target === row) openPlayerDrawer(player.playerId);
-    });
-
-    rowElements.push(row);
-  });
-
-  placeRows(rowElements);
   document.getElementById("lines-message").classList.add("d-none");
-  document.getElementById("lines-table").classList.remove("d-none");
+  const list = document.getElementById("propList");
+  list.classList.remove("d-none");
+  document.getElementById("propRows").setAttribute("aria-busy", String(statsLoading));
+  document.getElementById("propRows").innerHTML = entries.slice(0, PROP_ROWS_SHOWN).map((entry) => propRowHtml(entry)).join("");
+  document.getElementById("propRowsMore").innerHTML = entries.slice(PROP_ROWS_SHOWN).map((entry) => propRowHtml(entry)).join("");
+  const isOpen = document.getElementById("propRowsMore").classList.contains("show");
+  toggle.hidden = entries.length <= PROP_ROWS_SHOWN;
+  document.getElementById("propsToggleText").textContent = isOpen ? "Show fewer" : `Show all (${entries.length})`;
+
+  plBindControls(list, {
+    edits: propBar.edits,
+    find: (key) => buildPropEntries().find((entry) => entry.key === key) || null,
+    render: (entry) => propRowHtml(entry),
+  });
+}
+
+["shown.bs.collapse", "hidden.bs.collapse"].forEach((eventName) => {
+  document.getElementById("propRowsMore").addEventListener(eventName, () => {
+    const total = document.querySelectorAll("#propRows .lh-prow, #propRowsMore .lh-prow").length;
+    document.getElementById("propsToggleText").textContent = document.getElementById("propRowsMore").classList.contains("show") ? "Show fewer" : `Show all (${total})`;
+  });
+});
+
+// A row (or its odds chip) was clicked: open the player drawer on this page, on that row's prop, line and side. Links, buttons and the
+// stepper do their own thing (the player name goes to player.html, + ADD adds to My Hunts).
+function openPropDrawer(info) {
+  openPlayerDrawer(info.playerId, info.side, PROP_CODES[info.code] || null, info.line);
+}
+(() => {
+  const list = document.getElementById("propList");
+  list.addEventListener("click", (event) => {
+    const chip = event.target.closest("[data-lh-drawer]");
+    if (chip) {
+      event.preventDefault();
+      openPropDrawer(JSON.parse(chip.dataset.lhDrawer));
+      return;
+    }
+    if (event.target.closest("a, button, input, select, output, .lh-top-linectl")) return;
+    const row = event.target.closest("[data-lh-open]");
+    if (row) openPropDrawer(JSON.parse(row.dataset.lhOpen));
+  });
+  list.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || !event.target.matches("[data-lh-open]")) return;
+    openPropDrawer(JSON.parse(event.target.dataset.lhOpen));
+  });
+})();
+
+// Fill the table with the lines for the selected prop and window.
+function renderTable() {
+  if (isResearchMode()) {
+    renderTableWindows();
+    updateSortHeaders();
+    renderResearchTable();
+    return;
+  }
+  renderPropRows();
 }
 
 // ---------- Loading everything ----------
@@ -512,10 +606,13 @@ function openLinkedPlayer(propTypes) {
 
   if (linkedPropType && propTypes.includes(linkedPropType)) {
     selectedProp = linkedPropType;
+    const code = propCode(linkedPropType);
+    if (PROP_CODES_ALL.includes(code)) propTab = code;
     renderPills(propTypes);
+    renderPropTabs();
     renderTable();
   }
-  openPlayerDrawer(linkedPlayerId, linkedSide); // the drawer starts on the table's prop (selectedProp)
+  openPlayerDrawer(linkedPlayerId, linkedSide, linkedPropType); // the drawer starts on the linked prop
 }
 
 async function loadPage() {
@@ -544,9 +641,6 @@ async function loadPage() {
       }),
     ]);
 
-    // Every sportsbook's lines go to the best-odds lookup (js/data/odds.js) before we keep one per player.
-    lhOdds.ingest(propsJson.data);
-
     // 3. Keep ONE over/under line per player per prop type (pickOneLinePerPlayer in js/core/stats.js).
     const chosen = pickOneLinePerPlayer(propsJson.data);
 
@@ -555,7 +649,14 @@ async function loadPage() {
     const people = {};
     roster.forEach((person) => { people[person.id] = person; });
     const missingIds = [...new Set(chosen.map((prop) => prop.player_id))].filter((id) => !people[id]);
-    if (missingIds.length > 0) Object.assign(people, await fetchPlayers(missingIds));
+    if (missingIds.length > 0) {
+      // The props feed sometimes pins a book's line on the wrong player id (a Jazz player on a Thunder-Spurs game). Someone who is not on
+      // either active roster only counts when the API says his current team is one of the game's two teams.
+      const found = await fetchPlayers(missingIds);
+      Object.values(found).forEach((person) => {
+        if (person.team && [game.home_team.id, game.visitor_team.id].includes(person.team.id)) people[person.id] = person;
+      });
+    }
 
     playersById = {};
     Object.values(people).forEach((person) => {
@@ -568,6 +669,9 @@ async function loadPage() {
       };
     });
     const playerIds = Object.keys(playersById).map(Number);
+
+    // Every sportsbook's lines go to the best-odds lookup (js/data/odds.js), only for players who are really in this game.
+    lhOdds.ingest(propsJson.data.filter((prop) => playersById[prop.player_id]));
 
     if (playerIds.length === 0) {
       showLinesMessage("No players found for this game yet.", "text-muted");
@@ -595,6 +699,7 @@ async function loadPage() {
 
     setUpSortHeaders();
     renderPills(propTypes);
+    renderPropTabs();
     renderTable();
     openLinkedPlayer(propTypes); // only does something for links like ?player=237&prop=pts
 
@@ -615,5 +720,6 @@ loadPage();
 document.addEventListener("lh-mode-change", () => {
   if (isResearchMode() && sortKey === "hitRate") { sortKey = "average"; sortDescending = true; }
   if (!isResearchMode() && sortKey === "average") { sortKey = "hitRate"; sortDescending = true; }
+  if (!isResearchMode()) selectedWindow = propBar.state.window; // lines mode: the bar's window rules
   renderTable();
 });

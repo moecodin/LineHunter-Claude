@@ -168,7 +168,7 @@
     state.info = info;
     state.data = null;
     state.propType = PROP_CODES[info.code] || "points";
-    state.windowSize = typeof topWindow !== "undefined" ? topWindow : 10;
+    state.windowSize = typeof topUi !== "undefined" && topUi ? topUi.state.window : 10;
     toolbar.setSide(info.side);
     const token = ++state.token;
     // Start on the clicked row's line, before the games arrive (the stepper and odds work straight away).

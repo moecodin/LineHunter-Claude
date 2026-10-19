@@ -60,19 +60,20 @@
     </div>
 
     <!-- PLAYER PROPS CARD -->
-    <div class="card lh-tint-card mb-4">
+    <div class="card lh-tint-card mb-4" id="gamePropsCard">
       <div class="card-header lh-label py-3"><span class="lines-only">Player Props</span><span class="research-only">Player Stats</span></div>
       <div class="card-body">
 
-        <!-- PROP TYPE TABS: Bootstrap "nav-underline". js/pages/game.js adds one button per prop type.
-             lh-tabs (css/styles.css) = one row that scrolls sideways on phones, no wrapping -->
-        <ul id="prop-pills" class="nav nav-underline lh-tabs mb-3"></ul>
-
-        <!-- WINDOW TOGGLE: how many recent games the whole table uses. js/pages/game.js adds the buttons. -->
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <!-- RESEARCH MODE: the stat tabs and window toggle of the "Player Stats" table. js/pages/game.js adds the buttons. -->
+        <ul id="prop-pills" class="nav nav-underline lh-tabs mb-3 research-only"></ul>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3 research-only">
           <div id="table-windows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to use"></div>
           <span id="table-window-note" class="small text-muted" hidden>This season hasn't started, so Season shows last season.</span>
         </div>
+
+        <!-- LINES MODE: the same controls as Top Hit Rates (L5 / L10 / L20, Filter, Sportsbook, search, chips: js/components/prop-list.js inserts them
+             right above these tabs), then the stat tabs ALL / PTS / REB / AST / 3PM / PRA and the rows. -->
+        <ul id="propTabs" class="nav nav-underline lh-tabs mb-3 lines-only"></ul>
 
         <!-- Shown when the books haven't posted lines for this game or this prop yet (players are still listed) -->
         <div id="lines-note" class="small text-muted mb-3 lines-only" hidden></div>
@@ -80,31 +81,27 @@
         <!-- Messages like "Loading..." or "No lines yet" appear here -->
         <div id="lines-message" class="text-muted">Loading lines...</div>
 
-        <!-- d-none = hidden until there are lines to show -->
-        <div id="lines-table" class="table-responsive d-none">
+        <!-- Lines mode: plain rows (player, prop line, hit count, graph, stepper, Over / Under, odds, + Add). Rows past the first 8 sit in a collapse. -->
+        <div id="propList" class="lines-only d-none">
+          <div id="propRows" class="lh-prows"></div>
+          <div id="propRowsMore" class="collapse lh-prows"></div>
+          <button type="button" id="propsToggle" class="btn btn-sm btn-outline-secondary lh-mi-toggle w-100 mt-3 collapsed" hidden
+                  data-bs-toggle="collapse" data-bs-target="#propRowsMore" aria-expanded="false" aria-controls="propRowsMore">
+            <span id="propsToggleText">Show all</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <!-- Research mode: the "Player Stats" table (Player, Avg, graph, "25+ in 7/10") -->
+        <div id="lines-table" class="table-responsive d-none research-only">
           <table class="table table-hover align-middle mb-0">
             <thead>
-              <!-- Research mode: Player, Avg, Graph, and "25+ in 7/10" (a milestone instead of a line) -->
-              <tr class="research-only">
+              <tr>
                 <th>Player</th>
                 <th class="text-end" data-sort="average">
                   <button type="button" class="lh-sort-button">Avg <i class="bi bi-caret-down-fill"></i></button>
                 </th>
                 <th class="d-none d-md-table-cell">Graph vs milestone</th>
                 <th class="text-end">Milestone</th>
-              </tr>
-              <tr class="lines-only">
-                <th>Player</th>
-                <th class="text-end lines-only">Line</th>
-                <!-- d-none d-md-table-cell = hidden on phones so Player, Line and Hit % fit -->
-                <th class="d-none d-md-table-cell">Graph</th>
-                <!-- data-sort = which number this header sorts by. Clicking flips the direction. -->
-                <th class="text-end lines-only" data-sort="hitRate">
-                  <button type="button" class="lh-sort-button">Hit % <i class="bi bi-caret-down-fill"></i></button>
-                </th>
-                <th class="text-end d-none d-md-table-cell" data-sort="average">
-                  <button type="button" class="lh-sort-button">Avg <i class="bi bi-caret-down-fill"></i></button>
-                </th>
               </tr>
             </thead>
             <tbody id="lines-body"></tbody>
@@ -113,8 +110,8 @@
           </table>
         </div>
 
-        <!-- Full-width button under the table; js/pages/game.js shows it only when there are more than 5 players -->
-        <button type="button" id="linesToggle" class="btn btn-sm btn-outline-secondary lh-mi-toggle w-100 mt-3 collapsed" hidden
+        <!-- Full-width button under the research table; js/pages/game.js shows it only when there are more than 5 players -->
+        <button type="button" id="linesToggle" class="btn btn-sm btn-outline-secondary lh-mi-toggle w-100 mt-3 collapsed research-only" hidden
                 data-bs-toggle="collapse" data-bs-target="#lines-more" aria-expanded="false" aria-controls="lines-more">
           <span id="linesToggleText">Show all players</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
         </button>
@@ -189,6 +186,7 @@
   <script src="js/core/stats.js"></script>
   <script src="js/components/propChart.js"></script>
   <script src="js/components/prop-toolbar.js"></script>
+  <script src="js/components/prop-list.js"></script>
   <script src="js/components/share.js"></script>
   <script src="js/data/teams.js"></script>
   <script src="js/components/matchupInfo.js"></script>

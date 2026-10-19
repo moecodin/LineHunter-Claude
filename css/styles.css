@@ -3391,13 +3391,13 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 @supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
   .lh-top-panel,
-  #topHitRatesSheet {
+  .lh-top-sheet {
     background-color: rgba(var(--lh-bg-rgb), 0.78);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
   }
 }
-#topHitRatesSheet { border-top: 1px solid var(--lh-border); }
+.lh-top-sheet { border-top: 1px solid var(--lh-border); }
 .lh-top-field { margin-bottom: 0.75rem; }
 .lh-top-field:last-child { margin-bottom: 0; }
 .lh-top-field .lh-label { display: block; margin-bottom: 0.25rem; }
@@ -4197,8 +4197,8 @@ body:not(.research-mode) .lh-player-drawer .offcanvas-header { background: var(-
 
   /* Top Hit Rates header on phones: no description line; L5 / L10 / L20, Filter and an icon-only Sort share one row */
   #top-hit-rates .card-header .small { display: none; }
-  #top-hit-rates .lh-top-controls { flex-wrap: nowrap; gap: 0.35rem; }
-  #top-hit-rates .lh-top-ctl [data-sort-label] { display: none; }
+  #top-hit-rates .lh-top-controls, #gamePropsCard .lh-top-controls { flex-wrap: nowrap; gap: 0.35rem; }
+  #top-hit-rates .lh-top-ctl [data-sort-label], #gamePropsCard .lh-top-ctl [data-sort-label] { display: none; }
 }
 
 /* The floating My Hunts pill: a small ticket stub (MY HUNTS | dashed divider | count + chevron) */
@@ -4267,7 +4267,8 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
    The odds chip and the Add button are 8px apart. It is a sibling of the ticket link (buttons can't live inside a link), laid over the empty
    last grid column at 1200px and up; narrower desktops / tablets put it on its own line under the ticket. Phones hide it (compact rows). */
 @media (min-width: 768px) { .lh-ticket-main { grid-template-columns: minmax(0, 13rem) 2.75rem 140px minmax(0, 1fr); grid-template-areas: "player count graph ."; gap: 0.25rem 0.6rem; } }
-.lh-top-linectl { display: flex; align-items: center; gap: 0.75rem; position: static; margin: 0.35rem 0 0.2rem 1rem; flex-wrap: wrap; }
+.lh-top-linectl { display: flex; align-items: center; gap: 0.75rem; position: static; margin: 0; flex-wrap: wrap; }
+.lh-top-addwrap > .lh-top-linectl { margin: 0.35rem 0 0.2rem 1rem; }
 .lh-top-step { display: inline-flex; align-items: stretch; height: 30px; border: 1px solid var(--lh-border); border-radius: 6px; overflow: hidden; }
 .lh-top-stepbtn { width: 28px; border: 0; background: none; color: var(--lh-strong); font-size: 1.05rem; line-height: 1; cursor: pointer; }
 .lh-top-stepbtn:hover:not(:disabled), .lh-top-stepbtn:focus-visible { background: rgba(var(--lh-accent-rgb), 0.12); }
@@ -4288,7 +4289,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-top-linectl .lh-top-add { position: static; transform: none; margin-left: -4px; /* the oddsbox's 12px flex gap minus 4px = 8px */ }
 .lh-top-oddsbox:empty { display: none; }
 @media (min-width: 1200px) {
-  .lh-top-linectl {
+  .lh-top-addwrap > .lh-top-linectl {
     position: absolute; z-index: 2; top: 50%; margin: 0; flex-wrap: nowrap;
     /* stub + 1px border + main padding + player col + count col + graph col (all fixed widths, so every row lines up) + three 0.6rem gaps + 1.5rem clear space after the graph */
     left: calc(161px + 1rem + 13rem + 2.75rem + 140px + 1.8rem + 1.5rem);
@@ -4330,4 +4331,55 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   .lh-top-field--phone { display: block; }
   .lh-top-search { max-width: none; width: 100%; }
   .lh-top-search-input { height: 40px; font-size: 1rem; } /* 16px: iOS doesn't zoom the page on focus */
+}
+
+/* Game page, Player Props: plain rows (no ticket). Same pieces as Top Hit Rates, laid out as a grid so the graph and the controls never overlap. */
+.lh-prows { display: flex; flex-direction: column; }
+.lh-prow {
+  display: grid; align-items: center; gap: 0.3rem 0.75rem;
+  padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--lh-border);
+  cursor: pointer; transition: background-color 0.15s ease;
+}
+.lh-prows .lh-prow:last-child, #propRows:not(:has(+ #propRowsMore.show)) .lh-prow:last-child { border-bottom: 0; }
+.lh-prow:focus-visible { outline: 2px solid rgba(var(--lh-accent-rgb), 0.6); outline-offset: -2px; }
+@media (hover: hover) { .lh-prow:hover { background: rgba(var(--lh-accent-rgb), 0.06); } }
+.lh-prow-player { grid-area: player; display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem 0.5rem; min-width: 0; }
+.lh-prow-player .lh-player-link { font-size: 1.02rem; color: var(--lh-strong); text-decoration: none; }
+.lh-prow-player .lh-player-link:hover { text-decoration: underline; }
+.lh-prow-match { font-size: 0.82rem; color: var(--lh-muted); }
+.lh-prow-prop { grid-area: prop; font-family: var(--lh-font-display); font-size: 1rem; font-weight: 600; color: var(--lh-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lh-prow-propname { color: var(--lh-muted); font-weight: 500; }
+.lh-prow-rate { grid-area: rate; font-family: var(--lh-font-display); font-size: 1.3rem; font-weight: 700; line-height: 1; color: var(--lh-strong); white-space: nowrap; }
+.lh-prow-rate span { margin-left: 0.25rem; font-family: var(--lh-font-label); font-size: 0.58rem; font-weight: 400; letter-spacing: 0.08em; color: var(--lh-muted); }
+.lh-prow-rate.lh-hit--good, .lh-prow-count.lh-hit--good { color: var(--lh-over-text); }
+.lh-prow-rate.lh-hit--bad, .lh-prow-count.lh-hit--bad { color: var(--lh-under-text); }
+.lh-prow-count { grid-area: count; font-family: var(--lh-font-display); font-size: 1.05rem; font-weight: 700; color: var(--lh-strong); white-space: nowrap; }
+.lh-prow-avg { display: block; font-family: var(--lh-font-label); font-size: 0.6rem; font-weight: 400; color: var(--lh-muted); }
+.lh-prow-graph { grid-area: graph; min-width: 0; }
+.lh-prow-graph .lh-mini-graph { width: 120px; }
+.lh-prow-graph .lh-mini-bar { max-width: 16px; }
+.lh-prow-chip { grid-area: chip; justify-self: end; }
+.lh-prow-controls { grid-area: controls; min-width: 0; }
+.lh-prow--noline .lh-prow-prop { grid-column: prop / rate; }
+@media (min-width: 768px) {
+  .lh-prow {
+    grid-template-columns: minmax(0, 13rem) minmax(0, 11rem) 4.2rem 4.2rem 120px;
+    grid-template-areas: "player prop rate count graph" ". controls controls controls controls";
+  }
+  .lh-prow-chip { display: none; }
+  .lh-prow--noline .lh-prow-controls { display: none; }
+}
+@media (min-width: 1280px) {
+  .lh-prow {
+    grid-template-columns: minmax(0, 13rem) minmax(0, 10.5rem) 4rem 4rem 120px auto;
+    grid-template-areas: "player prop rate count graph controls";
+  }
+}
+@media (max-width: 767.98px) {
+  .lh-prow { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "player chip" "prop rate" "graph count"; padding: 0.6rem 0.25rem; }
+  .lh-prow-controls { display: none; }
+  .lh-prow-count { text-align: right; }
+  .lh-prow-rate { text-align: right; }
+  .lh-prow--noline .lh-prow-prop { grid-column: prop; }
+  .lh-prow-graph .lh-mini-graph { width: 96px; }
 }

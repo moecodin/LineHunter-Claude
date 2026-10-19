@@ -91,6 +91,10 @@ async function loadGameInjuries(game) {
   try {
     const injuries = await bdlGetAllPages(`${BDL_BASE}/player_injuries?${teams.map((team) => `team_ids[]=${team.id}`).join("&")}&per_page=100`);
     box.innerHTML = "";
+    // playerId -> status, for the Player Props "Hide injured" filter (js/pages/game.js)
+    window.gameInjuryStatus = {};
+    injuries.forEach((item) => { if (item.player) window.gameInjuryStatus[item.player.id] = item.status || "Out"; });
+    if (typeof onGameInjuriesLoaded === "function") onGameInjuriesLoaded();
     teams.forEach((team) => {
       const heading = document.createElement("div");
       heading.className = "lh-injury-team lh-label";

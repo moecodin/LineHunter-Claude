@@ -33,18 +33,27 @@ function isKnownStat(stat) {
 // ---------- Requests ----------
 
 // One place for every request: turns bad answers into clear errors. (The key is added by the server, not here.)
+// A busy API (429, a 5xx, or no network for a moment) gets two more tries per request, 0.7 s then 1.4 s later, so one hiccup in a
+// long list of requests doesn't quietly drop players. error.status tells callers what happened; 401 and the like are never retried.
 async function bdlGet(url) {
-  const response = await fetch(url);
-  if (response.status === 401) {
-    throw new Error("The API said no (401). Your plan may not include this data, or the server's API key is wrong.");
+  for (let attempt = 0; ; attempt += 1) {
+    let response = null;
+    try {
+      response = await fetch(url);
+    } catch (error) {
+      if (attempt < 2) { await new Promise((resolve) => setTimeout(resolve, 700 * (attempt + 1))); continue; }
+      throw error;
+    }
+    if (response.ok) return response.json();
+    if ((response.status === 429 || response.status >= 500) && attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 700 * (attempt + 1)));
+      continue;
+    }
+    const fail = (message) => Object.assign(new Error(message), { status: response.status });
+    if (response.status === 401) throw fail("The API said no (401). Your plan may not include this data, or the server's API key is wrong.");
+    if (response.status === 429) throw fail("Too many requests. Wait a minute and try again.");
+    throw fail(`The API answered with status ${response.status}`);
   }
-  if (response.status === 429) {
-    throw new Error("Too many requests. Wait a minute and try again.");
-  }
-  if (!response.ok) {
-    throw new Error(`The API answered with status ${response.status}`);
-  }
-  return response.json();
 }
 
 // Ask for every page of a list. The API hands out at most 100 items per answer,
@@ -227,15 +236,17 @@ const PLAYERS_PER_REQUEST = 5;
 // Every game MANY players played in a season. Returns logsByPlayer[237] = [...newest first]
 async function fetchGameLogsForPlayers(playerIds, season) {
   const groups = splitIntoGroups(playerIds, PLAYERS_PER_REQUEST);
+  const failedIds = [];
+  // bdlGet retries a busy API request by request. A group that still fails is remembered in failedIds: those players have no games
+  // here, so callers must not treat the result as complete (Top Hit Rates does not cache it).
+  const fetchGroup = (group) => bdlGetAllPages(`${BDL_BASE}/stats?${playerIdParams(group)}&seasons[]=${season}&per_page=100`)
+    .catch((error) => {
+      console.warn(`Stats unavailable for players ${group.join(", ")}:`, error);
+      failedIds.push(...group);
+      return []; // those players show "–" and every other group still loads
+    });
   const [groupLogs, teams] = await Promise.all([
-    Promise.all(groups.map((group) =>
-      bdlGetAllPages(`${BDL_BASE}/stats?${playerIdParams(group)}&seasons[]=${season}&per_page=100`)
-        // If one group fails, those players show "–" and every other group still loads.
-        .catch((error) => {
-          console.warn(`Stats unavailable for players ${group.join(", ")}:`, error);
-          return [];
-        })
-    )),
+    Promise.all(groups.map(fetchGroup)),
     getTeamAbbreviations(),
   ]);
 
@@ -253,6 +264,7 @@ async function fetchGameLogsForPlayers(playerIds, season) {
     addOpponentInfo(logs, teams);
     sortNewestFirst(logs);
   });
+  Object.defineProperty(logsByPlayer, "failedIds", { value: failedIds, enumerable: false }); // not a player id: keeps Object.keys() clean
   return logsByPlayer;
 }
 
@@ -260,7 +272,8 @@ async function fetchGameLogsForPlayers(playerIds, season) {
 // gamesNeeded played games this season (the 2026 -> 2025 fallback).
 // Returns {
 //   logsByPlayer: { 237: { current: [...newest first], previous: [...newest first] } },
-//   showingCurrentSeason: false when nobody has played this season yet ("Season" then means last season)
+//   showingCurrentSeason: false when nobody has played this season yet ("Season" then means last season),
+//   incomplete: true when some players' downloads failed even after retrying
 // }
 async function loadPlayerGameLogs(playerIds, gamesNeeded) {
   const season = currentSeasonYear();
@@ -280,6 +293,8 @@ async function loadPlayerGameLogs(playerIds, gamesNeeded) {
   return {
     logsByPlayer,
     showingCurrentSeason: playerIds.some((id) => current[id].some(playedInGame)),
+    // true when some players' games could not be downloaded (even after retrying): their rows are missing, so don't cache the result
+    incomplete: current.failedIds.length > 0 || (previous.failedIds || []).length > 0,
   };
 }
 

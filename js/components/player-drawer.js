@@ -187,15 +187,18 @@ function renderPlayerDrawer() {
 
 // ---------- Opening ----------
 
-// Called by js/pages/game.js when a table row is clicked.
-// side ("over" / "under") = opened from a prop that has one (a Top Hit Rates or Hit List link): that side starts picked.
-function openPlayerDrawer(playerId, side = null) {
+// Called by js/pages/game.js when a row is clicked.
+// side ("over" / "under") = opened from a prop that has one (a row's chip, a Top Hit Rates or Hit List link): that side starts picked.
+// propType / startLine = the row's own prop and (stepped) line; without them the drawer starts on the table's prop and its book line.
+function openPlayerDrawer(playerId, side = null, propType = null, startLine = null) {
   drawerState.playerId = playerId;
   drawerToolbar.setSide(side);
-  // Start on the same stat as the table, if the drawer has a tab for it. Otherwise Points.
-  drawerState.propType = CHART_STAT_TABS.some((option) => option.propType === selectedProp) ? selectedProp : "points";
+  // Start on the row's stat (or the table's), if the drawer has a tab for it. Otherwise Points.
+  const wanted = propType || selectedProp;
+  drawerState.propType = CHART_STAT_TABS.some((option) => option.propType === wanted) ? wanted : "points";
   drawerState.windowSize = selectedWindow; // start on the same window as the table
   resetDrawerLine();                       // a new player starts back on the book line
+  if (startLine !== null && startLine !== undefined && !isResearchMode()) drawerChart.setActiveLine(startLine); // the row's own line (a stepped or sportsbook line)
 
   renderPlayerDrawer();
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("playerDrawer")).show();
