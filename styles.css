@@ -2997,17 +2997,14 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 .lh-shelf-track::-webkit-scrollbar { display: none; }
 .lh-shelf-item {
-  flex: 0 0 32%;
+  flex: 0 0 300px;                     /* compact cards: a fixed width, not a share of the screen */
   min-width: 0;
   display: flex;                       /* the card inside is as tall as the tallest one */
   scroll-snap-align: start;
 }
 .lh-shelf-item > .lh-hitlist-card { width: 100%; }
-@media (max-width: 1199.98px) { .lh-shelf-item { flex-basis: 40%; } }
-@media (max-width: 991.98px) { .lh-shelf-item { flex-basis: 48%; } }
 @media (max-width: 575.98px) {
   .lh-shelf-track { gap: 0.75rem; }
-  .lh-shelf-item { flex-basis: 85%; }
 }
 
 /* Desktop only (992px and up, where the ← → buttons show): the shelf's title and description are centered, buttons stay on the right */
@@ -3804,3 +3801,35 @@ body:not(.research-mode) .research-only { display: none !important; }
 /* Game page: the Injury report card sits beside Matchup Info; a long report scrolls instead of stretching the row */
 .lh-game-injury-list { max-height: 22rem; overflow-y: auto; }
 .lh-brand:hover, .lh-brand:focus-visible { color: var(--lh-logo-ink); }
+
+
+/* ---------- Hit List shelf: compact cards ----------
+   Fixed widths (300px desktop, 280px tablet, 82% on phones), cards as tall as the tallest one, one tight line per leg
+   (name | prop | proof, the proof right after the prop), and less air between the title, the blurb and the first row. */
+@media (max-width: 991.98px) { .lh-shelf-item { flex-basis: 280px; } }
+@media (max-width: 575.98px) { .lh-shelf-item { flex-basis: 82%; } }
+
+.lh-shelf-item .lh-hitlist-head { padding-top: 0.4rem; padding-bottom: 0.4rem; }
+.lh-shelf-item .lh-hitlist-blurb { padding-top: 0.4rem; }
+.lh-shelf-item .lh-hitlist-list {
+  display: flex;                       /* so the "Not enough picks today" message can sit in the middle */
+  flex-direction: column;
+  padding: 0.4rem 0 0.25rem;
+}
+.lh-shelf-item .lh-hitlist-leg:not(.is-stacked) {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, max-content) auto;
+  justify-content: start;
+  align-items: baseline;
+  column-gap: 0.5rem;
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+.lh-shelf-item .lh-hitlist-leg:not(.is-stacked) .lh-hitlist-pick {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;             /* a long prop is cut with an ellipsis, never wrapped */
+  white-space: nowrap;
+}
+.lh-shelf-item .lh-hitlist-leg:not(.is-stacked) .lh-hitlist-proof { margin-left: 0; }
+.lh-shelf-item .lh-hitlist-empty { margin: auto; padding: 0.75rem; text-align: center; }
