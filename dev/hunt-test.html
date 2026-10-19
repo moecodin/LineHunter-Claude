@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LineHunter - Hunt Score test</title>
+  <style>
+    body { font: 14px/1.4 system-ui, sans-serif; margin: 1rem; background: #050506; color: #d2e0f8; }
+    h1 { font-size: 1.2rem; margin: 0 0 0.75rem; }
+    form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+    input, select, button { font: inherit; padding: 0.3rem 0.5rem; background: #071a38; color: inherit; border: 1px solid #13305e; border-radius: 6px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 0.35rem 0.5rem; border-bottom: 1px solid #13305e; text-align: left; vertical-align: top; }
+    th { position: sticky; top: 0; background: #050506; cursor: pointer; white-space: nowrap; }
+    .over { color: #5dcaa5; } .under { color: #f0997b; } .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .pos { color: #5dcaa5; } .neg { color: #f0997b; }
+    .gtd { color: #ffc83d; font-size: 0.75rem; border: 1px solid #ffc83d; padding: 0 0.25rem; }
+    .muted { color: #8fa3c4; } .injured { opacity: 0.5; }
+    .why { max-width: 38rem; } .why div { margin-bottom: 0.15rem; }
+    #top { margin: 0 0 1rem; padding: 0.5rem 0.75rem; border: 1px solid #13305e; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Hunt Score test <span class="muted">(GET /api/hunt)</span></h1>
+  <form id="form">
+    <label>Date <input type="date" id="date"></label>
+    <label>Stat
+      <select id="stat"><option value="">All</option><option>pts</option><option>reb</option><option>ast</option><option>3pm</option><option>pra</option></select>
+    </label>
+    <label>Side
+      <select id="side"><option value="">Both</option><option>over</option><option>under</option></select>
+    </label>
+    <label>Min score <input type="number" id="min" value="0" min="0" max="100" style="width:4.5rem"></label>
+    <label><input type="checkbox" id="hideInjured"> hide injured</label>
+    <button type="submit">Load</button>
+    <span id="status" class="muted"></span>
+  </form>
+  <div id="top"></div>
+  <table>
+    <thead><tr><th data-k="player">Player</th><th data-k="stat">Prop</th><th data-k="side">Side</th><th data-k="score" class="num">Score</th><th>Factors</th><th>Why</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    // Plain table to sanity-check /api/hunt. Everything is read from the response; nothing is cached here.
+    let data = null;
+    let sortKey = "score";
+    let sortDesc = true;
+    const $ = (id) => document.getElementById(id);
+    const esc = (text) => String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+    function etToday() { return new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" }); }
+    $("date").value = etToday();
+
+    function line(prop) { return `${prop.stat.toUpperCase()} ${prop.side === "over" ? "o" : "u"}${prop.line}`; }
+
+    function render() {
+      if (!data) return;
+      const stat = $("stat").value, side = $("side").value, min = Number($("min").value) || 0, hide = $("hideInjured").checked;
+      let list = data.props.filter((p) => (!stat || p.stat === stat) && (!side || p.side === side) && p.score >= min && !(hide && p.injured));
+      list = [...list].sort((a, b) => {
+        const x = a[sortKey], y = b[sortKey];
+        return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * (sortDesc ? -1 : 1);
+      });
+      $("status").textContent = `${list.length} of ${data.props.length} props · updated ${new Date(data.updatedAt).toLocaleTimeString()}`;
+      $("top").innerHTML = `<strong>Top hunts (${data.topHunts.length})</strong>` + (data.topHunts.length
+        ? data.topHunts.map((p) => `<div>${p.score} · ${esc(p.player)} (${p.team} ${p.home ? "vs" : "@"} ${p.opp}) · <span class="${p.side}">${line(p)}</span></div>`).join("")
+        : ` <span class="muted">none (needs a score of 65+ and a healthy player)</span>`);
+      $("rows").innerHTML = list.map((p) => `
+        <tr class="${p.injured ? "injured" : ""}">
+          <td>${esc(p.player)} <span class="muted">${p.team} ${p.home ? "vs" : "@"} ${p.opp}</span>${p.gtd ? ` <strong class="gtd">GTD</strong>` : p.injured ? ` <strong class="under">${esc(p.injuryStatus || "OUT")}</strong>` : ""}</td>
+          <td>${esc(line(p))}</td>
+          <td class="${p.side}">${p.side}</td>
+          <td class="num"><strong>${p.score}</strong></td>
+          <td>${p.factors.map((f) => `<div class="${f.points > 0 ? "pos" : f.points < 0 ? "neg" : "muted"}">${esc(f.label)}: ${f.points > 0 ? "+" : ""}${f.points}</div>`).join("")}</td>
+          <td class="why">${p.why.map((s) => `<div>${esc(s)}</div>`).join("")}</td>
+        </tr>`).join("") || `<tr><td colspan="6" class="muted">No props. (Future dates and games that already started return an empty list.)</td></tr>`;
+    }
+
+    async function load() {
+      $("status").textContent = "Loading...";
+      try {
+        const response = await fetch(`/api/hunt?date=${$("date").value}`);
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        data = await response.json();
+        render();
+      } catch (error) {
+        $("status").textContent = `Couldn't load: ${error.message}`;
+      }
+    }
+
+    $("form").addEventListener("submit", (event) => { event.preventDefault(); load(); });
+    ["stat", "side", "min", "hideInjured"].forEach((id) => $(id).addEventListener("input", render));
+    document.querySelectorAll("th[data-k]").forEach((th) => th.addEventListener("click", () => {
+      sortDesc = sortKey === th.dataset.k ? !sortDesc : th.dataset.k === "score";
+      sortKey = th.dataset.k;
+      render();
+    }));
+    load();
+  </script>
+</body>
+</html>

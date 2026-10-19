@@ -46,6 +46,30 @@
   <!-- container = centers the content and adds side padding -->
   <main class="container-fluid lh-container px-3 px-lg-4 lh-schedule-page">
 
+    <!-- HUNT SCORE CARDS (above the games): Today's top hunts (left) and the Hit List carousel (right). js/components/hunt-cards.js fills
+         them in; the row stays hidden until there is something to show. -->
+    <div id="huntRow" class="lh-hunt-row mb-4" hidden>
+      <section id="huntLeft" class="lh-hcard lh-hunt-left" aria-label="Today's top hunts" hidden>
+        <span class="lh-hcard-tab">Hunt score</span>
+        <div id="huntLeftBody"></div>
+      </section>
+
+      <section id="huntRight" class="lh-hcard lh-hunt-right lines-only" aria-label="Hit list" hidden>
+        <span class="lh-hcard-tab">Hit list</span>
+        <div class="lh-hright-head">
+          <div>
+            <h2 class="lh-hcard-title">Hit list</h2>
+            <div class="lh-hcard-sub" id="huntCount">&nbsp;</div>
+          </div>
+          <a class="lh-hseeall stretched-link" href="hit-list.html" aria-label="See the full Hit list">See all →</a>
+        </div>
+        <div class="lh-hcarousel">
+          <div class="lh-hviewport" id="huntViewport"><div class="lh-htrack" id="huntTrack"></div></div>
+          <div class="lh-hbars" id="huntBars" aria-hidden="true"></div>
+        </div>
+      </section>
+    </div>
+
     <!-- GAMES HEADER: the title on the left, the date pager on the right.
          d-flex = line things up in a row. flex-wrap = drop to a new line on narrow screens.
          justify-content-between = push the two parts to opposite sides. gap-3 = space between. -->
@@ -181,6 +205,7 @@
   <script src="js/components/brickCity.js"></script>
   <script src="js/components/fanCards.js"></script>
   <script src="js/components/quickLook.js"></script>
+  <script src="js/components/hunt-cards.js"></script>
   <script src="js/pages/app.js"></script>
 </body>
 </html>

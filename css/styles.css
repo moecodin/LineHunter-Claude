@@ -35,6 +35,8 @@
   --lh-accent-light: #d2e0f8;       /* accent text on dark backgrounds */
   --lh-accent-rgb: 210, 224, 248;   /* same pale blue as numbers, for faint tints and glows */
   --lh-logo-ink: #d2e0f8;           /* the logo's letters: pale blue */
+  --lh-hunt-card: #0a101b;          /* the Hunt Score cards on the schedule page */
+  --lh-hunt-shadow: none;
   --lh-fill: #2107a9;               /* indigo: filled elements */
   --lh-fill-2: #3b22c9;             /* the other end of the fill gradient (buttons) */
   --lh-fill-rgb: 33, 7, 169;
@@ -129,6 +131,8 @@
   --lh-accent-light: #2107a9;       /* indigo text and links: dark enough on white */
   --lh-accent-rgb: 33, 7, 169;
   --lh-logo-ink: #052350;           /* the logo's letters: navy */
+  --lh-hunt-card: #ffffff;          /* the Hunt Score cards: the light card color */
+  --lh-hunt-shadow: 0 1px 3px rgba(var(--lh-shadow-rgb), 0.12);
   --lh-fill: #2107a9;               /* filled elements: primary buttons, selected pills, switches */
   --lh-fill-2: #3b22c9;
   --lh-fill-rgb: 33, 7, 169;
@@ -3833,3 +3837,133 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 .lh-shelf-item .lh-hitlist-leg:not(.is-stacked) .lh-hitlist-proof { margin-left: 0; }
 .lh-shelf-item .lh-hitlist-empty { margin: auto; padding: 0.75rem; text-align: center; }
+
+
+/* ---------- Hunt Score cards (schedule page, above the games): Today's top hunts + the Hit List carousel ----------
+   Square corners, --lh-hunt-card background, no side or bottom border, a 3px indigo top edge and a small square label tab
+   flush in the top-right corner. Left ~60%, right ~40%, same height; stacked on phones (top hunts first). */
+.lh-hunt-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1rem;
+  align-items: stretch;
+}
+.lh-hunt-row[hidden] { display: none; }
+.lh-hunt-row.is-single { grid-template-columns: 1fr; }
+.research-mode .lh-hunt-row { grid-template-columns: 1fr; }     /* the Hit List card is lines-only */
+.lh-hcard {
+  position: relative;
+  min-width: 0;
+  border: 0;
+  border-top: 3px solid var(--lh-fill);
+  border-radius: 0;
+  background: var(--lh-hunt-card);
+  box-shadow: var(--lh-hunt-shadow);
+  padding: 1.1rem 1.25rem 1rem;
+}
+.lh-hcard[hidden] { display: none; }
+.lh-hcard-tab {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.3rem 0.55rem;
+  background: var(--lh-fill);
+  color: var(--lh-on-fill);
+  font-family: var(--lh-font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.lh-hcard-title {
+  margin: 0;
+  font-family: var(--lh-font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--lh-strong);
+}
+.lh-hcard-sub {
+  margin: 0.15rem 0 0.6rem;
+  font-family: var(--lh-font-label);
+  font-size: 0.68rem;
+  color: var(--lh-muted);
+}
+
+/* Left: the rows. No boxes, only thin lines between them. */
+.lh-hlist { list-style: none; margin: 0; padding: 0; }
+.lh-hrow {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  gap: 0 0.75rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--lh-border);
+}
+.lh-hrank { font-family: var(--lh-font-display); font-size: 1.3rem; font-weight: 700; color: var(--lh-muted); line-height: 1.2; }
+.lh-hname { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5rem; }
+.lh-hplayer { font-family: var(--lh-font-display); font-size: 1.3rem; font-weight: 700; color: var(--lh-strong); text-decoration: none; line-height: 1.2; }
+.lh-hplayer:hover { text-decoration: underline; color: var(--lh-strong); }
+.lh-hmatch { font-size: 0.78rem; color: var(--lh-muted); }
+.lh-hprop { margin-top: 0.1rem; font-size: 0.9rem; color: var(--lh-text); }
+.lh-hside { font-weight: 700; }
+.lh-hside--over { color: var(--lh-over); }
+.lh-hside--under { color: var(--lh-under); }
+.lh-hwhy { margin: 0.4rem 0 0; padding: 0; list-style: none; font-family: var(--lh-font-body); font-size: 0.76rem; line-height: 1.45; color: var(--lh-muted); }
+.lh-hscore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5rem;
+  padding-left: 1rem;
+  border-left: 1px dashed var(--lh-border);
+}
+.lh-hscore-label { font-family: var(--lh-font-label); font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-hscore-num { font-family: var(--lh-font-display); font-size: 2.8rem; font-weight: 700; line-height: 1; color: var(--lh-logo-ink); }
+.lh-hbar { display: block; width: 100%; height: 3px; margin-top: 0.3rem; background: rgba(var(--lh-ink-rgb), 0.12); }
+.lh-hbar span { display: block; height: 100%; background: var(--lh-fill); }
+.lh-hempty { margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--lh-muted); }
+
+/* Right: the vertical carousel. The viewport is one and a half slides tall, so the next slide peeks in from the bottom. */
+.lh-hunt-right { display: flex; flex-direction: column; }
+.lh-hright-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; padding-right: 5.5rem; }
+.lh-hseeall { margin-top: 0.35rem; font-family: var(--lh-font-label); font-size: 0.7rem; color: var(--lh-accent-light); text-decoration: none; white-space: nowrap; }
+.lh-hseeall:hover { text-decoration: underline; }
+.lh-hcarousel { position: relative; flex: 1 1 auto; min-height: 0; display: flex; gap: 0.75rem; }
+.lh-hviewport { position: relative; flex: 1 1 auto; min-width: 0; min-height: 9rem; overflow: hidden; }
+/* absolute, so the tall track never makes the card taller: the card's height comes from the Top Hunts card (or 300px on phones) */
+.lh-htrack { position: absolute; top: 0; left: 0; right: 0; transition: transform 0.6s ease; will-change: transform; }
+.lh-hslide { height: var(--slide-h, 12rem); padding: 0.1rem 0 0.9rem; overflow: hidden; border-top: 1px solid var(--lh-border); }
+.lh-hslide-name { margin-top: 0.5rem; font-family: var(--lh-font-display); font-size: 1.2rem; font-weight: 700; color: var(--lh-strong); line-height: 1.2; }
+.lh-hslide-blurb { margin: 0.1rem 0 0.5rem; font-size: 0.74rem; line-height: 1.35; color: var(--lh-muted); }
+.lh-hslide-picks { list-style: none; margin: 0; padding: 0; }
+.lh-hslide-picks li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.5rem; align-items: baseline; padding: 0.15rem 0; font-size: 0.82rem; }
+.lh-hslide-player { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--lh-strong); }
+.lh-hslide-prop { color: var(--lh-muted); white-space: nowrap; }
+.lh-hslide-proof { font-family: var(--lh-font-label); font-size: 0.72rem; color: var(--lh-over-text); white-space: nowrap; }
+.lh-hbars { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.lh-hbars span { width: 3px; flex: 0 1 2.2rem; min-height: 1rem; background: rgba(var(--lh-ink-rgb), 0.18); transition: background-color 0.3s ease; }
+.lh-hbars span.is-active { background: var(--lh-fill); }
+@media (prefers-reduced-motion: reduce) { .lh-htrack { transition: none; } }
+
+/* Desktop: the carousel card is as tall as the Top Hunts card (the grid stretches it). Phones: stacked, carousel about 300px. */
+@media (max-width: 991.98px) {
+  .lh-hunt-row { grid-template-columns: 1fr; }
+  .lh-hunt-right { height: 300px; }
+}
+@media (max-width: 575.98px) {
+  .lh-hcard { padding: 1rem 1rem 0.9rem; }
+  .lh-hrow { grid-template-columns: 1.3rem minmax(0, 1fr); }
+  .lh-hscore {
+    grid-column: 2;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+    padding: 0.5rem 0 0;
+    border-left: 0;
+    border-top: 1px dashed var(--lh-border);
+  }
+  .lh-hscore-num { font-size: 1.9rem; }
+  .lh-hbar { flex: 1 1 auto; width: auto; margin: 0; }
+}

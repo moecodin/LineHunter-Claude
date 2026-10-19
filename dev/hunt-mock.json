@@ -1,0 +1,208 @@
+{
+  "_note": "Dev-only sample data for the schedule Hunt Score cards. Used only on localhost with ?mock=1.",
+  "date": "2026-10-20",
+  "updatedAt": "2026-10-20T20:12:00Z",
+  "props": [],
+  "topHunts": [
+    {
+      "playerId": 1,
+      "player": "Jalen Brunson",
+      "team": "NYK",
+      "opp": "BOS",
+      "home": true,
+      "stat": "pts",
+      "side": "over",
+      "line": 26.5,
+      "score": 84,
+      "gameId": 1,
+      "why": [
+        "Brunson has cleared this line in 9 of the last 10 games.",
+        "Boston allows the 4th most points per game this season.",
+        "Only knock: second night of a back-to-back."
+      ],
+      "factors": [],
+      "injured": false,
+      "gtd": false,
+      "injuryStatus": null,
+      "tipoff": "2026-10-20T23:30:00Z"
+    },
+    {
+      "playerId": 2,
+      "player": "Tyrese Haliburton",
+      "team": "IND",
+      "opp": "CHI",
+      "home": false,
+      "stat": "ast",
+      "side": "over",
+      "line": 9.5,
+      "score": 79,
+      "gameId": 2,
+      "why": [
+        "Haliburton has cleared this line in 8 of the last 10 games.",
+        "Chicago allows the 2nd most assists per game this season.",
+        "The line sits 1.4 points below the recent average of 10.9."
+      ],
+      "factors": [],
+      "injured": false,
+      "gtd": false,
+      "injuryStatus": null,
+      "tipoff": "2026-10-20T23:30:00Z"
+    },
+    {
+      "playerId": 3,
+      "player": "Nikola Jokic",
+      "team": "DEN",
+      "opp": "UTA",
+      "home": true,
+      "stat": "pra",
+      "side": "over",
+      "line": 52.5,
+      "score": 76,
+      "gameId": 3,
+      "why": [
+        "Jokic went over 52.5 in 7 of the last 10 games.",
+        "Jokic's minutes are up: 36.4 a game over the last 5, against 34.8 on the season.",
+        "Only knock: Utah ranks 24th of 30 in points, rebounds and assists allowed per game."
+      ],
+      "factors": [],
+      "injured": false,
+      "gtd": false,
+      "injuryStatus": null,
+      "tipoff": "2026-10-20T23:30:00Z"
+    },
+    {
+      "playerId": 4,
+      "player": "Stephen Curry",
+      "team": "GSW",
+      "opp": "PHX",
+      "home": false,
+      "stat": "3pm",
+      "side": "under",
+      "line": 4.5,
+      "score": 71,
+      "gameId": 4,
+      "why": [
+        "Curry has stayed under this line in 7 of the last 10 games.",
+        "Phoenix gives up the 3rd fewest threes a game this season (11.2).",
+        "Line note: 4.5 against Curry's 10-game average of 3.7."
+      ],
+      "factors": [],
+      "injured": false,
+      "gtd": false,
+      "injuryStatus": null,
+      "tipoff": "2026-10-20T23:30:00Z"
+    },
+    {
+      "playerId": 5,
+      "player": "Evan Mobley",
+      "team": "CLE",
+      "opp": "MIA",
+      "home": true,
+      "stat": "reb",
+      "side": "over",
+      "line": 9.5,
+      "score": 68,
+      "gameId": 5,
+      "why": [
+        "Mobley has cleared this line in 8 of the last 10 games.",
+        "Miami ranks 3rd of 30 in rebounds allowed per game.",
+        "The line sits a full point below the recent average of 10.5."
+      ],
+      "factors": [],
+      "injured": false,
+      "gtd": false,
+      "injuryStatus": null,
+      "tipoff": "2026-10-20T23:30:00Z"
+    }
+  ],
+  "hitList": [
+    {
+      "key": "perfect",
+      "label": "Perfect Five",
+      "blurb": "Went over the line in each of the last 5 games",
+      "picks": [
+        {
+          "name": "J. Brunson NYK",
+          "text": "Over 26.5 PTS",
+          "proof": "5/5"
+        },
+        {
+          "name": "T. Haliburton IND",
+          "text": "Over 9.5 AST",
+          "proof": "5/5"
+        },
+        {
+          "name": "E. Mobley CLE",
+          "text": "Over 9.5 REB",
+          "proof": "5/5"
+        }
+      ]
+    },
+    {
+      "key": "weather",
+      "label": "Under the Weather",
+      "blurb": "Went under the line in each of the last 5 games",
+      "picks": [
+        {
+          "name": "S. Curry GSW",
+          "text": "Under 4.5 3PM",
+          "proof": "5/5"
+        },
+        {
+          "name": "D. Booker PHX",
+          "text": "Under 26.5 PTS",
+          "proof": "5/5"
+        },
+        {
+          "name": "J. Allen CLE",
+          "text": "Under 14.5 REB",
+          "proof": "5/5"
+        }
+      ]
+    },
+    {
+      "key": "venue",
+      "label": "Home Cookin' / Road Warriors",
+      "blurb": "Over the line in every recent game at tonight's venue",
+      "picks": [
+        {
+          "name": "N. Jokic DEN",
+          "text": "Over 52.5 PRA",
+          "proof": "6/6 H"
+        },
+        {
+          "name": "J. Brunson NYK",
+          "text": "Over 26.5 PTS",
+          "proof": "6/6 H"
+        },
+        {
+          "name": "D. Mitchell CLE",
+          "text": "Over 2.5 3PM",
+          "proof": "5/5 H"
+        }
+      ]
+    },
+    {
+      "key": "heat",
+      "label": "Heat Check",
+      "blurb": "Longest current streaks over tonight's line (6+)",
+      "picks": [
+        {
+          "name": "N. Jokic DEN",
+          "text": "Over 11.5 REB",
+          "proof": "9 str"
+        },
+        {
+          "name": "T. Haliburton IND",
+          "text": "Over 9.5 AST",
+          "proof": "8 str"
+        },
+        {
+          "name": "J. Brunson NYK",
+          "text": "Over 26.5 PTS",
+          "proof": "7 str"
+        }
+      ]
+    }
+  ]
+}

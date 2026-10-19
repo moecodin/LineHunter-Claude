@@ -10,6 +10,13 @@
   status = 200
   force = true
 
+# The Hunt Score engine (netlify/functions/hunt.js): /api/hunt?date=YYYY-MM-DD
+[[redirects]]
+  from = "/api/hunt"
+  to = "/.netlify/functions/hunt"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/api/bdl"
   to = "/.netlify/functions/bdl"
