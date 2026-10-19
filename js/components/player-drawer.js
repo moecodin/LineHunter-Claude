@@ -47,7 +47,7 @@ function resetDrawerLine() {
     ? null
     : windowResult(drawerState.playerId, stat, 0, "season").average;
   drawerChart.setLine({
-    book: propLine ? propLine.line : null,
+    book: lhOdds.startLine(drawerState.playerId, drawerState.propType, propLine ? propLine.line : null), // the chosen sportsbook's own line, if one is picked
     milestone: average === null ? null : Math.max(1, Math.round(average)),
     average,
   });

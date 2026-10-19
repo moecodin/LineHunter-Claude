@@ -46,7 +46,10 @@ let topSide = "both";          // "over" | "under" | "both" (both = each line sh
 let topGame = "all";           // "all" or one game id
 let topHideInjured = true;     // hides players listed Out / Questionable (and similar) in the injury data
 let topMinGames = 0;           // 0 = off, 5, 10
-let topOpenPanel = null;       // "filter" | "sort" | null (desktop dropdown)
+let topOpenPanel = null;       // "filter" | "sort" | "book" | null (desktop dropdown)
+let topQuery = "";             // the search box (not saved)
+// The Sportsbook filter lives in lhOdds (js/data/odds.js): lhOdds.getBook() = "fanduel" etc., null = Best odds. Saved in localStorage,
+// so the drawer, player page and game page use it too.
 let topRequestNumber = 0;  // goes up with every load, so a slow old load can't overwrite a newer one
 
 // ---------- Dates ----------
@@ -487,6 +490,8 @@ function renderTopMessage(html) {
   if (controls) controls.hidden = true;
   const chipBox = document.getElementById("topHitRatesChips");
   if (chipBox) chipBox.hidden = true;
+  const searchBox = document.getElementById("topHitRatesSearch");
+  if (searchBox) searchBox.hidden = true;
   const list = document.getElementById("topHitRatesList");
   list.removeAttribute("aria-busy");
   list.innerHTML = `<div class="lh-top-message">${html}</div>`;
@@ -513,6 +518,7 @@ function activeTopChips() {
     const match = topSlate.rows.find((row) => String(row.gameId) === String(topGame));
     chips.push({ label: match ? match.gameLabel : "One game", remove: () => { topGame = "all"; } });
   }
+  if (lhOdds.getBook()) chips.push({ label: `Book: ${lhOdds.vendorName(lhOdds.getBook())}`, remove: () => { setTopBook(null); } });
   if (topHideInjured) chips.push({ label: "Hiding injured", remove: () => { topHideInjured = false; } });
   if (topMinGames) chips.push({ label: `${topMinGames}+ games`, remove: () => { topMinGames = 0; } });
   return chips;
@@ -531,6 +537,7 @@ function renderTopChips() {
   const clear = box.querySelector("[data-clear]");
   if (clear) clear.addEventListener("click", () => {
     topSide = "both"; topGame = "all"; topHideInjured = false; topMinGames = 0;
+    setTopBook(null);
     refreshTopUi();
   });
 }
@@ -541,7 +548,23 @@ function topOptions(name, options, active) {
     `<button type="button" class="lh-top-opt${String(option.value) === String(active) ? " active" : ""}" data-set="${name}" data-value="${option.value}" aria-pressed="${String(option.value) === String(active)}">${option.label}</button>`).join("")}</div>`;
 }
 
+// The Sportsbook list, built from the books in the odds data. "Best odds" first.
+function topBookOptionsHtml() {
+  const options = [{ value: "best", label: "Best odds" }, ...lhOdds.vendors().map((vendor) => ({ value: vendor, label: lhOdds.vendorName(vendor) }))];
+  const active = lhOdds.getBook() || "best";
+  return `<div class="lh-top-opts lh-top-opts--list">${options.map((option) =>
+    `<button type="button" class="lh-top-opt${option.value === active ? " active" : ""}" data-set="book" data-value="${option.value}" aria-pressed="${option.value === active}">${option.label}</button>`).join("")}</div>`;
+}
+
+// Choosing a book moves every row to that book's own line, so any stepped lines start over.
+function setTopBook(vendor) {
+  if ((lhOdds.getBook() || null) === (vendor || null)) return;
+  lhOdds.setBook(vendor);
+  Object.keys(topRowEdits).forEach((key) => delete topRowEdits[key]);
+}
+
 function topPanelHtml(kind) {
+  if (kind === "book") return topBookOptionsHtml();
   if (kind === "sort") {
     return `<div class="lh-top-opts lh-top-opts--list">${TOP_SORTS.map((sort) =>
       `<button type="button" class="lh-top-opt${sort.code === topSort ? " active" : ""}" data-set="sort" data-value="${sort.code}">${sort.label}</button>`).join("")}</div>`;
@@ -563,7 +586,8 @@ function topPanelHtml(kind) {
       <input class="form-check-input" type="checkbox" role="switch" data-set="injured"${topHideInjured ? " checked" : ""}>
       <span class="form-check-label">Hide injured</span></label></div>
     <div class="lh-top-field"><span class="lh-label text-muted">Minimum games</span>
-      ${topOptions("min", [{ value: 0, label: "Off" }, { value: 5, label: "5+" }, { value: 10, label: "10+" }], topMinGames)}</div>`;
+      ${topOptions("min", [{ value: 0, label: "Off" }, { value: 5, label: "5+" }, { value: 10, label: "10+" }], topMinGames)}</div>
+    <div class="lh-top-field lh-top-field--phone"><span class="lh-label text-muted">Sportsbook</span>${topBookOptionsHtml()}</div>`;
 }
 
 // A change inside a panel (desktop dropdown or phone sheet).
@@ -575,6 +599,7 @@ function onTopPanelChange(element) {
   if (name === "injured") topHideInjured = value;
   if (name === "min") topMinGames = Number(value);
   if (name === "sort") { topSort = value; closeTopPanel(); }
+  if (name === "book") { setTopBook(value === "best" ? null : value); if (topOpenPanel === "book") closeTopPanel(); }
   refreshTopUi();
 }
 
@@ -607,7 +632,7 @@ function openTopSheet(kind) {
     document.body.appendChild(sheet);
   }
   topOpenPanel = kind;
-  sheet.querySelector(".offcanvas-title").textContent = kind === "sort" ? "Sort" : "Filter";
+  sheet.querySelector(".offcanvas-title").textContent = kind === "sort" ? "Sort" : kind === "book" ? "Sportsbook" : "Filter";
   fillTopPanel(sheet.querySelector(".offcanvas-body"), kind);
   bootstrap.Offcanvas.getOrCreateInstance(sheet).show();
 }
@@ -641,11 +666,28 @@ function renderTopControls() {
     bar.innerHTML = `
       <div class="lh-window-toggle btn-group" role="group" aria-label="Window"></div>
       ${dropdown("filter", "bi-funnel", "Filter")}
-      ${dropdown("sort", "bi-arrow-down-up", `<span data-sort-label></span>`)}`;
+      ${dropdown("sort", "bi-arrow-down-up", `<span data-sort-label></span>`)}
+      <span class="lh-top-bookpill">${dropdown("book", "bi-bank", `<span data-book-label></span>`)}</span>`;
+    // The search bar sits right under the pills: filters the rows as you type (no suggestion list).
+    const search = document.createElement("div");
+    search.id = "topHitRatesSearch";
+    search.className = "lh-top-search";
+    search.innerHTML = `
+      <i class="bi bi-search lh-top-search-icon" aria-hidden="true"></i>
+      <input type="search" class="lh-top-search-input" placeholder="Search players" aria-label="Search players" autocomplete="off" spellcheck="false" value="${huntAttr(topQuery)}">
+      <button type="button" class="lh-top-search-clear" aria-label="Clear search" hidden><i class="bi bi-x-lg" aria-hidden="true"></i></button>`;
+    const input = search.querySelector("input");
+    const clearButton = search.querySelector("button");
+    const sync = () => { clearButton.hidden = input.value === ""; };
+    input.addEventListener("input", () => { topQuery = input.value; sync(); renderTopRows(); });
+    input.addEventListener("keydown", (event) => { if (event.key === "Escape" && input.value) { input.value = ""; topQuery = ""; sync(); renderTopRows(); } });
+    clearButton.addEventListener("click", () => { input.value = ""; topQuery = ""; sync(); renderTopRows(); input.focus(); });
+    sync();
     const chips = document.createElement("div");
     chips.id = "topHitRatesChips";
     chips.className = "lh-top-chips";
     pills.parentNode.insertBefore(bar, pills);
+    pills.parentNode.insertBefore(search, pills);
     pills.parentNode.insertBefore(chips, pills);
     bar.querySelectorAll("[data-panel]").forEach((button) => {
       const kind = button.dataset.panel;
@@ -661,6 +703,9 @@ function renderTopControls() {
   }
   bar.hidden = false;
   bar.querySelector("[data-sort-label]").textContent = `Sort: ${TOP_SORT_LABELS[topSort]}`;
+  bar.querySelector("[data-book-label]").textContent = lhOdds.getBook() ? lhOdds.vendorName(lhOdds.getBook()) : "Sportsbook";
+  const searchBox = document.getElementById("topHitRatesSearch");
+  if (searchBox) searchBox.hidden = false;
 
   const group = bar.querySelector(".lh-window-toggle");
   group.innerHTML = "";
@@ -709,6 +754,15 @@ function renderTopPills() {
   });
 }
 
+// Search box: every typed word must be the start of some word in the player's name. Case and accents are ignored ("jok" finds Jokić).
+const topPlain = (text) => String(text).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+function topNameMatches(name, query) {
+  const tokens = topPlain(query).split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return true;
+  const words = topPlain(name).split(/[^a-z0-9]+/).filter(Boolean);
+  return tokens.every((token) => words.some((word) => word.startsWith(token)));
+}
+
 // Schedule page: the rows for the selected window, filtered and sorted. Full samples (a player with the whole window of games)
 // always rank above short ones. Hit rate ties: larger sample first, then longer streak.
 function sortedWindowRows() {
@@ -716,12 +770,25 @@ function sortedWindowRows() {
     .filter((row) => topFilter === "all" || row.code === topFilter)
     .filter((row) => topGame === "all" || String(row.gameId) === String(topGame))
     .filter((row) => !(topHideInjured && isInjuredOut(row.playerId)))
+    .filter((row) => topNameMatches(row.name, topQuery))
     .map((row) => {
+      // A sportsbook is chosen: the row moves to THAT book's own line (or is hidden when the book has none) and everything is
+      // recalculated from the games already in memory. Same stronger-side rule as below.
+      const vendor = lhOdds.getBook();
+      if (vendor) {
+        const own = lhOdds.bookLine(row.playerId, PROP_CODES[row.code] || row.code, vendor);
+        if (!own) return null;
+        const over = topStatsAtLine(row, own.line, "over");
+        const under = topStatsAtLine(row, own.line, "under");
+        const side = topSide === "both" ? (under.hitRate > over.hitRate ? "under" : "over") : topSide;
+        return { row, side, line: own.line, stats: side === "under" ? under : over };
+      }
       const win = row.w[topWindow];
       // "Both": each line shows the side that hit more often (the over on a tie).
       const side = topSide === "both" ? (win.under.hitRate > win.over.hitRate ? "under" : "over") : topSide;
-      return { row, side, stats: { ...win[side], totalGames: win.totalGames, games: side === "under" ? win.underGames : win.games } };
+      return { row, side, line: row.line, stats: { ...win[side], totalGames: win.totalGames, games: side === "under" ? win.underGames : win.games } };
     })
+    .filter(Boolean)
     .filter((item) => item.stats.totalGames >= Math.max(TOP_MIN_SAMPLE, topMinGames));
 
   const full = (item) => (item.stats.totalGames >= topWindow ? 1 : 0);
@@ -787,22 +854,22 @@ function topDrawerData(row, line, side) {
 
 // Desktop controls, one group at the right of the ticket: [ - 17.5 + ] [ Over | Under ] [ odds chip ] [ + ADD ].
 // Same rules as the drawer's toolbar: stepping keeps the chosen side; odds only show when a book posts that line + side, otherwise Add is disabled.
-function topControlsHtml(row, line, side) {
+function topControlsHtml(row, line, side, baseLine = row.line) {
   const stat = PROP_CODES[row.code] || row.code;
-  const books = side ? lhOdds.getOdds(row.playerId, stat, line, side) : [];
+  const books = side ? lhOdds.getOdds(row.playerId, stat, line, side) : []; // one book only when a sportsbook is chosen
   const best = books[0] || null;
   let status = "";
   if (!side) status = `<span class="lh-top-hint">Pick over or under</span>`;
   else if (best) {
     const others = books.slice(1).map((entry) => `${entry.book} ${topOddsText(entry.odds)}`).join(", ");
     status = `<a class="lh-odds-chip" href="${topHref(row, side)}" data-lh-drawer="${huntAttr(JSON.stringify(topDrawerData(row, line, side)))}" title="Best odds: ${best.vendor}"><b>${topOddsText(best.odds)}</b> ${best.book}</a>`
-      + (books.length > 1 ? `<span class="lh-odds-chip lh-odds-more" title="${others}">+${books.length - 1}</span>` : "");
+      + (books.length > 1 && !lhOdds.getBook() ? `<span class="lh-odds-chip lh-odds-more" title="${others}">+${books.length - 1}</span>` : "");
   }
   const add = best ? huntButtonHtml({
     playerId: row.playerId, player: row.name, team: row.team,
     opp: row.opp || (row.matchup || "").split(" ").pop(),
     gameId: row.gameId, tipoff: row.tip || null, stat, side, line,
-    odds: best.odds, book: best.vendor, isAlt: line !== row.line,
+    odds: best.odds, book: best.vendor, isAlt: line !== baseLine,
   }, { labelOut: "ADD", labelIn: "ADDED", iconFirst: true, className: "lh-top-add" })
     : side ? `<button type="button" class="lh-add lines-only lh-top-add" disabled aria-disabled="true"><i class="lh-add-icon bi bi-plus-lg" aria-hidden="true"></i><span class="lh-add-label">ADD</span></button>` : "";
   return `
@@ -828,8 +895,8 @@ const topHref = (row, side) => `game.html?id=${row.gameId}&player=${row.playerId
 // teal / coral edge and the stub on the right (odds chip, hit rate, window); no stepper there. Clicking a row opens the player
 // drawer on this page (js/components/schedule-drawer.js); the href stays as the fallback (middle click, no script).
 // edit = { line, side } from the stepper (side null = nothing picked yet: the numbers show the Over side).
-function topRowHtml({ row, side, stats }, edit = topRowEdits[topRowKey(row)]) {
-  const line = edit ? edit.line : row.line;
+function topRowHtml({ row, side, stats, line: baseLine = row.line }, edit = topRowEdits[topRowKey(row)]) {
+  const line = edit ? edit.line : baseLine;
   const shownSide = edit ? edit.side : side;
   if (edit) stats = { ...stats, ...topStatsAtLine(row, line, shownSide) };
 
@@ -841,7 +908,8 @@ function topRowHtml({ row, side, stats }, edit = topRowEdits[topRowKey(row)]) {
   const streak = topSort === "streak" ? `<span class="lh-top-cushion" title="Current run of hits">${stats.streak}🔥</span>` : "";
   const mobileSide = shownSide || "over";
   const sideWord = mobileSide === "under" ? "Under" : "Over";
-  const best = row.bestOdds && !edit ? row.bestOdds[side] : (shownSide ? lhOdds.getOdds(row.playerId, PROP_CODES[row.code] || row.code, line, shownSide)[0] || null : null);
+  const vendor = lhOdds.getBook();
+  const best = row.bestOdds && !edit && !vendor ? row.bestOdds[side] : (shownSide ? lhOdds.getOdds(row.playerId, PROP_CODES[row.code] || row.code, line, shownSide)[0] || null : null);
   const oddsText = best ? topOddsText(best.odds) : "";
   const href = topHref(row, shownSide);
   const statWord = TOP_PROP_WORDS[row.code] || row.code.toUpperCase();
@@ -877,7 +945,7 @@ function topRowHtml({ row, side, stats }, edit = topRowEdits[topRowKey(row)]) {
         <span class="lh-mrow-window">L${topWindow}</span>
       </div>
     </a>
-    ${topControlsHtml(row, line, shownSide)}
+    ${topControlsHtml(row, line, shownSide, baseLine)}
     </div>`;
 }
 
@@ -890,7 +958,7 @@ function onTopControlClick(event) {
   const item = wrap && sortedWindowRows().find((entry) => topRowKey(entry.row) === wrap.dataset.topRow);
   if (!item) return;
   const key = topRowKey(item.row);
-  const current = topRowEdits[key] || { line: item.row.line, side: item.side };
+  const current = topRowEdits[key] || { line: item.line, side: item.side };
   if (step) topRowEdits[key] = { line: Math.max(0.5, current.line + Number(step.dataset.topStep)), side: current.side }; // stepping keeps the side
   else topRowEdits[key] = { line: current.line, side: sideButton.dataset.topSide };
   wrap.outerHTML = topRowHtml(item);
@@ -903,9 +971,19 @@ function renderTopRows() {
   if (TOP_NEW_LAYOUT) {
     const list = document.getElementById("topHitRatesList");
     list.removeAttribute("aria-busy");
+    // A sportsbook is chosen but no odds are loaded yet (slate from the saved copy): ensureTopOdds redraws when they arrive.
+    if (lhOdds.getBook() && lhOdds.vendors().length === 0) {
+      list.innerHTML = `<div class="lh-top-message text-muted">Loading odds...</div>`;
+      return;
+    }
     const items = sortedWindowRows();
     if (items.length === 0) {
-      list.innerHTML = `<div class="lh-top-message text-muted">No players with ${TOP_MIN_SAMPLE}+ games for this prop yet.</div>`;
+      const book = lhOdds.getBook();
+      list.innerHTML = topQuery.trim()
+        ? `<div class="lh-top-message text-muted">No players match “${huntAttr(topQuery.trim())}”.</div>`
+        : book
+          ? `<div class="lh-top-message text-muted">${lhOdds.vendorName(book)} has no lines for these filters.</div>`
+          : `<div class="lh-top-message text-muted">No players with ${TOP_MIN_SAMPLE}+ games for this prop yet.</div>`;
       return;
     }
     list.innerHTML = items.map((item) => topRowHtml(item)).join("");
@@ -960,7 +1038,10 @@ async function ensureTopOdds(slate) {
   const gameIds = [...new Set(slate.rows.map((row) => row.gameId))];
   const lists = await Promise.all(gameIds.map((id) => bdlGet(`${PROPS_URL}?game_id=${id}`).then((json) => json.data).catch(() => [])));
   lhOdds.ingest(lists.flat());
-  if (topSlate === slate && lhOdds.vendors().length > 0) renderTopRows();
+  if (topSlate === slate && lhOdds.vendors().length > 0) {
+    if (TOP_NEW_LAYOUT) { renderTopControls(); renderTopChips(); }
+    renderTopRows();
+  }
 }
 
 function showTopSlate(slate) {

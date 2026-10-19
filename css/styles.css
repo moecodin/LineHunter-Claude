@@ -4304,3 +4304,30 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 @media (max-width: 767.98px) { .lh-top-linectl { display: none !important; } }
 @media (min-width: 768px) { .lh-top-row--v2 .lh-top-graph .lh-mini-graph { width: 140px; } } /* fills its own column: nothing overlaps the stepper */
 .lh-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Top Hit Rates: Sportsbook pill (desktop; phones use a field in the Filter sheet) and the player search bar under the pills */
+.lh-top-field--phone { display: none; }
+.lh-top-bookpill { display: contents; }
+.lh-top-search { position: relative; max-width: 26rem; margin: 0.65rem 0 0.5rem; }
+.lh-top-search[hidden] { display: none; }
+.lh-top-search-input {
+  width: 100%; height: 36px; padding: 0 2.2rem 0 2.15rem;
+  border: 1px solid var(--lh-border); border-radius: 8px;
+  background: rgba(var(--lh-ink-rgb), 0.04); color: var(--lh-text);
+  font-size: 0.9rem;
+}
+.lh-top-search-input::placeholder { color: var(--lh-muted); }
+.lh-top-search-input:focus { outline: none; border-color: var(--lh-accent); box-shadow: 0 0 0 2px rgba(var(--lh-accent-rgb), 0.25); }
+.lh-top-search-input::-webkit-search-cancel-button { display: none; }
+.lh-top-search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--lh-muted); font-size: 0.85rem; pointer-events: none; }
+.lh-top-search-clear {
+  position: absolute; right: 0.3rem; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--lh-muted); cursor: pointer;
+}
+.lh-top-search-clear:hover, .lh-top-search-clear:focus-visible { color: var(--lh-strong); background: rgba(var(--lh-accent-rgb), 0.12); }
+@media (max-width: 575.98px) {
+  .lh-top-bookpill { display: none; }
+  .lh-top-field--phone { display: block; }
+  .lh-top-search { max-width: none; width: 100%; }
+  .lh-top-search-input { height: 40px; font-size: 1rem; } /* 16px: iOS doesn't zoom the page on focus */
+}

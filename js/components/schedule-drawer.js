@@ -56,6 +56,8 @@
   function bookLine(playerId, propType) {
     const code = propCode(propType);
     if (code === state.info.code) return state.info.line; // the prop that was clicked starts on the clicked row's line
+    const vendor = lhOdds.getBook();                       // a sportsbook is chosen: its own line for this prop, or none
+    if (vendor) { const own = lhOdds.bookLine(playerId, propType, vendor); return own ? own.line : null; }
     const row = typeof topSlate !== "undefined" && topSlate && topSlate.rows.find((item) => item.playerId === playerId && item.code === code && String(item.gameId) === String(state.info.gameId));
     return row ? row.line : null;
   }

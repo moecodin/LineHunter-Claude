@@ -101,7 +101,7 @@ function resetPlayerLine() {
   const stat = CHART_STAT_TABS.find((tab) => tab.propType === pageState.propType).stat;
   const average = seasonAverage(stat);
   playerChart.setLine({
-    book: prop ? Number(prop.line_value) : null,
+    book: lhOdds.startLine(playerId, pageState.propType, prop ? Number(prop.line_value) : null), // the chosen sportsbook's own line, if one is picked
     fallback: average === null ? null : Math.round(average * 2) / 2,
     // Research mode: the milestone starts at the season average rounded to a whole number (at least 1).
     milestone: average === null ? null : Math.max(1, Math.round(average)),
