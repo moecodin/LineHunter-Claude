@@ -189,7 +189,6 @@ async function loadGames() {
 
     // The Top Hit Rates card under the games follows the same day (js/components/top-hit-rates.js).
     showTopHitRatesForDay(day, games);
-    if (typeof showHuntForDay === "function") showHuntForDay(day, games); // Hunt Score cards above the games (js/components/hunt-cards.js)
 
     if (games.length === 0) {
       showMessage("No games scheduled for this day.", "text-muted");

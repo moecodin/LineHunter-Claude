@@ -276,25 +276,12 @@ function shareCategory(category, slip, button) {
   });
 }
 
-// ---------- For the Hunt Score cards (js/components/hunt-cards.js) ----------
-
-// Every player/team category that has a slip tonight, with its 3 best legs: [{ key, label, blurb, picks: [pick, pick, pick] }].
-// (BBQ Chicken and Brick City download their own numbers, so they are not part of this summary.)
-function hitListSummaries(slate) {
-  return HITLIST_CATEGORIES
-    .filter((category) => !category.bbq && !category.brick)
-    .map((category) => ({ category, slip: buildSlip(category, slate) }))
-    .filter(({ slip }) => slip)
-    .map(({ category, slip }) => ({ key: category.key, label: category.label, blurb: category.blurb, picks: slip.slice(0, 3) }));
-}
-
 // ---------- Called by js/components/top-hit-rates.js ----------
 
 function showHitList(slate) {
   if (!document.getElementById("hitlist")) return;
   hitListSlate = slate;
   renderHitList();
-  if (typeof showHuntHitList === "function") showHuntHitList(hitListSummaries(slate)); // the carousel card above the games
 }
 
 function showHitListLoading() {
@@ -315,5 +302,4 @@ function showHitListMessage(html) {
   if (!body) return;
   body.removeAttribute("aria-busy");
   body.innerHTML = `<div class="lh-top-message">${html}</div>`;
-  if (typeof showHuntHitList === "function") showHuntHitList([]); // nothing to show in the carousel card either
 }
