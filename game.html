@@ -153,8 +153,9 @@
     </div>
 
     <div class="offcanvas-body">
-      <!-- The line and over/under odds for the selected stat -->
-      <div id="playerDrawerLine" class="lh-drawer-line mb-3 lines-only"></div>
+      <!-- PROP TOOLBAR (lines mode): stat tabs, the line stepper, Over / Under, the best odds and "Add to My Hunts".
+           js/components/prop-toolbar.js builds it and moves the stat tabs in; in research mode the tabs stay below. -->
+      <div id="playerDrawerToolbar"></div>
       <!-- Research mode: "25+ PTS in 7 of last 10 · avg 24.3" -->
       <div id="playerDrawerMilestone" class="research-only mb-3"></div>
 
@@ -180,9 +181,14 @@
           integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
           crossorigin="anonymous"></script>
   <script src="js/core/api.js"></script>
+  <script src="js/core/hunts.js"></script>
   <script src="js/components/nav.js"></script>
+  <script src="js/components/hunt-button.js"></script>
+  <script src="js/components/my-hunts.js"></script>
+  <script src="js/data/odds.js"></script>
   <script src="js/core/stats.js"></script>
   <script src="js/components/propChart.js"></script>
+  <script src="js/components/prop-toolbar.js"></script>
   <script src="js/components/share.js"></script>
   <script src="js/data/teams.js"></script>
   <script src="js/components/matchupInfo.js"></script>

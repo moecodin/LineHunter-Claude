@@ -61,6 +61,9 @@
     <!-- 4. PROPS: stat tabs, window + home/away toggles, hit rate, chart with the alt line -->
     <section class="card mb-4">
       <div class="card-body">
+        <!-- PROP TOOLBAR (lines mode): player + matchup, the stat tabs (moved in), the line stepper, Over / Under, the best
+             odds and "Add to My Hunts". js/components/prop-toolbar.js. In research mode the tabs stay right here. -->
+        <div id="playerToolbar"></div>
         <!-- Stat tabs: Points, Rebounds, Assists, 3PM, P+R+A -->
         <ul id="playerPropTabs" class="nav nav-underline lh-tabs mb-3"></ul>
 
@@ -75,8 +78,6 @@
           </button>
         </div>
 
-        <!-- "Points line 26.5  O -110  U -115", or "No line" -->
-        <div id="playerLine" class="lh-drawer-line mb-3 lines-only"></div>
         <!-- Research mode: "25+ PTS in 7 of last 10 · avg 24.3" -->
         <div id="playerMilestone" class="research-only mb-3"></div>
 
@@ -279,10 +280,15 @@
   <!-- ORDER MATTERS: js/core/stats.js the shared data code,
        js/components/propChart.js the shared chart, then js/pages/player.js uses them all -->
   <script src="js/core/api.js"></script>
+  <script src="js/core/hunts.js"></script>
   <script src="js/components/nav.js"></script>
+  <script src="js/components/hunt-button.js"></script>
+  <script src="js/components/my-hunts.js"></script>
+  <script src="js/data/odds.js"></script>
   <script src="js/data/teams.js"></script>
   <script src="js/core/stats.js"></script>
   <script src="js/components/propChart.js"></script>
+  <script src="js/components/prop-toolbar.js"></script>
   <script src="js/components/roleChart.js"></script>
   <script src="js/components/shotChart.js"></script>
   <script src="js/components/zoneMatchup.js"></script>

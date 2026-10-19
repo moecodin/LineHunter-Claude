@@ -35,6 +35,11 @@
   --lh-accent-light: #d2e0f8;       /* accent text on dark backgrounds */
   --lh-accent-rgb: 210, 224, 248;   /* same pale blue as numbers, for faint tints and glows */
   --lh-logo-ink: #d2e0f8;           /* the logo's letters: pale blue */
+  --lh-slip-bg: #141516;            /* My Hunts drawer */
+  --lh-slip-leg: #1c1e20;           /* a My Hunts ticket */
+  --lh-slip-line: #2b2e32;          /* My Hunts dividers */
+  --lh-pill-bg: #1f2124;             /* the floating My Hunts pill: lighter than the page */
+  --lh-pill-border: #33363b;
   --lh-fill: #2107a9;               /* indigo: filled elements */
   --lh-fill-2: #3b22c9;             /* the other end of the fill gradient (buttons) */
   --lh-fill-rgb: 33, 7, 169;
@@ -129,6 +134,11 @@
   --lh-accent-light: #2107a9;       /* indigo text and links: dark enough on white */
   --lh-accent-rgb: 33, 7, 169;
   --lh-logo-ink: #052350;           /* the logo's letters: navy */
+  --lh-slip-bg: #eef3fc;            /* My Hunts drawer: the light raised-card color */
+  --lh-slip-leg: #ffffff;           /* a My Hunts ticket: the light card color */
+  --lh-slip-line: #d2e0f8;          /* My Hunts dividers: the light border */
+  --lh-pill-bg: #ffffff;            /* the floating My Hunts pill: the light card color */
+  --lh-pill-border: #d2e0f8;
   --lh-fill: #2107a9;               /* filled elements: primary buttons, selected pills, switches */
   --lh-fill-2: #3b22c9;
   --lh-fill-rgb: 33, 7, 169;
@@ -3833,3 +3843,464 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 .lh-shelf-item .lh-hitlist-leg:not(.is-stacked) .lh-hitlist-proof { margin-left: 0; }
 .lh-shelf-item .lh-hitlist-empty { margin: auto; padding: 0.75rem; text-align: center; }
+
+
+/* ---------- My Hunts (the bet slip): "+" buttons, navbar item, tab badge, drawer / bottom sheet, toast ----------
+   js/core/hunts.js (storage), js/components/hunt-button.js (the "+"), js/components/my-hunts.js (the drawer). All lines-only. */
+.lh-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.45rem;
+  border: 1px solid var(--lh-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--lh-accent-light);
+  font-family: var(--lh-font-label);
+  font-size: 0.7rem;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.lh-add .lh-add-icon { font-size: 0.85rem; }
+.lh-add.is-in { background: var(--lh-over); border-color: var(--lh-over); color: #fff; }
+@media (hover: hover) {
+  .lh-add:not(.is-in):hover { background: rgba(var(--lh-accent-rgb), 0.12); color: var(--lh-strong); }
+}
+.lh-add:focus-visible { outline: 2px solid rgba(var(--lh-accent-rgb), 0.7); outline-offset: 1px; }
+.lh-add-pair { display: flex; justify-content: flex-end; gap: 0.25rem; margin-top: 0.3rem; }
+.lh-add-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.lh-add--wide { height: 34px; padding: 0 0.8rem; font-size: 0.78rem; gap: 0.4rem; }
+
+/* Top Hit Rates: the "+" sits in the space reserved at the right end of each ticket (a sibling of the ticket link) */
+#top-hit-rates .lh-top-addwrap { position: relative; margin-bottom: 0.5rem; }
+#top-hit-rates .lh-top-addwrap:last-child { margin-bottom: 0; }
+#top-hit-rates .lh-top-addwrap > a.lh-top-row { margin-bottom: 0; }
+.lh-top-add { position: absolute; z-index: 2; top: 50%; right: 1rem; transform: translateY(-50%); transition: transform 0.2s ease, background-color 0.15s ease, color 0.15s ease; }
+@media (hover: hover) {
+  /* hovering the "+" keeps its ticket lifted, and the "+" rises with it */
+  #top-hit-rates .lh-top-addwrap:hover > a.lh-top-row.lh-top-row--v2 {
+    position: relative;
+    z-index: 1;
+    transform: translateY(-4px) scale(1.01);
+    --tk-line: var(--lh-lift-border);
+    --tk-fill: rgba(var(--lh-accent-rgb), 0.06);
+    filter: drop-shadow(0 6px 10px rgba(var(--lh-ink-rgb), 0.12));
+  }
+  #top-hit-rates .lh-top-addwrap:hover > .lh-top-add { transform: translateY(calc(-50% - 4px)); }
+}
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  #top-hit-rates .lh-top-addwrap:hover > a.lh-top-row.lh-top-row--v2 { transform: none; }
+  #top-hit-rates .lh-top-addwrap:hover > .lh-top-add { transform: translateY(-50%); }
+}
+@media (max-width: 575.98px) {
+  .lh-top-add { top: auto; bottom: 0.55rem; right: auto; left: 1rem; transform: none; }
+  #top-hit-rates .lh-top-addwrap:hover > .lh-top-add { transform: none; }
+}
+
+/* Hit List cards: the "+" right after each player leg */
+.lh-leg-addwrap { display: flex; align-items: center; }
+.lh-leg-addwrap > .lh-hitlist-leg { flex: 1 1 auto; min-width: 0; }
+.lh-leg-add { flex: none; min-width: 24px; height: 24px; padding: 0; margin-right: 0.6rem; }
+
+/* Navbar: My Hunts (lines mode) / Players (research mode) */
+.lh-nav-hunts {
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--lh-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--lh-text);
+  font-size: 0.85rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lh-nav-hunts:hover, .lh-nav-hunts:focus-visible { color: var(--lh-strong); border-color: rgba(var(--lh-accent-rgb), 0.5); }
+.lh-nav-hunts i { color: var(--lh-accent-light); }
+.lh-hunts-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  background: var(--lh-fill);
+  color: var(--lh-on-fill);
+  font-family: var(--lh-font-label);
+  font-size: 0.62rem;
+  line-height: 1;
+}
+.lh-hunts-badge[hidden] { display: none; }
+.lh-tab-icon { position: relative; display: inline-flex; }
+.lh-tab-icon .lh-hunts-badge { position: absolute; top: -0.35rem; right: -0.75rem; min-width: 1rem; height: 1rem; font-size: 0.56rem; }
+
+/* The drawer (desktop, from the right) / bottom sheet (phones, ~90% tall): square corners, a 3px indigo top edge */
+.lh-hunts-drawer {
+  --bs-offcanvas-width: 420px;
+  --bs-offcanvas-height: 90vh;
+  --bs-offcanvas-bg: var(--lh-slip-bg);
+  --bs-offcanvas-border-color: var(--lh-slip-line);
+  --bs-offcanvas-color: var(--lh-text);
+  border-radius: 0;
+}
+.lh-hunts-drawer.offcanvas-end,
+.lh-hunts-drawer.offcanvas-bottom { border-top: 3px solid var(--lh-fill); }
+.lh-hunts-drawer .offcanvas-header { border-bottom: 1px solid var(--lh-slip-line); }
+.lh-hunts-drawer .lh-drawer-close { border-radius: 0; }
+.lh-hunts-title { margin: 0; font-family: var(--lh-font-display); font-size: 1.9rem; font-weight: 700; line-height: 1; color: var(--lh-strong); }
+.lh-hunts-date { margin-top: 0.3rem; font-family: var(--lh-font-label); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-hunts-body { padding: 1rem; }
+.lh-hunts-list { list-style: none; margin: 0; padding: 0; }
+.lh-hunts-empty { margin: 2rem 0; text-align: center; font-size: 0.9rem; color: var(--lh-muted); }
+.lh-hunts-empty[hidden] { display: none; }
+
+/* One leg = one bet ticket: a 4px side edge (teal over / coral under), the stub on the right behind a dashed perforation with
+   a half-circle notch cut into the top and bottom edges (a mask, so the drawer shows through). */
+.lh-hleg {
+  --stub: 5.5rem;
+  --notch: 7px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--stub);
+  margin-bottom: 0.6rem;
+  border-left: 4px solid var(--lh-over);
+  background: var(--lh-slip-leg);
+  -webkit-mask-image:
+    radial-gradient(circle at calc(100% - var(--stub)) 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)),
+    radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px));
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(circle at calc(100% - var(--stub)) 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)),
+    radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px));
+  mask-composite: intersect;
+}
+.lh-hleg--under { border-left-color: var(--lh-under); }
+.lh-hleg-main { min-width: 0; padding: 0.65rem 0.75rem 0.7rem; }
+.lh-hleg-top { display: flex; align-items: center; gap: 0.5rem; }
+.lh-hleg-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--lh-font-display); font-size: 1.25rem; font-weight: 700; line-height: 1.15; color: var(--lh-strong); }
+.lh-hleg-remove {
+  margin-left: auto;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--lh-muted);
+}
+.lh-hleg-remove:hover, .lh-hleg-remove:focus-visible { color: var(--lh-strong); background: rgba(var(--lh-ink-rgb), 0.06); }
+.lh-hleg-prop { margin-top: 0.15rem; font-size: 0.85rem; color: var(--lh-text); }
+.lh-hleg-side { font-weight: 700; color: var(--lh-over); }
+.lh-hleg--under .lh-hleg-side { color: var(--lh-under); }
+.lh-hleg-match { margin-top: 0.2rem; font-family: var(--lh-font-label); font-size: 0.66rem; color: var(--lh-muted); }
+.lh-hleg-tag {
+  flex: none;
+  padding: 0.08rem 0.3rem;
+  border: 1px solid var(--lh-slip-line);
+  font-family: var(--lh-font-label);
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+  vertical-align: 0.1em;
+}
+.lh-hleg-stub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  border-left: 1px dashed var(--lh-slip-line);
+}
+.lh-hleg-odds { font-family: var(--lh-font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; color: var(--lh-logo-ink); }
+.lh-hleg-book { padding: 0.08rem 0.3rem; border: 1px solid var(--lh-slip-line); font-family: var(--lh-font-label); font-size: 0.58rem; letter-spacing: 0.06em; color: var(--lh-muted); }
+
+/* The slip's bottom: Single / Parlay + odds, stake, to win, clear, the responsible-gambling line */
+.lh-hunts-foot { padding: 0.9rem 1rem calc(0.9rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--lh-slip-line); }
+.lh-hunts-foot[hidden] { display: none; }
+.lh-hunts-total { display: flex; justify-content: space-between; align-items: baseline; }
+.lh-hunts-type { font-family: var(--lh-font-label); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-hunts-total-odds { font-family: var(--lh-font-display); font-size: 1.6rem; font-weight: 700; color: var(--lh-logo-ink); }
+.lh-hunts-note { margin-top: 0.2rem; font-size: 0.72rem; color: var(--lh-muted); }
+.lh-hunts-note[hidden] { display: none; }
+.lh-hunts-stake-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; }
+.lh-hunts-stake, .lh-hunts-win { display: flex; flex-direction: column; gap: 0.25rem; margin: 0; }
+.lh-hunts-stake-label { font-family: var(--lh-font-label); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-hunts-stake-box { display: flex; align-items: center; gap: 0.25rem; height: 40px; padding: 0 0.6rem; border: 1px solid var(--lh-slip-line); background: var(--lh-slip-leg); color: var(--lh-muted); }
+.lh-hunts-stake-box input { width: 100%; min-width: 0; border: 0; background: transparent; color: var(--lh-strong); font-size: 1rem; outline: none; }
+.lh-hunts-stake-box:focus-within { border-color: rgba(var(--lh-accent-rgb), 0.6); }
+.lh-hunts-win-amount { display: flex; align-items: center; height: 40px; font-family: var(--lh-font-display); font-size: 1.5rem; font-weight: 700; color: var(--lh-over); }
+.lh-hunts-clear { width: 100%; margin-top: 0.85rem; height: 38px; border: 1px solid var(--lh-slip-line); border-radius: 0; background: transparent; color: var(--lh-muted); font-size: 0.8rem; }
+.lh-hunts-clear:hover, .lh-hunts-clear:focus-visible { color: var(--lh-under-text); border-color: rgba(var(--lh-under-rgb), 0.5); }
+.lh-hunts-legal { margin-top: 0.75rem; text-align: center; font-family: var(--lh-font-label); font-size: 0.6rem; letter-spacing: 0.04em; color: var(--lh-muted); }
+
+
+
+/* ---------- My Hunts step 2: prop toolbar, best-odds chips, compact phone rows, floating pill ---------- */
+
+/* The prop toolbar (player drawer + player page, lines mode): a charcoal panel, square corners, 3px indigo top edge */
+.lh-ptb {
+  background: var(--lh-slip-bg);
+  border-top: 3px solid var(--lh-fill);
+  border-radius: 0;
+  padding: 0.85rem 1rem 1rem;
+  margin-bottom: 1rem;
+}
+.lh-ptb-head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.6rem; }
+.lh-ptb-head[hidden] { display: none; }
+.lh-ptb-name { font-family: var(--lh-font-display); font-size: 1.5rem; font-weight: 700; line-height: 1.1; color: var(--lh-strong); }
+.lh-ptb-match { font-family: var(--lh-font-label); font-size: 0.7rem; color: var(--lh-muted); }
+.lh-ptb-stat { margin-bottom: 0.75rem; }
+.lh-ptb-stat .lh-tabs { margin-bottom: 0 !important; }
+.lh-ptb-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.9rem; }
+.lh-ptb-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.9rem; }
+.lh-ptb-step { display: inline-flex; align-items: stretch; border: 1px solid var(--lh-slip-line); }
+.lh-ptb-stepbtn {
+  width: 36px;
+  height: 38px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--lh-strong);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.lh-ptb-stepbtn:hover:not(:disabled), .lh-ptb-stepbtn:focus-visible { background: rgba(var(--lh-accent-rgb), 0.12); }
+.lh-ptb-stepbtn:disabled { opacity: 0.35; }
+.lh-ptb-value { min-width: 3.6rem; display: flex; align-items: center; justify-content: center; font-family: var(--lh-font-display); font-size: 1.45rem; font-weight: 700; color: var(--lh-strong); border-left: 1px solid var(--lh-slip-line); border-right: 1px solid var(--lh-slip-line); }
+.lh-ptb-sides { display: inline-flex; gap: 0.4rem; }
+.lh-ptb-side {
+  height: 40px;
+  min-width: 4.6rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--lh-slip-line);
+  border-radius: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.lh-ptb-side--over { color: var(--lh-over); border-color: var(--lh-over); }
+.lh-ptb-side--under { color: var(--lh-under); border-color: var(--lh-under); }
+.lh-ptb-side--over.is-on { background: var(--lh-over); color: #fff; }
+.lh-ptb-side--under.is-on { background: var(--lh-under); color: #fff; }
+.lh-ptb-side:disabled { opacity: 0.4; }
+.lh-ptb-odds { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.4rem; min-height: 40px; }
+.lh-ptb-odds[hidden], .lh-ptb-add[hidden] { display: none; }
+.lh-ptb-hint { align-self: center; font-family: var(--lh-font-label); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-ptb-box { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 3.6rem; padding: 0.2rem 0.5rem; border: 1px solid var(--lh-slip-line); }
+.lh-ptb-book { font-family: var(--lh-font-label); font-size: 0.56rem; letter-spacing: 0.06em; color: var(--lh-muted); line-height: 1.2; }
+.lh-ptb-price { font-family: var(--lh-font-display); font-size: 1.3rem; font-weight: 700; line-height: 1.1; color: var(--lh-strong); }
+.lh-ptb-box.is-best { border-color: var(--lh-over); }
+.lh-ptb-box.is-best .lh-ptb-price { color: var(--lh-over); }
+.lh-ptb-more .lh-ptb-price { font-size: 1.05rem; color: var(--lh-muted); }
+.lh-ptb-add { flex: 1 1 11rem; min-width: 0; }
+.lh-add--block { width: 100%; height: 42px; justify-content: center; gap: 0.5rem; font-size: 0.78rem; letter-spacing: 0.08em; font-weight: 700; }
+@media (max-width: 767.98px) {
+  .lh-ptb-add { flex: 1 1 100%; }
+  .lh-ptb-odds { flex: 1 1 100%; }
+  .lh-ptb-line { flex: 1 1 100%; }
+}
+@media (min-width: 992px) {
+  /* wide containers (the player page): the whole toolbar on one row */
+  #playerToolbar .lh-ptb-controls { flex-wrap: nowrap; }
+  #playerToolbar .lh-ptb-line { flex-wrap: nowrap; }
+}
+
+/* In the drawer, the header joins the toolbar: one charcoal panel with the indigo top edge (lines mode) */
+body:not(.research-mode) .lh-player-drawer .offcanvas-header { background: var(--lh-slip-bg); border-top: 3px solid var(--lh-fill); border-bottom: 0; }
+.lh-player-drawer .lh-ptb { margin: -1rem -1rem 1rem; border-top: 0; padding-top: 0.25rem; }
+.lh-player-drawer .lh-ptb-stat .nav-link { padding-left: 0.6rem; padding-right: 0.6rem; }
+
+/* Best-odds chip: "-115 DK" in a small bordered box */
+.lh-odds-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--lh-border);
+  font-family: var(--lh-font-label);
+  font-size: 0.66rem;
+  color: var(--lh-muted);
+  white-space: nowrap;
+}
+.lh-odds-chip b { font-family: var(--lh-font-display); font-size: 0.95rem; font-weight: 700; color: var(--lh-over); }
+.lh-odds-chip--none { color: var(--lh-muted); }
+
+/* Top Hit Rates, desktop: the odds chip fills the space before the "+ Add" button */
+.lh-ticket-main { grid-template-columns: minmax(0, 16rem) 3rem 140px auto minmax(0, 1fr); grid-template-areas: "player count graph odds ."; }
+.lh-ticket-main > .lh-odds-chip { grid-area: odds; justify-self: start; }
+.lh-top-add { height: 30px; padding: 0 0.7rem; gap: 0.35rem; letter-spacing: 0.06em; font-weight: 700; }
+.lh-top-add .lh-add-icon { font-size: 0.8rem; }
+@media (max-width: 991.98px) {
+  .lh-ticket-main { grid-template-columns: minmax(0, 12rem) 2.75rem 96px auto minmax(0, 1fr); }
+}
+
+/* Compact phone rows (under 768px): Top Hit Rates and the game page's props. One ticket per prop, a 3px teal / coral edge, the
+   stub (odds chip, hit rate, window) on the right behind a dashed line with a half-circle notch at the top and bottom. */
+.lh-mrow { display: none; }
+@media (max-width: 767.98px) {
+  #top-hit-rates .lh-top-addwrap > a.lh-top-row, .lh-top-add { display: none !important; }
+  #top-hit-rates .lh-top-addwrap { margin-bottom: 0.35rem; }
+  .lh-mrow {
+    --stub: 5.4rem;
+    --notch: 6px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--stub);
+    border: 1px solid var(--lh-border);
+    border-left: 3px solid var(--lh-over);
+    background: rgba(var(--lh-ink-rgb), 0.02);
+    color: inherit;
+    text-decoration: none;
+    -webkit-mask-image:
+      radial-gradient(circle at calc(100% - var(--stub)) 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)),
+      radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px));
+    -webkit-mask-composite: source-in;
+    mask-image:
+      radial-gradient(circle at calc(100% - var(--stub)) 0, transparent var(--notch), #000 calc(var(--notch) + 0.5px)),
+      radial-gradient(circle at calc(100% - var(--stub)) 100%, transparent var(--notch), #000 calc(var(--notch) + 0.5px));
+    mask-composite: intersect;
+  }
+  .lh-mrow--under { border-left-color: var(--lh-under); }
+  .lh-mrow:hover, .lh-mrow:active { color: inherit; background: rgba(var(--lh-accent-rgb), 0.06); }
+  .lh-mrow-main { min-width: 0; padding: 0.4rem 0.6rem 0.4rem 0.55rem; }
+  .lh-mrow-name { display: flex; align-items: baseline; gap: 0.4rem; min-width: 0; font-size: 0.94rem; font-weight: 700; line-height: 1.2; color: var(--lh-strong); }
+  .lh-mrow-name > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lh-mrow-match { flex: none; font-family: var(--lh-font-label); font-size: 0.6rem; font-weight: 400; color: var(--lh-muted); }
+  .lh-mrow-prop { font-family: var(--lh-font-display); font-size: 0.95rem; font-weight: 600; line-height: 1.25; color: var(--lh-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lh-mrow-prop b { color: var(--lh-over); }
+  .lh-mrow--under .lh-mrow-prop b { color: var(--lh-under); }
+  .lh-mrow-graph { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.15rem; min-height: 18px; }
+  .lh-mrow-count { font-family: var(--lh-font-label); font-size: 0.66rem; color: var(--lh-text); }
+  .lh-mrow-graph .lh-mini-graph { width: 84px; height: 18px; }
+  .lh-mrow-stub { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem; padding: 0.3rem 0.3rem; border-left: 1px dashed var(--lh-border); }
+  .lh-mrow-stub .lh-odds-chip { font-size: 0.58rem; padding: 0.05rem 0.3rem; }
+  .lh-mrow-stub .lh-odds-chip b { font-size: 0.82rem; }
+  .lh-mrow-rate { font-family: var(--lh-font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; color: var(--lh-strong); }
+  .lh-mrow-rate.lh-hit--good { color: var(--lh-over-text); }
+  .lh-mrow-rate.lh-hit--bad { color: var(--lh-under-text); }
+  .lh-mrow-window { font-family: var(--lh-font-label); font-size: 0.56rem; letter-spacing: 0.08em; color: var(--lh-muted); }
+
+  /* Game page: the table becomes a list of those tickets (lines mode) */
+  body:not(.research-mode) #lines-table thead { display: none; }
+  #lines-table tr:has(> .lh-mcell) { display: block; margin-bottom: 0.35rem; }
+  #lines-table tr:has(> .lh-mcell):hover { background: none; }
+  #lines-table td.lh-mcell { display: block; padding: 0; border: 0; background: none; box-shadow: none; }
+  #lines-table tbody { display: block; }
+  #lines-table table, #lines-table .table { display: block; }
+
+  /* Top Hit Rates header on phones: no description line; L5 / L10 / L20, Filter and an icon-only Sort share one row */
+  #top-hit-rates .card-header .small { display: none; }
+  #top-hit-rates .lh-top-controls { flex-wrap: nowrap; gap: 0.35rem; }
+  #top-hit-rates .lh-top-ctl [data-sort-label] { display: none; }
+}
+
+/* The floating My Hunts pill: a small ticket stub (MY HUNTS | dashed divider | count + chevron) */
+.lh-hpill {
+  position: fixed;
+  z-index: 1035;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--lh-pill-border);
+  border-top: 2px solid var(--lh-fill);
+  border-radius: 0;
+  background: var(--lh-pill-bg);
+  color: var(--lh-strong);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease;
+}
+[data-bs-theme="light"] .lh-hpill { box-shadow: 0 6px 18px rgba(var(--lh-shadow-rgb), 0.2); }
+.lh-hpill:hover, .lh-hpill:focus-visible { color: var(--lh-strong); transform: translateY(-2px); }
+.lh-hpill-label { font-family: var(--lh-font-label); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.lh-hpill-divider { align-self: stretch; border-left: 1px dashed var(--lh-pill-border); }
+.lh-hpill-count { font-family: var(--lh-font-display); font-size: 1.35rem; font-weight: 700; line-height: 1; min-width: 1ch; }
+.lh-hpill i { font-size: 0.75rem; color: var(--lh-muted); }
+body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !important; }
+@media (max-width: 767.98px) {
+  .lh-hpill { right: 0.75rem; bottom: calc(64px + env(safe-area-inset-bottom) + 0.6rem); }
+  .lh-hpill[data-empty="true"] { display: none; }
+  .lh-hpill-count { font-size: 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) { .lh-hpill { transition: none; } }
+
+/* The mini ticket above the pill: ADDED / REPLACED, player, prop, odds, and a close X (hides itself after 4 seconds) */
+.lh-hadded {
+  position: fixed;
+  z-index: 1036;
+  right: 1.25rem;
+  bottom: 4.6rem;
+  width: min(19rem, calc(100vw - 1.5rem));
+  padding: 0.55rem 2rem 0.6rem 0.8rem;
+  border: 1px solid var(--lh-pill-border);
+  border-left: 4px solid var(--lh-over);
+  background: var(--lh-pill-bg);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  animation: lh-added-in 0.2s ease-out;
+}
+.lh-hadded[hidden] { display: none; }
+.lh-hadded--under { border-left-color: var(--lh-under); }
+.lh-hadded-label { font-family: var(--lh-font-label); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lh-over); }
+.lh-hadded-body { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.15rem; }
+.lh-hadded-main { min-width: 0; flex: 1 1 auto; }
+.lh-hadded-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--lh-font-display); font-size: 1.15rem; font-weight: 700; line-height: 1.15; color: var(--lh-strong); }
+.lh-hadded-prop { font-size: 0.78rem; color: var(--lh-text); }
+.lh-hadded-odds { flex: none; font-family: var(--lh-font-display); font-size: 1.35rem; font-weight: 700; color: var(--lh-logo-ink); }
+.lh-hadded-x { position: absolute; top: 0.3rem; right: 0.3rem; width: 24px; height: 24px; padding: 0; border: 0; background: transparent; color: var(--lh-muted); }
+.lh-hadded-x:hover, .lh-hadded-x:focus-visible { color: var(--lh-strong); }
+@keyframes lh-added-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .lh-hadded { animation: none; } }
+@media (max-width: 767.98px) {
+  .lh-hadded { right: 0.75rem; bottom: calc(64px + env(safe-area-inset-bottom) + 3.3rem); }
+}
+
+/* Top Hit Rates rows, desktop: the stepper + Over / Under + best odds + "+ Add" are ONE group (.lh-top-linectl) that sits right after the graph.
+   The odds chip and the Add button are 8px apart. It is a sibling of the ticket link (buttons can't live inside a link), laid over the empty
+   last grid column at 1200px and up; narrower desktops / tablets put it on its own line under the ticket. Phones hide it (compact rows). */
+@media (min-width: 768px) { .lh-ticket-main { grid-template-columns: minmax(0, 13rem) 2.75rem 140px minmax(0, 1fr); grid-template-areas: "player count graph ."; gap: 0.25rem 0.6rem; } }
+.lh-top-linectl { display: flex; align-items: center; gap: 0.75rem; position: static; margin: 0.35rem 0 0.2rem 1rem; flex-wrap: wrap; }
+.lh-top-step { display: inline-flex; align-items: stretch; height: 30px; border: 1px solid var(--lh-border); border-radius: 6px; overflow: hidden; }
+.lh-top-stepbtn { width: 28px; border: 0; background: none; color: var(--lh-strong); font-size: 1.05rem; line-height: 1; cursor: pointer; }
+.lh-top-stepbtn:hover:not(:disabled), .lh-top-stepbtn:focus-visible { background: rgba(var(--lh-accent-rgb), 0.12); }
+.lh-top-stepbtn:disabled { opacity: 0.35; cursor: default; }
+.lh-top-line { min-width: 3rem; display: flex; align-items: center; justify-content: center; border-left: 1px solid var(--lh-border); border-right: 1px solid var(--lh-border); font-family: var(--lh-font-display); font-size: 1rem; font-weight: 700; color: var(--lh-strong); }
+.lh-top-sides { display: inline-flex; gap: 6px; }
+.lh-top-sidebtn { height: 30px; padding: 0 0.7rem; border: 1px solid var(--lh-border); border-radius: 6px; background: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
+.lh-top-sidebtn--over { color: var(--lh-over-text); border-color: var(--lh-over); }
+.lh-top-sidebtn--under { color: var(--lh-under-text); border-color: var(--lh-under); }
+.lh-top-sidebtn--over.is-on { background: var(--lh-over); color: #fff; }
+.lh-top-sidebtn--under.is-on { background: var(--lh-under); color: #fff; }
+.lh-top-sidebtn:focus-visible, .lh-top-add:focus-visible { outline: 2px solid rgba(var(--lh-accent-rgb), 0.6); outline-offset: 2px; }
+/* odds chip + Add: one group, 8px apart (a "+N" more-books chip counts as part of the chip side) */
+.lh-top-oddsbox { display: inline-flex; align-items: center; gap: 8px; min-height: 30px; }
+.lh-top-oddsbox .lh-odds-chip { height: 30px; align-items: center; text-decoration: none; }
+.lh-top-oddsbox a.lh-odds-chip:hover { border-color: var(--lh-lift-border); color: var(--lh-text); }
+.lh-top-hint { font-family: var(--lh-font-label); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lh-muted); white-space: nowrap; }
+.lh-top-linectl .lh-top-add { position: static; transform: none; margin-left: -4px; /* the oddsbox's 12px flex gap minus 4px = 8px */ }
+.lh-top-oddsbox:empty { display: none; }
+@media (min-width: 1200px) {
+  .lh-top-linectl {
+    position: absolute; z-index: 2; top: 50%; margin: 0; flex-wrap: nowrap;
+    /* stub + 1px border + main padding + player col + count col + graph col (all fixed widths, so every row lines up) + three 0.6rem gaps + 1.5rem clear space after the graph */
+    left: calc(161px + 1rem + 13rem + 2.75rem + 140px + 1.8rem + 1.5rem);
+    transform: translateY(-50%); transition: transform 0.2s ease;
+  }
+}
+@media (min-width: 1200px) and (hover: hover) {
+  #top-hit-rates .lh-top-addwrap:hover > .lh-top-linectl { transform: translateY(calc(-50% - 4px)); }
+}
+@media (min-width: 1200px) and (hover: hover) and (prefers-reduced-motion: reduce) {
+  #top-hit-rates .lh-top-addwrap:hover > .lh-top-linectl { transform: translateY(-50%); }
+}
+@media (max-width: 767.98px) { .lh-top-linectl { display: none !important; } }
+@media (min-width: 768px) { .lh-top-row--v2 .lh-top-graph .lh-mini-graph { width: 140px; } } /* fills its own column: nothing overlaps the stepper */
+.lh-add:disabled { opacity: 0.4; cursor: not-allowed; }

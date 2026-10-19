@@ -93,6 +93,8 @@ function readTopCache(key) {
     // saved before the opponent id (BBQ Chicken) and the 30-point streaks (Chicken Nuggets)?
     if (saved.slate && saved.slate.fan && saved.slate.fan.length && (saved.slate.fan[0].oppId === undefined || saved.slate.fan[0].nuggets === undefined || saved.slate.fan[0].fg === undefined)) return null;
 
+    // saved before the best odds across sportsbooks (My Hunts, step 2)?
+    if (saved.slate && Array.isArray(saved.slate.rows) && saved.slate.rows.length && saved.slate.rows[0].bestOdds === undefined) return null;
     // saved before the per-window numbers (L5 / L10 / L20)?
     if (saved.slate && Array.isArray(saved.slate.rows) && saved.slate.rows.length && (!saved.slate.rows[0].w || !saved.slate.rows[0].w[5].over)) return null;
     if (saved.slate && Array.isArray(saved.slate.rows) && saved.slate.injuries === undefined) return null; // saved before the injury filter
@@ -180,6 +182,9 @@ async function buildTopHitRates(slate) {
     gamesById[game.id] = game;
   });
 
+  // Every sportsbook's lines, for the best odds on each row (js/data/odds.js).
+  lhOdds.ingest(propLists.flat());
+
   // 4. L10 hit rate for every line, against that player's own line.
   const rows = lines.map((prop) => {
     const line = Number(prop.line_value);
@@ -225,6 +230,16 @@ async function buildTopHitRates(slate) {
       matchup: matchupText(team, game),
       tip: game ? (game.datetime || game.date) : "",
       gameLabel: game ? `${game.visitor_team.abbreviation} @ ${game.home_team.abbreviation}` : "",
+      // For My Hunts' "+" (js/components/hunt-button.js): the opponent, the book and both sides' odds.
+      opp: game ? (team === game.home_team.abbreviation ? game.visitor_team.abbreviation : game.home_team.abbreviation) : "",
+      book: prop.vendor || "",
+      overOdds: prop.market ? prop.market.over_odds : null,
+      underOdds: prop.market ? prop.market.under_odds : null,
+      // The best payout for this exact line, per side: { book: "DK", vendor, odds } or null when no book posts it.
+      bestOdds: {
+        over: lhOdds.getOdds(prop.player_id, prop.prop_type, line, "over")[0] || null,
+        under: lhOdds.getOdds(prop.player_id, prop.prop_type, line, "under")[0] || null,
+      },
       code: propCode(prop.prop_type),
       line,
       hits: result.hits,
@@ -414,6 +429,9 @@ function buildHitListLeg(prop, logs, showingCurrentSeason, { name, team, game })
     name,
     team,
     matchup: game ? matchupText(team, game) : "",
+    opp: opponent,
+    tipoff: game ? game.datetime || null : null,
+    book: prop.vendor || "",
     isHome,
     code,
     line,
@@ -729,22 +747,112 @@ function sortedWindowRows() {
 // Prop names in full words for the ticket stub (the combo stays "PRA").
 const TOP_PROP_WORDS = { pts: "Points", reb: "Rebounds", ast: "Assists", "3pm": "Threes Made", pra: "PRA" };
 
-// One row = one "bet ticket": a stub (side, line, prop, hit rate) | perforation | player, graph, hit count.
-// The right end of every ticket is left empty on purpose: room for "Add to pick" and best odds later.
-function topRowHtml({ row, side, stats }) {
+// Per-row line / side the visitor picked with the desktop stepper: "gameId|playerId|code" -> { line, side }. side null = nothing picked.
+const topRowEdits = {};
+const topRowKey = (row) => `${row.gameId}|${row.playerId}|${row.code}`;
+
+// The numbers for one row at any line, from the games already in memory (no new requests): each game's stat value against the
+// line. Over = value above the line, Under = below it, equal = a push (neither). Newest game first, like calculateHitRate.
+function topStatsAtLine(row, line, side) {
+  const raw = row.w[topWindow].games;
+  const games = raw.map((game) => ({ ...game, overUnder: game.value > line ? "over" : game.value < line ? "under" : "push" }));
+  const name = side || "over";
+  const hits = games.filter((game) => game.overUnder === name).length;
+  let streak = 0;
+  for (const game of games) {
+    if (game.overUnder !== name) break;
+    streak += 1;
+  }
+  const total = games.length;
+  const average = total ? games.reduce((sum, game) => sum + game.value, 0) / total : null;
+  // The mini graph swaps the colors for the under side, so a colored bar always means "hit".
+  const shown = name === "under" ? games.map((game) => ({ ...game, overUnder: game.overUnder === "over" ? "under" : game.overUnder === "under" ? "over" : game.overUnder })) : games;
+  return {
+    hits, streak, totalGames: total, games: shown,
+    hitRate: total ? Math.round((hits / total) * 1000) / 10 : 0,
+    cushion: total ? Math.round((name === "over" ? average - line : line - average) * 10) / 10 : null,
+  };
+}
+
+const topOddsText = (odds) => (odds > 0 ? `+${odds}` : `${odds}`);
+
+// The drawer link data for a row (js/components/schedule-drawer.js): what to open, and on which prop, line and side.
+function topDrawerData(row, line, side) {
+  return {
+    playerId: row.playerId, player: row.name, team: row.team,
+    opp: row.opp || (row.matchup || "").split(" ").pop(),
+    gameId: row.gameId, tipoff: row.tip || null, code: row.code, line, side,
+  };
+}
+
+// Desktop controls, one group at the right of the ticket: [ - 17.5 + ] [ Over | Under ] [ odds chip ] [ + ADD ].
+// Same rules as the drawer's toolbar: stepping keeps the chosen side; odds only show when a book posts that line + side, otherwise Add is disabled.
+function topControlsHtml(row, line, side) {
+  const stat = PROP_CODES[row.code] || row.code;
+  const books = side ? lhOdds.getOdds(row.playerId, stat, line, side) : [];
+  const best = books[0] || null;
+  let status = "";
+  if (!side) status = `<span class="lh-top-hint">Pick over or under</span>`;
+  else if (best) {
+    const others = books.slice(1).map((entry) => `${entry.book} ${topOddsText(entry.odds)}`).join(", ");
+    status = `<a class="lh-odds-chip" href="${topHref(row, side)}" data-lh-drawer="${huntAttr(JSON.stringify(topDrawerData(row, line, side)))}" title="Best odds: ${best.vendor}"><b>${topOddsText(best.odds)}</b> ${best.book}</a>`
+      + (books.length > 1 ? `<span class="lh-odds-chip lh-odds-more" title="${others}">+${books.length - 1}</span>` : "");
+  }
+  const add = best ? huntButtonHtml({
+    playerId: row.playerId, player: row.name, team: row.team,
+    opp: row.opp || (row.matchup || "").split(" ").pop(),
+    gameId: row.gameId, tipoff: row.tip || null, stat, side, line,
+    odds: best.odds, book: best.vendor, isAlt: line !== row.line,
+  }, { labelOut: "ADD", labelIn: "ADDED", iconFirst: true, className: "lh-top-add" })
+    : side ? `<button type="button" class="lh-add lines-only lh-top-add" disabled aria-disabled="true"><i class="lh-add-icon bi bi-plus-lg" aria-hidden="true"></i><span class="lh-add-label">ADD</span></button>` : "";
+  return `
+    <div class="lh-top-linectl" role="group" aria-label="Line for ${huntAttr(row.name)}">
+      <div class="lh-top-step">
+        <button type="button" class="lh-top-stepbtn" data-top-step="-1" aria-label="Lower the line by 1"${line <= 0.5 ? " disabled" : ""}>−</button>
+        <output class="lh-top-line">${lineText(line)}</output>
+        <button type="button" class="lh-top-stepbtn" data-top-step="1" aria-label="Raise the line by 1">+</button>
+      </div>
+      <div class="lh-top-sides">
+        <button type="button" class="lh-top-sidebtn lh-top-sidebtn--over${side === "over" ? " is-on" : ""}" data-top-side="over" aria-pressed="${side === "over"}">Over</button>
+        <button type="button" class="lh-top-sidebtn lh-top-sidebtn--under${side === "under" ? " is-on" : ""}" data-top-side="under" aria-pressed="${side === "under"}">Under</button>
+      </div>
+      <div class="lh-top-oddsbox">${status}</div>
+      ${add}
+    </div>`;
+}
+
+const topHref = (row, side) => `game.html?id=${row.gameId}&player=${row.playerId}&prop=${row.code}${side ? `&side=${side}` : ""}`;
+
+// One row = one "bet ticket". Desktop: a stub (side, line, prop, hit rate) | perforation | player, hit count, graph; the controls
+// (stepper, Over / Under, best odds + "+ Add" as one group) sit at the right. Phones (under 768px): a compact ticket with a 3px
+// teal / coral edge and the stub on the right (odds chip, hit rate, window); no stepper there. Clicking a row opens the player
+// drawer on this page (js/components/schedule-drawer.js); the href stays as the fallback (middle click, no script).
+// edit = { line, side } from the stepper (side null = nothing picked yet: the numbers show the Over side).
+function topRowHtml({ row, side, stats }, edit = topRowEdits[topRowKey(row)]) {
+  const line = edit ? edit.line : row.line;
+  const shownSide = edit ? edit.side : side;
+  if (edit) stats = { ...stats, ...topStatsAtLine(row, line, shownSide) };
+
   let hitClass = "";
   if (stats.hitRate >= 60) hitClass = "lh-hit--good";
   if (stats.hitRate <= 40) hitClass = "lh-hit--bad";
   const cushion = topSort === "cushion" && stats.cushion !== null
     ? `<span class="lh-top-cushion" title="Average margin past the line">${stats.cushion > 0 ? "+" : ""}${stats.cushion.toFixed(1)}</span>` : "";
   const streak = topSort === "streak" ? `<span class="lh-top-cushion" title="Current run of hits">${stats.streak}🔥</span>` : "";
-  const sideWord = side === "under" ? "Under" : "Over";
+  const mobileSide = shownSide || "over";
+  const sideWord = mobileSide === "under" ? "Under" : "Over";
+  const best = row.bestOdds && !edit ? row.bestOdds[side] : (shownSide ? lhOdds.getOdds(row.playerId, PROP_CODES[row.code] || row.code, line, shownSide)[0] || null : null);
+  const oddsText = best ? topOddsText(best.odds) : "";
+  const href = topHref(row, shownSide);
+  const statWord = TOP_PROP_WORDS[row.code] || row.code.toUpperCase();
+  const drawer = `data-lh-drawer="${huntAttr(JSON.stringify(topDrawerData(row, line, shownSide)))}"`;
 
   return `
-    <a class="lh-top-row lh-top-row--v2" href="game.html?id=${row.gameId}&player=${row.playerId}&prop=${row.code}">
+    <div class="lh-top-addwrap" data-top-row="${topRowKey(row)}">
+    <a class="lh-top-row lh-top-row--v2" href="${href}" ${drawer}>
       <div class="lh-ticket">
         <div class="lh-ticket-stub">
-          <div class="lh-top-prop"><strong class="lh-top-side lh-top-side--${side}">${sideWord}</strong> ${row.line} ${TOP_PROP_WORDS[row.code] || row.code.toUpperCase()}</div>
+          <div class="lh-top-prop"><strong class="lh-top-side lh-top-side--${mobileSide}">${sideWord}</strong> ${lineText(line)} ${statWord}</div>
           <div class="lh-top-rate ${hitClass}">${Math.round(stats.hitRate)}%<span>L${topWindow}</span></div>
         </div>
         <div class="lh-ticket-main">
@@ -756,7 +864,39 @@ function topRowHtml({ row, side, stats }) {
           <div class="lh-top-graph">${miniGraph(stats.games)}</div>
         </div>
       </div>
-    </a>`;
+    </a>
+    <a class="lh-mrow lh-mrow--${mobileSide}" href="${href}" ${drawer}>
+      <div class="lh-mrow-main">
+        <div class="lh-mrow-name"><span>${row.name}</span> <span class="lh-mrow-match">${row.team} ${row.matchup}</span></div>
+        <div class="lh-mrow-prop"><b>${sideWord}</b> ${lineText(line)} ${statWord}</div>
+        <div class="lh-mrow-graph"><span class="lh-mrow-count ${hitClass}">${stats.hits}/${stats.totalGames}</span>${miniGraph(stats.games)}</div>
+      </div>
+      <div class="lh-mrow-stub">
+        ${best ? `<span class="lh-odds-chip"><b>${oddsText}</b> ${best.book}</span>` : `<span class="lh-odds-chip lh-odds-chip--none">–</span>`}
+        <span class="lh-mrow-rate ${hitClass}">${Math.round(stats.hitRate)}%</span>
+        <span class="lh-mrow-window">L${topWindow}</span>
+      </div>
+    </a>
+    ${topControlsHtml(row, line, shownSide)}
+    </div>`;
+}
+
+// Stepper and Over / Under clicks on a desktop row. Re-draws just that row from the stored choice.
+function onTopControlClick(event) {
+  const step = event.target.closest("[data-top-step]");
+  const sideButton = event.target.closest("[data-top-side]");
+  if (!step && !sideButton) return;
+  const wrap = event.target.closest("[data-top-row]");
+  const item = wrap && sortedWindowRows().find((entry) => topRowKey(entry.row) === wrap.dataset.topRow);
+  if (!item) return;
+  const key = topRowKey(item.row);
+  const current = topRowEdits[key] || { line: item.row.line, side: item.side };
+  if (step) topRowEdits[key] = { line: Math.max(0.5, current.line + Number(step.dataset.topStep)), side: current.side }; // stepping keeps the side
+  else topRowEdits[key] = { line: current.line, side: sideButton.dataset.topSide };
+  wrap.outerHTML = topRowHtml(item);
+  const fresh = document.querySelector(`[data-top-row="${key}"]`);
+  const again = fresh && fresh.querySelector(step ? `[data-top-step="${step.dataset.topStep}"]` : `[data-top-side="${sideButton.dataset.topSide}"]`);
+  if (again && !again.disabled) again.focus();
 }
 
 function renderTopRows() {
@@ -768,8 +908,9 @@ function renderTopRows() {
       list.innerHTML = `<div class="lh-top-message text-muted">No players with ${TOP_MIN_SAMPLE}+ games for this prop yet.</div>`;
       return;
     }
-    list.innerHTML = items.map(topRowHtml).join("");
-    if (typeof limitRowsOnPhones === "function") limitRowsOnPhones(list, ".lh-top-row");
+    list.innerHTML = items.map((item) => topRowHtml(item)).join("");
+    if (!list.dataset.controls) { list.dataset.controls = "1"; list.addEventListener("click", onTopControlClick); }
+    if (typeof limitRowsOnPhones === "function") limitRowsOnPhones(list, ".lh-top-addwrap");
     return;
   }
 
@@ -812,6 +953,16 @@ function updateSlideLink() {
   pill.outerHTML = `<a href="#top-hit-rates" class="lh-slide-link">See top hit rates <span>→</span></a>`;
 }
 
+// A slate read from the 10-minute cache skips the downloads, so js/data/odds.js (which the row controls and the drawer read) is empty.
+// Fetch the games' props again (one request per game, shared by the CDN cache), feed lhOdds, and draw the rows once more.
+async function ensureTopOdds(slate) {
+  if (lhOdds.vendors().length > 0) return; // a fresh build already ingested them
+  const gameIds = [...new Set(slate.rows.map((row) => row.gameId))];
+  const lists = await Promise.all(gameIds.map((id) => bdlGet(`${PROPS_URL}?game_id=${id}`).then((json) => json.data).catch(() => [])));
+  lhOdds.ingest(lists.flat());
+  if (topSlate === slate && lhOdds.vendors().length > 0) renderTopRows();
+}
+
 function showTopSlate(slate) {
   topSlate = slate;
   setTopTitle(slate.date);
@@ -830,6 +981,7 @@ function showTopSlate(slate) {
   if (topGame !== "all" && !slate.rows.some((row) => String(row.gameId) === String(topGame))) topGame = "all"; // another day was picked
   renderTopPills();
   renderTopRows();
+  ensureTopOdds(slate);
   updateSlideLink();
   if (typeof showHitList === "function") showHitList(slate);
   if (typeof showFanCards === "function") showFanCards(slate);

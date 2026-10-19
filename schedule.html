@@ -168,14 +168,25 @@
 
   <!-- ORDER MATTERS: js/core/api.js provides shared constants, js/components/nav.js injects the drawer, the shared code in js/core/stats.js talks to the /api/bdl proxy (no API key in the browser),
        js/core/stats.js + js/components/top-hit-rates.js provide the hit rates card, then js/pages/app.js uses them all -->
+  <!-- Chart.js draws the bar chart in the player drawer (js/components/schedule-drawer.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
+          crossorigin="anonymous"></script>
   <script src="js/core/api.js"></script>
+  <script src="js/core/hunts.js"></script>
   <script src="js/components/nav.js"></script>
+  <script src="js/components/hunt-button.js"></script>
+  <script src="js/components/my-hunts.js"></script>
+  <script src="js/data/odds.js"></script>
   <script src="js/data/teams.js"></script>
   <script src="js/core/stats.js"></script>
+  <script src="js/components/propChart.js"></script>
+  <script src="js/components/prop-toolbar.js"></script>
   <script src="js/components/moreRows.js"></script>
   <script src="js/components/shelf.js"></script>
   <script src="js/components/share.js"></script>
   <script src="js/components/top-hit-rates.js"></script>
+  <script src="js/components/schedule-drawer.js"></script>
   <script src="js/components/hit-list.js"></script>
   <script src="js/components/bbq.js"></script>
   <script src="js/components/brickCity.js"></script>

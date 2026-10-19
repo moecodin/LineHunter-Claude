@@ -100,7 +100,7 @@ function compareHitListPicks(streakFirst) {
 //   { href, name, text, hover, proof, proofTitle, side, odds, rate, sample, streak }
 function playerPick(leg, hit) {
   return {
-    href: `game.html?id=${leg.gameId}&player=${leg.playerId}&prop=${leg.code}`,
+    href: `game.html?id=${leg.gameId}&player=${leg.playerId}&prop=${leg.code}&side=${hit.side}`,
     name: `${shortName(leg.name)} ${teamBadgeForMatchup(leg.team, leg.matchup)}`,
     text: `${hit.side === "over" ? "Over" : "Under"} ${leg.line} ${leg.code.toUpperCase()}`,
     hover: `${leg.name} ${leg.matchup}`,
@@ -111,6 +111,21 @@ function playerPick(leg, hit) {
     rate: hit.rate,
     sample: hit.sample,
     streak: hit.streak,
+    // The leg for My Hunts' "+" (js/components/hunt-button.js)
+    hunt: {
+      playerId: leg.playerId,
+      player: leg.name,
+      team: leg.team,
+      opp: leg.opp || (leg.matchup || "").split(" ").pop(),
+      gameId: leg.gameId,
+      tipoff: leg.tipoff || null,
+      stat: PROP_CODES[leg.code] || leg.code,
+      side: hit.side,
+      line: leg.line,
+      odds: hit.side === "over" ? leg.overOdds : leg.underOdds,
+      book: leg.book || "",
+      isAlt: false,
+    },
   };
 }
 
@@ -186,13 +201,20 @@ function shortName(name) {
 }
 
 // One compact line: "L. James  Over 16.5 PTS ........ 5/5". Click = that game (with the player's drawer open).
-function legHtml(pick) {
-  return `
-    <a class="lh-hitlist-leg" href="${pick.href}" title="${pick.hover}">
+// withAdd: the My Hunts "+" after the link (player legs only; never in the share picture).
+function legHtml(pick, withAdd = false) {
+  // Player legs open the player drawer on this page (js/components/schedule-drawer.js); team legs keep their game page link.
+  const drawer = pick.hunt
+    ? ` data-lh-drawer="${huntAttr(JSON.stringify({ playerId: pick.hunt.playerId, player: pick.hunt.player, team: pick.hunt.team, opp: pick.hunt.opp, gameId: pick.hunt.gameId, tipoff: pick.hunt.tipoff, code: propCode(pick.hunt.stat), line: pick.hunt.line, side: pick.side }))}"`
+    : "";
+  const link = `
+    <a class="lh-hitlist-leg" href="${pick.href}"${drawer} title="${pick.hover}">
       <span class="lh-hitlist-name">${pick.name}</span>
       <span class="lh-hitlist-pick">${pick.text}</span>
       <span class="lh-hitlist-proof ${pick.side === "under" ? "is-under" : ""}"${pick.proofTitle ? ` title="${pick.proofTitle}"` : ""}>${pick.proof}</span>
     </a>`;
+  if (!withAdd || !pick.hunt) return link;
+  return `<div class="lh-leg-addwrap">${link}${huntButtonHtml(pick.hunt, { className: "lh-leg-add" })}</div>`;
 }
 
 // The top of a category card: title, description and the legs. The share image reuses it.
@@ -205,7 +227,7 @@ function cardTopHtml(category, slip, shareButton) {
     </div>
     <div class="lh-hitlist-blurb">${category.blurb}</div>
     <div class="lh-hitlist-list">${slip
-      ? slip.map(legHtml).join("")
+      ? slip.map((pick) => legHtml(pick, shareButton)).join("")
       : `<div class="lh-hitlist-empty text-muted">Not enough picks today</div>`}</div>`;
 }
 

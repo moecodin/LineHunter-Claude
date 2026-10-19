@@ -18,7 +18,15 @@ const drawerState = {
 // The shared chart, built inside #playerDrawerChart. − / + / Reset redraw the drawer's numbers.
 const drawerChart = createPropChart(document.getElementById("playerDrawerChart"), {
   height: 260,
+  externalLine: true,                          // the prop toolbar below moves the line (research mode keeps the milestone control)
   onLineChange: () => renderPlayerDrawer(),
+});
+
+// The prop toolbar (js/components/prop-toolbar.js): stat tabs, the − / + line stepper, Over / Under, best odds, Add to My Hunts.
+const drawerToolbar = createPropToolbar(document.getElementById("playerDrawerToolbar"), {
+  statTabs: document.getElementById("playerDrawerStats"),
+  onStep: (value) => { drawerChart.setActiveLine(value); renderPlayerDrawer(); },
+  onSide: () => renderPlayerDrawer(),
 });
 
 let drawerView = null; // the numbers behind the chart on screen: the share picture uses them
@@ -61,6 +69,7 @@ function renderDrawerStatTabs() {
     button.textContent = option.label;
     button.addEventListener("click", () => {
       drawerState.propType = option.propType;
+      drawerToolbar.setSide(null);  // a new prop starts with nothing picked
       resetDrawerLine(); // a new prop starts back on its book line
       renderPlayerDrawer();
     });
@@ -107,15 +116,19 @@ function renderPlayerDrawer() {
   const nameBox = document.getElementById("playerDrawerName");
   nameBox.textContent = `${anyLine.fullName} `;
   nameBox.insertAdjacentHTML("beforeend", gameTeamBadge(anyLine.team));
-  document.getElementById("playerDrawerMeta").textContent = anyLine.position || "";
+  // The matchup next to the position ("NYK vs BOS"), and the base of any My Hunts leg made here.
+  const legBase = huntLegFor({ ...anyLine, propType: drawerState.propType, overOdds: null, underOdds: null, book: "" }, "over");
+  const isHomeTeam = currentGame && currentGame.home_team.abbreviation === anyLine.team;
+  const matchup = legBase.opp ? `${anyLine.team} ${isHomeTeam ? "vs" : "@"} ${legBase.opp}` : anyLine.team;
+  document.getElementById("playerDrawerMeta").textContent = [anyLine.position, matchup].filter(Boolean).join(" · ");
   document.getElementById("playerDrawerPageLink").href =
     `player.html?id=${playerId}&prop=${propCode(drawerState.propType)}`; // propCode: "points" -> "pts" (js/core/stats.js)
-  document.getElementById("playerDrawerLine").innerHTML = propLine
-    ? `<span class="lh-label">${option.label} line</span>
-       <span class="lh-drawer-line-value">${propLine.line}</span>
-       <span class="lh-drawer-odds">O ${formatOdds(propLine.overOdds)}</span>
-       <span class="lh-drawer-odds">U ${formatOdds(propLine.underOdds)}</span>`
-    : `<span class="lh-label">${option.label} line</span> <span class="text-muted">No line posted</span>`;
+  drawerToolbar.render({
+    line: isResearchMode() ? null : drawerChart.activeLine(),
+    mainLine: drawerChart.mainLine(),
+    stat: drawerState.propType,
+    legBase: { playerId: legBase.playerId, player: legBase.player, team: legBase.team, opp: legBase.opp, gameId: legBase.gameId, tipoff: legBase.tipoff, stat: drawerState.propType },
+  });
 
   // 2 + 3. The tabs and the window buttons, with the current choice highlighted.
   renderDrawerStatTabs();
@@ -175,8 +188,10 @@ function renderPlayerDrawer() {
 // ---------- Opening ----------
 
 // Called by js/pages/game.js when a table row is clicked.
-function openPlayerDrawer(playerId) {
+// side ("over" / "under") = opened from a prop that has one (a Top Hit Rates or Hit List link): that side starts picked.
+function openPlayerDrawer(playerId, side = null) {
   drawerState.playerId = playerId;
+  drawerToolbar.setSide(side);
   // Start on the same stat as the table, if the drawer has a tab for it. Otherwise Points.
   drawerState.propType = CHART_STAT_TABS.some((option) => option.propType === selectedProp) ? selectedProp : "points";
   drawerState.windowSize = selectedWindow; // start on the same window as the table
@@ -213,3 +228,6 @@ document.getElementById("playerDrawerShare").addEventListener("click", (event) =
 
 // Research mode switched on or off (js/components/nav.js): redraw the drawer (the chart drops or gets its line back).
 document.addEventListener("lh-mode-change", () => refreshPlayerDrawer());
+
+// Closing the drawer forgets the chosen side (opening a player or prop sets it again from the link, or starts with none).
+document.getElementById("playerDrawer").addEventListener("hidden.bs.offcanvas", () => { drawerToolbar.setSide(null); });

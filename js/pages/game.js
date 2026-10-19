@@ -29,6 +29,7 @@ const pageParams = new URLSearchParams(window.location.search);
 const gameId = pageParams.get("id");
 const linkedPlayerId = Number(pageParams.get("player")) || null; // Number("") is 0, so || null = "none"
 const linkedPropType = PROP_CODES[pageParams.get("prop")] || null; // "pts" -> "points", unknown -> null
+const linkedSide = ["over", "under"].includes(pageParams.get("side")) ? pageParams.get("side") : null; // ?side=under: that side starts picked in the drawer
 
 // ---------- Helpers ----------
 
@@ -61,6 +62,55 @@ function oddsText(line) {
   if (line.overOdds !== null && line.overOdds !== undefined) parts.push(`O ${formatOdds(line.overOdds)}`);
   if (line.underOdds !== null && line.underOdds !== undefined) parts.push(`U ${formatOdds(line.underOdds)}`);
   return parts.join(" · ");
+}
+
+// One side of a line as a My Hunts leg (js/core/hunts.js). lineValue / isAlt: the drawer can pass an alt line (no odds then).
+function huntLegFor(item, side, lineValue = item.line, isAlt = false) {
+  const game = currentGame;
+  let opp = "";
+  if (game) opp = item.team === game.home_team.abbreviation ? game.visitor_team.abbreviation : game.home_team.abbreviation;
+  return {
+    playerId: item.playerId,
+    player: item.fullName,
+    team: item.team,
+    opp,
+    gameId: game ? game.id : Number(gameId),
+    tipoff: game ? game.datetime || null : null,
+    stat: item.propType,
+    side,
+    line: lineValue,
+    odds: isAlt ? null : side === "over" ? item.overOdds : item.underOdds,
+    book: isAlt ? "" : item.book,
+    isAlt,
+  };
+}
+
+// The compact ticket a phone shows instead of the table columns (under 768px; the other cells are hidden there).
+// 3px teal edge (the table's hit rate is the over's), name + matchup, the prop line, hit count + a small graph, and on the right
+// a stub with the best odds chip, the hit rate and the window. No + button on phones: tapping the row opens the drawer.
+function mobileRowHtml(player, line, result) {
+  const best = line ? lhOdds.getOdds(player.playerId, line.propType, line.line, "over")[0] : null;
+  const rate = result.hitRate === null ? null : Math.round(result.hitRate);
+  const windowText = selectedWindow === "season" ? "SEASON" : `L${selectedWindow}`;
+  let hitClass = "";
+  if (result.hitRate >= 60) hitClass = "lh-hit--good";
+  if (result.hitRate !== null && result.hitRate <= 40) hitClass = "lh-hit--bad";
+  const opp = currentGame ? (player.team === currentGame.home_team.abbreviation ? currentGame.visitor_team.abbreviation : currentGame.home_team.abbreviation) : "";
+  const homeAway = currentGame && player.team === currentGame.home_team.abbreviation ? "vs" : "@";
+  const statName = line ? huntStatName(line.propType) : "";
+  return `
+    <div class="lh-mrow lh-mrow--over">
+      <div class="lh-mrow-main">
+        <div class="lh-mrow-name"><span>${player.fullName}</span> <span class="lh-mrow-match">${player.team}${opp ? ` ${homeAway} ${opp}` : ""}</span></div>
+        <div class="lh-mrow-prop">${line ? `<b>Over</b> ${line.line} ${statName}` : `<span class="text-muted">No line yet</span>`}</div>
+        <div class="lh-mrow-graph">${statsLoading ? "" : `<span class="lh-mrow-count ${hitClass}">${result.totalGames ? `${result.hits}/${result.totalGames}` : "–"}</span>${miniGraph(result.games)}`}</div>
+      </div>
+      <div class="lh-mrow-stub">
+        ${best ? `<span class="lh-odds-chip"><b>${best.odds > 0 ? "+" : ""}${best.odds}</b> ${best.book}</span>` : `<span class="lh-odds-chip lh-odds-chip--none">–</span>`}
+        <span class="lh-mrow-rate ${hitClass}">${rate === null ? "–" : `${rate}%`}</span>
+        <span class="lh-mrow-window">${windowText}</span>
+      </div>
+    </div>`;
 }
 
 // "70%" in neon green (60%+), red (40% or less), or white, with "7/10" underneath.
@@ -408,19 +458,22 @@ function renderTable() {
     row.className = "lh-clickable-row";
     row.tabIndex = 0;
     row.setAttribute("aria-label", `Show ${player.fullName}'s recent games`);
+    // Phones show one compact ticket (the .lh-mcell cell); the other cells are hidden there and the ticket is hidden from tablets up.
     row.innerHTML = `
-      <td>
+      <td class="lh-mcell d-md-none lines-only" colspan="5">${mobileRowHtml(player, line, result)}</td>
+      <td class="d-none d-md-table-cell">
         <a class="lh-player-link fw-semibold" href="player.html?id=${player.playerId}">${player.playerName}</a>
         ${gameTeamBadge(player.team)}
       </td>
-      <td class="text-end lines-only">
+      <td class="text-end lines-only d-none d-md-table-cell">
         ${line
           ? `<div class="line-value">${line.line}</div>
-             <div class="lh-odds small text-muted">${oddsText(line)}</div>`
+             <div class="lh-odds small text-muted">${oddsText(line)}</div>
+             <div class="lh-add-pair">${huntButtonHtml(huntLegFor(line, "over"), { label: "O", iconFirst: true })}${huntButtonHtml(huntLegFor(line, "under"), { label: "U", iconFirst: true })}</div>`
           : `<span class="small text-muted">No line yet</span>`}
       </td>
       <td class="d-none d-md-table-cell">${statsLoading ? STAT_PLACEHOLDER : miniGraph(result.games)}</td>
-      <td class="text-end lines-only">${statsLoading ? STAT_PLACEHOLDER : hitRateCell(result)}</td>
+      <td class="text-end lines-only d-none d-md-table-cell">${statsLoading ? STAT_PLACEHOLDER : hitRateCell(result)}</td>
       <td class="text-end d-none d-md-table-cell lh-avg">${statsLoading ? STAT_PLACEHOLDER : formatStatValue(result.average)}</td>
     `;
 
@@ -462,7 +515,7 @@ function openLinkedPlayer(propTypes) {
     renderPills(propTypes);
     renderTable();
   }
-  openPlayerDrawer(linkedPlayerId); // the drawer starts on the table's prop (selectedProp)
+  openPlayerDrawer(linkedPlayerId, linkedSide); // the drawer starts on the table's prop (selectedProp)
 }
 
 async function loadPage() {
@@ -490,6 +543,9 @@ async function loadPage() {
         return [];
       }),
     ]);
+
+    // Every sportsbook's lines go to the best-odds lookup (js/data/odds.js) before we keep one per player.
+    lhOdds.ingest(propsJson.data);
 
     // 3. Keep ONE over/under line per player per prop type (pickOneLinePerPlayer in js/core/stats.js).
     const chosen = pickOneLinePerPlayer(propsJson.data);
@@ -525,6 +581,7 @@ async function loadPage() {
       line: Number(prop.line_value), // the API sends "24.5" as text; Number() makes it 24.5
       overOdds: prop.market.over_odds,
       underOdds: prop.market.under_odds,
+      book: prop.vendor, // the sportsbook (for My Hunts)
     }));
 
     // 6. Pills for every prop type found. Start on Points if there is one.

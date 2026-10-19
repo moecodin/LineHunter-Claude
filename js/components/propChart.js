@@ -212,7 +212,10 @@ const lineAndValuesPlugin = {
 // height: chart height in pixels. maxBarWidth: the widest a bar may get (bars fill most of their slot up to this).
 // onLineChange: runs after − / + / Reset (redraw the page's numbers).
 // onBarClick: optional. Runs with the game's row when a bar is clicked (the player page opens a game summary).
-function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChange = () => {}, onBarClick = null } = {}) {
+// externalLine: true = the page has its own prop toolbar (js/components/prop-toolbar.js) that moves the line with
+//   setActiveLine(), so the chart's own "Alt line − / +" control stays hidden in lines mode. The research-mode milestone
+//   control is not affected.
+function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChange = () => {}, onBarClick = null, externalLine = false } = {}) {
   container.innerHTML = `
     <div class="lh-chart-scroll" hidden>
       <div class="lh-chart-inner" style="height: ${height}px">
@@ -352,7 +355,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
   // Both are always kept up to date; the CSS class on each shows only the one for the current mode.
   function updateAltControl() {
     const line = altLine ?? baseLine;
-    parts.alt.hidden = line === null; // no line at all = nothing to move
+    parts.alt.hidden = externalLine || line === null; // no line at all = nothing to move (or the page's toolbar does it)
     if (line !== null) {
       parts.altValue.textContent = lineText(line);
       parts.altDown.disabled = line <= ALT_MIN;
@@ -529,6 +532,12 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
       averageMarker = average;
     },
     activeLine,
+    // The toolbar picks a line: it becomes the alt line, unless it is the starting line again. The caller redraws.
+    setActiveLine(value) {
+      const next = Math.max(ALT_MIN, Math.round(Number(value) * 2) / 2);
+      altLine = next === baseLine ? null : next;
+    },
+    mainLine: () => baseLine,
     isAltLine: () => (isResearchMode() ? milestoneAlt !== null : altLine !== null),
     draw,
     // Hide the chart and alt control (while loading, or when there are no games).

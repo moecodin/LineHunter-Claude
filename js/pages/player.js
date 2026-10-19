@@ -50,9 +50,20 @@ const roleChart = createRoleChart(document.getElementById("roleChart"), { height
 const playerChart = createPropChart(document.getElementById("playerChart"), {
   height: 240,
   maxBarWidth: 56,
+  externalLine: true,                          // the prop toolbar above moves the line (research mode keeps the milestone control)
   onBarClick: (game) => openGameSummary(game),
   onLineChange: () => renderProps(),
 });
+
+// The prop toolbar (js/components/prop-toolbar.js): stat tabs, the − / + line stepper, Over / Under, best odds, Add to My Hunts.
+// ?side=under (from a Top Hit Rates / Hit List link) starts with that side picked.
+const playerToolbar = createPropToolbar(document.getElementById("playerToolbar"), {
+  statTabs: document.getElementById("playerPropTabs"),
+  showHead: true,
+  onStep: (value) => { playerChart.setActiveLine(value); renderProps(); },
+  onSide: () => renderProps(),
+});
+playerToolbar.setSide(["over", "under"].includes(playerParams.get("side")) ? playerParams.get("side") : null);
 
 // ---------- Small helpers ----------
 
@@ -220,6 +231,7 @@ function renderPropTabs() {
     button.textContent = option.label;
     button.addEventListener("click", () => {
       pageState.propType = option.propType;
+      playerToolbar.setSide(null); // a new prop starts with nothing picked
       // Keep ?prop= in the address up to date, so a refresh or a shared link opens this tab.
       history.replaceState(null, "", `?id=${playerId}&prop=${propCode(option.propType)}`);
       if (playerLogs) resetPlayerLine(); // a new prop starts back on its own line
@@ -257,18 +269,26 @@ function renderToggles() {
   });
 }
 
-// "Points line 26.5  O -110  U -115" or "Points · No line · season avg 24.5"
-function renderLineInfo() {
-  const tab = CHART_STAT_TABS.find((option) => option.propType === pageState.propType);
-  const prop = linesByProp[pageState.propType];
-  document.getElementById("playerLine").innerHTML = prop
-    ? `<span class="lh-label">${tab.label} line</span>
-       <span class="lh-drawer-line-value">${lineText(prop.line_value)}</span>
-       <span class="lh-drawer-odds">O ${formatOdds(prop.market.over_odds)}</span>
-       <span class="lh-drawer-odds">U ${formatOdds(prop.market.under_odds)}</span>`
-    : `<span class="lh-label">${tab.label}</span>
-       <span class="lh-no-line">No line</span>
-       <span class="text-muted small">${playerChart.activeLine() === null ? "" : "Starting from the season average"}</span>`;
+// The prop toolbar for the current tab: the line the chart is on, the side picked, the best odds and the Add button.
+function renderToolbar() {
+  const isHome = nextGame && player && player.team ? nextGame.home_team.id === player.team.id : null;
+  const opp = nextGame && isHome !== null ? (isHome ? nextGame.visitor_team.abbreviation : nextGame.home_team.abbreviation) : "";
+  const team = player && player.team ? player.team.abbreviation : "";
+  playerToolbar.render({
+    head: player ? { name: `${player.first_name} ${player.last_name}`, matchup: opp ? `${team} ${isHome ? "vs" : "@"} ${opp}` : team } : null,
+    line: isResearchMode() ? null : playerChart.activeLine(),
+    mainLine: playerChart.mainLine(),
+    stat: pageState.propType,
+    legBase: {
+      playerId: player ? player.id : playerId,
+      player: player ? `${player.first_name} ${player.last_name}` : "",
+      team,
+      opp,
+      gameId: nextGame ? nextGame.id : null,
+      tipoff: nextGame ? nextGame.datetime || null : null,
+      stat: pageState.propType,
+    },
+  });
 }
 
 // The game log: one row per game in the window and split, newest first.
@@ -592,7 +612,7 @@ function renderProps() {
   const allGames = pickWindowLogs(splitLogs(playerLogs, pageState.split, false), pageState.windowSize, usingCurrentSeason);
   renderWithoutSummary(result, calculateHitRate(allGames, tab.stat, line ?? 0, "all"), line);
 
-  renderLineInfo();
+  renderToolbar();
 
   const summary = document.getElementById("playerSummary");
   const message = document.getElementById("playerMessage");
@@ -1137,6 +1157,7 @@ async function loadNextGameAndLines() {
 
   // player_id = only this player's props, so it's one small request.
   const propsJson = await bdlGet(`${PROPS_URL}?game_id=${nextGame.id}&player_id=${playerId}`);
+  lhOdds.ingest(propsJson.data); // every sportsbook's lines, for the toolbar's best odds (js/data/odds.js)
   pickOneLinePerPlayer(propsJson.data).forEach((prop) => {
     linesByProp[prop.prop_type] = prop;
   });

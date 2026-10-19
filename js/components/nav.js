@@ -66,6 +66,10 @@ window.lhLockupHtml = lhLockupHtml;
         <div class="btn-group btn-group-sm lh-window-toggle lh-league d-none d-md-inline-flex" role="group" aria-label="League">${leagueLinks}</div>
         ${inPage ? "" : searchMarkup}
         <div class="lh-mode-nav d-none d-md-flex" id="lhModeNav"></div>
+        <button type="button" class="lh-nav-hunts lines-only d-none d-md-inline-flex" data-lh-open-hunts aria-label="Open My Hunts">
+          <i class="bi bi-ticket-perforated" aria-hidden="true"></i><span>My Hunts</span>
+        </button>
+        <a class="lh-nav-hunts research-only d-none d-md-inline-flex" id="lhNavPlayers" href="#lhSearchInput"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Players</span></a>
         <a class="lh-theme-toggle lh-discord-btn d-none d-md-inline-flex" href="${DISCORD_URL}" target="_blank" rel="noopener" title="Join our Discord" aria-label="Join our Discord" data-discord-link><i class="bi bi-discord" aria-hidden="true"></i></a>
         <button type="button" class="lh-theme-toggle d-none d-md-inline-flex" id="lhThemeToggle" data-lh-theme-toggle></button>
         <button class="navbar-toggler lh-nav-toggle" type="button"
@@ -316,7 +320,7 @@ window.lhLockupHtml = lhLockupHtml;
   initPlayerSearch(document.getElementById("lhSearch"), document.getElementById("lhSearchInput"), document.getElementById("lhSearchResults"));
 
   // ---------- Phone bottom tab bar (under 768px) ----------
-  // Today, Hit List, Search, Players, More. The bar and its two bottom sheets exist on every page, but the CSS only shows
+  // Today, Hit List, Search, My Hunts (lines mode) or Players (research mode), More. The bar and its two bottom sheets exist on every page, but the CSS only shows
   // them under 768px (css/styles.css, "Phone bottom tab bar"), where the top bar keeps just the logo.
   const LAST_PLAYER_KEY = "lh-last-player"; // the player page you last opened: the Players tab goes back to it
   if (currentPage === "player.html") {
@@ -337,8 +341,8 @@ window.lhLockupHtml = lhLockupHtml;
   // The Hit List shelf is #hitlist in lines mode and #streaks in research mode (the other one is hidden).
   const shelfId = () => (isResearchMode() ? "streaks" : "hitlist");
   const playersTab = lastPlayerId
-    ? `<a class="lh-tab" href="player.html?id=${lastPlayerId}" data-tab="players"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Players</span></a>`
-    : `<button type="button" class="lh-tab" data-tab="players" data-bs-toggle="offcanvas" data-bs-target="#lhSearchSheet"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Players</span></button>`;
+    ? `<a class="lh-tab research-only" href="player.html?id=${lastPlayerId}" data-tab="players"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Players</span></a>`
+    : `<button type="button" class="lh-tab research-only" data-tab="players" data-bs-toggle="offcanvas" data-bs-target="#lhSearchSheet"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Players</span></button>`;
 
   const tabbar = document.createElement("nav");
   tabbar.className = "lh-tabbar";
@@ -348,6 +352,7 @@ window.lhLockupHtml = lhLockupHtml;
     <a class="lh-tab" href="schedule.html#hitlist" data-tab="hitlist" id="lhTabHitlist"><i class="bi bi-bullseye" aria-hidden="true"></i><span>Hit List</span></a>
     <button type="button" class="lh-tab" data-tab="search" data-bs-toggle="offcanvas" data-bs-target="#lhSearchSheet"><i class="bi bi-search" aria-hidden="true"></i><span>Search</span></button>
     ${playersTab}
+    <button type="button" class="lh-tab lines-only" data-tab="hunts" data-lh-open-hunts><span class="lh-tab-icon"><i class="bi bi-ticket-perforated" aria-hidden="true"></i><span class="lh-hunts-badge" data-hunts-count hidden>0</span></span><span>My Hunts</span></button>
     <button type="button" class="lh-tab" data-tab="more" data-bs-toggle="offcanvas" data-bs-target="#lhMoreSheet"><i class="bi bi-three-dots" aria-hidden="true"></i><span>More</span></button>`;
   document.body.appendChild(tabbar);
 
@@ -443,6 +448,25 @@ window.lhLockupHtml = lhLockupHtml;
     sheet.addEventListener("show.bs.offcanvas", () => { openSheet = name; renderTabs(); });
     sheet.addEventListener("hidden.bs.offcanvas", () => { openSheet = null; renderTabs(); });
   });
+
+  document.addEventListener("show.bs.offcanvas", (event) => {
+    if (event.target.id === "lhHuntsDrawer") { openSheet = "hunts"; renderTabs(); }
+  });
+  document.addEventListener("hidden.bs.offcanvas", (event) => {
+    if (event.target.id === "lhHuntsDrawer") { openSheet = null; renderTabs(); }
+  });
+
+  // The navbar's Players link (research mode): the last player page you opened, or the navbar search box.
+  const navPlayers = document.getElementById("lhNavPlayers");
+  if (navPlayers) {
+    if (lastPlayerId) navPlayers.href = `player.html?id=${lastPlayerId}`;
+    else navPlayers.addEventListener("click", (event) => {
+      const input = document.getElementById("lhSearchInput");
+      if (!input) return;
+      event.preventDefault();
+      input.focus();
+    });
+  }
 
   let shelfObserver = null;
   const watchShelf = () => {
