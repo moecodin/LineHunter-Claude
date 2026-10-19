@@ -1,10 +1,10 @@
-// LineHunter - player-drawer.js
+// LineHunter - js/components/player-drawer.js
 // The drawer that slides in from the right when you click a row in the props table on game.html.
 // It shows one player's recent games as a bar chart against the prop line,
 // and lets you try a different ("alt") line to see how often it would have hit.
-// The chart, tooltip and alt line control come from js/propChart.js (shared with player.html).
+// The chart, tooltip and alt line control come from js/components/propChart.js (shared with player.html).
 //
-// Loaded after game.js, and uses what game.js already has in memory:
+// Loaded after js/pages/game.js, and uses what js/pages/game.js already has in memory:
 //   allLines, playersById, selectedProp, selectedWindow, showingCurrentSeason, statsLoading, windowResult
 // So opening the drawer never downloads anything new.
 
@@ -70,7 +70,7 @@ function renderDrawerStatTabs() {
   });
 }
 
-// The same L5 / L10 / L20 / Season buttons as above the table (renderWindowButtons in js/propChart.js).
+// The same L5 / L10 / L20 / Season buttons as above the table (renderWindowButtons in js/components/propChart.js).
 // Changing them here only changes the drawer, not the table.
 function renderDrawerWindows() {
   renderWindowButtons(document.getElementById("playerDrawerWindows"), drawerState.windowSize, (size) => {
@@ -94,7 +94,7 @@ function showDrawerMessage(html) {
 // Redraw everything inside the drawer from drawerState.
 function renderPlayerDrawer() {
   const playerId = drawerState.playerId;
-  const anyLine = playersById[playerId]; // everyone in the game, with or without a line (game.js)
+  const anyLine = playersById[playerId]; // everyone in the game, with or without a line (js/pages/game.js)
   if (!anyLine) return;
 
   const option = CHART_STAT_TABS.find((choice) => choice.propType === drawerState.propType);
@@ -109,7 +109,7 @@ function renderPlayerDrawer() {
   nameBox.insertAdjacentHTML("beforeend", gameTeamBadge(anyLine.team));
   document.getElementById("playerDrawerMeta").textContent = anyLine.position || "";
   document.getElementById("playerDrawerPageLink").href =
-    `player.html?id=${playerId}&prop=${propCode(drawerState.propType)}`; // propCode: "points" -> "pts" (js/stats.js)
+    `player.html?id=${playerId}&prop=${propCode(drawerState.propType)}`; // propCode: "points" -> "pts" (js/core/stats.js)
   document.getElementById("playerDrawerLine").innerHTML = propLine
     ? `<span class="lh-label">${option.label} line</span>
        <span class="lh-drawer-line-value">${propLine.line}</span>
@@ -121,13 +121,13 @@ function renderPlayerDrawer() {
   renderDrawerStatTabs();
   renderDrawerWindows();
 
-  // Opened before the table's stats finished downloading? Show a spinner. game.js redraws us when they arrive.
+  // Opened before the table's stats finished downloading? Show a spinner. js/pages/game.js redraws us when they arrive.
   if (statsLoading) {
     showDrawerMessage(`<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading games...`);
     return;
   }
 
-  // Same games and window rules as the table (windowResult in game.js), measured against the active line.
+  // Same games and window rules as the table (windowResult in js/pages/game.js), measured against the active line.
   // It needs a number for the line. Without a line the hits don't mean anything,
   // so we pass 0 and only use the average and the game list.
   const isSeason = drawerState.windowSize === "season";
@@ -174,7 +174,7 @@ function renderPlayerDrawer() {
 
 // ---------- Opening ----------
 
-// Called by game.js when a table row is clicked.
+// Called by js/pages/game.js when a table row is clicked.
 function openPlayerDrawer(playerId) {
   drawerState.playerId = playerId;
   // Start on the same stat as the table, if the drawer has a tab for it. Otherwise Points.
@@ -186,14 +186,14 @@ function openPlayerDrawer(playerId) {
   bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("playerDrawer")).show();
 }
 
-// Called by game.js once the stats finish loading, in case the drawer is already open.
+// Called by js/pages/game.js once the stats finish loading, in case the drawer is already open.
 function refreshPlayerDrawer() {
   if (drawerState.playerId === null) return;
   resetDrawerLine(); // the stats may have just arrived: the research-mode milestone starts from the season average
   renderPlayerDrawer();
 }
 
-// The share button: a picture of the chart, with the player, prop, line, hit rate and average (js/share.js).
+// The share button: a picture of the chart, with the player, prop, line, hit rate and average (js/components/share.js).
 document.getElementById("playerDrawerShare").addEventListener("click", (event) => {
   if (!drawerView) return;
   const { anyLine, option, propLine, line, result } = drawerView;
@@ -211,5 +211,5 @@ document.getElementById("playerDrawerShare").addEventListener("click", (event) =
   }, event.currentTarget);
 });
 
-// Research mode switched on or off (nav.js): redraw the drawer (the chart drops or gets its line back).
+// Research mode switched on or off (js/components/nav.js): redraw the drawer (the chart drops or gets its line back).
 document.addEventListener("lh-mode-change", () => refreshPlayerDrawer());

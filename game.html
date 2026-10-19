@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Theme: applied before anything renders, so there's no flash (default dark; nav.js has the toggle) -->
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; js/components/nav.js has the toggle) -->
   <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
   <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -19,18 +19,18 @@
   <link href="https://api.fontshare.com/v2/css?f[]=comico@400&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link href="styles.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
 </head>
 
 <body>
-  <!-- Research mode: applied before anything renders, so there's no flash (nav.js has the switch) -->
+  <!-- Research mode: applied before anything renders, so there's no flash (js/components/nav.js has the switch) -->
   <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
 
   <div id="site-nav"></div>
 
   <main class="container-fluid lh-container px-3 px-lg-4">
 
-    <!-- BACK BUTTON: btn-ghost = our quiet outlined pill button (styles.css) -->
+    <!-- BACK BUTTON: btn-ghost = our quiet outlined pill button (css/styles.css) -->
     <a href="schedule.html" class="btn btn-sm btn-ghost mb-3">‹ All games</a>
 
         <!-- MATCHUP CARD (left, col-lg-6), MATCHUP INFO (col-lg-3) and INJURY REPORT (col-lg-3), same height. Stacked on phones, header first. -->
@@ -41,7 +41,7 @@
         </div>
       </div>
       <div class="col-md-6 col-lg-3">
-        <!-- MATCHUP INFO: arena, coaches, last 5, home / road record, rest, last meeting. js/matchupInfo.js fills it in. -->
+        <!-- MATCHUP INFO: arena, coaches, last 5, home / road record, rest, last meeting. js/components/matchupInfo.js fills it in. -->
         <div id="matchup-info" class="card lh-tint-card h-100">
           <div id="matchup-info-body" class="flex-grow-1">
             <div class="card-body text-center text-muted py-5">Loading matchup info...</div>
@@ -49,7 +49,7 @@
         </div>
       </div>
       <div class="col-md-6 col-lg-3">
-        <!-- INJURY REPORT: both teams, same look as the player page's card. js/gameInjuries.js fills it in. -->
+        <!-- INJURY REPORT: both teams, same look as the player page's card. js/components/gameInjuries.js fills it in. -->
         <div class="card lh-tint-card lh-injury-card h-100">
           <div class="card-header py-3"><div class="lh-label">Injury report</div></div>
           <div id="gameInjuryList" class="lh-injury-list lh-game-injury-list">
@@ -64,11 +64,11 @@
       <div class="card-header lh-label py-3"><span class="lines-only">Player Props</span><span class="research-only">Player Stats</span></div>
       <div class="card-body">
 
-        <!-- PROP TYPE TABS: Bootstrap "nav-underline". game.js adds one button per prop type.
-             lh-tabs (styles.css) = one row that scrolls sideways on phones, no wrapping -->
+        <!-- PROP TYPE TABS: Bootstrap "nav-underline". js/pages/game.js adds one button per prop type.
+             lh-tabs (css/styles.css) = one row that scrolls sideways on phones, no wrapping -->
         <ul id="prop-pills" class="nav nav-underline lh-tabs mb-3"></ul>
 
-        <!-- WINDOW TOGGLE: how many recent games the whole table uses. game.js adds the buttons. -->
+        <!-- WINDOW TOGGLE: how many recent games the whole table uses. js/pages/game.js adds the buttons. -->
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
           <div id="table-windows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to use"></div>
           <span id="table-window-note" class="small text-muted" hidden>This season hasn't started, so Season shows last season.</span>
@@ -113,7 +113,7 @@
           </table>
         </div>
 
-        <!-- Full-width button under the table; game.js shows it only when there are more than 5 players -->
+        <!-- Full-width button under the table; js/pages/game.js shows it only when there are more than 5 players -->
         <button type="button" id="linesToggle" class="btn btn-sm btn-outline-secondary lh-mi-toggle w-100 mt-3 collapsed" hidden
                 data-bs-toggle="collapse" data-bs-target="#lines-more" aria-expanded="false" aria-controls="lines-more">
           <span id="linesToggleText">Show all players</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
@@ -122,7 +122,7 @@
       </div>
     </div>
 
-    <!-- MATCHUP DETAILS: the team comparison (butterfly bars), full width, always visible. js/teamCompare.js loads its data
+    <!-- MATCHUP DETAILS: the team comparison (butterfly bars), full width, always visible. js/components/teamCompare.js loads its data
          when this card scrolls into view. -->
     <div class="card lh-tint-card mb-5" id="matchupDetails">
       <div class="card-header lh-label py-3">Matchup Details</div>
@@ -132,16 +132,16 @@
   </main>
 
   <!-- PLAYER DRAWER: Bootstrap offcanvas that slides in from the right (offcanvas-end).
-       player-drawer.js fills it in when a row in the props table is clicked. -->
+       js/components/player-drawer.js fills it in when a row in the props table is clicked. -->
   <div class="offcanvas offcanvas-end lh-player-drawer" tabindex="-1" id="playerDrawer" aria-labelledby="playerDrawerName">
     <div class="offcanvas-header align-items-start">
       <div>
         <h2 class="lh-display h3 mb-1" id="playerDrawerName">Player</h2>
         <div class="lh-label" id="playerDrawerMeta"></div>
-        <!-- player-drawer.js sets the link: player.html?id=PLAYER_ID&prop=pts -->
+        <!-- js/components/player-drawer.js sets the link: player.html?id=PLAYER_ID&prop=pts -->
         <div class="d-flex flex-wrap gap-2 mt-2">
           <a id="playerDrawerPageLink" class="btn btn-sm lh-player-page-btn" href="player.html">Go to player page →</a>
-          <!-- Share the chart as a picture (js/share.js) -->
+          <!-- Share the chart as a picture (js/components/share.js) -->
           <button type="button" id="playerDrawerShare" class="btn btn-sm btn-ghost lines-only" aria-label="Share this chart as an image" title="Share as image">
             <i class="bi bi-share" aria-hidden="true"></i> Share
           </button>
@@ -167,7 +167,7 @@
       <!-- Hit rate and average -->
       <div id="playerDrawerSummary" class="d-flex gap-4 mb-3"></div>
 
-      <!-- The chart, its hover tooltip, and the alt line − / + control: built by js/propChart.js -->
+      <!-- The chart, its hover tooltip, and the alt line − / + control: built by js/components/propChart.js -->
       <div id="playerDrawerChart"></div>
 
       <div id="playerDrawerMessage" class="text-muted small mt-2" hidden></div>
@@ -179,16 +179,16 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
           integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
           crossorigin="anonymous"></script>
-  <script src="api.js"></script>
-  <script src="nav.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/propChart.js"></script>
-  <script src="js/share.js"></script>
-  <script src="js/teams.js"></script>
-  <script src="js/matchupInfo.js"></script>
-  <script src="js/gameInjuries.js"></script>
-  <script src="js/teamCompare.js"></script>
-  <script src="game.js"></script>
-  <script src="player-drawer.js"></script>
+  <script src="js/core/api.js"></script>
+  <script src="js/components/nav.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/components/propChart.js"></script>
+  <script src="js/components/share.js"></script>
+  <script src="js/data/teams.js"></script>
+  <script src="js/components/matchupInfo.js"></script>
+  <script src="js/components/gameInjuries.js"></script>
+  <script src="js/components/teamCompare.js"></script>
+  <script src="js/pages/game.js"></script>
+  <script src="js/components/player-drawer.js"></script>
 </body>
 </html>

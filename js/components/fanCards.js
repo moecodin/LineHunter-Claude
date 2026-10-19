@@ -1,12 +1,12 @@
-// LineHunter - js/fanCards.js
+// LineHunter - js/components/fanCards.js
 // Research mode's two cards on the schedule page, shown where Top Hit Rates and the Hit List are in lines mode:
 //   "Hot Players": players on tonight's slate whose last-5 average is furthest above their season average, per stat.
 //   "Streaks":     small cards of players on a run: 30+ PTS ("30 Piece Chicken Nuggets"), 10+ REB, 8+ AST, 3+ 3PM,
-//                  plus the BBQ Chicken card (js/bbq.js).
-// No betting lines are used. js/top-hit-rates.js builds slate.fan (one entry per player, from the game logs it already
+//                  plus the BBQ Chicken card (js/components/bbq.js).
+// No betting lines are used. js/components/top-hit-rates.js builds slate.fan (one entry per player, from the game logs it already
 // downloads and caches) and calls showFanCards(slate); this file only draws it.
 //
-// Needs js/top-hit-rates.js (slate.fan) and js/hit-list.js (shortName), js/stats.js (miniGraph, formatStatValue).
+// Needs js/components/top-hit-rates.js (slate.fan) and js/components/hit-list.js (shortName), js/core/stats.js (miniGraph, formatStatValue).
 
 const HOT_FILTERS = [
   { code: "pts", label: "PTS" },
@@ -20,7 +20,7 @@ const STREAK_MIN = 3;       // a run shorter than this isn't listed
 const NUGGET_MIN = 2;       // ...except 30-point runs, which are rare: 2 straight is enough
 const STREAK_MAX_ROWS = 5;
 
-// One card each. key = the streak field built in js/top-hit-rates.js, code = the prop code used in the game page link.
+// One card each. key = the streak field built in js/components/top-hit-rates.js, code = the prop code used in the game page link.
 // "nuggets" is the 30-point run (count + average points, min 2 straight); the others are plain runs (min STREAK_MIN).
 const STREAK_CARDS = [
   { key: "nuggets", code: "pts", icon: "bi-stars", label: "30 Piece Chicken Nuggets", blurb: "Straight games with 30+ PTS (2 or more)" },
@@ -135,13 +135,13 @@ function renderStreaks() {
   const body = document.getElementById("streaksBody");
   body.removeAttribute("aria-busy");
   body.className = "";
-  // The four streak cards, then BBQ Chicken (js/bbq.js) and Brick City (js/brickCity.js) side by side underneath.
+  // The four streak cards, then BBQ Chicken (js/components/bbq.js) and Brick City (js/components/brickCity.js) side by side underneath.
   body.innerHTML = `<div class="lh-shelf-track" id="streaksShelf">${STREAK_CARDS.map(streakCardHtml).join("")}${bbqCardHtml()}${brickCityCardHtml(fanSlate)}</div>`;
-  refreshShelf("#streaksShelf"); // js/shelf.js: back to the first card, arrows up to date
+  refreshShelf("#streaksShelf"); // js/components/shelf.js: back to the first card, arrows up to date
   fillBbqSlots(fanSlate);
 }
 
-// ---------- Called by js/top-hit-rates.js ----------
+// ---------- Called by js/components/top-hit-rates.js ----------
 
 function showFanCards(slate) {
   if (!document.getElementById("hotPlayers")) return;

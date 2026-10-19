@@ -317,7 +317,7 @@ window.lhLockupHtml = lhLockupHtml;
 
   // ---------- Phone bottom tab bar (under 768px) ----------
   // Today, Hit List, Search, Players, More. The bar and its two bottom sheets exist on every page, but the CSS only shows
-  // them under 768px (styles.css, "Phone bottom tab bar"), where the top bar keeps just the logo.
+  // them under 768px (css/styles.css, "Phone bottom tab bar"), where the top bar keeps just the logo.
   const LAST_PLAYER_KEY = "lh-last-player"; // the player page you last opened: the Players tab goes back to it
   if (currentPage === "player.html") {
     try {

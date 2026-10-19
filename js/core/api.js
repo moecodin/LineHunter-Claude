@@ -1,6 +1,6 @@
 // Shared theme helpers and team display palettes (one for the dark theme, one for the light theme).
 
-// The theme the page is in ("light" or "dark": set on <html> by the script in every page's <head>, changed by nav.js).
+// The theme the page is in ("light" or "dark": set on <html> by the script in every page's <head>, changed by js/components/nav.js).
 function isLightTheme() {
   return document.documentElement.getAttribute("data-bs-theme") === "light";
 }

@@ -1,7 +1,7 @@
-// LineHunter - js/gameInjuries.js
+// LineHunter - js/components/gameInjuries.js
 // The "Injury report" card on game.html, next to Matchup Info: who is hurt on each team of this game, with the same look as the
 // player page's Injury report card (name, status badge, and a "Details" dropdown with the description and expected return).
-// Needs js/stats.js (BDL_BASE, bdlGetAllPages). game.js calls loadGameInjuries(game) once the game is loaded.
+// Needs js/core/stats.js (BDL_BASE, bdlGetAllPages). js/pages/game.js calls loadGameInjuries(game) once the game is loaded.
 //
 //   GET /v1/player_injuries?team_ids[]=2&team_ids[]=9&per_page=100 -> data[] { player: { id, first_name, last_name, team_id },
 //       status, description, return_date }

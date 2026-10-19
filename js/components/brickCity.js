@@ -1,13 +1,13 @@
-// LineHunter - js/brickCity.js
+// LineHunter - js/components/brickCity.js
 // "Brick City" card: players on tonight's slate who are shooting poorly in recent form. Shown next to BBQ Chicken in both
-// modes (the Hit List grid in lines mode, the Streaks grid in research mode). It uses no extra downloads: js/top-hit-rates.js
+// modes (the Hit List grid in lines mode, the Streaks grid in research mode). It uses no extra downloads: js/components/top-hit-rates.js
 // adds fg = { l5Made, l5Att, seasonMade, seasonAtt } to every slate.fan entry from the game logs it already has.
 //
 // A player is listed when their field-goal percentage over the last 5 games is at least 5 points below their season
 // percentage, on at least 30 attempts in those 5 games (so a bench player with 6 shots isn't a "cold streak").
 // Sorted by the biggest drop. Past results only: shooting rates swing from game to game.
 //
-// Needs js/hit-list.js (shortName) and js/stats.js (nothing else).
+// Needs js/components/hit-list.js (shortName) and js/core/stats.js (nothing else).
 
 const BRICK_MIN_L5_ATTEMPTS = 30;
 const BRICK_MIN_SEASON_ATTEMPTS = 50;

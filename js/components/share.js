@@ -1,4 +1,4 @@
-// LineHunter - js/share.js
+// LineHunter - js/components/share.js
 // Shared "share as an image" code for the Hit List cards, the player page and the player drawer.
 //   shareNodeAsImage(): draws an off-screen element to a PNG, then opens the share sheet or downloads it.
 //   shareChartCard():   builds the picture for a prop chart (name, prop, line, hit rate, the chart itself).
@@ -84,7 +84,7 @@ async function shareNodeAsImage(innerHtml, { filename, title, text, button }) {
   }
 }
 
-// A picture of a prop chart. chart = the object from createPropChart (js/propChart.js).
+// A picture of a prop chart. chart = the object from createPropChart (js/components/propChart.js).
 // info: { name, meta, propLabel, filterText, lineText, hitRateText, averageText }, all plain text.
 function shareChartCard(chart, info, button) {
   const image = chart.toImage();

@@ -1,9 +1,9 @@
-// LineHunter - js/top-hit-rates.js
+// LineHunter - js/components/top-hit-rates.js
 // The "Top Hit Rates" card: the players who went over their line most often in their last 10 games.
 //   - Homepage (index.html): the next slate of games (today, or the next day with games).
-//   - Schedule page (schedule.html): the day picked in the date pager. app.js calls showTopHitRatesForDay().
+//   - Schedule page (schedule.html): the day picked in the date pager. js/pages/app.js calls showTopHitRatesForDay().
 //
-// Uses the shared code in js/stats.js. Needs js/stats.js loaded first.
+// Uses the shared code in js/core/stats.js. Needs js/core/stats.js loaded first.
 
 const TOP_WINDOW = 10;    // L10
 const TOP_MIN_GAMES = 8;  // fewer games than this in the window = too small a sample to rank
@@ -19,7 +19,7 @@ const TOP_SORTS = [
   { code: "game", label: "Game" },
 ];
 
-// The filter pills. "all" mixes every prop; the others match PROP_CODES in js/stats.js.
+// The filter pills. "all" mixes every prop; the others match PROP_CODES in js/core/stats.js.
 const TOP_FILTERS = [
   { code: "all", label: "All" },
   { code: "pts", label: "PTS" },
@@ -238,7 +238,7 @@ async function buildTopHitRates(slate) {
 
   rows.sort(compareTopRows);
 
-  // The Hit List (js/hit-list.js) reads the same downloaded logs: one "leg" per line, with the facts it needs.
+  // The Hit List (js/components/hit-list.js) reads the same downloaded logs: one "leg" per line, with the facts it needs.
   const legs = lines.map((prop) => {
     const player = players[prop.player_id];
     const team = player && player.team ? player.team.abbreviation : "";
@@ -255,7 +255,7 @@ async function buildTopHitRates(slate) {
   };
 }
 
-// Research mode's cards (js/fanCards.js) need no betting lines, only each player's recent box scores, so this reads
+// Research mode's cards (js/components/fanCards.js) need no betting lines, only each player's recent box scores, so this reads
 // the same game logs already downloaded for the rows above. One entry per player on the slate (players with a posted
 // prop are the ones the page already has logs for):
 //   st[code] = { l5, season, vals }  l5 / season = average of the last 5 games / the season (null if too few games),
@@ -802,7 +802,7 @@ function renderTopRows() {
         <div class="lh-top-hit ${hitClass}">${row.hits}/${row.totalGames} <span>(${Math.round(row.hitRate)}%)</span></div>
       </a>`;
   }).join("");
-  if (typeof limitRowsOnPhones === "function") limitRowsOnPhones(list, ".lh-top-row"); // phones: 3 rows + "Show more" (js/moreRows.js)
+  if (typeof limitRowsOnPhones === "function") limitRowsOnPhones(list, ".lh-top-row"); // phones: 3 rows + "Show more" (js/components/moreRows.js)
 }
 
 // The carousel slide's "Coming soon" pill becomes a link to this card once there's data.
@@ -876,7 +876,7 @@ async function loadTopHitRates({ cacheKey, titleDate, getSlate }) {
   }
 }
 
-// Schedule page: called by app.js with the picked day ("2026-10-20") and the games it already downloaded.
+// Schedule page: called by js/pages/app.js with the picked day ("2026-10-20") and the games it already downloaded.
 function showTopHitRatesForDay(day, games) {
   return loadTopHitRates({
     cacheKey: day,
@@ -886,7 +886,7 @@ function showTopHitRatesForDay(day, games) {
 }
 
 // Homepage: the next slate. The card there has data-slate="next".
-// (On the schedule page app.js decides the day, so nothing starts here.)
+// (On the schedule page js/pages/app.js decides the day, so nothing starts here.)
 if (document.querySelector('#top-hit-rates[data-slate="next"]')) {
   loadTopHitRates({ cacheKey: "next", titleDate: null, getSlate: findNextSlate });
 }

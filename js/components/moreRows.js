@@ -1,4 +1,4 @@
-// LineHunter - js/moreRows.js
+// LineHunter - js/components/moreRows.js
 // Phones only (the CSS does the hiding, so desktop and tablet are unchanged): a list shows its first few items by default
 // (3 by default), with a "Show more" button for the rest. limitRowsOnPhones(container, itemSelector, keep) marks the items
 // after the first `keep` and adds the button. The schedule page uses it for the rows of Top Hit Rates / Hot Players (3 rows)

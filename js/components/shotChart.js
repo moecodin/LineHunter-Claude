@@ -1,4 +1,4 @@
-// LineHunter - js/shotChart.js
+// LineHunter - js/components/shotChart.js
 // The "Shot Chart" card on player.html: a half court split into six zones, each colored by the player's
 // FG% against the league average for that zone, plus a "shot diet" bar (share of attempts by zone).
 //
@@ -10,7 +10,7 @@
 //   Zone field prefixes: restricted_area, in_the_paint_(non-ra), mid-range, left_corner_3, right_corner_3, above_the_break_3.
 //   fga / fgm are PER GAME averages and fg_pct is a fraction (0.638). A season with no data comes back as { data: [] }.
 //
-// Needs js/stats.js (bdlGet, bdlGetAllPages, currentSeasonYear).
+// Needs js/core/stats.js (bdlGet, bdlGetAllPages, currentSeasonYear).
 // loadLeagueZones() is global on purpose: the Zone Matchup card reuses it.
 
 const SHOT_SEASON_URL = "/api/bdl/nba/v1/season_averages/shooting";

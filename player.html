@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Theme: applied before anything renders, so there's no flash (default dark; nav.js has the toggle) -->
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; js/components/nav.js has the toggle) -->
   <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
   <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -19,15 +19,15 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link href="styles.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
 </head>
 <body class="lh-tint-cards">
-  <!-- Research mode: applied before anything renders, so there's no flash (nav.js has the switch) -->
+  <!-- Research mode: applied before anything renders, so there's no flash (js/components/nav.js has the switch) -->
   <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
 
   <div id="site-nav"></div>
 
-  <!-- player.html?id=PLAYER_ID&prop=pts. js/player.js fills in every section.
+  <!-- player.html?id=PLAYER_ID&prop=pts. js/pages/player.js fills in every section.
        placeholder-glow / placeholder = Bootstrap's grey loading bars, shown until the data arrives. -->
   <main class="container-fluid lh-container px-3 px-lg-4 my-4">
 
@@ -69,7 +69,7 @@
           <div id="playerWindows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to use"></div>
           <!-- All / Home / Away -->
           <div id="playerSplits" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="Home or away games"></div>
-          <!-- Share the chart as a picture (js/share.js) -->
+          <!-- Share the chart as a picture (js/components/share.js) -->
           <button type="button" id="playerShare" class="btn btn-sm btn-ghost ms-auto lines-only" aria-label="Share this chart as an image" title="Share as image" disabled>
             <i class="bi bi-share" aria-hidden="true"></i> Share
           </button>
@@ -83,7 +83,7 @@
         <!-- Hit rate and average -->
         <div id="playerSummary" class="d-flex gap-4 mb-3"></div>
 
-        <!-- Grey box while loading; then the chart and the alt line − / + control (js/propChart.js) -->
+        <!-- Grey box while loading; then the chart and the alt line − / + control (js/components/propChart.js) -->
         <div id="playerChartSkeleton" class="placeholder-glow" aria-hidden="true">
           <span class="placeholder w-100 rounded lh-chart-skeleton"></span>
         </div>
@@ -140,7 +140,7 @@
     <!-- 6. THREE EQUAL CARDS: With / Without, Opportunity, Role. h-100 = same height; stacked on tablets and phones. -->
     <div class="row g-4 mb-4">
       <div class="col-lg-4">
-    <!-- WITH / WITHOUT: click a teammate chip to cycle neutral -> with -> without. js/player.js fills it in. -->
+    <!-- WITH / WITHOUT: click a teammate chip to cycle neutral -> with -> without. js/pages/player.js fills it in. -->
     <section class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center py-3">
         <span class="lh-label">With / Without</span>
@@ -156,7 +156,7 @@
       </div>
 
       <div class="col-lg-4">
-        <!-- OPPORTUNITY: three numbers for the selected prop tab, filtered games vs the season. js/player.js fills it in. -->
+        <!-- OPPORTUNITY: three numbers for the selected prop tab, filtered games vs the season. js/pages/player.js fills it in. -->
         <section class="card h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
@@ -176,7 +176,7 @@
       </div>
 
       <div class="col-lg-4">
-        <!-- ROLE: minutes or usage % per game, for the same games as the chart above (js/roleChart.js) -->
+        <!-- ROLE: minutes or usage % per game, for the same games as the chart above (js/components/roleChart.js) -->
         <section class="card h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
@@ -211,7 +211,7 @@
         </section>
       </div>
       <div class="col-lg-6">
-        <!-- ZONE MATCHUP: the player's shot zones against an opponent's defense. js/zoneMatchup.js fills it in. -->
+        <!-- ZONE MATCHUP: the player's shot zones against an opponent's defense. js/components/zoneMatchup.js fills it in. -->
         <section class="card h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
@@ -247,7 +247,7 @@
         </div>
       </div>
 
-      <!-- INJURY REPORT: who is hurt on this team and the next opponent. Each name opens its description. js/player.js fills it in. -->
+      <!-- INJURY REPORT: who is hurt on this team and the next opponent. Each name opens its description. js/pages/player.js fills it in. -->
       <div class="card lh-injury-card mt-3">
         <div class="card-header py-3"><div class="lh-label">Injury report</div></div>
         <div id="injuryList" class="lh-injury-list">
@@ -258,7 +258,7 @@
     </div>
   </main>
 
-  <!-- Game summary pop-up: js/player.js fills it when a chart bar is clicked -->
+  <!-- Game summary pop-up: js/pages/player.js fills it when a chart bar is clicked -->
   <div class="modal fade" id="gameModal" tabindex="-1" aria-labelledby="gameModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
@@ -276,17 +276,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
           integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
           crossorigin="anonymous"></script>
-  <!-- ORDER MATTERS: js/stats.js the shared data code,
-       js/propChart.js the shared chart, then js/player.js uses them all -->
-  <script src="api.js"></script>
-  <script src="nav.js"></script>
-  <script src="js/teams.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/propChart.js"></script>
-  <script src="js/roleChart.js"></script>
-  <script src="js/shotChart.js"></script>
-  <script src="js/zoneMatchup.js"></script>
-  <script src="js/share.js"></script>
-  <script src="js/player.js"></script>
+  <!-- ORDER MATTERS: js/core/stats.js the shared data code,
+       js/components/propChart.js the shared chart, then js/pages/player.js uses them all -->
+  <script src="js/core/api.js"></script>
+  <script src="js/components/nav.js"></script>
+  <script src="js/data/teams.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/components/propChart.js"></script>
+  <script src="js/components/roleChart.js"></script>
+  <script src="js/components/shotChart.js"></script>
+  <script src="js/components/zoneMatchup.js"></script>
+  <script src="js/components/share.js"></script>
+  <script src="js/pages/player.js"></script>
 </body>
 </html>

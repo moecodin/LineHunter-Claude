@@ -1,7 +1,7 @@
-// LineHunter - js/bbq.js
+// LineHunter - js/components/bbq.js
 // "BBQ Chicken" (hoops slang for an easy matchup): players on tonight's slate facing one of the 5 weakest defenses for
-// the stat they produce the most of. Shown in both modes: as a card in the Hit List grid (lines mode, js/hit-list.js)
-// and in the Streaks grid (research mode, js/fanCards.js). Both just call fillBbqSlots(slate).
+// the stat they produce the most of. Shown in both modes: as a card in the Hit List grid (lines mode, js/components/hit-list.js)
+// and in the Streaks grid (research mode, js/components/fanCards.js). Both just call fillBbqSlots(slate).
 //
 // How it works:
 //   1. Each team's defense per game for points / rebounds / assists / 3PM allowed, from
@@ -12,7 +12,7 @@
 //   3. If tonight's opponent allows one of the 5 highest numbers in the league for that stat, the player is listed.
 //      Sorted by how bad that opponent's rank is, then by how far above the slate average the player is.
 //
-// Needs js/stats.js, js/top-hit-rates.js (slate.fan) and js/hit-list.js (shortName).
+// Needs js/core/stats.js, js/components/top-hit-rates.js (slate.fan) and js/components/hit-list.js (shortName).
 
 const BBQ_STATS = [
   { code: "pts", label: "PTS", oppField: "opp_pts" },
@@ -62,7 +62,7 @@ async function loadOpponentAllowed(season) {
   return data;
 }
 
-// The listed players for a slate (slate.fan = one entry per player, see js/top-hit-rates.js).
+// The listed players for a slate (slate.fan = one entry per player, see js/components/top-hit-rates.js).
 async function bbqPicksFor(slate) {
   const players = (slate.fan || []).filter((player) => player.oppId !== null && player.oppId !== undefined);
   if (players.length < BBQ_MIN_POOL) return [];

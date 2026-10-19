@@ -1,4 +1,4 @@
-// LineHunter - js/teamCompare.js
+// LineHunter - js/components/teamCompare.js
 // The "Matchup Details" card on game.html: a butterfly chart of the two teams' season numbers. It is always visible
 // (directly under the props / stats card) and only downloads its data when it scrolls into view.
 //
@@ -10,7 +10,7 @@
 //   type=advanced  -> pace, off_rating, def_rating, net_rating
 // A season with no games comes back as { data: [] } (2026 does until games are played).
 //
-// Needs js/stats.js (bdlGetAllPages, currentSeasonYear).
+// Needs js/core/stats.js (bdlGetAllPages, currentSeasonYear).
 
 const TEAM_GENERAL_URL = "/api/bdl/nba/v1/team_season_averages/general";
 const COMPARE_CACHE_MS = 60 * 60 * 1000;
@@ -182,7 +182,7 @@ async function loadTeamComparison(game) {
   }
 }
 
-// Called by game.js once the game is known. The "Matchup Details" card is always visible; its numbers download only
+// Called by js/pages/game.js once the game is known. The "Matchup Details" card is always visible; its numbers download only
 // when it scrolls into view, so the top of the page isn't held up by 90 team numbers nobody has looked at yet.
 function setUpTeamComparison(game) {
   const card = document.getElementById("matchupDetails");

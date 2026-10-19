@@ -1,4 +1,4 @@
-// LineHunter - js/matchupInfo.js
+// LineHunter - js/components/matchupInfo.js
 // The "Matchup Info" card on game.html, next to the game header: arena, coaches, last 5, home / road record,
 // rest days and the last meeting. (Last 5 is drawn under each team's name in the header card.) Away team on the left, home team on the right, labels in the middle.
 //
@@ -10,7 +10,7 @@
 //   Standings: GET /v1/standings?season=2025 -> 30 rows { team: {id, ...}, wins, losses, home_record: "31-9", road_record: "28-13" }
 //              A season with no games comes back as { data: [] }.
 //
-// Needs js/stats.js (bdlGet, bdlGetAllPages) and js/teams.js (TEAM_INFO).
+// Needs js/core/stats.js (bdlGet, bdlGetAllPages) and js/data/teams.js (TEAM_INFO).
 
 const MATCHUP_CACHE_MS = 10 * 60 * 1000;
 const STANDINGS_CACHE_MS = 60 * 60 * 1000;
@@ -163,7 +163,7 @@ function renderMatchupInfo(game, data) {
     }
   }
 
-  // Last 5 sits under each team's name in the game header card (see renderGameHeader in game.js).
+  // Last 5 sits under each team's name in the game header card (see renderGameHeader in js/pages/game.js).
   const formAway = document.getElementById("formAway");
   const formHome = document.getElementById("formHome");
   if (formAway) formAway.innerHTML = lastFiveHtml(data.awayResults === undefined ? null : data.awayResults);

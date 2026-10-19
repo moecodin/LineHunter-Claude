@@ -1,5 +1,5 @@
 /* =========================================================
-   LineHunter - styles.css
+   LineHunter - css/styles.css
    The whole design lives here. Both pages load this file
    AFTER Bootstrap, so anything here wins over Bootstrap.
    ========================================================= */
@@ -11,7 +11,7 @@
 
    [data-bs-theme="dark"] / [data-bs-theme="light"] = the two themes. An early script in every page's <head> sets
    data-bs-theme on <html> from the saved choice (localStorage "lh-theme", default dark) before anything renders, and the
-   toggle in nav.js changes it. Both blocks define the SAME names. The --bs-... lines override Bootstrap's own variables. */
+   toggle in js/components/nav.js changes it. Both blocks define the SAME names. The --bs-... lines override Bootstrap's own variables. */
 :root,
 [data-bs-theme="dark"] {
   /* Our colors */
@@ -45,7 +45,7 @@
   --lh-div-northwest: #22d3ee; --lh-div-pacific: #f472b6;  --lh-div-southwest: #94a3b8;
 
   /* Over / under / push. The darker values are for bars, fills and outlines; the lighter "-text"
-     values are for text and icons on the dark background. Used by the CSS below AND by the Chart.js bars (js/propChart.js). */
+     values are for text and icons on the dark background. Used by the CSS below AND by the Chart.js bars (js/components/propChart.js). */
   --lh-over: #1D9E75;               /* teal: over / hit */
   --lh-over-text: #5DCAA5;
   --lh-under: #D85A30;              /* coral: under / miss */
@@ -299,7 +299,7 @@ html {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* The logo: the inlined lockup (nav.js lhLockupHtml). Letters are currentColor = --lh-logo-ink; the mark keeps its own colors. */
+/* The logo: the inlined lockup (js/components/nav.js lhLockupHtml). Letters are currentColor = --lh-logo-ink; the mark keeps its own colors. */
 .lh-brand {
   display: inline-flex;
   align-items: center;
@@ -1658,7 +1658,7 @@ a.lh-top-row:focus-visible {
 }
 
 
-/* Navbar player search (built in nav.js) */
+/* Navbar player search (built in js/components/nav.js) */
 .lh-search {
   position: relative;
   flex: 1 1 auto;
@@ -2026,7 +2026,7 @@ h3.lh-display,
 }
 
 
-/* ---------- Responsible gaming footer (added to every page by nav.js) ---------- */
+/* ---------- Responsible gaming footer (added to every page by js/components/nav.js) ---------- */
 
 /* Short pages (the placeholders) still push the footer toward the bottom of the screen */
 body > main {
@@ -2795,7 +2795,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 /* ---------- Team colors ---------- */
 
 /* Matchup cards (a schedule game card, the game page header): a faint tint of each team's color, split by a thin diagonal
-   slash, plus a soft glow of each team's color along its own side. --away / --home are "r, g, b" set by js/teams.js. */
+   slash, plus a soft glow of each team's color along its own side. --away / --home are "r, g, b" set by js/data/teams.js. */
 .lh-team-card {
   isolation: isolate; /* the tint below sits behind the card's content but above its background */
   box-shadow: -10px 0 24px -18px rgba(var(--away), calc(0.28 * var(--lh-glow-k))), 10px 0 24px -18px rgba(var(--home), calc(0.28 * var(--lh-glow-k)));
@@ -2819,7 +2819,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 
 /* The team abbreviation next to a player's name: plain display-font letters in a softened team color with a 2px team-color underline
    (no pill, no fill). --tc = the team color as "r, g, b" (already lightened if it is very dark, e.g. BKN or SAS, and the away
-   team's secondary color where the clash rule applies); --tc-text = that color brightened for text. js/teams.js sets both. */
+   team's secondary color where the clash rule applies); --tc-text = that color brightened for text. js/data/teams.js sets both. */
 .lh-team-badge {
   display: inline-block;
   font-family: var(--lh-font-display); /* Barlow Condensed, like the team abbreviations on the matchup cards */
@@ -2840,7 +2840,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-ww-avatar { border: 1px solid transparent; }
 
 
-/* City watermarks: each team's word runs vertically along its own outer edge of a matchup card (js/teams.js, addCityWatermarks).
+/* City watermarks: each team's word runs vertically along its own outer edge of a matchup card (js/data/teams.js, addCityWatermarks).
    Away = left edge (reads bottom to top), home = right edge (reads top to bottom). The card keeps 3.25rem of side padding,
    so the word never sits under the team name text. */
 .lh-team-card.has-city-marks { overflow: hidden; }
@@ -2867,7 +2867,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-city-mark.is-home { right: 0; }
 .lh-city-text {
   font-family: "Comico", sans-serif;
-  font-size: 24px;           /* js/teams.js refits it so the whole word fits the card height */
+  font-size: 24px;           /* js/data/teams.js refits it so the whole word fits the card height */
   line-height: 1;
   letter-spacing: 0.04em;
   white-space: pre;          /* keep the spaces in "MOTOR CITY" */
@@ -2885,7 +2885,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 
 
 /* ---------- Logo shine: a soft light band sweeps across the inlined lockup on page load ----------
-   The band is a gradient rect inside the SVG, clipped to the mark and the letters (see lhLockupHtml in nav.js), so it only lights
+   The band is a gradient rect inside the SVG, clipped to the mark and the letters (see lhLockupHtml in js/components/nav.js), so it only lights
    the logo's own shapes. 3 sweeps of 1s with 1.5s between them (one 2.5s cycle: sweep in the first 40%, then it waits off the
    right edge), then it stops. Hidden for reduced motion. */
 .lh-logo-band {
@@ -2905,7 +2905,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 
 /* ---------- Schedule page on phones (under 576px). Desktop and tablet are not touched by anything below. ---------- */
 
-/* "Show more" under a list that js/moreRows.js limits to 3 rows on phones; the link itself only exists on phones */
+/* "Show more" under a list that js/components/moreRows.js limits to 3 rows on phones; the link itself only exists on phones */
 .lh-more-link { display: none; }
 @media (max-width: 575.98px) {
   .lh-schedule-page { overflow-x: clip; } /* nothing here may scroll the whole page sideways */
@@ -3019,7 +3019,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 
 
-/* ---------- Phone bottom tab bar (under 768px; nav.js builds it) ----------
+/* ---------- Phone bottom tab bar (under 768px; js/components/nav.js builds it) ----------
    Fixed to the bottom: Today, Hit List, Search, Players, More. "Search" and "More" open bottom sheets. The top bar keeps just
    the logo. Desktop and tablet never show any of this. */
 .lh-tabbar { display: none; }
@@ -3129,7 +3129,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 
 /* ---------- Matchup card abbreviations (BOS, DET...): one gray shade each, a set per theme, no inline styles ----------
-   The shade (0 = strongest) is picked by api.js (getNeutralTeamIndex). Dark: white to gray with a soft white glow and a hairline
+   The shade (0 = strongest) is picked by js/core/api.js (getNeutralTeamIndex). Dark: white to gray with a soft white glow and a hairline
    stroke. Light: near-black to gray, no glow. */
 .lh-abbr {
   text-shadow: 0 0 1px rgba(var(--lh-ink-rgb), 0.8), 0 0 12px rgba(var(--lh-ink-rgb), 0.12);
@@ -3206,7 +3206,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 /* City watermark shine: a soft band of light sweeps along each word. The same technique as .lh-shine (a copy of the text,
    clipped to the letters, with a moving gradient), but along the vertical word and in a tint of the team color: a lighter tint
    on the dark theme, the team color itself (a bit stronger) on the light theme. One sweep takes 2s (slow enough to follow), then it rests 3s
-   (a 5s cycle: the sweep is the first 40%), repeating while the card is on screen (.is-shining, set in js/teams.js).
+   (a 5s cycle: the sweep is the first 40%), repeating while the card is on screen (.is-shining, set in js/data/teams.js).
    The home word starts 0.3s after the away word. The word itself never changes. */
 .lh-city-mark.is-away { --city-rgb: var(--away); }
 .lh-city-mark.is-home { --city-rgb: var(--home); }
@@ -3638,7 +3638,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 
 
-/* ---------- Standings page (standings.html, js/standings.js) ---------- */
+/* ---------- Standings page (standings.html, js/pages/standings.js) ---------- */
 .lh-div-dot {
   display: inline-block;
   flex: none;

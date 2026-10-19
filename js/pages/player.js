@@ -1,9 +1,9 @@
-// LineHunter - js/player.js
+// LineHunter - js/pages/player.js
 // The player page: player.html?id=PLAYER_ID&prop=pts
 //   1. Back link   2. Header with injury badge and next game   3. Season averages
 //   4. Prop chart with tabs, L5/L10/L20/Season, All/Home/Away and the alt line   5. Game log table
 //
-// Uses js/stats.js (data, hit rates) and js/propChart.js (the chart, shared with the game page's drawer).
+// Uses js/core/stats.js (data, hit rates) and js/components/propChart.js (the chart, shared with the game page's drawer).
 
 const playerParams = new URLSearchParams(window.location.search);
 const playerId = Number(playerParams.get("id")) || null; // Number("") is 0, so || null = "none"
@@ -22,7 +22,7 @@ const PROP_TO_COLUMN = { points: "pts", rebounds: "reb", assists: "ast", threes:
 
 // What the prop section shows. ?prop=pts in the address picks the starting tab.
 const pageState = {
-  propType: PROP_CODES[playerParams.get("prop")] || "points", // "pts" -> "points" (js/stats.js)
+  propType: PROP_CODES[playerParams.get("prop")] || "points", // "pts" -> "points" (js/core/stats.js)
   windowSize: 10,
   split: "all",
   roleMetric: "minutes", // the Role card: "minutes" or "usage"
@@ -43,10 +43,10 @@ let teammates = null;           // the top 8 teammates by minutes (see loadTeamm
 let sideTab = "team";           // "team" or "opponent"
 let linesByProp = {};           // linesByProp.points = that prop's line for the next game
 
-// The small Role chart under it (js/roleChart.js).
+// The small Role chart under it (js/components/roleChart.js).
 const roleChart = createRoleChart(document.getElementById("roleChart"), { height: 160 });
 
-// The shared chart (js/propChart.js). − / + / Reset redraw the hit rate, chart and game log.
+// The shared chart (js/components/propChart.js). − / + / Reset redraw the hit rate, chart and game log.
 const playerChart = createPropChart(document.getElementById("playerChart"), {
   height: 240,
   maxBarWidth: 56,
@@ -580,10 +580,10 @@ function renderProps() {
 
   const tab = CHART_STAT_TABS.find((option) => option.propType === pageState.propType);
   // The number games are scored against: the alt line / book line (lines mode), or the milestone minus 0.5 (research
-  // mode, where "25+" means >= 25: see lineForScoring in js/propChart.js).
+  // mode, where "25+" means >= 25: see lineForScoring in js/components/propChart.js).
   const line = lineForScoring(playerChart.activeLine());
 
-  // The games in this window and split, newest first (pickWindowLogs in js/stats.js),
+  // The games in this window and split, newest first (pickWindowLogs in js/core/stats.js),
   // scored against the line. The table below uses the very same games.
   const games = pickWindowLogs(splitLogs(playerLogs, pageState.split), pageState.windowSize, usingCurrentSeason);
   const result = calculateHitRate(games, tab.stat, line ?? 0, "all");
@@ -649,7 +649,7 @@ function renderProps() {
 // ---------- With / Without teammates ----------
 //
 // How a game is counted for a teammate chip:
-//   PLAYED     = the teammate has a stat line in that game with minutes above 0 (playedInGame, js/stats.js),
+//   PLAYED     = the teammate has a stat line in that game with minutes above 0 (playedInGame, js/core/stats.js),
 //                and that line is for the SAME team as our player's line in that game.
 //   WITH       = the teammate PLAYED in the game.
 //   WITHOUT    = the teammate was on the team at that time but did NOT play (no line, or 0 minutes).
@@ -1158,7 +1158,7 @@ async function loadPlayerPage() {
     player = playerJson.data;
 
     // 2. Everything else at the same time: injuries, next game + lines, and game logs
-    //    (this season, plus last season if fewer than 20 games: loadPlayerGameLogs in js/stats.js).
+    //    (this season, plus last season if fewer than 20 games: loadPlayerGameLogs in js/core/stats.js).
     //    The injury and next game are extras: if they fail, the page still works without them.
     const [injuries, , loaded] = await Promise.all([
       bdlGet(`${BDL_BASE}/player_injuries?player_ids[]=${playerId}`).then((json) => json.data).catch(() => []),
@@ -1171,7 +1171,7 @@ async function loadPlayerPage() {
 
     renderHeader(injuries[0] || null);
     renderSidePlayers();
-    // The Shot Chart is season-level (js/shotChart.js): it loads on its own and ignores the filters.
+    // The Shot Chart is season-level (js/components/shotChart.js): it loads on its own and ignores the filters.
     // Then the Zone Matchup card, which reuses the Shot Chart's numbers. Opponent = the next game's other team.
     const opponentId = nextGame && player.team
       ? (nextGame.home_team.id === player.team.id ? nextGame.visitor_team.id : nextGame.home_team.id)
@@ -1214,5 +1214,5 @@ document.getElementById("playerBack").addEventListener("click", (event) => {
 
 loadPlayerPage();
 
-// Research mode switched on or off (nav.js): redraw what depends on it (the chart's line, the With / Without text).
+// Research mode switched on or off (js/components/nav.js): redraw what depends on it (the chart's line, the With / Without text).
 document.addEventListener("lh-mode-change", () => renderProps());

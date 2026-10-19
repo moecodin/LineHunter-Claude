@@ -1,8 +1,8 @@
-// LineHunter - game.js
+// LineHunter - js/pages/game.js
 // The page for ONE game: the matchup at the top, then every player prop line for that game.
 // The game comes from the address bar: game.html?id=12345
 // A link can also open one player's drawer right away: game.html?id=12345&player=237&prop=pts
-// The shared stats code (requests, game logs, hit rates) lives in js/stats.js.
+// The shared stats code (requests, game logs, hit rates) lives in js/core/stats.js.
 
 let allLines = [];       // every line for this game, cleaned up and with player names added
 let playersById = {};    // EVERY player in this game (both rosters), with or without a line: playersById[237] = { playerId, playerName, fullName, team, position }
@@ -14,7 +14,7 @@ let gameLogsByPlayer = {};
 let statsLoading = true;         // true until loadPlayerStats() finishes: the table shows placeholders
 let showingCurrentSeason = true; // false when nobody has played this season yet: "Season" then means last season
 
-// The table's L5 / L10 / L20 / Season choice (the buttons come from js/propChart.js).
+// The table's L5 / L10 / L20 / Season choice (the buttons come from js/components/propChart.js).
 let selectedWindow = 10; // the table's window; the drawer starts on the same one
 
 // Which column the table is sorted by ("hitRate" or "average"), and which way.
@@ -32,7 +32,7 @@ const linkedPropType = PROP_CODES[pageParams.get("prop")] || null; // "pts" -> "
 
 // ---------- Helpers ----------
 
-// Same idea as in app.js: tip-off time, live score, or final score.
+// Same idea as in js/pages/app.js: tip-off time, live score, or final score.
 function describeTime(game) {
   if (game.status === "Final") {
     return `Final: ${game.visitor_team_score} - ${game.home_team_score}`;
@@ -46,7 +46,7 @@ function describeTime(game) {
   });
 }
 
-// One player's games for a window, scored against a line (hitRateForWindow in js/stats.js).
+// One player's games for a window, scored against a line (hitRateForWindow in js/core/stats.js).
 // Used by the table and the drawer, so both always agree.
 function windowResult(playerId, stat, line, windowSize) {
   return hitRateForWindow(gameLogsByPlayer[playerId], stat, line, windowSize, showingCurrentSeason);
@@ -162,7 +162,7 @@ function renderGameHeader(game) {
   currentGame = game;
   document.title = `${game.visitor_team.abbreviation} @ ${game.home_team.abbreviation} · LineHunter`;
 
-  // lh-label / lh-display / display-3 = our label font and big condensed font (styles.css)
+  // lh-label / lh-display / display-3 = our label font and big condensed font (css/styles.css)
   const visitorShade = getNeutralTeamIndex(game.visitor_team.abbreviation); // which gray (.lh-abbr-N, one set per theme)
   const homeShade = getNeutralTeamIndex(game.home_team.abbreviation);
 
@@ -403,7 +403,7 @@ function renderTable() {
   rows.forEach(({ player, line, result }) => {
     const row = document.createElement("tr");
 
-    // Clicking the row opens the player drawer (player-drawer.js).
+    // Clicking the row opens the player drawer (js/components/player-drawer.js).
     // tabindex="0" lets keyboard users reach the row with Tab and open it with Enter.
     row.className = "lh-clickable-row";
     row.tabIndex = 0;
@@ -443,7 +443,7 @@ function renderTable() {
 
 // ---------- Loading everything ----------
 
-// Download game logs for every player in the table, once (loadPlayerGameLogs in js/stats.js:
+// Download game logs for every player in the table, once (loadPlayerGameLogs in js/core/stats.js:
 // many players per request, plus last season for anyone short on games this season).
 // Switching tabs or windows afterwards needs no new requests: everything re-reads these logs.
 async function loadPlayerStats(playerIds) {
@@ -476,9 +476,9 @@ async function loadPage() {
     const gameJson = await bdlGet(`${BDL_BASE}/games/${gameId}`);
     const game = gameJson.data;
     renderGameHeader(game);
-    setUpTeamComparison(game); // the Team Comparison panel (js/teamCompare.js): closed unless the visitor left it open
-    loadGameInjuries(game); // the Injury report card beside it (js/gameInjuries.js)
-    loadMatchupInfo(game); // the Matchup Info card next to it (js/matchupInfo.js): loads on its own and never blocks the table
+    setUpTeamComparison(game); // the Team Comparison panel (js/components/teamCompare.js): closed unless the visitor left it open
+    loadGameInjuries(game); // the Injury report card beside it (js/components/gameInjuries.js)
+    loadMatchupInfo(game); // the Matchup Info card next to it (js/components/matchupInfo.js): loads on its own and never blocks the table
 
     // 2. Every prop line for this game (from every sportsbook), and both teams' active players, at the same time.
     //    The roster is how we show players the books haven't posted a line for yet. If it fails, we still show the lines.
@@ -491,7 +491,7 @@ async function loadPage() {
       }),
     ]);
 
-    // 3. Keep ONE over/under line per player per prop type (pickOneLinePerPlayer in js/stats.js).
+    // 3. Keep ONE over/under line per player per prop type (pickOneLinePerPlayer in js/core/stats.js).
     const chosen = pickOneLinePerPlayer(propsJson.data);
 
     // 4. Everyone in the game: the rosters, plus anyone with a line who isn't on them (a just-traded player).
@@ -554,7 +554,7 @@ async function loadPage() {
 
 loadPage();
 
-// Research mode switched on or off (nav.js): the Hit % column appears or disappears, so move the sort off (or back to) it.
+// Research mode switched on or off (js/components/nav.js): the Hit % column appears or disappears, so move the sort off (or back to) it.
 document.addEventListener("lh-mode-change", () => {
   if (isResearchMode() && sortKey === "hitRate") { sortKey = "average"; sortDescending = true; }
   if (!isResearchMode() && sortKey === "average") { sortKey = "hitRate"; sortDescending = true; }

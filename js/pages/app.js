@@ -1,4 +1,4 @@
-// LineHunter - app.js
+// LineHunter - js/pages/app.js
 // Loads NBA games for a chosen day from the BALLDONTLIE API and shows each one as a card.
 
 // The address every request starts with.
@@ -99,7 +99,7 @@ document.getElementById("gamesNext").addEventListener("click", () => scrollGames
 document.getElementById("games-list").addEventListener("scroll", updateGamesCarousel, { passive: true });
 window.addEventListener("resize", updateGamesCarousel);
 
-// Add one tab to the date pager (same underline tabs as the rest of the site: lh-tabs in styles.css).
+// Add one tab to the date pager (same underline tabs as the rest of the site: lh-tabs in css/styles.css).
 // When clicked, it makes "date" the selected day and loads that day's games.
 // extraClass is optional: extra Bootstrap classes for this one tab.
 // ariaLabel is optional: what screen readers say instead of the text (for the ‹ › arrows).
@@ -187,7 +187,7 @@ async function loadGames() {
     // the newer click's loadGames() will draw its own day, so stop here.
     if (day !== toApiDate(selectedDate)) return;
 
-    // The Top Hit Rates card under the games follows the same day (js/top-hit-rates.js).
+    // The Top Hit Rates card under the games follows the same day (js/components/top-hit-rates.js).
     showTopHitRatesForDay(day, games);
 
     if (games.length === 0) {
@@ -205,7 +205,7 @@ async function loadGames() {
 
     // forEach can also give us the position (index) of each game: 0, 1, 2, 3...
     games.forEach((game, index) => {
-      // One slide per game. styles.css sizes them: 3 per page on desktop, 2 on tablets, 1 on phones.
+      // One slide per game. css/styles.css sizes them: 3 per page on desktop, 2 on tablets, 1 on phones.
       const col = document.createElement("div");
       col.className = "lh-game-slot";
 
@@ -215,7 +215,7 @@ async function loadGames() {
 
       // The card's HTML, written as a template string so ${...} fills in the game's data.
       // The whole card is a link (<a>) to that game's page: game.html?id=12345
-      // game-card + shade-N = our blue gradient (styles.css). h-100 = same height in a row.
+      // game-card + shade-N = our blue gradient (css/styles.css). h-100 = same height in a row.
       // text-reset + text-decoration-none = keep normal text colors, no underline.
   const visitorShade = getNeutralTeamIndex(game.visitor_team.abbreviation); // which gray (.lh-abbr-N, one set per theme)
   const homeShade = getNeutralTeamIndex(game.home_team.abbreviation);
@@ -248,7 +248,7 @@ async function loadGames() {
           <a href="game.html?id=${game.id}" class="card-footer lh-label text-accent text-center py-2 text-decoration-none stretched-link">View <span class="lines-only">props</span><span class="research-only">stats</span> ›</a>
         </div>
       `;
-      // Team colors: the slash tint and edge glows (js/teams.js, styles.css .lh-team-card)
+      // Team colors: the slash tint and edge glows (js/data/teams.js, css/styles.css .lh-team-card)
       applyMatchupColors(col.querySelector(".game-card"), game.visitor_team.abbreviation, game.home_team.abbreviation);
       setUpQuickLook(col, game);
 

@@ -1,4 +1,4 @@
-// LineHunter - js/zoneMatchup.js
+// LineHunter - js/components/zoneMatchup.js
 // The "Zone Matchup" card on player.html: where the player shoots, against how an opponent defends each zone.
 //
 // Real API shape (checked against a live response):
@@ -10,7 +10,7 @@
 //   "opp" = the shots OTHER teams take against that team, so opp_fg_pct is the FG% the team ALLOWS.
 //   A season with no data comes back as { data: [] } (2026 does until games are played).
 //
-// Reuses from js/shotChart.js: the player's by_zone numbers and the cached league averages (passed in as shotData),
+// Reuses from js/components/shotChart.js: the player's by_zone numbers and the cached league averages (passed in as shotData),
 // plus readShotCache / writeShotCache / SHOT_CACHE_MS / SHOT_NEUTRAL_POINTS / percentText.
 
 // The matchup has five rows: the two corners are combined into one. "parts" = which Shot Chart zones feed the player's share.

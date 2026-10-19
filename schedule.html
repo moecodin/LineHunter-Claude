@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Theme: applied before anything renders, so there's no flash (default dark; nav.js has the toggle) -->
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; js/components/nav.js has the toggle) -->
   <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
   <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -25,11 +25,11 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <!-- OUR design. Loaded after Bootstrap so our rules win. -->
-  <link href="styles.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
 </head>
 
 <body>
-  <!-- Research mode: applied before anything renders, so there's no flash (nav.js has the switch) -->
+  <!-- Research mode: applied before anything renders, so there's no flash (js/components/nav.js has the switch) -->
   <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
 
   <div id="site-nav"></div>
@@ -51,23 +51,23 @@
          justify-content-between = push the two parts to opposite sides. gap-3 = space between. -->
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
       <div>
-        <!-- lh-label = tiny techy caps text (styles.css) -->
+        <!-- lh-label = tiny techy caps text (css/styles.css) -->
         <div class="lh-label mb-1">NBA · <span class="text-accent">Schedule</span></div>
         <!-- lh-display = big condensed font. JavaScript changes the text inside the span. -->
         <h2 id="games" class="lh-display display-6 mb-0">Games <span id="games-date-label" class="text-accent">Today</span></h2>
       </div>
 
       <!-- DATE PAGER: the same underline tabs as the rest of the site (nav-underline + lh-tabs).
-           app.js fills in the tabs. lh-date-tabs = a little tighter, so five days fit. -->
+           js/pages/app.js fills in the tabs. lh-date-tabs = a little tighter, so five days fit. -->
       <nav aria-label="Choose a date">
         <ul id="date-pager" class="nav nav-underline lh-tabs lh-date-tabs mb-0"></ul>
       </nav>
     </div>
 
     <!-- row = a Bootstrap grid row. g-3 = gap between cards. mb-5 = space below.
-         The id stays "games-list" so app.js can still find it. -->
+         The id stays "games-list" so js/pages/app.js can still find it. -->
     <!-- GAMES CAROUSEL: 3 cards per page on desktop (2 on tablets, 1 on phones). The ‹ › buttons page through
-         the rest. app.js fills #games-list and sets up the buttons and the "1-3 of 8" counter. -->
+         the rest. js/pages/app.js fills #games-list and sets up the buttons and the "1-3 of 8" counter. -->
     <div class="lh-games-carousel mb-5">
       <button type="button" id="gamesPrev" class="lh-games-nav lh-games-prev" aria-label="Previous games" hidden>
         <i class="bi bi-chevron-left" aria-hidden="true"></i>
@@ -81,11 +81,11 @@
       <div id="gamesCount" class="lh-label text-center mt-2" aria-live="polite" hidden></div>
     </div>
 
-    <!-- Player search: nav.js puts the search bar here instead of in the navbar -->
+    <!-- Player search: js/components/nav.js puts the search bar here instead of in the navbar -->
     <div id="lh-search-slot" class="lh-search-slot mb-3"></div>
 
     <!-- HIT LIST (lines mode) / STREAKS (research mode): a horizontal shelf of category cards, full width. Only the shelf
-         scrolls sideways; the arrows (desktop) move it one card. js/hit-list.js and js/fanCards.js draw the cards. -->
+         scrolls sideways; the arrows (desktop) move it one card. js/components/hit-list.js and js/components/fanCards.js draw the cards. -->
     <section id="hitlist" class="lh-shelf mb-5 lines-only">
       <div class="lh-shelf-head">
         <div>
@@ -130,7 +130,7 @@
       <div class="small text-muted mt-2">Based on past results.</div>
     </section>
 
-    <!-- TOP HIT RATES (lines mode) / HOT PLAYERS (research mode): full width, below the shelf. js/top-hit-rates.js and js/fanCards.js fill them in. -->
+    <!-- TOP HIT RATES (lines mode) / HOT PLAYERS (research mode): full width, below the shelf. js/components/top-hit-rates.js and js/components/fanCards.js fill them in. -->
     <div id="top-hit-rates" class="card lh-top-compact lines-only mb-5">
       <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
         <div>
@@ -166,21 +166,21 @@
   <!-- Bootstrap's JavaScript: makes interactive parts work (drawers, dropdowns, modals) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- ORDER MATTERS: api.js provides shared constants, nav.js injects the drawer, the shared code in js/stats.js talks to the /api/bdl proxy (no API key in the browser),
-       js/stats.js + js/top-hit-rates.js provide the hit rates card, then app.js uses them all -->
-  <script src="api.js"></script>
-  <script src="nav.js"></script>
-  <script src="js/teams.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/moreRows.js"></script>
-  <script src="js/shelf.js"></script>
-  <script src="js/share.js"></script>
-  <script src="js/top-hit-rates.js"></script>
-  <script src="js/hit-list.js"></script>
-  <script src="js/bbq.js"></script>
-  <script src="js/brickCity.js"></script>
-  <script src="js/fanCards.js"></script>
-  <script src="js/quickLook.js"></script>
-  <script src="app.js"></script>
+  <!-- ORDER MATTERS: js/core/api.js provides shared constants, js/components/nav.js injects the drawer, the shared code in js/core/stats.js talks to the /api/bdl proxy (no API key in the browser),
+       js/core/stats.js + js/components/top-hit-rates.js provide the hit rates card, then js/pages/app.js uses them all -->
+  <script src="js/core/api.js"></script>
+  <script src="js/components/nav.js"></script>
+  <script src="js/data/teams.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/components/moreRows.js"></script>
+  <script src="js/components/shelf.js"></script>
+  <script src="js/components/share.js"></script>
+  <script src="js/components/top-hit-rates.js"></script>
+  <script src="js/components/hit-list.js"></script>
+  <script src="js/components/bbq.js"></script>
+  <script src="js/components/brickCity.js"></script>
+  <script src="js/components/fanCards.js"></script>
+  <script src="js/components/quickLook.js"></script>
+  <script src="js/pages/app.js"></script>
 </body>
 </html>

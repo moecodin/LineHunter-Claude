@@ -1,4 +1,4 @@
-// LineHunter - js/stats.js
+// LineHunter - js/core/stats.js
 // Shared stats code for every page that shows hit rates (the homepage and game.html).
 // Data only, no page drawing, except miniGraph() at the bottom, which builds a small piece of HTML.
 //
@@ -13,7 +13,7 @@
 //
 // Every request goes to /api/bdl/... (netlify/functions/bdl.js), which adds the API key on the server. No key lives in the browser.
 
-// Named differently from API_BASE in app.js, so this file can sit on the same page without a name clash.
+// Named differently from API_BASE in js/pages/app.js, so this file can sit on the same page without a name clash.
 const BDL_BASE = "/api/bdl/v1";
 const PROPS_URL = "/api/bdl/nba/v2/odds/player_props";
 
@@ -207,7 +207,7 @@ function statValue(log, stat) {
     .reduce((sum, key) => sum + (log[key] ?? 0), 0); // ?? 0 = use 0 if the number is missing
 }
 
-// Every game ONE player played in a season, newest first. (Used by hitrate-test.html.)
+// Every game ONE player played in a season, newest first. (Used by dev/hitrate-test.html.)
 async function fetchPlayerGameLogs(playerId, season = currentSeasonYear() - 1) {
   // Ask for the team list at the same time as the stats, instead of waiting for one then the other.
   const [logs, teams] = await Promise.all([
@@ -379,7 +379,7 @@ function formatStatValue(value) {
 
 // ---------- Mini bar graph (shared HTML) ----------
 
-// One plain <span> per game, oldest on the left. Needs the .lh-mini-graph styles in styles.css.
+// One plain <span> per game, oldest on the left. Needs the .lh-mini-graph styles in css/styles.css.
 // Each bar's height is a percent of this player's best game in the window, so the tallest bar fills the box.
 // games = calculateHitRate(...).games (newest first), or anything with { value, overUnder }.
 function miniGraph(games) {

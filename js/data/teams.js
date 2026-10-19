@@ -1,4 +1,4 @@
-// LineHunter - js/teams.js
+// LineHunter - js/data/teams.js
 // Static facts about each team, keyed by the abbreviation the API uses: { arena, city, coach, colors: { primary, secondary }, watermark }. (city = the ARENA's city; watermark = the word drawn behind a matchup card, e.g. "PHILLY".)
 // city = the city of the ARENA (the Clippers play in Inglewood, the Warriors in San Francisco).
 //
@@ -169,7 +169,7 @@ function teamDisplayColor(abbreviation, awayAbbreviation, homeAbbreviation) {
   return ensureContrast(teamBaseColor(abbreviation));
 }
 
-// Sets --away / --home on a card and adds the class that draws the slash tint and the edge glows (styles.css).
+// Sets --away / --home on a card and adds the class that draws the slash tint and the edge glows (css/styles.css).
 function applyMatchupColors(element, awayAbbreviation, homeAbbreviation) {
   const colors = matchupColors(awayAbbreviation, homeAbbreviation);
   element.classList.add("lh-team-card");
@@ -183,7 +183,7 @@ function applyMatchupColors(element, awayAbbreviation, homeAbbreviation) {
 // ---------- City watermarks ----------
 // Each team's word (TEAM_INFO[abbreviation].watermark) runs VERTICALLY along its own outer edge of a matchup card: the away
 // team on the left edge (reading bottom to top), the home team on the right edge (reading top to bottom), centered, in the
-// team's matchup color at low opacity (styles.css, .lh-city-mark). The word is always fully visible and still. It is sized so
+// team's matchup color at low opacity (css/styles.css, .lh-city-mark). The word is always fully visible and still. It is sized so
 // the whole word fits the card height. While the card is on screen a soft band of light sweeps along each word (CSS only,
 // switched on by the class "is-shining" below; the home word starts 0.3s after the away word).
 const CITY_MAX_FONT = 40;     // px: the strip beside the card text is 3.25rem wide, so the letters stay inside it

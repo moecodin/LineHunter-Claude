@@ -1,10 +1,10 @@
-// LineHunter - js/hit-list.js
+// LineHunter - js/components/hit-list.js
 // The "Hit List" card on the schedule page: a grid of six small cards, each a slip of 3-5 legs for the
 // same slate as Top Hit Rates ("Props that hit in 100% of recent games").
-// It uses no downloads of its own: js/top-hit-rates.js builds one "leg" per line (buildHitListLeg) and
+// It uses no downloads of its own: js/components/top-hit-rates.js builds one "leg" per line (buildHitListLeg) and
 // calls showHitList(slate) with them, so the Hit List shares its logs and its 10-minute cache.
 //
-// Needs js/stats.js (formatOdds), js/share.js and js/top-hit-rates.js loaded first.
+// Needs js/core/stats.js (formatOdds), js/components/share.js and js/components/top-hit-rates.js loaded first.
 
 const SLIP_MIN_LEGS = 3;
 const SLIP_MAX_LEGS = 5;
@@ -72,12 +72,12 @@ const HITLIST_CATEGORIES = [
   },
   {
     key: "bbq",
-    bbq: true, // drawn by js/bbq.js: a full-width card, no slip and no combined odds
+    bbq: true, // drawn by js/components/bbq.js: a full-width card, no slip and no combined odds
     label: "BBQ Chicken 🍗",
   },
   {
     key: "brick",
-    brick: true, // drawn by js/brickCity.js: no slip and no combined odds
+    brick: true, // drawn by js/components/brickCity.js: no slip and no combined odds
     label: "Brick City",
   },
 ];
@@ -211,8 +211,8 @@ function cardTopHtml(category, slip, shareButton) {
 
 // One small category card, with its own "Combined odds" link and share button.
 function categoryHtml(category, slip) {
-  if (category.bbq) return bbqCardHtml(); // js/bbq.js
-  if (category.brick) return brickCityCardHtml(hitListSlate); // js/brickCity.js
+  if (category.bbq) return bbqCardHtml(); // js/components/bbq.js
+  if (category.brick) return brickCityCardHtml(hitListSlate); // js/components/brickCity.js
   const foot = slip && !category.noOdds
     ? `<div class="lh-hitlist-foot">
          <button type="button" class="lh-hitlist-link" data-hitlist-odds="${category.key}" aria-expanded="false">Combined odds</button>
@@ -236,7 +236,7 @@ function renderHitList() {
 
   const slips = HITLIST_CATEGORIES.map((category) => ({ category, slip: category.bbq || category.brick ? null : buildSlip(category, hitListSlate) }));
   body.innerHTML = `<div class="lh-shelf-track" id="hitlistShelf">${slips.map(({ category, slip }) => categoryHtml(category, slip)).join("")}</div>`;
-  refreshShelf("#hitlistShelf"); // js/shelf.js: back to the first card, arrows up to date
+  refreshShelf("#hitlistShelf"); // js/components/shelf.js: back to the first card, arrows up to date
   fillBbqSlots(hitListSlate); // the BBQ Chicken card downloads its own (cached) defense numbers
 
   // The share icon turns the card into a picture (see "Share as an image" below).
@@ -261,7 +261,7 @@ function renderHitList() {
 
 // ---------- Share as an image ----------
 // A clean copy of the card (site styles, logo, date, responsible-gambling note) goes through
-// shareNodeAsImage in js/share.js: the phone's share sheet, or a PNG download on desktop.
+// shareNodeAsImage in js/components/share.js: the phone's share sheet, or a PNG download on desktop.
 
 function shareCategory(category, slip, button) {
   const dateText = new Date(`${hitListSlate.date}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
@@ -276,7 +276,7 @@ function shareCategory(category, slip, button) {
   });
 }
 
-// ---------- Called by js/top-hit-rates.js ----------
+// ---------- Called by js/components/top-hit-rates.js ----------
 
 function showHitList(slate) {
   if (!document.getElementById("hitlist")) return;

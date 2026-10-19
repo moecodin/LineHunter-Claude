@@ -1,6 +1,6 @@
-// LineHunter - js/standings.js
+// LineHunter - js/pages/standings.js
 // The Standings page (standings.html): East and West, as a Conference view (ranked lists with the play-in line) or a
-// Division view (small cards). Needs js/stats.js (BDL_BASE, bdlGet, bdlGetAllPages, currentSeasonYear).
+// Division view (small cards). Needs js/core/stats.js (BDL_BASE, bdlGet, bdlGetAllPages, currentSeasonYear).
 //
 // Data:
 //   Standings: GET /v1/standings?season=2025 -> 30 rows { team: { id, full_name, abbreviation, conference, division }, wins, losses,

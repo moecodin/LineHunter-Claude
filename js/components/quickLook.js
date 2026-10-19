@@ -1,4 +1,4 @@
-// LineHunter - js/quickLook.js
+// LineHunter - js/components/quickLook.js
 // The "Quick look" toggle on each game card of the schedule page. Opening it shows, for that game:
 //   - the spread and total (the first book that posts both),
 //   - who is on each team's injury report (names and status),
@@ -11,7 +11,7 @@
 //              (strings; a book may have null for the total or the spread)
 //   Injuries:  GET /v1/player_injuries?team_ids[]=2&team_ids[]=9&per_page=100 -> data[] { player: { team_id, ... }, status, ... }
 //
-// Needs js/stats.js, js/top-hit-rates.js (readTopCache, topSlate) and js/hit-list.js (shortName).
+// Needs js/core/stats.js, js/components/top-hit-rates.js (readTopCache, topSlate) and js/components/hit-list.js (shortName).
 
 const ODDS_URL = "/api/bdl/nba/v2/odds";
 const QUICKLOOK_CACHE_MS = 10 * 60 * 1000;
@@ -115,7 +115,7 @@ function renderQuickLook(game, body, data) {
 
 // ---------- Hooking up one card ----------
 
-// col = the card's slide element, game = the game. The card's markup (app.js) has #ql-GAMEID (the collapse) and .lh-ql-body.
+// col = the card's slide element, game = the game. The card's markup (js/pages/app.js) has #ql-GAMEID (the collapse) and .lh-ql-body.
 function setUpQuickLook(col, game) {
   const panel = col.querySelector(`#ql-${game.id}`);
   const body = col.querySelector(".lh-ql-body");
@@ -136,7 +136,7 @@ function setUpQuickLook(col, game) {
   });
 }
 
-// Called by js/top-hit-rates.js when the hit-rate data arrives: any card already open fills in its top prop.
+// Called by js/components/top-hit-rates.js when the hit-rate data arrives: any card already open fills in its top prop.
 function refreshQuickLookTopProps() {
   quickLooks.forEach(({ game, body, started }) => {
     const slot = body.querySelector("[data-top-prop]");

@@ -1,4 +1,4 @@
-// LineHunter - js/shelf.js
+// LineHunter - js/components/shelf.js
 // Helpers for a horizontal "shelf": a row of cards inside a .lh-shelf-track that scrolls sideways (scroll-snap, hidden
 // scrollbar) while the rest of the page doesn't. The ← → buttons (data-shelf-target="#trackId" data-shelf-dir="-1|1")
 // move it one card. Used by the schedule page's Hit List (lines mode) and Streaks (research mode).

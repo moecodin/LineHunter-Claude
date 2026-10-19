@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Theme: applied before anything renders, so there's no flash (default dark; nav.js has the toggle) -->
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; js/components/nav.js has the toggle) -->
   <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
   <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -19,11 +19,11 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link href="styles.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
 </head>
 
 <body>
-  <!-- Research mode: applied before anything renders, so there's no flash (nav.js has the switch) -->
+  <!-- Research mode: applied before anything renders, so there's no flash (js/components/nav.js has the switch) -->
   <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
   <div id="site-nav"></div>
 
@@ -61,7 +61,7 @@
                   <div class="lh-label lh-slide-kicker">Top hit rates · NBA</div>
                   <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">Over or under?</span><span class="lh-hit-answer">Know first.</span></h3>
                   <p>See who has gone over their line the most across their last 10 games, for every game on the slate.</p>
-                  <!-- js/top-hit-rates.js swaps this for a link to the Top Hit Rates card once there's data -->
+                  <!-- js/components/top-hit-rates.js swaps this for a link to the Top Hit Rates card once there's data -->
                   <span class="lh-coming-soon" id="hitRatesSlideCta">Coming soon</span>
                 </div>
               </div>
@@ -238,7 +238,7 @@
       </div>
     </section>
 
-    <!-- TOP HIT RATES: real data for the next slate. js/top-hit-rates.js fills it in. -->
+    <!-- TOP HIT RATES: real data for the next slate. js/components/top-hit-rates.js fills it in. -->
     <section id="top-hit-rates" class="lh-top-hit-rates lines-only" data-slate="next">
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
@@ -288,15 +288,15 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="api.js"></script>
-  <script src="js/teams.js"></script>
+  <script src="js/core/api.js"></script>
+  <script src="js/data/teams.js"></script>
   <script>
     (function () {
       const carousel = document.getElementById("toolCarousel");
       if (!carousel) return;
 
       // Team chips: the team's color as the background (the light or dark palette for the theme), and white or dark letters,
-      // whichever reads better on that color (readableTextOn in js/teams.js). Redone when the theme changes.
+      // whichever reads better on that color (readableTextOn in js/data/teams.js). Redone when the theme changes.
       const paintChips = () => {
         document.querySelectorAll(".lh-team-chip[data-team-abbr]").forEach((chip) => {
           const color = getTeamColor(chip.dataset.teamAbbr);
@@ -327,8 +327,8 @@
       }
     })();
   </script>
-  <script src="nav.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/top-hit-rates.js"></script>
+  <script src="js/components/nav.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/components/top-hit-rates.js"></script>
 </body>
 </html>

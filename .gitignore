@@ -1,4 +1,5 @@
-config.js
+# Your real API key lives here (no longer loaded by the site; the key is now an environment variable). Keep it off GitHub.
+js/core/config.js
 
 # Local environment variables for `netlify dev` (the API key lives here, never in the code)
 .env

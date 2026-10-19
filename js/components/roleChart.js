@@ -1,4 +1,4 @@
-// LineHunter - js/roleChart.js
+// LineHunter - js/components/roleChart.js
 // The small "Role" line chart on player.html: minutes or usage % for each game, oldest to newest,
 // with a faint dashed line at the season average.
 //   const role = createRoleChart(document.getElementById("roleChart"), { height: 160 });
@@ -6,7 +6,7 @@
 //   role.clear("No usage data for these games.");
 //
 // row = one game from calculateHitRate (opponent, homeAway, date). minutes / usage = numbers, or null (no data).
-// Needs Chart.js, and js/propChart.js (shortDate, monthDayDate).
+// Needs Chart.js, and js/components/propChart.js (shortDate, monthDayDate).
 
 const ROLE_METRICS = {
   minutes: { label: "Minutes", unit: " min", decimals: 0 },

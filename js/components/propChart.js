@@ -1,4 +1,4 @@
-// LineHunter - js/propChart.js
+// LineHunter - js/components/propChart.js
 // The shared prop chart: one player's games as bars against a line. Used by the player drawer
 // on game.html and by player.html, so both look and behave the same.
 //
@@ -39,7 +39,7 @@ const WINDOWS = [
 // Short names for tooltips and tables: "18 PTS · 7 REB · 6 AST = 31"
 const STAT_SHORT_NAMES = { pts: "PTS", reb: "REB", ast: "AST", fg3m: "3PM", stl: "STL", blk: "BLK", turnover: "TO" };
 
-// Every color on a chart comes from the CSS variables in styles.css, read each time the chart draws (so the theme can change).
+// Every color on a chart comes from the CSS variables in css/styles.css, read each time the chart draws (so the theme can change).
 function chartColors() {
   const value = (name) => cssVar(name);
   return {
