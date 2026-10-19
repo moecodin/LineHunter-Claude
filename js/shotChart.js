@@ -13,8 +13,8 @@
 // Needs js/stats.js (bdlGet, bdlGetAllPages, currentSeasonYear).
 // loadLeagueZones() is global on purpose: the Zone Matchup card reuses it.
 
-const SHOT_SEASON_URL = "https://api.balldontlie.io/nba/v1/season_averages/shooting";
-const SHOT_TEAM_URL = "https://api.balldontlie.io/nba/v1/team_season_averages/shooting";
+const SHOT_SEASON_URL = "/api/bdl/nba/v1/season_averages/shooting";
+const SHOT_TEAM_URL = "/api/bdl/nba/v1/team_season_averages/shooting";
 const SHOT_CACHE_MS = 60 * 60 * 1000; // season numbers barely change: keep them an hour
 const SHOT_NEUTRAL_POINTS = 2;        // within 2 percentage points of the league = gray
 

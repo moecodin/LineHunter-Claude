@@ -2,7 +2,7 @@
 // Loads NBA games for a chosen day from the BALLDONTLIE API and shows each one as a card.
 
 // The address every request starts with.
-const API_BASE = "https://api.balldontlie.io/v1";
+const API_BASE = "/api/bdl/v1";
 
 // The day the user is looking at. Starts as today; the date pager changes it.
 // "let" (not "const") because this value changes.
@@ -148,12 +148,6 @@ function renderPager() {
 
 // "async" lets this function wait for the internet with "await".
 async function loadGames() {
-  // Stop early if the key file is missing or still has the placeholder.
-  if (typeof BDL_API_KEY === "undefined" || BDL_API_KEY === "paste-your-key-here") {
-    showMessage("No API key yet. Copy config.example.js to config.js and paste your key in.", "text-danger");
-    return;
-  }
-
   // Update the heading and the pager for the chosen day.
   document.getElementById("games-date-label").textContent = dayLabel(selectedDate);
   renderPager();
@@ -171,10 +165,8 @@ async function loadGames() {
       // Start and end on the same day = only that day's games.
       const url = `${API_BASE}/games?start_date=${day}&end_date=${day}&per_page=25`;
 
-      // fetch = ask the API for data. The key goes in the Authorization header.
-      const response = await fetch(url, {
-        headers: { Authorization: BDL_API_KEY },
-      });
+      // fetch = ask for data. The request goes to our own /api/bdl proxy, which adds the API key on the server.
+      const response = await fetch(url);
 
       // 429 = too many requests for your plan's per-minute limit.
       if (response.status === 429) {

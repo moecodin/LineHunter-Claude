@@ -24,7 +24,7 @@ const BBQ_WORST_N = 5;        // "one of the 5 worst defenses"
 const BBQ_MAX_ROWS = 5;
 const BBQ_MIN_POOL = 6;       // need at least this many players on the slate to say who is "above average"
 const BBQ_CACHE_MS = 60 * 60 * 1000;
-const BBQ_URL = "https://api.balldontlie.io/nba/v1/team_season_averages/general";
+const BBQ_URL = "/api/bdl/nba/v1/team_season_averages/general";
 
 let bbqRequest = 0; // goes up with every fill, so a slow old answer can't overwrite a newer one
 

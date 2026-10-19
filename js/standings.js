@@ -237,10 +237,6 @@ function showStandingsMessage(html) {
 
 async function startStandings() {
   renderViewToggle();
-  if (typeof BDL_API_KEY === "undefined" || BDL_API_KEY === "paste-your-key-here") {
-    showStandingsMessage("Standings need an API key (see config.js).");
-    return;
-  }
   try {
     standingsData = await loadStandings();
     renderStandings();

@@ -340,7 +340,7 @@ function updateGameLogToggle(total) {
 
 // ---------- Advanced stats (usage, touches, passes, rebound chances) ----------
 
-const ADVANCED_URL = "https://api.balldontlie.io/nba/v2/stats/advanced";
+const ADVANCED_URL = "/api/bdl/nba/v2/stats/advanced";
 
 // The advanced stats for every game in the seasons we show, as { gameId: { usage, touches, passes, secAst, rebChances } }.
 // Saved in sessionStorage for 10 minutes. A game the API has no advanced stats for is simply missing,
@@ -1147,10 +1147,6 @@ async function loadPlayerPage() {
   renderToggles();
   renderRoleToggle();
 
-  if (typeof BDL_API_KEY === "undefined" || BDL_API_KEY === "paste-your-key-here") {
-    showPlayerError("No API key yet. Copy config.example.js to config.js and paste your key in.");
-    return;
-  }
   if (!playerId) {
     showPlayerError("No player picked. Open a player from a game page.");
     return;

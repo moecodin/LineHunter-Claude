@@ -3,7 +3,7 @@
 //   - Homepage (index.html): the next slate of games (today, or the next day with games).
 //   - Schedule page (schedule.html): the day picked in the date pager. app.js calls showTopHitRatesForDay().
 //
-// Uses the shared code in js/stats.js. Needs config.js and js/stats.js loaded first.
+// Uses the shared code in js/stats.js. Needs js/stats.js loaded first.
 
 const TOP_WINDOW = 10;    // L10
 const TOP_MIN_GAMES = 8;  // fewer games than this in the window = too small a sample to rank
@@ -843,11 +843,6 @@ function showTopSlate(slate) {
 async function loadTopHitRates({ cacheKey, titleDate, getSlate }) {
   if (!document.getElementById("top-hit-rates")) return;
   const requestNumber = ++topRequestNumber;
-
-  if (typeof BDL_API_KEY === "undefined" || BDL_API_KEY === "paste-your-key-here") {
-    renderTopMessage(`<span class="lh-coming-soon">Coming soon</span>`);
-    return;
-  }
 
   // Saved in the last 10 minutes? Show it straight away, no downloads.
   const cached = readTopCache(cacheKey);

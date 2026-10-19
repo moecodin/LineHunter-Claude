@@ -466,10 +466,6 @@ function openLinkedPlayer(propTypes) {
 }
 
 async function loadPage() {
-  if (typeof BDL_API_KEY === "undefined" || BDL_API_KEY === "paste-your-key-here") {
-    showLinesMessage("No API key yet. Copy config.example.js to config.js and paste your key in.", "text-danger");
-    return;
-  }
   if (!gameId) {
     showLinesMessage("No game picked. Go back and click a game card.", "text-danger");
     return;

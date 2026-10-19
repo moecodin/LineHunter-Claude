@@ -32,7 +32,7 @@
 - `js/player.js` also fills the sidebar's "Injury report" card (under the Players card, same width): the player's team and the next opponent, one `/v1/player_injuries?team_ids[]=` request; each injured player has a status badge (OUT red, DTD yellow, Q light grey; Doubtful uses the yellow style) and a "Details" Bootstrap collapse with the API's description and expected return date. The Players card is no longer sticky
 - `js/player.js` — runs on `player.html`: player, injuries, next game + that game's lines (`player_id` filter), and game logs (current → last season fallback). With no book line, the line starts at the season average rounded to .5 and is labeled "No line". Advanced stats (usage %, touches, passes, secondary assists, rebound chances) come from `/nba/v2/stats/advanced` (`player_ids[]`, `seasons[]`, `period=0`, paginated) via `loadAdvanced`, matched to games by game id and cached in sessionStorage (`lh-advanced:…`, 10 minutes); games without advanced data show "–". The "Opportunity" card (right of Role) shows 3 metrics per prop tab (`OPPORTUNITY_METRICS`): average over the filtered games vs the season average with a ▲/▼/– arrow (5% band) and one neutral insight sentence; percentage metrics are pooled totals from the box score (3P%, % shots from 3, conversion %, ast/100 passes)
 - `api.js` — shared team color helpers and palette data
-- `config.js` — standalone API key source; not touched in the homepage/schedule split
+- `netlify/functions/bdl.js` + `netlify.toml` — the API proxy: the browser only calls `/api/bdl/...` (e.g. `/api/bdl/v1/games?...`); `/api/bdl/*` is redirected to the function, which checks the path against an allowlist, adds the key from the `BALLDONTLIE_API_KEY` environment variable and sets CDN cache headers (60 s live, 10 min props/odds/injuries/game logs, 6 h season-level). No API key exists in any front-end file; `config.js` is no longer loaded (it stays in `.gitignore`). Local testing: `netlify dev` with a gitignored `.env` (see `.env.example`)
 
 ## Collapsible explainers
 - The Shot Chart, Zone Matchup, Opportunity and Hit List cards each end with a muted collapse link ("What this tells us" on the Shot Chart, "How to use this" on Zone Matchup, "Why this matters" on Opportunity, "Why these made the list" on the Hit List) (`.lh-explain`, a Bootstrap collapse) with 2–3 neutral sentences. The wording lives in the static HTML of `player.html` and `schedule.html`.
@@ -102,6 +102,6 @@
 - Reduced-motion users get a static, non-animated slide experience and no auto-advance.
 
 ## API note
-- `config.js` is not touched here. The project continues to keep API configuration separate from view logic.
+- All data requests go through the `/api/bdl` proxy (`netlify/functions/bdl.js`); the API key only exists as the `BALLDONTLIE_API_KEY` environment variable on Netlify / in a local `.env`.
 - The homepage carousel's preview cards are static and do not call the API. The Top Hit Rates card below the carousel does (via `js/stats.js`), and the carousel's hit-rates slide links to it once data is available.
 - The new standings and props pages are intentionally static placeholders and do not call the API yet.

@@ -1,0 +1,21 @@
+# Netlify settings for LineHunter.
+[build]
+  publish = "."                     # the site is plain files in the project root
+  functions = "netlify/functions"
+
+# The site calls /api/bdl/v1/games?... ; Netlify runs the proxy function (netlify/functions/bdl.js), which adds the API key.
+[[redirects]]
+  from = "/api/bdl/*"
+  to = "/.netlify/functions/bdl/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/bdl"
+  to = "/.netlify/functions/bdl"
+  status = 200
+  force = true
+
+[dev]
+  framework = "#static"
+  publish = "."

@@ -10,7 +10,7 @@ let html2canvasPromise = null;
 // Under every shared picture.
 const SHARE_NOTE_HTML = `
   <div class="lh-share-note">
-    <div class="lh-share-url">linehunter.app</div>
+    <div class="lh-share-url">${SITE_DOMAIN}</div>
     <div>Based on past results — not guarantees.</div>
     <div>Please gamble responsibly. 21+. Problem gambling? Call 1-800-GAMBLER.</div>
   </div>`;

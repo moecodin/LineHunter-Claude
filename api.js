@@ -6,6 +6,9 @@ function isLightTheme() {
 }
 
 // A CSS variable's value, e.g. cssVar("--lh-text"). root = the element to read it from (default: the page).
+// The site's domain, in one place (shown under every shared picture). Change it here and it changes everywhere.
+const SITE_DOMAIN = "linehunterapp.com";
+
 function cssVar(name, root = document.documentElement) {
   return getComputedStyle(root).getPropertyValue(name).trim();
 }

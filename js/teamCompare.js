@@ -12,7 +12,7 @@
 //
 // Needs js/stats.js (bdlGetAllPages, currentSeasonYear).
 
-const TEAM_GENERAL_URL = "https://api.balldontlie.io/nba/v1/team_season_averages/general";
+const TEAM_GENERAL_URL = "/api/bdl/nba/v1/team_season_averages/general";
 const COMPARE_CACHE_MS = 60 * 60 * 1000;
 
 // The 12 rows, in order. better: "high" (bigger is better), "low" (smaller is better), or "none" (Pace: no better or worse).

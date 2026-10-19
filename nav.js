@@ -239,7 +239,7 @@ window.lhLockupHtml = lhLockupHtml;
   renderThemeControls();
 
   // ---------- Player search ----------
-  // Type a name, pick a player, land on player.html. Needs config.js (BDL_API_KEY) on the page.
+  // Type a name, pick a player, land on player.html. Goes through the /api/bdl proxy (no API key in the browser).
   // initPlayerSearch wires one search box (the navbar / page one, and the phone Search sheet's).
   function initPlayerSearch(searchBox, searchInput, searchResults) {
   let searchTimer = null;
@@ -275,17 +275,11 @@ window.lhLockupHtml = lhLockupHtml;
   const runSearch = async (text) => {
     const words = text.toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) { searchResults.hidden = true; return; }
-    if (typeof BDL_API_KEY === "undefined" || BDL_API_KEY === "paste-your-key-here") {
-      return showMessage("Add your API key in config.js to search.");
-    }
     const token = ++searchToken;
     try {
       // The API searches one word at a time, so ask with the longest and filter on the rest here.
       const longest = words.reduce((a, b) => (b.length > a.length ? b : a));
-      const response = await fetch(
-        `https://api.balldontlie.io/v1/players/active?search=${encodeURIComponent(longest)}&per_page=50`,
-        { headers: { Authorization: BDL_API_KEY } }
-      );
+      const response = await fetch(`/api/bdl/v1/players/active?search=${encodeURIComponent(longest)}&per_page=50`);
       if (!response.ok) throw new Error(`status ${response.status}`);
       const json = await response.json();
       if (token !== searchToken) return;

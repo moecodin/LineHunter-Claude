@@ -13,7 +13,7 @@
 //
 // Needs js/stats.js, js/top-hit-rates.js (readTopCache, topSlate) and js/hit-list.js (shortName).
 
-const ODDS_URL = "https://api.balldontlie.io/nba/v2/odds";
+const ODDS_URL = "/api/bdl/nba/v2/odds";
 const QUICKLOOK_CACHE_MS = 10 * 60 * 1000;
 const QUICKLOOK_PREFERRED_BOOK = "draftkings";
 

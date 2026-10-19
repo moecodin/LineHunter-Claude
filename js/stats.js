@@ -11,11 +11,11 @@
 //   - hitRateForWindow():    calculateHitRate for one of those windows
 //   - formatOdds(), formatStatValue(): number formatting
 //
-// Needs config.js loaded first, because that's where BDL_API_KEY comes from.
+// Every request goes to /api/bdl/... (netlify/functions/bdl.js), which adds the API key on the server. No key lives in the browser.
 
 // Named differently from API_BASE in app.js, so this file can sit on the same page without a name clash.
-const BDL_BASE = "https://api.balldontlie.io/v1";
-const PROPS_URL = "https://api.balldontlie.io/nba/v2/odds/player_props";
+const BDL_BASE = "/api/bdl/v1";
+const PROPS_URL = "/api/bdl/nba/v2/odds/player_props";
 
 // Several sportsbooks post a line for the same player and prop.
 // We use one per player: this book if it has one, otherwise the first one we find.
@@ -32,11 +32,11 @@ function isKnownStat(stat) {
 
 // ---------- Requests ----------
 
-// One place for every request: adds the key and turns bad answers into clear errors.
+// One place for every request: turns bad answers into clear errors. (The key is added by the server, not here.)
 async function bdlGet(url) {
-  const response = await fetch(url, { headers: { Authorization: BDL_API_KEY } });
+  const response = await fetch(url);
   if (response.status === 401) {
-    throw new Error("The API said no (401). Your plan may not include this data, or the key in config.js is wrong.");
+    throw new Error("The API said no (401). Your plan may not include this data, or the server's API key is wrong.");
   }
   if (response.status === 429) {
     throw new Error("Too many requests. Wait a minute and try again.");
