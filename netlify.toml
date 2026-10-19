@@ -21,8 +21,8 @@
   publish = "."
 
 # ============================ PRIVATE SOFT LAUNCH ============================
-# Password gate (HTTP Basic Auth) in front of the WHOLE site, including /api/bdl.
-# Username and password: the SITE_USER and SITE_PASSWORD environment variables.
+# Branded password page in front of the WHOLE site, including /api/bdl (a signed cookie keeps visitors in for 30 days).
+# Environment variables: SITE_PASSWORD and SITE_COOKIE_SECRET.
 # FOR THE PUBLIC LAUNCH: delete this block (the next 3 lines), and optionally netlify/edge-functions/password-gate.js,
 # the noindex meta tags and robots.txt.
 [[edge_functions]]
