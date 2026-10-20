@@ -308,7 +308,11 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
   function tooltipHtml(game) {
     const result = gameResultHtml(game);
     return `
+<<<<<<< HEAD
       <div class="lh-tip-title">${opponentLabel(game)} · ${monthDayDate(game.date)}${game.postseason ? ` <span class="lh-post-tag">Post-season</span>` : ""}</div>
+=======
+      <div class="lh-tip-title">${opponentLabel(game)} · ${monthDayDate(game.date)}</div>
+>>>>>>> 6773d7489efae0d4026598a0d748ff64303a6b16
       ${tooltipStatLines(game).map((text) => `<div>${text}</div>`).join("")}
       ${result ? `<div class="lh-tip-result">${result}</div>` : ""}`;
   }
@@ -333,6 +337,15 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     }
 
     parts.tooltip.innerHTML = tooltipHtml(games[item.dataIndex]);
+<<<<<<< HEAD
+=======
+    const game = games[item.dataIndex];
+    const result = gameResultHtml(game);
+    parts.tooltip.innerHTML = `
+      <div class="lh-tip-title">${opponentLabel(game)} · ${monthDayDate(game.date)}${game.postseason ? ` <span class="lh-post-tag">Post-season</span>` : ""}</div>
+      ${tooltipStatLines(game).map((text) => `<div>${text}</div>`).join("")}
+      ${result ? `<div class="lh-tip-result">${result}</div>` : ""}`;
+>>>>>>> 6773d7489efae0d4026598a0d748ff64303a6b16
     parts.tooltip.hidden = false;
 
     // Centered above the bar, but kept inside the chart box so it never gets cut off.
