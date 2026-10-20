@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex">
+  <title>LineHunter - Props Vendor Report</title>
+</head>
+<body>
+  <p>Open the browser console (F12, then Console) to see the report. Add <code>?game=GAME_ID</code> or <code>?date=YYYY-MM-DD</code> to pick a game.</p>
+
+  <script src="../js/core/stats.js"></script>
+  <script>
+    // Temporary dev report: which sportsbooks / markets the player props endpoint returns for one game.
+    const nyToday = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+    const query = new URLSearchParams(location.search);
+
+    async function pickGame() {
+      if (query.get("game")) return { id: query.get("game") };
+      const date = query.get("date") || nyToday();
+      const games = await bdlGetAllPages(`/api/bdl/v1/games?dates[]=${date}&per_page=100`);
+      if (!games.length) throw new Error(`No games on ${date}. Try ?date=YYYY-MM-DD`);
+      // Take the first game that actually has props.
+      for (const game of games) {
+        const probe = await bdlGet(`${PROPS_URL}?game_id=${game.id}`);
+        if (probe.data && probe.data.length) return game;
+      }
+      throw new Error(`No props posted yet for any of the ${games.length} games on ${date}.`);
+    }
+
+    const marketType = (p) => (p.market && p.market.type) || "unknown";
+    const fmtOdds = (v) => (v === null || v === undefined ? "–" : v > 0 ? `+${v}` : `${v}`);
+
+    async function run() {
+      const game = await pickGame();
+      const label = game.visitor_team ? `${game.visitor_team.abbreviation} @ ${game.home_team.abbreviation}` : "";
+      const props = await bdlGetAllPages(`${PROPS_URL}?game_id=${game.id}`);
+      console.log(`%cGame ${game.id} ${label} - ${props.length} prop rows`, "font-weight:bold");
+      console.log("Sample raw row:", props[0]);
+
+      // 1. vendors
+      const byVendor = {};
+      props.forEach((p) => {
+        const v = (byVendor[p.vendor] = byVendor[p.vendor] || { props: 0, types: {}, bothSides: 0, overOnly: 0, underOnly: 0, odds: 0 });
+        v.props += 1;
+        const t = marketType(p);
+        v.types[t] = (v.types[t] || 0) + 1;
+        const m = p.market || {};
+        if (t === "over_under") {
+          const o = m.over_odds != null, u = m.under_odds != null;
+          if (o && u) v.bothSides += 1; else if (o) v.overOnly += 1; else if (u) v.underOnly += 1;
+        }
+      });
+      console.log("1. VENDORS (props per book)");
+      console.table(Object.entries(byVendor).map(([vendor, v]) => ({ vendor, props: v.props })).sort((a, b) => b.props - a.props));
+
+      // 2. prop types
+      const byType = {};
+      props.forEach((p) => { byType[p.prop_type] = (byType[p.prop_type] || 0) + 1; });
+      console.log("2. PROP TYPES");
+      console.table(Object.entries(byType).map(([prop_type, rows]) => ({ prop_type, rows })).sort((a, b) => b.rows - a.rows));
+
+      // 3. per vendor sides
+      console.log("3. SIDES PER VENDOR (market types; over_under rows with both / over-only / under-only odds)");
+      console.table(Object.entries(byVendor).map(([vendor, v]) => ({
+        vendor,
+        market_types: Object.entries(v.types).map(([k, n]) => `${k}:${n}`).join(" "),
+        ou_both_sides: v.bothSides, ou_over_only: v.overOnly, ou_under_only: v.underOnly,
+        verdict: v.bothSides && !v.types.milestone ? "BOTH sides" : v.types.milestone && !v.bothSides ? "milestone / one side" : "mixed",
+      })));
+
+      // 4. three points players, every vendor side by side
+      const points = props.filter((p) => p.prop_type === "points");
+      const perPlayer = {};
+      points.forEach((p) => { (perPlayer[p.player_id] = perPlayer[p.player_id] || []).push(p); });
+      const top = Object.entries(perPlayer).sort((a, b) => b[1].length - a[1].length).slice(0, 3);
+      let names = {};
+      try {
+        const ids = top.map(([id]) => `player_ids[]=${id}`).join("&");
+        const res = await bdlGet(`/api/bdl/v1/players?${ids}`);
+        (res.data || []).forEach((pl) => { names[pl.id] = `${pl.first_name} ${pl.last_name}`; });
+      } catch (error) { console.warn("Could not load player names", error.message); }
+      console.log("4. POINTS PROPS - three players, every vendor (most-covered players first)");
+      top.forEach(([id, rows]) => {
+        console.log(`%c${names[id] || "player " + id}  (id ${id}) - ${rows.length} rows from ${new Set(rows.map((r) => r.vendor)).size} books`, "font-weight:bold");
+        console.table(rows.slice().sort((a, b) => a.vendor.localeCompare(b.vendor) || a.line_value - b.line_value).map((r) => {
+          const m = r.market || {};
+          return { vendor: r.vendor, market: marketType(r), line: r.line_value, over: fmtOdds(m.over_odds ?? m.odds), under: fmtOdds(m.under_odds) };
+        }));
+      });
+
+      // 5. Kalshi / Polymarket
+      const pred = props.filter((p) => /kalshi|polymarket/i.test(p.vendor));
+      console.log("5. KALSHI / POLYMARKET");
+      if (!pred.length) {
+        console.log(`Not in this game's response. Vendors seen: ${Object.keys(byVendor).join(", ")}`);
+      } else {
+        console.log(`${pred.length} rows. Raw samples (check whether odds are American, 0-1 prices or percentages):`);
+        pred.slice(0, 5).forEach((p) => console.log(p.vendor, JSON.stringify(p)));
+      }
+
+      // Coverage: how many books post the same player + prop
+      const cover = {};
+      props.forEach((p) => { const k = `${p.player_id}|${p.prop_type}`; (cover[k] = cover[k] || new Set()).add(p.vendor); });
+      const counts = Object.values(cover).map((s) => s.size).sort((a, b) => a - b);
+      const median = counts[Math.floor(counts.length / 2)];
+      console.log(`Coverage: ${counts.length} player+prop pairs, books per pair: min ${counts[0]}, median ${median}, max ${counts[counts.length - 1]}`);
+      console.log("Full raw response available as window.propsReport");
+      window.propsReport = props;
+    }
+
+    run().catch((error) => console.error("Props report failed:", error.message));
+  </script>
+</body>
+</html>
