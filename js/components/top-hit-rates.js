@@ -77,7 +77,7 @@ function readTopCache(key) {
     if (saved.slate && Array.isArray(saved.slate.legs) && !Array.isArray(saved.slate.teamLegs)) return null; // saved before team totals
     if (saved.slate && Array.isArray(saved.slate.legs) && !Array.isArray(saved.slate.fan)) return null;       // saved before the fan cards
     // saved before the opponent id (BBQ Chicken) and the 30-point streaks (Chicken Nuggets)?
-    if (saved.slate && saved.slate.fan && saved.slate.fan.length && (saved.slate.fan[0].oppId === undefined || saved.slate.fan[0].nuggets === undefined || saved.slate.fan[0].fg === undefined)) return null;
+    if (saved.slate && saved.slate.fan && saved.slate.fan.length && (saved.slate.fan[0].oppId === undefined || saved.slate.fan[0].nuggets === undefined || saved.slate.fan[0].fg === undefined || saved.slate.fan[0].seasonLabel === undefined)) return null;
 
     // saved before the best odds across sportsbooks (My Hunts, step 2)?
     if (saved.slate && Array.isArray(saved.slate.rows) && saved.slate.rows.length && saved.slate.rows[0].bestOdds === undefined) return null;
@@ -151,11 +151,14 @@ async function buildTopHitRates(slate) {
   //    with fewer than 10 games this season (the 2026 -> 2025 fallback).
   const playerIds = [...new Set(lines.map((prop) => prop.player_id))];
   const teamIds = [...new Set(slate.games.flatMap((game) => [game.home_team.id, game.visitor_team.id]))];
-  const [players, loaded, injuryList] = await Promise.all([
+  const [players, loaded, injuryList, seasonAverages] = await Promise.all([
     fetchPlayers(playerIds),
-    loadPlayerGameLogs(playerIds, Math.max(...TOP_WINDOWS)), // enough history for L20 (adds last season where needed)
+    // Recent games only (this season's last 90 days, last season from January): enough for L5 / L10 / L20 and the Hit List.
+    // Full seasons load when a drawer or player page opens; season-level numbers come from loadSeasonAverages below.
+    loadPlayerGameLogs(playerIds, Math.max(...TOP_WINDOWS), { recent: true }),
     // The injury report for both teams of every game (one request). null if it failed: then nobody is hidden.
     bdlGetAllPages(`${BDL_BASE}/player_injuries?${teamIds.map((id) => `team_ids[]=${id}`).join("&")}&per_page=100`).catch(() => null),
+    loadSeasonAverages(playerIds).catch(() => ({})), // no averages: the cards that compare to a season rate just skip those players
   ]);
   // { playerId: "Out" } for everyone on the report
   const injuries = {};
@@ -261,7 +264,7 @@ async function buildTopHitRates(slate) {
 
   return {
     date: slate.date, rows, injuries, legs, incomplete: loaded.incomplete, teamLegs: buildTeamLegs(slate, loaded.logsByPlayer),
-    fan: buildFanPlayers(lines, players, loaded, gamesById), // for research mode's Hot Players and Streaks cards
+    fan: buildFanPlayers(lines, players, loaded, gamesById, seasonAverages), // for research mode's Hot Players and Streaks cards
   };
 }
 
@@ -280,7 +283,7 @@ const FAN_STATS = [
 ];
 const FAN_MIN_GAMES = 5; // L5 and season averages need at least 5 games
 
-function buildFanPlayers(lines, players, loaded, gamesById) {
+function buildFanPlayers(lines, players, loaded, gamesById, seasonAverages = {}) {
   // { l5Made, l5Att } or { seasonMade, seasonAtt }
   const fgTotals = (list, prefix) => ({
     [`${prefix}Made`]: list.reduce((total, log) => total + (log.fgm ?? 0), 0),
@@ -304,15 +307,22 @@ function buildFanPlayers(lines, players, loaded, gamesById) {
     if (!logs || !player) return null;
 
     const games = pickWindowLogs(logs, Infinity, loaded.showingCurrentSeason);            // newest first
-    const seasonGames = pickWindowLogs(logs, "season", loaded.showingCurrentSeason);
     if (games.length < FAN_MIN_GAMES) return null;
+    // Season-level numbers come from the season averages (one request for everyone): this season once the player has 10+ games, else last season.
+    const averages = seasonAverages[id] && seasonAverages[id].gp >= FAN_MIN_GAMES ? seasonAverages[id] : null;
+    const seasonValue = { pts: "pts", reb: "reb", ast: "ast", "3pm": "fg3m", pra: ["pts", "reb", "ast"] };
+    const seasonOf = (code) => {
+      if (!averages) return null;
+      const keys = [].concat(seasonValue[code]);
+      return keys.reduce((total, key) => total + (averages[key] ?? 0), 0);
+    };
 
     const st = {};
     FAN_STATS.forEach((stat) => {
       const values = games.map((log) => statValue(log, stat.key));
       st[stat.code] = {
         l5: average(values.slice(0, 5)),
-        season: average(seasonGames.map((log) => statValue(log, stat.key))),
+        season: seasonOf(stat.code),
         vals: values.slice(0, 10),
       };
     });
@@ -337,7 +347,9 @@ function buildFanPlayers(lines, players, loaded, gamesById) {
       st,
       nuggets: { count: nuggetCount, avg: nuggetAverage },
       // Field goals made / attempted over the last 5 games and over the season (Brick City compares the two percentages).
-      fg: { ...fgTotals(games.slice(0, 5), "l5"), ...fgTotals(seasonGames, "season") },
+      // (the season totals are the per-game averages times games played)
+      fg: { ...fgTotals(games.slice(0, 5), "l5"), seasonMade: averages ? averages.fgm * averages.gp : 0, seasonAtt: averages ? averages.fga * averages.gp : 0 },
+      seasonLabel: averages && averages.fromLastSeason ? "last season" : "season",
       streaks: { pts: streakOf(valuesOf("pts"), 20), reb: streakOf(valuesOf("reb"), 10), ast: streakOf(valuesOf("ast"), 8), fg3m: streakOf(valuesOf("fg3m"), 3) },
     };
   }).filter(Boolean);

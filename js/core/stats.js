@@ -35,7 +35,40 @@ function isKnownStat(stat) {
 // One place for every request: turns bad answers into clear errors. (The key is added by the server, not here.)
 // A busy API (429, a 5xx, or no network for a moment) gets two more tries per request, 0.7 s then 1.4 s later, so one hiccup in a
 // long list of requests doesn't quietly drop players. error.status tells callers what happened; 401 and the like are never retried.
-async function bdlGet(url) {
+//
+// Answers are kept in memory, one entry per full URL, for as long as the proxy's CDN would keep them (bdlMemoryTtl): the same
+// URL is not requested again until then, and requests that ask for it while it is still downloading share one promise.
+// A failed request is forgotten, so the next call tries again. Every caller gets its OWN copy of the answer, so code that
+// sorts or adds fields (addOpponentInfo, games.sort...) can never change what another caller sees.
+const bdlMemory = new Map(); // url -> { request, expires }  (expires = null: never)
+
+// Seconds an answer stays fresh in the browser. Mirrors netlify/functions/bdl.js; null = never expires (past seasons and past days).
+function bdlMemoryTtl(url) {
+  const params = new URLSearchParams(url.split("?")[1] || "");
+  const seasons = [...params.getAll("seasons[]"), ...params.getAll("season")].map(Number).filter(Boolean);
+  if (seasons.length > 0 && seasons.every((season) => season < currentSeasonYear())) return null;
+  if (/\/v1\/games(\?|$)/.test(url)) {
+    const lastDay = params.get("end_date") || params.get("start_date");
+    if (lastDay && lastDay < new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" })) return null;
+    return 30;
+  }
+  if (/\/v1\/games\/\d+/.test(url) || params.has("game_ids[]")) return 30; // a game or box score that may be live
+  if (/\/nba\/v2\/odds/.test(url)) return 2 * 60;
+  return 10 * 60; // injuries, this season's logs, everything else
+}
+
+function bdlGet(url) {
+  const saved = bdlMemory.get(url);
+  if (!saved || (saved.expires !== null && saved.expires < Date.now())) {
+    const ttl = bdlMemoryTtl(url);
+    const entry = { request: bdlFetch(url), expires: ttl === null ? null : Date.now() + ttl * 1000 };
+    bdlMemory.set(url, entry);
+    entry.request.catch(() => { if (bdlMemory.get(url) === entry) bdlMemory.delete(url); });
+  }
+  return bdlMemory.get(url).request.then((json) => (typeof structuredClone === "function" ? structuredClone(json) : JSON.parse(JSON.stringify(json))));
+}
+
+async function bdlFetch(url) {
   for (let attempt = 0; ; attempt += 1) {
     let response = null;
     try {
@@ -234,12 +267,15 @@ async function fetchPlayerGameLogs(playerId, season = currentSeasonYear() - 1) {
 const PLAYERS_PER_REQUEST = 5;
 
 // Every game MANY players played in a season. Returns logsByPlayer[237] = [...newest first]
-async function fetchGameLogsForPlayers(playerIds, season) {
-  const groups = splitIntoGroups(playerIds, PLAYERS_PER_REQUEST);
+// options.since ("YYYY-MM-DD") only asks for games from that day on; options.perRequest sets the group size (default 5).
+// Recent-only loads (the schedule page) use both: fewer rows per player, so bigger groups still fit in a few pages.
+async function fetchGameLogsForPlayers(playerIds, season, options = {}) {
+  const groups = splitIntoGroups(playerIds, options.perRequest || PLAYERS_PER_REQUEST);
+  const sinceParam = options.since ? `&start_date=${options.since}` : "";
   const failedIds = [];
   // bdlGet retries a busy API request by request. A group that still fails is remembered in failedIds: those players have no games
   // here, so callers must not treat the result as complete (Top Hit Rates does not cache it).
-  const fetchGroup = (group) => bdlGetAllPages(`${BDL_BASE}/stats?${playerIdParams(group)}&seasons[]=${season}&per_page=100`)
+  const fetchGroup = (group) => bdlGetAllPages(`${BDL_BASE}/stats?${playerIdParams(group)}&seasons[]=${season}${sinceParam}&per_page=100`)
     .catch((error) => {
       console.warn(`Stats unavailable for players ${group.join(", ")}:`, error);
       failedIds.push(...group);
@@ -275,14 +311,21 @@ async function fetchGameLogsForPlayers(playerIds, season) {
 //   showingCurrentSeason: false when nobody has played this season yet ("Season" then means last season),
 //   incomplete: true when some players' downloads failed even after retrying
 // }
-async function loadPlayerGameLogs(playerIds, gamesNeeded) {
+//
+// options.recent = true is for pages that only need the last 5-20 games (the schedule page): this season's games from the last
+// RECENT_DAYS days, and last season's from January 1 of this season's year (about 50 games a player, plenty for L20), 10 players
+// per request. Without it every game of both seasons is downloaded (the game page, player page and drawers).
+const RECENT_DAYS = 90;
+async function loadPlayerGameLogs(playerIds, gamesNeeded, options = {}) {
   const season = currentSeasonYear();
-  const current = await fetchGameLogsForPlayers(playerIds, season);
+  const recent = Boolean(options.recent);
+  const ninetyDaysAgo = new Date(Date.now() - RECENT_DAYS * 86400000).toLocaleDateString("en-CA");
+  const current = await fetchGameLogsForPlayers(playerIds, season, recent ? { since: ninetyDaysAgo, perRequest: 10 } : {});
 
   // Only the players who need it get last season's games.
   const needLastSeason = playerIds.filter((id) => current[id].filter(playedInGame).length < gamesNeeded);
   const previous = needLastSeason.length
-    ? await fetchGameLogsForPlayers(needLastSeason, season - 1)
+    ? await fetchGameLogsForPlayers(needLastSeason, season - 1, recent ? { since: `${season}-01-01`, perRequest: 10 } : {})
     : {};
 
   const logsByPlayer = {};
@@ -296,6 +339,39 @@ async function loadPlayerGameLogs(playerIds, gamesNeeded) {
     // true when some players' games could not be downloaded (even after retrying): their rows are missing, so don't cache the result
     incomplete: current.failedIds.length > 0 || (previous.failedIds || []).length > 0,
   };
+}
+
+// ---------- Season averages (one request for many players) ----------
+
+// Per-game season numbers for many players from /nba/v1/season_averages/general (up to 100 players per request), so a page
+// doesn't have to download a whole season of game logs just to show an average.
+// A player's numbers come from this season once they have played MIN_GAMES_THIS_SEASON games, otherwise from last season.
+// Returns { 237: { fromLastSeason: true, season: 2025, gp: 60, pts, reb, ast, fg3m, fgm, fga, fg_pct } }; players with no numbers are left out.
+const SEASON_AVERAGES_URL = "/api/bdl/nba/v1/season_averages/general";
+const MIN_GAMES_THIS_SEASON = 10;
+
+async function loadSeasonAverages(playerIds) {
+  const season = currentSeasonYear();
+  const fetchSeason = async (ids, year) => {
+    const answers = await Promise.all(splitIntoGroups(ids, 100).map((group) =>
+      bdlGetAllPages(`${SEASON_AVERAGES_URL}?season=${year}&season_type=regular&type=base&per_page=100&${playerIdParams(group)}`)
+        .catch((error) => { console.warn(`Season averages unavailable for ${year}:`, error); return []; })));
+    const byPlayer = {};
+    answers.flat().forEach((row) => { byPlayer[row.player.id] = { season: year, ...row.stats }; });
+    return byPlayer;
+  };
+
+  const thisSeason = await fetchSeason(playerIds, season);
+  const needLast = playerIds.filter((id) => !thisSeason[id] || thisSeason[id].gp < MIN_GAMES_THIS_SEASON);
+  const lastSeason = needLast.length ? await fetchSeason(needLast, season - 1) : {};
+
+  const result = {};
+  playerIds.forEach((id) => {
+    if (thisSeason[id] && thisSeason[id].gp >= MIN_GAMES_THIS_SEASON) result[id] = { ...thisSeason[id], fromLastSeason: false };
+    else if (lastSeason[id]) result[id] = { ...lastSeason[id], fromLastSeason: true };
+    else if (thisSeason[id]) result[id] = { ...thisSeason[id], fromLastSeason: false }; // a few games and no last season (a rookie)
+  });
+  return result;
 }
 
 // ---------- Hit rate against a line ----------

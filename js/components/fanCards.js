@@ -83,7 +83,7 @@ function renderHotRows() {
           <span class="fw-semibold">${player.name}</span> ${teamBadgeForMatchup(player.team, player.matchup)}
           <div class="small text-muted">${player.matchup}</div>
         </div>
-        <div class="lh-fan-stat">${formatStatValue(stat.l5)} ${hotFilter.toUpperCase()} L5 · <span class="lh-fan-up">+${diff.toFixed(1)}</span> vs season</div>
+        <div class="lh-fan-stat">${formatStatValue(stat.l5)} ${hotFilter.toUpperCase()} L5 · <span class="lh-fan-up">+${diff.toFixed(1)}</span> vs ${player.seasonLabel || "season"}</div>
         <div class="lh-fan-graph">${miniGraph(games)}</div>
       </a>`;
   }).join("");

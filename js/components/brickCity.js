@@ -33,7 +33,7 @@ function brickLegHtml(pick) {
     <a class="lh-hitlist-leg is-stacked" href="game.html?id=${player.gameId}&player=${player.playerId}&prop=pts" title="${player.name} ${player.matchup}">
       <span class="lh-hitlist-name">${shortName(player.name)} ${teamBadgeForMatchup(player.team, player.matchup)}</span>
       <span class="lh-hitlist-proof is-cold">${pick.l5.toFixed(1)}% FG L5</span>
-      <span class="lh-hitlist-sub">${player.fg.l5Made}/${player.fg.l5Att} · season ${pick.season.toFixed(1)}% · −${pick.drop.toFixed(1)} pts</span>
+      <span class="lh-hitlist-sub">${player.fg.l5Made}/${player.fg.l5Att} · ${player.seasonLabel || "season"} ${pick.season.toFixed(1)}% · −${pick.drop.toFixed(1)} pts</span>
     </a>`;
 }
 

@@ -165,20 +165,9 @@ async function loadGames() {
       // Start and end on the same day = only that day's games.
       const url = `${API_BASE}/games?start_date=${day}&end_date=${day}&per_page=25`;
 
-      // fetch = ask for data. The request goes to our own /api/bdl proxy, which adds the API key on the server.
-      const response = await fetch(url);
-
-      // 429 = too many requests for your plan's per-minute limit.
-      if (response.status === 429) {
-        throw new Error("Too many requests (429). Your plan's per-minute limit was reached, so wait a minute and try again.");
-      }
-      // Any other problem (401 = bad key, 500 = their server had a problem, etc.)
-      if (!response.ok) {
-        throw new Error(`The API answered with status ${response.status}`);
-      }
-
-      // Turn the response text into a JavaScript object. The games are in .data
-      const json = await response.json();
+      // bdlGet (js/core/stats.js) asks our own /api/bdl proxy, which adds the API key on the server. It retries a busy API
+      // (429 / 5xx) twice, shares identical requests, and throws a readable error for the catch below.
+      const json = await bdlGet(url);
       games = json.data;
       gamesCache[day] = games; // save for next time
     }

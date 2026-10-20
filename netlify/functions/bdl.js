@@ -5,10 +5,16 @@
 //   netlify.toml sends /api/bdl/* here; this function checks the path against an allowlist, adds the key from the
 //   BALLDONTLIE_API_KEY environment variable, calls https://api.balldontlie.io and returns the JSON.
 //
-// Cache headers let Netlify's CDN share one answer between visitors (the cache is per full URL, query included):
-//   about 1 minute   live data: games from today on, box scores
-//   about 10 minutes props / odds, injuries, player game logs, advanced stats
-//   about 6 hours    season-level data: standings, team and season averages, teams, players, past games
+// Cache headers let Netlify's CDN share one answer between visitors. The cache key is the full URL INCLUDING the query string
+// (Netlify-Vary: query below), so /v1/stats?player_ids[]=1 and /v1/stats?player_ids[]=2 never share an entry.
+//   15 seconds   box scores (/v1/stats?game_ids[]=)
+//   30 seconds   games from today on while one is live
+//   2 minutes    player props and odds
+//   5 minutes    games from today on when none is live
+//   10 minutes   injuries, advanced stats, this season's player game logs
+//   24 hours     past seasons (stats, averages, games), teams
+//   6 hours      this season's standings, team averages, players
+// Only successful (200) answers are cached; errors and 429s are sent with no-store.
 
 const API_ORIGIN = "https://api.balldontlie.io";
 
@@ -24,39 +30,62 @@ const ALLOWED_PATHS = [
   /^\/v1\/standings$/,
   /^\/v1\/teams$/,
   /^\/nba\/v1\/team_season_averages\/(general|shooting)$/,
-  /^\/nba\/v1\/season_averages\/shooting$/,
+  /^\/nba\/v1\/season_averages\/(general|shooting)$/,
   /^\/nba\/v2\/odds$/,
   /^\/nba\/v2\/odds\/player_props$/,
   /^\/nba\/v2\/stats\/advanced$/,
 ];
 
 const MINUTE = 60;
-const TTL = { live: MINUTE, medium: 10 * MINUTE, season: 6 * 60 * MINUTE };
+const TTL = { box: 15, live: 30, props: 2 * MINUTE, games: 5 * MINUTE, medium: 10 * MINUTE, season: 6 * 60 * MINUTE, past: 24 * 60 * MINUTE };
 
+// Today's date in New York (the NBA's day), "YYYY-MM-DD".
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  return new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+}
+
+// BALLDONTLIE names a season by the year it starts; from September on the new one is current.
+function currentSeasonYear() {
+  const [year, month] = today().split("-").map(Number);
+  return month >= 9 ? year : year - 1;
+}
+
+// True when the request asks only for seasons before the current one (their numbers never change).
+function isPastSeason(params) {
+  const seasons = [...params.getAll("seasons[]"), ...params.getAll("season")].map(Number).filter(Boolean);
+  return seasons.length > 0 && seasons.every((season) => season < currentSeasonYear());
+}
+
+// A game that has started and is not Final carries a quarter / "Halftime" status instead of a start time.
+function anyLiveGame(body) {
+  try {
+    const data = JSON.parse(body).data;
+    return (Array.isArray(data) ? data : [data]).some((game) => game && game.status && game.status !== "Final" && !/^\d{4}-\d{2}-\d{2}T/.test(game.status));
+  } catch (error) {
+    return true; // can't tell: use the short cache
+  }
 }
 
 // How long a response may be shared, by endpoint (and, for games, by the dates asked for).
-function ttlFor(path, params) {
-  if (/^\/nba\/v2\/odds/.test(path) || path === "/v1/player_injuries" || path === "/nba/v2/stats/advanced") return TTL.medium;
+function ttlFor(path, params, body) {
+  if (/^\/nba\/v2\/odds/.test(path)) return TTL.props;
+  if (path === "/v1/player_injuries" || path === "/nba/v2/stats/advanced") return TTL.medium;
+  if (path === "/v1/teams") return TTL.past;
 
   if (path === "/v1/stats") {
-    // A game's box score can still be changing; a player's season of game logs changes at most once a day.
-    return params.has("game_ids[]") ? TTL.live : TTL.medium;
+    if (params.has("game_ids[]")) return TTL.box;                  // a game's box score can still be changing
+    return isPastSeason(params) ? TTL.past : TTL.medium;           // last season's logs never change; this season's change daily
   }
 
   if (path === "/v1/games" || /^\/v1\/games\/\d+$/.test(path)) {
-    // Games on or after today can be live. A whole season, or days that are already over, are past games.
-    const end = params.get("end_date");
-    const start = params.get("start_date");
-    const lastDay = end || start;
-    if (lastDay && lastDay < today()) return TTL.season;
-    if (!lastDay && params.has("seasons[]")) return TTL.season;
-    return TTL.live;
+    // A whole past season, or days that are already over, are past games.
+    const lastDay = params.get("end_date") || params.get("start_date");
+    if (lastDay && lastDay < today()) return TTL.past;
+    if (!lastDay && params.has("seasons[]")) return isPastSeason(params) ? TTL.past : TTL.games;
+    return anyLiveGame(body) ? TTL.live : TTL.games;
   }
 
-  return TTL.season; // standings, teams, players, team and season averages
+  return isPastSeason(params) ? TTL.past : TTL.season; // standings, team and season averages, players
 }
 
 function reply(statusCode, body, extraHeaders = {}) {
@@ -107,9 +136,10 @@ exports.handler = async (event) => {
     return reply(upstream.status, body || { error: `Upstream status ${upstream.status}` }, { "Cache-Control": "no-store" });
   }
 
-  const seconds = ttlFor(path, params);
+  const seconds = ttlFor(path, params, body);
   return reply(200, body, {
     "Cache-Control": "public, max-age=0, must-revalidate",                       // the browser always checks...
+    "Netlify-Vary": "query",                                                     // ...and the CDN keeps one copy per full query string
     "Netlify-CDN-Cache-Control": `public, s-maxage=${seconds}, stale-while-revalidate=${seconds}`, // ...Netlify's CDN shares the answer
   });
 };
