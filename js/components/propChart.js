@@ -208,6 +208,16 @@ const lineAndValuesPlugin = {
   },
 };
 
+// A y-axis for the HTML bars: up to 5 round steps that cover the tallest bar (or line) plus a little headroom.
+function niceScale(highest) {
+  const target = Math.max(1, Math.ceil(highest));
+  const step = [1, 2, 5, 10, 20, 25, 50, 100].find((candidate) => target / candidate <= 5) || 100;
+  const scaleMax = Math.ceil(target / step) * step;
+  const ticks = [];
+  for (let tick = 0; tick <= scaleMax; tick += step) ticks.push(tick);
+  return { scaleMax, ticks };
+}
+
 // ---------- The chart ----------
 
 // container: an empty element to build the chart in.
@@ -217,7 +227,9 @@ const lineAndValuesPlugin = {
 // externalLine: true = the page has its own prop toolbar (js/components/prop-toolbar.js) that moves the line with
 //   setActiveLine(), so the chart's own "Alt line − / +" control stays hidden in lines mode. The research-mode milestone
 //   control is not affected.
-function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChange = () => {}, onBarClick = null, externalLine = false } = {}) {
+// animatedBars: true = draw HTML / CSS bars instead of the Chart.js canvas (js/components/animatedBars.js): compact bars (3px gap, capped at
+//   maxBarWidth, centered when few), keyed by game so they move, grow and shrink when the range, split or stat changes. The player page uses it.
+function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChange = () => {}, onBarClick = null, externalLine = false, animatedBars = false } = {}) {
   container.innerHTML = `
     <div class="lh-chart-scroll" hidden>
       <div class="lh-chart-inner" style="height: ${height}px">
@@ -262,6 +274,21 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     msReset: container.querySelector('[data-ms="reset"]'),
   };
 
+  // The HTML bars (animatedBars only). Hovering a bar shows the same tooltip box as the canvas chart.
+  const bars = animatedBars ? createAnimatedBars(parts.inner, {
+    maxBarWidth,
+    onHover: (game, centerX, topY) => showBarTooltip(game, centerX, topY),
+    onLeave: () => { parts.tooltip.hidden = true; },
+    onClick: onBarClick,
+  }) : null;
+  if (bars) {
+    parts.canvas.hidden = true;
+    // On a phone a tapped bar stays highlighted, like the tooltip, until the next tap somewhere else.
+    document.addEventListener("pointerdown", (event) => {
+      if (!parts.inner.contains(event.target) || !event.target.closest(".lh-bar")) bars.unhover();
+    });
+  }
+
   let chart = null;    // the current Chart.js chart, so we can destroy it before drawing the next
   let chartKey = null; // which games that chart shows (the page decides, e.g. "player|prop|window")
   let games = [];      // the games behind the bars (oldest first), for the tooltip
@@ -278,6 +305,23 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
   const activeLine = () => (isResearchMode() ? milestoneAlt ?? milestoneBase : altLine ?? baseLine);
   const shownLine = activeLine;
 
+  function tooltipHtml(game) {
+    const result = gameResultHtml(game);
+    return `
+      <div class="lh-tip-title">${opponentLabel(game)} · ${monthDayDate(game.date)}${game.postseason ? ` <span class="lh-post-tag">Post-season</span>` : ""}</div>
+      ${tooltipStatLines(game).map((text) => `<div>${text}</div>`).join("")}
+      ${result ? `<div class="lh-tip-result">${result}</div>` : ""}`;
+  }
+
+  // The HTML bars' version: centered above the hovered bar (centerX / topY are in the chart box), kept inside the box.
+  function showBarTooltip(game, centerX, topY) {
+    parts.tooltip.innerHTML = tooltipHtml(game);
+    parts.tooltip.hidden = false;
+    const left = Math.min(Math.max(centerX - parts.tooltip.offsetWidth / 2, 0), parts.inner.clientWidth - parts.tooltip.offsetWidth);
+    parts.tooltip.style.left = `${left}px`;
+    parts.tooltip.style.top = `${Math.max(topY - parts.tooltip.offsetHeight - 8, 0)}px`;
+  }
+
   // Our own tooltip box, drawn by Chart.js's "external" option.
   // Chart.js's built-in tooltip picks its colors before it knows which bar is hovered, so the
   // W / L color could belong to the previous bar. A plain HTML box gets it right every time.
@@ -288,12 +332,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
       return;
     }
 
-    const game = games[item.dataIndex];
-    const result = gameResultHtml(game);
-    parts.tooltip.innerHTML = `
-      <div class="lh-tip-title">${opponentLabel(game)} · ${monthDayDate(game.date)}${game.postseason ? ` <span class="lh-post-tag">Post-season</span>` : ""}</div>
-      ${tooltipStatLines(game).map((text) => `<div>${text}</div>`).join("")}
-      ${result ? `<div class="lh-tip-result">${result}</div>` : ""}`;
+    parts.tooltip.innerHTML = tooltipHtml(games[item.dataIndex]);
     parts.tooltip.hidden = false;
 
     // Centered above the bar, but kept inside the chart box so it never gets cut off.
@@ -407,9 +446,11 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     onLineChange();
   });
 
+  let showTonight = false; // animatedBars: a dashed "?" bar at the far right for the next game
+
   let lastDraw = null; // the last draw() arguments, so switching modes or themes can redraw
   document.addEventListener("lh-mode-change", () => {
-    if (lastDraw && chart) draw(...lastDraw);
+    if (lastDraw && (chart || bars)) draw(...lastDraw);
   });
   document.addEventListener("lh-theme-change", () => {
     if (lastDraw && chart) draw(...lastDraw); // new colors for the bars, line, numbers, axes and grid
@@ -431,6 +472,24 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
 
     parts.scroll.hidden = false;
     updateAltControl();
+
+    if (bars) {
+      // HTML bars: no sideways scroll (the bars shrink to fit), and the same game keeps the same bar element.
+      parts.inner.style.width = "100%";
+      parts.scroll.style.overflowX = "hidden"; // nothing to scroll: the bars always fit
+      const { scaleMax, ticks } = niceScale(highest * 1.1);
+      parts.tooltip.hidden = true;
+      bars.render({
+        games, line, bookLine: book, bookLabel: markerOptions.bookLabel, scaleMax, ticks,
+        tonight: showTonight,
+        barClass: (game) => {
+          if (line === null) return "is-noline";
+          // Research mode has no "under": a bar that misses the milestone is neutral gray, never red.
+          return `is-${research && game.overUnder === "under" ? "push" : game.overUnder}`;
+        },
+      });
+      return;
+    }
 
     // Same games as the chart already shows, and only the line moved (the − / + buttons)?
     // Then just recolor the bars and move the dashed line. update("none") = no animation, so it's instant.
@@ -519,7 +578,12 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     // The chart as a PNG (for the share picture), or null if nothing is drawn.
     // The chart as a PNG for the share picture (it has the colors of the theme the page is in).
     toImage() {
+      if (bars) return bars.toImage();
       return chart ? chart.toBase64Image("image/png", 1) : null;
+    },
+    // animatedBars: show (or hide) the dashed "?" bar for tonight's game. Takes effect on the next draw().
+    setTonight(enabled) {
+      showTonight = Boolean(enabled);
     },
 
     // A new player or prop: set the book line (null if none) and an optional fallback starting line.
@@ -545,6 +609,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     // Hide the chart and alt control (while loading, or when there are no games).
     clear() {
       lastDraw = null;
+      if (bars) bars.clear();
       destroyChart();
       parts.scroll.hidden = true;
       parts.alt.hidden = true;
