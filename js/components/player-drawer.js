@@ -13,7 +13,26 @@ const drawerState = {
   playerId: null,
   propType: "points",
   windowSize: 10,
+  split: "all", // all, home, away or h2h (this player's games against the other team in this game: js/core/h2h.js)
 };
+
+// The H2H download for this game's two teams (one per page), and the players who turned out to have no games in it.
+const drawerH2H = { status: "idle", data: null, noGames: new Set() };
+function ensureDrawerH2H() {
+  if (drawerH2H.status === "loading" || drawerH2H.status === "ready" || !currentGame) return;
+  drawerH2H.status = "loading";
+  loadH2H(currentGame.home_team.id, currentGame.visitor_team.id)
+    .then((data) => { drawerH2H.data = data; drawerH2H.status = "ready"; })
+    .catch((error) => { console.warn("Head-to-head games unavailable:", error); drawerH2H.status = "failed"; })
+    .finally(() => {
+      const id = drawerState.playerId;
+      if (drawerH2H.status === "ready" && id !== null && !h2hLogsFor(drawerH2H.data, id).some(playedInGame)) {
+        drawerH2H.noGames.add(id);              // nothing to chart: back to All and grey the pill out
+        if (drawerState.split === "h2h") drawerState.split = "all";
+      }
+      renderPlayerDrawer();
+    });
+}
 
 // The shared chart, built inside #playerDrawerChart. − / + / Reset redraw the drawer's numbers.
 const drawerChart = createPropChart(document.getElementById("playerDrawerChart"), {
@@ -88,6 +107,15 @@ function renderDrawerWindows() {
   });
 }
 
+// All / Home / Away / H2H. The H2H pill only exists when we know the other team in this game.
+function renderDrawerSplits(opponent) {
+  renderToggleButtons(document.getElementById("playerDrawerSplits"), h2hSplitOptions(opponent, drawerH2H.noGames.has(drawerState.playerId)), drawerState.split, (split) => {
+    drawerState.split = split;
+    if (split === "h2h") ensureDrawerH2H();
+    renderPlayerDrawer();
+  });
+}
+
 // Show a message in place of the summary and chart (loading, no games, etc.).
 function showDrawerMessage(html) {
   drawerView = null;
@@ -133,6 +161,7 @@ function renderPlayerDrawer() {
   // 2 + 3. The tabs and the window buttons, with the current choice highlighted.
   renderDrawerStatTabs();
   renderDrawerWindows();
+  renderDrawerSplits(legBase.opp);
 
   // Opened before the table's stats finished downloading? Show a spinner. js/pages/game.js redraws us when they arrive.
   if (statsLoading) {
@@ -144,10 +173,19 @@ function renderPlayerDrawer() {
   // It needs a number for the line. Without a line the hits don't mean anything,
   // so we pass 0 and only use the average and the game list.
   const isSeason = drawerState.windowSize === "season";
-  const result = windowResult(playerId, option.stat, line ?? 0, drawerState.windowSize);
+  const isH2H = drawerState.split === "h2h";
+  if (isH2H && drawerH2H.status !== "ready") {
+    showDrawerMessage(drawerH2H.status === "failed"
+      ? "Couldn't load head-to-head games. Try again later."
+      : `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading head-to-head games...`);
+    return;
+  }
+  const h2hLogs = isH2H ? h2hLogsFor(drawerH2H.data, playerId) : [];
+  const view = splitGames(gameLogsByPlayer[playerId], drawerState.split, h2hLogs);
+  const result = hitRateForWindow(view.logs, option.stat, line ?? 0, drawerState.windowSize, view.showingCurrentSeason ?? showingCurrentSeason);
 
   if (result.totalGames === 0) {
-    showDrawerMessage("No games played yet.");
+    showDrawerMessage(drawerState.split === "all" ? "No games played yet." : `No ${drawerState.split} games in this window.`);
     return;
   }
 
@@ -173,16 +211,16 @@ function renderPlayerDrawer() {
     <div>
       <div class="lh-label">Average</div>
       <div class="lh-drawer-stat">${formatStatValue(result.average)}</div>
-    </div>
+    </div>${isH2H ? h2hNoteHtml(legBase.opp, h2hLogs) : ""}
   `;
 
   const message = document.getElementById("playerDrawerMessage");
-  message.hidden = !(isSeason && !showingCurrentSeason);
+  message.hidden = !(isSeason && !showingCurrentSeason && !isH2H);
   message.textContent = "This season hasn't started, so Season shows last season.";
 
   // 5. The chart (with the alt line control under it). result.games is newest first;
   //    the chart reads left to right, so oldest goes first.
-  drawerChart.draw([...result.games].reverse(), `${playerId}|${drawerState.propType}|${drawerState.windowSize}`);
+  drawerChart.draw([...result.games].reverse(), `${playerId}|${drawerState.propType}|${drawerState.windowSize}|${drawerState.split}`);
 }
 
 // ---------- Opening ----------
@@ -197,6 +235,7 @@ function openPlayerDrawer(playerId, side = null, propType = null, startLine = nu
   const wanted = propType || selectedProp;
   drawerState.propType = CHART_STAT_TABS.some((option) => option.propType === wanted) ? wanted : "points";
   drawerState.windowSize = selectedWindow; // start on the same window as the table
+  drawerState.split = "all";               // and on all games
   resetDrawerLine();                       // a new player starts back on the book line
   if (startLine !== null && startLine !== undefined && !isResearchMode()) drawerChart.setActiveLine(startLine); // the row's own line (a stepped or sportsbook line)
 
@@ -222,7 +261,7 @@ document.getElementById("playerDrawerShare").addEventListener("click", (event) =
     name: anyLine.fullName,
     meta: [anyLine.team, anyLine.position].filter(Boolean).join(" · "),
     propLabel: option.label,
-    filterText: windowText,
+    filterText: drawerState.split === "all" ? windowText : `${windowText} · ${drawerState.split === "h2h" ? "H2H" : drawerState.split === "home" ? "Home games" : "Away games"}`,
     lineText: lineLabel,
     hitRateText: line === null ? "–" : `${result.hits}/${result.totalGames} (${Math.round(result.hitRate)}%)`,
     averageText: formatStatValue(result.average),

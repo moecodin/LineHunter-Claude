@@ -160,7 +160,10 @@
       <ul id="playerDrawerStats" class="nav nav-underline lh-tabs mb-3"></ul>
 
       <!-- Window toggle: L5 / L10 / L20 / Season -->
-      <div id="playerDrawerWindows" class="btn-group btn-group-sm lh-window-toggle mb-3" role="group" aria-label="How many games to show"></div>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+          <div id="playerDrawerWindows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to show"></div>
+          <div id="playerDrawerSplits" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="All, home, away or head-to-head games"></div>
+        </div>
 
       <!-- Hit rate and average -->
       <div id="playerDrawerSummary" class="d-flex gap-4 mb-3"></div>
@@ -184,6 +187,7 @@
   <script src="js/components/my-hunts.js"></script>
   <script src="js/data/odds.js"></script>
   <script src="js/core/stats.js"></script>
+  <script src="js/core/h2h.js"></script>
   <script src="js/components/propChart.js"></script>
   <script src="js/components/prop-toolbar.js"></script>
   <script src="js/components/prop-list.js"></script>

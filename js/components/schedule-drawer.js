@@ -28,14 +28,18 @@
         <div id="playerDrawerToolbar"></div>
         <div id="playerDrawerMilestone" class="research-only mb-3"></div>
         <ul id="playerDrawerStats" class="nav nav-underline lh-tabs mb-3"></ul>
-        <div id="playerDrawerWindows" class="btn-group btn-group-sm lh-window-toggle mb-3" role="group" aria-label="How many games to show"></div>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <div id="playerDrawerWindows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to show"></div>
+          <div id="playerDrawerSplits" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="All, home, away or head-to-head games"></div>
+        </div>
         <div id="playerDrawerSummary" class="d-flex gap-4 mb-3"></div>
         <div id="playerDrawerChart"></div>
         <div id="playerDrawerMessage" class="text-muted small mt-2" hidden></div>
       </div>
     </div>`);
 
-  const state = { info: null, propType: "points", windowSize: 10, token: 0 };
+  const state = { info: null, propType: "points", windowSize: 10, split: "all", token: 0, h2h: "idle", h2hData: null };
+  const h2hNoGames = new Set(); // "playerId-gameId": no games against that team, so the H2H pill is greyed out
   const logCache = {}; // playerId -> { logs, showingCurrentSeason } (a Promise while loading)
 
   const chart = createPropChart(document.getElementById("playerDrawerChart"), {
@@ -71,8 +75,29 @@
     return logCache[playerId];
   }
 
+  // The games for the chosen split (All / Home / Away / H2H) scored against the line, in the chosen window.
   function result(data, line, windowSize) {
-    return hitRateForWindow(data.logs, optionFor(state.propType).stat, line ?? 0, windowSize, data.showingCurrentSeason);
+    const view = splitGames(data.logs, state.split, state.split === "h2h" ? h2hLogsFor(state.h2hData, state.info.playerId) : []);
+    return hitRateForWindow(view.logs, optionFor(state.propType).stat, line ?? 0, windowSize, view.showingCurrentSeason ?? data.showingCurrentSeason);
+  }
+
+  // The H2H download for this game's two teams starts the first time the pill is picked (shared by every player in the matchup).
+  function loadH2HNow() {
+    if (state.h2h === "loading" || state.h2h === "ready") return;
+    state.h2h = "loading";
+    const token = state.token;
+    loadH2HForGame(state.info.gameId)
+      .then((data) => { if (token === state.token) { state.h2hData = data; state.h2h = "ready"; } })
+      .catch((error) => { console.warn("Head-to-head games unavailable:", error); if (token === state.token) state.h2h = "failed"; })
+      .finally(() => {
+        if (token !== state.token) return;
+        const key = `${state.info.playerId}-${state.info.gameId}`;
+        if (state.h2h === "ready" && !h2hLogsFor(state.h2hData, state.info.playerId).some(playedInGame)) {
+          h2hNoGames.add(key);                  // nothing to chart: back to All and grey the pill out
+          if (state.split === "h2h") state.split = "all";
+        }
+        render();
+      });
   }
 
   // A new player or prop: start on the book line (or the season average to the nearest .5 when no book posts one).
@@ -140,13 +165,24 @@
     });
     renderTabs();
     renderWindowButtons(el("playerDrawerWindows"), state.windowSize, (size) => { state.windowSize = size; render(); });
+    renderToggleButtons(el("playerDrawerSplits"), h2hSplitOptions(info.opp, h2hNoGames.has(`${info.playerId}-${info.gameId}`)), state.split, (split) => {
+      state.split = split;
+      if (split === "h2h") loadH2HNow();
+      render();
+    });
 
     if (!data) {
       message(`<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading games...`);
       return;
     }
+    const isH2H = state.split === "h2h";
+    if (isH2H && state.h2h !== "ready") {
+      message(state.h2h === "failed" ? "Couldn't load head-to-head games. Try again later."
+        : `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading head-to-head games...`);
+      return;
+    }
     const res = result(data, line, state.windowSize);
-    if (res.totalGames === 0) { message("No games played yet."); return; }
+    if (res.totalGames === 0) { message(state.split === "all" ? "No games played yet." : `No ${state.split} games in this window.`); return; }
 
     const milestone = chart.activeLine();
     const outOf = typeof state.windowSize === "number" ? `last ${res.totalGames}` : `${res.totalGames} games`;
@@ -157,16 +193,19 @@
         <div class="lh-label">Hit rate${chart.isAltLine() ? ` <span class="lh-alt-tag">o${lineText(line)}</span>` : ""}</div>
         <div class="lh-drawer-stat">${line === null ? "–" : `${res.hits}/${res.totalGames} <span class="text-muted">(${Math.round(res.hitRate)}%)</span>`}</div>
       </div>
-      <div><div class="lh-label">Average</div><div class="lh-drawer-stat">${formatStatValue(res.average)}</div></div>`;
+      <div><div class="lh-label">Average</div><div class="lh-drawer-stat">${formatStatValue(res.average)}</div></div>${isH2H ? h2hNoteHtml(info.opp, h2hLogsFor(state.h2hData, info.playerId)) : ""}`;
     const box = el("playerDrawerMessage");
-    box.hidden = !(state.windowSize === "season" && !data.showingCurrentSeason);
+    box.hidden = !(state.windowSize === "season" && !data.showingCurrentSeason && !isH2H);
     box.textContent = "This season hasn't started, so Season shows last season.";
-    chart.draw([...res.games].reverse(), `${info.playerId}|${state.propType}|${state.windowSize}`);
+    chart.draw([...res.games].reverse(), `${info.playerId}|${state.propType}|${state.windowSize}|${state.split}`);
   }
 
   function open(info) {
     state.info = info;
     state.data = null;
+    state.split = "all";
+    if (!state.h2hData || state.info.gameId !== state.h2hGameId) { state.h2h = "idle"; state.h2hData = null; }
+    state.h2hGameId = info.gameId;
     state.propType = PROP_CODES[info.code] || "points";
     state.windowSize = typeof topUi !== "undefined" && topUi ? topUi.state.window : 10;
     toolbar.setSide(info.side);

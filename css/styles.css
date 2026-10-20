@@ -1466,6 +1466,27 @@ html {
 .lh-result.is-loss { color: var(--lh-under-text); }
 
 /* "o29.5" next to "Hit rate" while an alt line is used */
+/* "Post-season" marker (chart tooltip, game log date) and the "Small sample" tag next to the H2H line */
+.lh-post-tag,
+.lh-sample-tag {
+  display: inline-block;
+  padding: 0 0.4rem;
+  border: 1px solid var(--lh-border);
+  border-radius: 999px;
+  color: var(--lh-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.lh-h2h-note {
+  flex-basis: 100%;
+  color: var(--lh-muted);
+  font-size: 0.8rem;
+}
+
 .lh-alt-tag {
   color: var(--lh-accent-light);
   text-transform: none; /* keep the lowercase "o" (over), so it doesn't read as a zero */

@@ -10,13 +10,6 @@ const playerId = Number(playerParams.get("id")) || null; // Number("") is 0, so 
 
 const PLAYER_GAMES_NEEDED = 20; // L20 is the biggest window: fewer games this season = add last season's
 
-// All / Home / Away
-const SPLITS = [
-  { label: "All", value: "all" },
-  { label: "Home", value: "home" },
-  { label: "Away", value: "away" },
-];
-
 // The game log column to highlight for each prop tab ("pra" = points + rebounds + assists).
 const PROP_TO_COLUMN = { points: "pts", rebounds: "reb", assists: "ast", threes: "fg3m", points_rebounds_assists: "pra" };
 
@@ -83,8 +76,45 @@ function seasonLogs() {
   return (usingCurrentSeason ? playerLogs.current : playerLogs.previous).filter(playedInGame);
 }
 
+// The next game's opponent (id and abbreviation), or null when there is no upcoming game: H2H needs it.
+function h2hOpponent() {
+  if (!nextGame || !player || !player.team) return null;
+  const opponent = nextGame.home_team.id === player.team.id ? nextGame.visitor_team : nextGame.home_team;
+  return { id: opponent.id, abbreviation: opponent.abbreviation };
+}
+
+// The H2H download (js/core/h2h.js) starts the first time the pill is picked. Status: "idle", "loading", "ready" or "failed".
+let h2hData = null;
+let h2hStatus = "idle";
+let h2hNoGames = false; // the download finished and this player has no games against that team
+let splitBeforeH2H = "all";
+function ensureH2H() {
+  const opponent = h2hOpponent();
+  if (!opponent || h2hStatus === "loading" || h2hStatus === "ready") return;
+  h2hStatus = "loading";
+  loadH2H(player.team.id, opponent.id)
+    .then((data) => { h2hData = data; h2hStatus = "ready"; })
+    .catch((error) => { console.warn("Head-to-head games unavailable:", error); h2hStatus = "failed"; })
+    .finally(() => {
+      if (h2hStatus === "ready" && !h2hLogsFor(h2hData, playerId).some(playedInGame)) {
+        h2hNoGames = true;                      // nothing to chart: go back to where the visitor was and grey the pill out
+        if (pageState.split === "h2h") pageState.split = splitBeforeH2H;
+        renderToggles();
+      }
+      renderProps();
+    });
+}
+
+// The chip group: All / Home / Away, plus H2H when the next game gives an opponent (js/core/h2h.js).
+function splitOptions() {
+  const opponent = h2hOpponent();
+  return h2hSplitOptions(opponent ? opponent.abbreviation : null, h2hNoGames);
+}
+
 // Keep only the games that pass the Home / Away split and (unless useTeammates is false) the With / Without chips.
+// H2H replaces the whole list with the games against the opponent (its own seasons; the teammate chips only know the last two, so they are not applied).
 function splitLogs(logs, split, useTeammates = true) {
+  if (split === "h2h") return { current: h2hLogsFor(h2hData, playerId), previous: [] };
   const keep = (log) =>
     (split === "all" || (split === "home") === log.isHome) && (!useTeammates || passesTeammateFilter(log));
   return { current: logs.current.filter(keep), previous: logs.previous.filter(keep) };
@@ -263,8 +293,10 @@ function renderToggles() {
     renderToggles();
     renderProps();
   });
-  renderToggleButtons(document.getElementById("playerSplits"), SPLITS, pageState.split, (split) => {
+  renderToggleButtons(document.getElementById("playerSplits"), splitOptions(), pageState.split, (split) => {
+    if (split === "h2h" && pageState.split !== "h2h") splitBeforeH2H = pageState.split;
     pageState.split = split;
+    if (split === "h2h") ensureH2H();
     renderToggles();
     renderProps();
   });
@@ -325,7 +357,7 @@ function renderGameLog(games, result, line) {
     const usage = (advancedFor(log) || {}).usage;
 
     return `<tr>
-      <td class="text-nowrap">${monthDayDate(row.date)}</td>
+      <td class="text-nowrap">${monthDayDate(row.date)}${row.postseason ? ` <span class="lh-post-tag">Post</span>` : ""}</td>
       <td class="text-nowrap">${opponentLabel(row)}</td>
       <td class="text-nowrap">${gameResultHtml(row) || "–"}</td>
       ${cell("min")}
@@ -606,11 +638,13 @@ function renderProps() {
 
   // The games in this window and split, newest first (pickWindowLogs in js/core/stats.js),
   // scored against the line. The table below uses the very same games.
-  const games = pickWindowLogs(splitLogs(playerLogs, pageState.split), pageState.windowSize, usingCurrentSeason);
+  // (H2H has its own list, so "Season" there means every game in the 5-season range.)
+  const seasonIsCurrent = pageState.split === "h2h" || usingCurrentSeason;
+  const games = pickWindowLogs(splitLogs(playerLogs, pageState.split), pageState.windowSize, seasonIsCurrent);
   const result = calculateHitRate(games, tab.stat, line ?? 0, "all");
 
   // The same window and split WITHOUT the teammate chips: the "All games" line in the With / Without card.
-  const allGames = pickWindowLogs(splitLogs(playerLogs, pageState.split, false), pageState.windowSize, usingCurrentSeason);
+  const allGames = pickWindowLogs(splitLogs(playerLogs, pageState.split, false), pageState.windowSize, seasonIsCurrent);
   renderWithoutSummary(result, calculateHitRate(allGames, tab.stat, line ?? 0, "all"), line);
 
   renderToolbar();
@@ -624,9 +658,14 @@ function renderProps() {
     summary.innerHTML = "";
     document.getElementById("playerMilestone").textContent = "";
     playerChart.clear();
-    message.textContent = Object.keys(pageState.teammates).length
-      ? "No games match these filters."
-      : pageState.split === "all" ? "No games played yet." : `No ${pageState.split} games in this window.`;
+    const opponent = h2hOpponent();
+    message.textContent = pageState.split === "h2h"
+      ? (h2hStatus === "loading" || h2hStatus === "idle" ? "Loading head-to-head games..."
+        : h2hStatus === "failed" ? "Couldn't load head-to-head games. Try again later."
+        : `No games against ${opponent ? opponent.abbreviation : "this team"} in the last 5 seasons.`)
+      : Object.keys(pageState.teammates).length
+        ? "No games match these filters."
+        : pageState.split === "all" ? "No games played yet." : `No ${pageState.split} games in this window.`;
     message.hidden = false;
     renderGameLog([], result, line);
     renderRole([], []);
@@ -645,7 +684,7 @@ function renderProps() {
     <div>
       <div class="lh-label">Average</div>
       <div class="lh-drawer-stat">${formatStatValue(result.average)}</div>
-    </div>`;
+    </div>${pageState.split === "h2h" ? h2hNoteHtml((h2hOpponent() || {}).abbreviation, h2hLogsFor(h2hData, playerId)) : ""}`;
 
   // Research mode: "25+ PTS in 7 of last 10 · avg 24.3"
   const milestone = playerChart.activeLine();
@@ -657,8 +696,13 @@ function renderProps() {
     milestoneBox.textContent = "";
   }
 
-  message.hidden = !(pageState.windowSize === "season" && !usingCurrentSeason);
-  message.textContent = "This season hasn't started, so Season shows last season.";
+  if (pageState.split === "h2h" && Object.keys(pageState.teammates).length) {
+    message.textContent = "The With / Without chips don't apply to H2H games.";
+    message.hidden = false;
+  } else {
+    message.hidden = !(pageState.windowSize === "season" && !usingCurrentSeason && pageState.split !== "h2h");
+    message.textContent = "This season hasn't started, so Season shows last season.";
+  }
 
   // The chart reads left to right, so oldest goes first.
   playerChart.setTonight(Boolean(nextGame)); // the dashed "?" bar for the next game
@@ -853,7 +897,8 @@ document.getElementById("withoutClear").addEventListener("click", () => {
 // "L10 · Home · Without J. Duren": which games the chart is showing.
 function shareFilterText() {
   const windowText = pageState.windowSize === "season" ? "Season" : `L${pageState.windowSize}`;
-  const splitText = { all: "All games", home: "Home games", away: "Away games" }[pageState.split];
+  const opponentNow = h2hOpponent();
+  const splitText = { all: "All games", home: "Home games", away: "Away games", h2h: `H2H${opponentNow ? ` vs ${opponentNow.abbreviation}` : ""}` }[pageState.split];
   const mates = Object.entries(pageState.teammates).map(([id, mode]) => {
     const mate = teammates && teammates.find((candidate) => candidate.id === Number(id));
     return mate ? `${mode === "with" ? "With" : "Without"} ${mate.shortName}` : null;
@@ -1191,6 +1236,7 @@ async function loadPlayerPage() {
 
     playerLogs = loaded.logsByPlayer[playerId];
     usingCurrentSeason = loaded.showingCurrentSeason;
+    renderToggles(); // now the next opponent is known, the H2H pill can appear
 
     renderHeader(injuries[0] || null);
     renderSidePlayers();

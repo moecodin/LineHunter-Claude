@@ -404,6 +404,8 @@ function calculateHitRate(games, stat, line, windowSize) {
       date: log.game.date,
       opponent: log.opponent,
       homeAway: log.isHome ? "home" : "away",
+      season: log.game.season,
+      postseason: Boolean(log.game.postseason),
       value,
       overUnder,
       // Extra details for tooltips: each stat in a combo, minutes played, and the final score
