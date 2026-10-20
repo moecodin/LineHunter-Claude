@@ -15,6 +15,8 @@
 //
 //   const bars = createAnimatedBars(innerBox, { maxBarWidth: 56, onHover, onLeave, onClick });
 //   bars.render({ games, line, bookLine, bookLabel, scaleMax, barClass, tonight });  // games oldest first (rows from calculateHitRate)
+//     tonight = null (no upcoming game) or { label: "vs BOS" }: one more slot at the right, an empty outlined bar as tall as the line
+//     with a softly pulsing dot where it meets the line, labeled "vs BOS" over "TONIGHT"
 //   bars.toImage()  -> PNG data URL of the chart as drawn now (the share picture)
 //   bars.clear()    -> remove everything
 // Needs js/components/propChart.js (chartColors, opponentLabel, shortDate) loaded first.
@@ -58,7 +60,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
   function makeBar(id) {
     const el = document.createElement("div");
     el.className = "lh-bar";
-    el.innerHTML = `<div class="lh-bar-fill"><span class="lh-bar-value"></span></div><div class="lh-bar-label"><span></span><span></span></div>`;
+    el.innerHTML = `<div class="lh-bar-fill"><span class="lh-bar-value"></span><i class="lh-bar-dot"></i></div><div class="lh-bar-label"><span></span><span></span></div>`;
     const bar = { el, fill: el.firstChild, valueEl: el.querySelector(".lh-bar-value"), labelEl: el.querySelector(".lh-bar-label"), game: null };
     el.addEventListener("pointerenter", () => {
       if (!bar.game) return;
@@ -127,9 +129,10 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       bar.el.style.transform = `translateX(${x}px)`;
       bar.fill.style.borderRadius = radius;
       bar.fill.className = `lh-bar-fill ${isTonight ? "" : barClass(game)}`;
-      bar.valueEl.textContent = isTonight ? "?" : game.value;
+      bar.valueEl.textContent = isTonight ? "" : game.value;
+      bar.el.classList.toggle("has-no-line", isTonight && line === null); // no line, no dot
       bar.valueEl.style.opacity = showValue ? "" : "0";
-      const [top, bottom] = isTonight ? ["Tonight", ""] : [opponentLabel(game), shortDate(game.date)];
+      const [top, bottom] = isTonight ? [tonight.label, "TONIGHT"] : [opponentLabel(game), shortDate(game.date)];
       bar.labelEl.children[0].textContent = top;
       bar.labelEl.children[1].textContent = bottom;
       bar.labelEl.style.opacity = showLabel ? "" : "0";
@@ -140,7 +143,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
         void bar.el.offsetWidth;
       }
       bar.fill.style.height = percent(value, scaleMax);
-      layout.bars.push({ game: isTonight ? null : game, x, width: barWidth, height: bar.heightPx, showValue, showLabel, isTonight, cls: isTonight ? "" : barClass(game) });
+      layout.bars.push({ game: isTonight ? null : game, x, width: barWidth, height: bar.heightPx, showValue, showLabel, isTonight, tonightLabel: isTonight ? tonight.label : "", cls: isTonight ? "" : barClass(game) });
     };
 
     const draw = () => {
@@ -240,10 +243,14 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       ctx.lineTo(x + bar.width, baseY);
       ctx.closePath();
       if (bar.isTonight) {
-        ctx.setLineDash([4, 3]);
-        ctx.strokeStyle = colors.muted;
+        ctx.strokeStyle = `rgba(${colors.textRgb}, 0.22)`; // thin, faint, solid outline; no fill
         ctx.stroke();
-        ctx.setLineDash([]);
+        if (layout.line !== null) {
+          ctx.fillStyle = colors.line;
+          ctx.beginPath();
+          ctx.arc(x + bar.width / 2, top, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
       } else {
         ctx.fillStyle = bar.cls.includes("is-noline") ? colors.noLine : colors[bar.cls.replace("is-", "")] || colors.push;
         ctx.fill();
@@ -254,15 +261,15 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
         ctx.font = "700 12px Satoshi, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
-        ctx.fillText(bar.isTonight ? "?" : bar.game.value, centerX, top - 4);
+        if (!bar.isTonight) ctx.fillText(bar.game.value, centerX, top - 4);
       }
       if (bar.showLabel) {
         ctx.fillStyle = colors.muted;
         ctx.font = "10px 'JetBrains Mono', monospace";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
-        ctx.fillText(bar.isTonight ? "Tonight" : opponentLabel(bar.game), centerX, baseY + 6);
-        if (!bar.isTonight) ctx.fillText(shortDate(bar.game.date), centerX, baseY + 18);
+        ctx.fillText(bar.isTonight ? bar.tonightLabel : opponentLabel(bar.game), centerX, baseY + 6);
+        ctx.fillText(bar.isTonight ? "TONIGHT" : shortDate(bar.game.date), centerX, baseY + 18);
       }
     });
 

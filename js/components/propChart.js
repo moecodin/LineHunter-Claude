@@ -446,7 +446,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     onLineChange();
   });
 
-  let showTonight = false; // animatedBars: a dashed "?" bar at the far right for the next game
+  let tonightLabel = null; // animatedBars: the label ("vs BOS") for the empty bar at the far right for the next game, or null for none
 
   let lastDraw = null; // the last draw() arguments, so switching modes or themes can redraw
   document.addEventListener("lh-mode-change", () => {
@@ -481,7 +481,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
       parts.tooltip.hidden = true;
       bars.render({
         games, line, bookLine: book, bookLabel: markerOptions.bookLabel, scaleMax, ticks,
-        tonight: showTonight,
+        tonight: tonightLabel ? { label: tonightLabel } : null,
         barClass: (game) => {
           if (line === null) return "is-noline";
           // Research mode has no "under": a bar that misses the milestone is neutral gray, never red.
@@ -581,9 +581,9 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
       if (bars) return bars.toImage();
       return chart ? chart.toBase64Image("image/png", 1) : null;
     },
-    // animatedBars: show (or hide) the dashed "?" bar for tonight's game. Takes effect on the next draw().
-    setTonight(enabled) {
-      showTonight = Boolean(enabled);
+    // animatedBars: the empty bar for tonight's game, labeled e.g. "vs BOS" (null = no upcoming game, no bar). Takes effect on the next draw().
+    setTonight(label) {
+      tonightLabel = label || null;
     },
 
     // A new player or prop: set the book line (null if none) and an optional fallback starting line.

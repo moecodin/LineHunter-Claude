@@ -705,7 +705,9 @@ function renderProps() {
   }
 
   // The chart reads left to right, so oldest goes first.
-  playerChart.setTonight(Boolean(nextGame)); // the dashed "?" bar for the next game
+  const tonightOpponent = h2hOpponent();
+  // The empty bar for the next game, labeled "vs BOS" (home) or "@BOS" (away); no upcoming game, no bar.
+  playerChart.setTonight(tonightOpponent ? `${nextGame.home_team.id === player.team.id ? "vs " : "@"}${tonightOpponent.abbreviation}` : null);
   playerChart.draw([...result.games].reverse(), `${pageState.propType}|${pageState.windowSize}|${pageState.split}|${JSON.stringify(pageState.teammates)}`);
   renderGameLog(games, result, line);
   renderRole(games, result.games);
