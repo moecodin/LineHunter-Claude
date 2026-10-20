@@ -78,6 +78,8 @@ function renderToggleButtons(group, options, activeValue, onPick) {
     button.className = isActive ? "btn btn-ghost active" : "btn btn-ghost";
     button.setAttribute("aria-pressed", String(isActive));
     button.textContent = option.label;
+    if (option.title) button.title = option.title;
+    if (option.disabled) button.disabled = true;
     button.addEventListener("click", () => onPick(option.value));
     group.appendChild(button);
   });
@@ -289,7 +291,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     const game = games[item.dataIndex];
     const result = gameResultHtml(game);
     parts.tooltip.innerHTML = `
-      <div class="lh-tip-title">${opponentLabel(game)} · ${monthDayDate(game.date)}</div>
+      <div class="lh-tip-title">${opponentLabel(game)} · ${monthDayDate(game.date)}${game.postseason ? ` <span class="lh-post-tag">Post-season</span>` : ""}</div>
       ${tooltipStatLines(game).map((text) => `<div>${text}</div>`).join("")}
       ${result ? `<div class="lh-tip-result">${result}</div>` : ""}`;
     parts.tooltip.hidden = false;

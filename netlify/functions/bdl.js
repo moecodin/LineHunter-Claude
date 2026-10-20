@@ -7,7 +7,7 @@
 //
 // Cache headers let Netlify's CDN share one answer between visitors. The cache key is the full URL INCLUDING the query string
 // (Netlify-Vary: query below), so /v1/stats?player_ids[]=1 and /v1/stats?player_ids[]=2 never share an entry.
-//   15 seconds   box scores (/v1/stats?game_ids[]=)
+//   15 seconds   box scores (/v1/stats?game_ids[]=) unless every game was Final before today (then 24 hours)
 //   30 seconds   games from today on while one is live
 //   2 minutes    player props and odds
 //   5 minutes    games from today on when none is live
@@ -66,6 +66,16 @@ function anyLiveGame(body) {
   }
 }
 
+// True when the stat lines are all from Final games played before today (a box score that will not change).
+function allGamesSettled(body) {
+  try {
+    const rows = JSON.parse(body).data;
+    return rows.length > 0 && rows.every((row) => row.game && row.game.status === "Final" && row.game.date < today());
+  } catch (error) {
+    return false;
+  }
+}
+
 // How long a response may be shared, by endpoint (and, for games, by the dates asked for).
 function ttlFor(path, params, body) {
   if (/^\/nba\/v2\/odds/.test(path)) return TTL.props;
@@ -73,7 +83,8 @@ function ttlFor(path, params, body) {
   if (path === "/v1/teams") return TTL.past;
 
   if (path === "/v1/stats") {
-    if (params.has("game_ids[]")) return TTL.box;                  // a game's box score can still be changing
+    // A game's box score can still be changing, but once every game in it was Final before today (head-to-head history) it is settled.
+    if (params.has("game_ids[]")) return allGamesSettled(body) ? TTL.past : TTL.box;
     return isPastSeason(params) ? TTL.past : TTL.medium;           // last season's logs never change; this season's change daily
   }
 
