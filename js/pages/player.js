@@ -43,6 +43,7 @@ const roleChart = createRoleChart(document.getElementById("roleChart"), { height
 const playerChart = createPropChart(document.getElementById("playerChart"), {
   height: 240,
   maxBarWidth: 56,
+  animatedBars: true,                          // compact HTML bars that move between ranges (js/components/animatedBars.js)
   externalLine: true,                          // the prop toolbar above moves the line (research mode keeps the milestone control)
   onBarClick: (game) => openGameSummary(game),
   onLineChange: () => renderProps(),
@@ -704,6 +705,7 @@ function renderProps() {
   }
 
   // The chart reads left to right, so oldest goes first.
+  playerChart.setTonight(Boolean(nextGame)); // the dashed "?" bar for the next game
   playerChart.draw([...result.games].reverse(), `${pageState.propType}|${pageState.windowSize}|${pageState.split}|${JSON.stringify(pageState.teammates)}`);
   renderGameLog(games, result, line);
   renderRole(games, result.games);
