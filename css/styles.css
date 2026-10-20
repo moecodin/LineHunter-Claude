@@ -1306,6 +1306,132 @@ html {
   font-weight: 700;
   color: var(--lh-strong);
 }
+/* The player page's HTML bars (js/components/animatedBars.js). Bars are keyed by game: they slide / resize with transform + width,
+   grow and shrink with height. 220 ms ease-out; skipped for reduced motion and while .is-still (first draw, resizes). */
+.lh-bars {
+  --lh-bar-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  position: absolute;
+  inset: 0;
+}
+.lh-bars-plot {
+  position: absolute;
+  left: 30px;   /* y-axis numbers */
+  right: 0;
+  top: 18px;    /* room for the number above the tallest bar */
+  bottom: 32px; /* room for the opponent / date labels */
+}
+.lh-bars-tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid rgba(var(--lh-line-rgb), 0.12);
+  transition: bottom 220ms var(--lh-bar-ease), opacity 220ms;
+}
+.lh-bars-tick span {
+  position: absolute;
+  right: calc(100% + 6px);
+  top: 0;
+  transform: translateY(-50%);
+  color: var(--lh-muted);
+  font: 10px "JetBrains Mono", monospace;
+}
+.lh-bars-tick.is-leaving { opacity: 0; }
+.lh-bars-line,
+.lh-bars-book {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  z-index: 1;
+  pointer-events: none; /* never blocks hovering the bars */
+  transition: bottom 220ms var(--lh-bar-ease);
+}
+.lh-bars-line { border-top: 2px dashed var(--lh-accent); }
+.lh-bars-line::before,
+.lh-bars-line::after { /* the small arrow handles at each end, pointing in at the line */
+  content: "";
+  position: absolute;
+  top: -6px;
+  border: 5px solid transparent;
+}
+.lh-bars-line::before { left: 0; border-left: 8px solid var(--lh-accent); border-right: 0; }
+.lh-bars-line::after { right: 0; border-right: 8px solid var(--lh-accent); border-left: 0; }
+.lh-bars-book { border-top: 1px dashed rgba(var(--lh-text-rgb), 0.3); }
+.lh-bars-book span {
+  position: absolute;
+  right: 2px;
+  bottom: 3px;
+  color: rgba(var(--lh-text-rgb), 0.55);
+  font: 500 10px "JetBrains Mono", monospace;
+}
+.lh-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  cursor: pointer;
+  transition: transform 220ms var(--lh-bar-ease), width 220ms var(--lh-bar-ease);
+}
+.lh-bar-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--lh-push);
+  transition: height 220ms var(--lh-bar-ease), opacity 160ms;
+}
+.lh-bar-fill.is-over { background: var(--lh-over); }
+.lh-bar-fill.is-under { background: var(--lh-under); }
+.lh-bar-fill.is-push { background: var(--lh-push); }
+.lh-bar-fill.is-noline { background: var(--lh-accent); }
+.lh-bar-value {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 4px;
+  transform: translateX(-50%);
+  color: var(--lh-text);
+  font: 700 12px Satoshi, sans-serif;
+  transition: opacity 160ms;
+}
+.lh-bar-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 6px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--lh-muted);
+  font: 10px/1.3 "JetBrains Mono", monospace;
+  white-space: nowrap;
+  transition: opacity 160ms;
+}
+.lh-bar-label span:empty { display: none; }
+/* Hovering a bar fades the others (and their numbers), like the canvas chart */
+.lh-bars.has-hover .lh-bar:not(.is-hover) .lh-bar-fill { opacity: 0.3; }
+.lh-bars.has-hover .lh-bar:not(.is-hover) .lh-bar-value { opacity: 0.35; }
+/* A dropped game shrinks to the baseline and goes */
+.lh-bar.is-leaving { pointer-events: none; }
+.lh-bar.is-leaving .lh-bar-value,
+.lh-bar.is-leaving .lh-bar-label { opacity: 0; }
+/* Tonight's game: an empty dashed bar with a "?" */
+.lh-bar.is-tonight { pointer-events: none; cursor: default; }
+.lh-bar.is-tonight .lh-bar-fill {
+  background: transparent;
+  border: 2px dashed rgba(var(--lh-text-rgb), 0.35);
+  border-bottom: 0;
+  box-sizing: border-box;
+}
+.lh-bar.is-tonight .lh-bar-value { color: var(--lh-muted); }
+.lh-bars.is-still,
+.lh-bars.is-still * { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .lh-bars, .lh-bars * { transition: none !important; }
+}
+
 /* Bar tooltip in the drawer chart: "@BOS · Oct 22" / "31 PTS · 34 min" / "W 112–105" */
 .lh-chart-tooltip {
   position: absolute;
