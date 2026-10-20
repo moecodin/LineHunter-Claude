@@ -54,6 +54,7 @@ const playerChart = createPropChart(document.getElementById("playerChart"), {
 const playerToolbar = createPropToolbar(document.getElementById("playerToolbar"), {
   statTabs: document.getElementById("playerPropTabs"),
   showHead: true,
+  editableLine: true,                          // click the line number to type one (js/components/prop-toolbar.js)
   onStep: (value) => { playerChart.setActiveLine(value); renderProps(); },
   onSide: () => renderProps(),
 });

@@ -14,9 +14,28 @@
 //   pick is in the slip the button is teal and reads "IN MY HUNTS"; tapping it again removes it. (One leg per player + stat:
 //   js/core/hunts.js replaces the old one.)
 //
+// - editableLine: true (the player page) lets you click / tap the number to type a line: it becomes a text input (numeric keypad on
+//   phones) with the value selected. Enter or clicking away applies it, Escape cancels. The number snaps to the nearest x.5 (14 -> 14.5,
+//   15.2 -> 15.5) and stays between 0.5 and a maximum for the stat (LINE_MAX); letters or an empty box keep the old line. It goes through
+//   onStep like the + / - buttons, so everything redraws the same way.
+//
 // Needs js/core/hunts.js, js/data/odds.js, js/components/hunt-button.js and lineText() from js/components/propChart.js.
 
-function createPropToolbar(container, { statTabs = null, showHead = false, onStep = () => {}, onSide = () => {} } = {}) {
+// The highest line a typed number may be, per prop type (a sensible ceiling, not a book limit).
+const LINE_MAX = { points: 70.5, rebounds: 30.5, assists: 25.5, threes: 14.5, points_rebounds_assists: 100.5 };
+const LINE_MAX_DEFAULT = 100.5;
+
+// Typed text -> a line: the nearest x.5 between 0.5 and the maximum, or null when it isn't a number.
+function snapTypedLine(text, max) {
+  const raw = String(text).trim().replace(",", ".");
+  if (raw === "" || !/^\d*\.?\d+$|^\d+\.$/.test(raw)) return null; // letters, signs, several dots: not a line
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return null;
+  const snapped = Math.round(value - 0.5) + 0.5; // the nearest x.5 (a whole number goes up: 14 -> 14.5)
+  return Math.min(max, Math.max(0.5, snapped));
+}
+
+function createPropToolbar(container, { statTabs = null, showHead = false, editableLine = false, onStep = () => {}, onSide = () => {} } = {}) {
   container.classList.add("lh-ptb", "lines-only");
   container.innerHTML = `
     <div class="lh-ptb-head" ${showHead ? "" : "hidden"}>
@@ -54,6 +73,50 @@ function createPropToolbar(container, { statTabs = null, showHead = false, onSte
 
   let side = null; // "over", "under", or null (nothing picked)
   let line = null;
+  let statType = null; // the prop type of the last render (sets the maximum a typed line may have)
+  let editing = false; // the number is an input right now (render() leaves it alone)
+
+  // Click / tap the number to type a line (editableLine only).
+  function startEditing() {
+    if (!editableLine || line === null || editing) return;
+    editing = true;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "decimal"; // numeric keypad on phones
+    input.autocomplete = "off";
+    input.className = "lh-ptb-input";
+    input.setAttribute("aria-label", "Line");
+    input.value = lineText(line);
+    parts.value.textContent = "";
+    parts.value.appendChild(input);
+    input.focus();
+    input.select();
+
+    let finished = false;
+    const finish = (apply) => {
+      if (finished) return;
+      finished = true;
+      editing = false;
+      const typed = apply ? snapTypedLine(input.value, LINE_MAX[statType] || LINE_MAX_DEFAULT) : null;
+      parts.value.textContent = line === null ? "–" : lineText(line); // back to the number (the old one unless it changed below)
+      if (typed !== null && typed !== line) onStep(typed);
+    };
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") { event.preventDefault(); finish(true); }
+      if (event.key === "Escape") { event.preventDefault(); finish(false); }
+    });
+    input.addEventListener("blur", () => finish(true));
+  }
+  if (editableLine) {
+    parts.value.classList.add("is-editable");
+    parts.value.tabIndex = 0;
+    parts.value.setAttribute("role", "button");
+    parts.value.setAttribute("aria-label", "Line: tap to type a number");
+    parts.value.addEventListener("click", startEditing);
+    parts.value.addEventListener("keydown", (event) => {
+      if (event.target === parts.value && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); startEditing(); }
+    });
+  }
 
   // The page's stat tabs live in the toolbar in lines mode and go back to where they were in research mode (the toolbar is hidden then).
   let statHome = null;
@@ -88,12 +151,13 @@ function createPropToolbar(container, { statTabs = null, showHead = false, onSte
   //   stat = the API prop type ("points"); line = the line on the chart (null = no line to move).
   function render(ctx) {
     line = ctx.line;
+    statType = ctx.stat;
     if (showHead && ctx.head) {
       parts.name.textContent = ctx.head.name;
       parts.match.textContent = ctx.head.matchup || "";
     }
 
-    parts.value.textContent = line === null ? "–" : lineText(line);
+    if (!editing) parts.value.textContent = line === null ? "–" : lineText(line);
     parts.down.disabled = line === null || line <= 0.5;
     parts.up.disabled = line === null;
     parts.sides.forEach((button) => {
