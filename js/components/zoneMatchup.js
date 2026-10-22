@@ -107,9 +107,8 @@ function matchupVerdict(rows, opponent) {
   const total = rows.reduce((sum, row) => sum + row.impact, 0);
   let label = "Neutral";
   let tone = "neutral";
-  let hint = "";
   if (total >= MATCHUP_VERDICT_POINTS) { label = "Favorable"; tone = "over"; }
-  if (total >= MATCHUP_BBQ_POINTS) { label = "BBQ Chicken 🍗"; hint = "Hoops slang: an easy matchup."; }
+  if (total >= MATCHUP_BBQ_POINTS) label = "BBQ Chicken 🍗";
   if (total <= -MATCHUP_VERDICT_POINTS) { label = "Tough"; tone = "under"; }
 
   const biggest = rows.filter((row) => row.rank !== null).sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact))[0];
@@ -121,7 +120,7 @@ function matchupVerdict(rows, opponent) {
     const phrase = place === 1 ? `the ${word}` : `the ${ordinal(place)} ${word}`;
     sentence = `Takes ${Math.round(biggest.share * 100)}% of shots ${biggest.phrase}; ${opponent.abbr} allows ${phrase} there.`;
   }
-  return { label, tone, sentence, hint };
+  return { label, tone, sentence };
 }
 
 // ---------- Drawing ----------
@@ -156,7 +155,7 @@ function renderMatchup(shotData, teams, opponent) {
 
   body.innerHTML = `
     <div class="lh-zm-verdict">
-      <span class="lh-zm-pill is-${verdict.tone}"${verdict.hint ? ` title="${verdict.hint}"` : ""}>${verdict.label}</span>
+      <span class="lh-zm-pill is-${verdict.tone}">${verdict.label}</span>
       <span class="small text-muted">${verdict.sentence}</span>
     </div>
     <div class="lh-zm-head"><span>Zone</span><span>Shot share</span><span>${opponent.abbr} allows</span><span>Rank</span></div>

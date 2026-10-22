@@ -133,7 +133,7 @@ function bbqCardHtml() {
     <div class="lh-shelf-item">
       <div class="lh-hitlist-card">
         <div class="lh-hitlist-head"><i class="bi bi-fire" aria-hidden="true"></i><span>BBQ Chicken 🍗</span></div>
-        <div class="lh-hitlist-blurb" title="Hoops slang: an easy matchup.">Facing one of the 5 weakest defenses for their main stat (points, rebounds, assists or 3PM)</div>
+        <div class="lh-hitlist-blurb">Facing one of the 5 weakest defenses for their main stat (points, rebounds, assists or 3PM)</div>
         <div class="lh-hitlist-list" data-bbq-slot><div class="lh-hitlist-empty text-muted">Loading…</div></div>
       </div>
     </div>`;
