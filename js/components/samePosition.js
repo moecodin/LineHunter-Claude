@@ -1,5 +1,5 @@
 // LineHunter - js/components/samePosition.js
-// The "Same Position vs BOS" card on player.html (half width, right under the prop chart, Zone Matchup beside it): how players
+// The "Same Position vs BOS" card on player.html (half width, right under the prop chart, Matchup Analysis beside it): how players
 // at this player's position did against the opponent in its last 10 finished games, each scored against THIS player's current
 // line for the selected prop tab, and compared with their own norm (their last 10 games against other teams).
 //

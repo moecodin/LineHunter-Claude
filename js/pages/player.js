@@ -637,6 +637,7 @@ function renderProps() {
   // mode, where "25+" means >= 25: see lineForScoring in js/components/propChart.js).
   const line = lineForScoring(playerChart.activeLine());
   renderSamePosition(pageState.propType, playerChart.activeLine()); // the Same Position card follows the tab and line
+  renderMatchupAnalysis(pageState.propType); // the Matchup Analysis battle section follows the tab
 
   // The games in this window and split, newest first (pickWindowLogs in js/core/stats.js),
   // scored against the line. The table below uses the very same games.
@@ -1253,6 +1254,15 @@ async function loadPlayerPage() {
     loadShotChart(playerId).then((shotData) => loadZoneMatchup(shotData, opponentId, player.team ? player.team.id : null));
     // Same Position vs the next opponent (js/components/samePosition.js), right under the chart.
     loadSamePosition({ playerId, position: player.position, ownTeamId: player.team ? player.team.id : null, opponentId });
+    // Matchup Analysis (js/components/matchupAnalysis.js): this player next to a player on the next opponent, beside Same Position.
+    const nextOpponent = h2hOpponent();
+    loadMatchupAnalysis({
+      me: { id: playerId, name: `${player.first_name} ${player.last_name}`, last: player.last_name, position: player.position || "", team: player.team || null },
+      opponent: nextOpponent
+        ? { ...nextOpponent, away: nextGame.visitor_team.abbreviation, home: nextGame.home_team.abbreviation }
+        : null,
+      ownTeamId: player.team ? player.team.id : null,
+    });
     // Usage % loads after the page is up: the Role card and the USG% column fill in when it arrives.
     loadAdvanced()
       .then(() => { usageStatus = "ready"; renderProps(); })

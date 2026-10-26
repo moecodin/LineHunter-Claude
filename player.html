@@ -98,7 +98,7 @@
     </section>
 
     <!-- MATCHUP ROW: Same Position (players at this position vs the next opponent's last 10 games, vs this player's line
-         and their own norm: js/components/samePosition.js) and Zone Matchup. Stacked on tablets and phones. -->
+         and their own norm: js/components/samePosition.js) and Matchup Analysis. Stacked on tablets and phones. -->
     <div class="row g-4 mb-4">
       <div class="col-lg-6">
         <section class="card h-100" data-lh-collapse="sameposition" data-lh-collapse-name="Same Position">
@@ -120,24 +120,18 @@
         </section>
       </div>
       <div class="col-lg-6">
-        <!-- ZONE MATCHUP: the player's shot zones against an opponent's defense. js/components/zoneMatchup.js fills it in. -->
-        <section class="card h-100" data-lh-collapse="zonematchup">
+        <!-- MATCHUP ANALYSIS: this player next to one player on the next opponent (default: most minutes at the same
+             position), season averages, a battle section that follows the prop tab, past meetings. js/components/matchupAnalysis.js -->
+        <section class="card h-100" data-lh-collapse="matchupanalysis" data-lh-collapse-name="Matchup Analysis">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Zone Matchup</h2>
-              <div class="d-flex align-items-center gap-2">
-                <span id="zoneMatchupNote" class="small text-muted"></span>
-                <select id="zoneMatchupTeam" class="form-select form-select-sm lh-zm-select" aria-label="Opponent team" disabled></select>
+              <div class="me-auto">
+                <h2 class="lh-label mb-0">Matchup Analysis</h2>
+                <div id="matchupSub" class="small text-muted"></div>
               </div>
+              <select id="matchupPick" class="form-select form-select-sm lh-zm-select lh-ma-select" aria-label="Compare with" disabled></select>
             </div>
-            <div id="zoneMatchupBody" class="text-muted small">Loading matchup...</div>
-            <!-- "How to read this": a small muted link that expands a plain-language explanation (Bootstrap collapse) -->
-            <div class="lh-explain">
-              <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainZone" aria-expanded="false" aria-controls="explainZone">
-                How to use this <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
-              </button>
-              <div class="collapse" id="explainZone"><p class="lh-explain-text">Look at which zones the player shoots from most, then check how the chosen team defends those same zones. For a points or 3PM <span class="lines-only">prop</span><span class="research-only">stat</span>, a team that allows a high field-goal percentage in the player's busiest zones may leave more room, and one that ranks among the best there may leave less. It is one input among many and does not predict the game.</p></div>
-            </div>
+            <div id="matchupBody" class="text-muted small py-4 text-center">Loading matchup...</div>
           </div>
         </section>
       </div>
@@ -241,7 +235,7 @@
       </div>
     </div>
 
-    <!-- 7. SHOT CHART: season-level, the window / home-away / teammate filters don't change it. (Zone Matchup moved up next to Same Position.) -->
+    <!-- 7. SHOT CHART + ZONE MATCHUP: season-level, the window / home-away / teammate filters don't change the Shot Chart. -->
     <div class="row g-4 mb-5">
       <div class="col-lg-6">
         <section class="card h-100" data-lh-collapse="shotchart">
@@ -257,6 +251,28 @@
                 What this tells us <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
               </button>
               <div class="collapse" id="explainShot"><p class="lh-explain-text">Where a player shoots, and how efficiently they shoot there, shows how they score. A big share of attempts at the rim points to a paint-and-finishing style, while a big above-the-break share points to a perimeter-shooting one. The colours compare each zone with the league average, so this is season-level context, not a prediction.</p></div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="col-lg-6">
+        <!-- ZONE MATCHUP: the player's shot zones against an opponent's defense. js/components/zoneMatchup.js fills it in. -->
+        <section class="card h-100" data-lh-collapse="zonematchup">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Zone Matchup</h2>
+              <div class="d-flex align-items-center gap-2">
+                <span id="zoneMatchupNote" class="small text-muted"></span>
+                <select id="zoneMatchupTeam" class="form-select form-select-sm lh-zm-select" aria-label="Opponent team" disabled></select>
+              </div>
+            </div>
+            <div id="zoneMatchupBody" class="text-muted small">Loading matchup...</div>
+            <!-- "How to read this": a small muted link that expands a plain-language explanation (Bootstrap collapse) -->
+            <div class="lh-explain">
+              <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainZone" aria-expanded="false" aria-controls="explainZone">
+                How to use this <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+              </button>
+              <div class="collapse" id="explainZone"><p class="lh-explain-text">Look at which zones the player shoots from most, then check how the chosen team defends those same zones. For a points or 3PM <span class="lines-only">prop</span><span class="research-only">stat</span>, a team that allows a high field-goal percentage in the player's busiest zones may leave more room, and one that ranks among the best there may leave less. It is one input among many and does not predict the game.</p></div>
             </div>
           </div>
         </section>
@@ -323,6 +339,7 @@
   <script src="js/components/shotChart.js"></script>
   <script src="js/components/zoneMatchup.js"></script>
   <script src="js/components/samePosition.js"></script>
+  <script src="js/components/matchupAnalysis.js"></script>
   <script src="js/components/share.js"></script>
   <script src="js/components/cardCollapse.js"></script>
   <script src="js/pages/player.js"></script>

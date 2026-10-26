@@ -2643,6 +2643,65 @@ a.lh-demo-button:focus-visible {
 .lh-zm-rank.is-over  { border-color: var(--lh-over);  color: var(--lh-over-text); }
 .lh-zm-rank.is-under { border-color: var(--lh-under); color: var(--lh-under-text); }
 
+/* Player page: Matchup Analysis card (js/components/matchupAnalysis.js) */
+.lh-ma-select { max-width: 13rem; }
+.lh-ma { display: flex; flex-direction: column; gap: 1rem; }
+.lh-ma-flag {
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  padding: 0.6rem 0.75rem; border-radius: 8px; font-size: 0.82rem; line-height: 1.4;
+  color: var(--lh-muted); background: rgba(var(--lh-ink-rgb), 0.03); border: 1px solid var(--lh-border);
+}
+.lh-ma-flag b { color: var(--lh-strong); font-weight: 700; }
+.lh-ma-flag.is-out { color: var(--lh-text); background: rgba(var(--lh-out-rgb), 0.1); border-color: rgba(var(--lh-out-rgb), 0.55); }
+.lh-ma-flag.is-gtd { color: var(--lh-text); background: rgba(var(--lh-dtd-rgb), 0.08); border-color: rgba(var(--lh-dtd-rgb), 0.45); }
+.lh-ma-badge {
+  flex: none; font-family: var(--lh-font-label); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
+  border-radius: 4px; padding: 0.1rem 0.4rem; margin-top: 0.1rem;
+}
+.lh-ma-badge.is-ok { color: var(--lh-over-text); border: 1px solid var(--lh-over); }
+.lh-ma-badge.is-out { color: #fff; background: var(--lh-out); }
+.lh-ma-badge.is-gtd { color: var(--lh-dtd); border: 1px solid var(--lh-dtd); }
+.lh-ma-badge.is-backup { color: var(--lh-accent); border: 1px solid var(--lh-border); margin-top: 0; }
+.lh-ma-names { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 0.5rem; }
+.lh-ma-name { min-width: 0; }
+.lh-ma-name.is-right { text-align: right; }
+.lh-ma-who { font-family: var(--lh-font-display); font-weight: 700; font-size: 1.15rem; line-height: 1.1; color: var(--lh-strong); }
+.lh-ma-meta { font-size: 0.72rem; color: var(--lh-muted); margin-top: 0.2rem; }
+.lh-ma-vs { font-family: var(--lh-font-label); font-size: 0.7rem; color: var(--lh-muted); padding-bottom: 0.25rem; }
+.lh-ma-sec {
+  display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem;
+  font-family: var(--lh-font-label); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lh-muted);
+}
+.lh-ma-sec span:last-child { letter-spacing: 0.04em; text-transform: none; }
+.lh-ma-tape { display: flex; flex-direction: column; gap: 0.25rem; }
+.lh-ma-row {
+  display: grid; grid-template-columns: 2.6rem 1fr 3rem 1fr 2.6rem; align-items: center; gap: 0.4rem;
+  padding: 0.1rem 0.25rem; border-radius: 6px; font-variant-numeric: tabular-nums;
+}
+.lh-ma-row.is-selected { background: rgba(var(--lh-accent-rgb), 0.07); }
+.lh-ma-row.is-selected .lh-ma-label { color: var(--lh-accent); }
+.lh-ma-val { font-family: var(--lh-font-display); font-weight: 600; font-size: 1.05rem; color: var(--lh-muted); }
+.lh-ma-val.is-right { text-align: right; }
+.lh-ma-val.is-win { color: var(--lh-strong); font-weight: 800; }
+.lh-ma-label { font-family: var(--lh-font-label); font-size: 0.62rem; letter-spacing: 0.05em; text-align: center; color: var(--lh-muted); }
+.lh-ma-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: rgba(var(--lh-accent-rgb), 0.06); }
+.lh-ma-bar.is-left { justify-content: flex-end; }
+.lh-ma-bar > i { display: block; height: 100%; border-radius: 3px; background: rgba(var(--lh-push-rgb), 0.55); }
+.lh-ma-bar > i.is-win { background: var(--lh-accent); }
+.lh-ma-battle { display: flex; flex-direction: column; }
+.lh-ma-split { display: flex; gap: 2px; height: 22px; border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem; }
+.lh-ma-split > div {
+  display: flex; align-items: center; min-width: 2.6rem; padding: 0 0.5rem; white-space: nowrap;
+  font-family: var(--lh-font-display); font-weight: 700; font-size: 0.85rem;
+}
+.lh-ma-split .is-mine { background: rgba(var(--lh-accent-rgb), 0.22); color: var(--lh-strong); }
+.lh-ma-split .is-theirs { justify-content: flex-end; background: rgba(var(--lh-push-rgb), 0.28); color: var(--lh-text); }
+.lh-ma-legend { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.72rem; color: var(--lh-muted); margin-bottom: 0.4rem; }
+.lh-ma-legend b { color: var(--lh-text); font-weight: 500; }
+.lh-ma-insight { font-size: 0.8rem; line-height: 1.45; color: var(--lh-text); }
+.lh-ma-past { border-top: 1px dashed var(--lh-border); padding-top: 0.75rem; font-size: 0.78rem; line-height: 1.45; color: var(--lh-muted); }
+.lh-ma-past b { color: var(--lh-text); font-weight: 500; }
+
 /* Player page: Same Position vs opponent card (js/components/samePosition.js). Half width from 992px (rows grouped by
    game, a bar per stat with a tick at the line, an L10 column); below that the plain table. */
 .lh-sp-head { margin-bottom: 0.75rem; }
