@@ -7,7 +7,7 @@
   <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
   <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Schedule · LineHunter</title>
+  <title>Today · LineHunter</title>
   <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
   <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
@@ -44,7 +44,7 @@
   </div>
 
   <!-- container = centers the content and adds side padding -->
-  <main class="container-fluid lh-container px-3 px-lg-4 lh-schedule-page">
+  <main class="container-fluid lh-container px-3 px-lg-4 lh-schedule-page" data-lh-slate="day"><!-- data-lh-slate: js/components/top-hit-rates.js builds the slate here without its card -->
 
     <!-- GAMES HEADER: the title on the left, the date pager on the right.
          d-flex = line things up in a row. flex-wrap = drop to a new line on narrow screens.
@@ -52,7 +52,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
       <div>
         <!-- lh-label = tiny techy caps text (css/styles.css) -->
-        <div class="lh-label mb-1">NBA · <span class="text-accent">Schedule</span></div>
+        <div class="lh-label mb-1">NBA · <span class="text-accent">Today</span></div>
         <!-- lh-display = big condensed font. JavaScript changes the text inside the span. -->
         <h2 id="games" class="lh-display display-6 mb-0">Games <span id="games-date-label" class="text-accent">Today</span></h2>
       </div>
@@ -68,7 +68,7 @@
          The id stays "games-list" so js/pages/app.js can still find it. -->
     <!-- GAMES CAROUSEL: 3 cards per page on desktop (2 on tablets, 1 on phones). The ‹ › buttons page through
          the rest. js/pages/app.js fills #games-list and sets up the buttons and the "1-3 of 8" counter. -->
-    <div class="lh-games-carousel mb-5">
+    <div class="lh-games-carousel mb-4">
       <button type="button" id="gamesPrev" class="lh-games-nav lh-games-prev" aria-label="Previous games" hidden>
         <i class="bi bi-chevron-left" aria-hidden="true"></i>
       </button>
@@ -81,93 +81,28 @@
       <div id="gamesCount" class="lh-label text-center mt-2" aria-live="polite" hidden></div>
     </div>
 
-    <!-- Player search: js/components/nav.js puts the search bar here instead of in the navbar -->
-    <div id="lh-search-slot" class="lh-search-slot mb-3"></div>
+    <!-- TOOLS: one tile per tool (LH_TOOLS in js/components/nav.js; lines-only / research-only follow the mode), each with one live
+         teaser from data this page already loads. js/pages/today.js draws them. -->
+    <section id="todayTools" class="lh-today-tools mb-4" aria-label="Tools"></section>
 
-    <!-- HIT LIST (lines mode) / STREAKS (research mode): a horizontal shelf of category cards, full width. Only the shelf
-         scrolls sideways; the arrows (desktop) move it one card. js/components/hit-list.js and js/components/fanCards.js draw the cards. -->
-    <section id="hitlist" class="lh-shelf mb-5 lines-only">
-      <div class="lh-shelf-head">
-        <div>
-          <h2 class="lh-top-title mb-1"><i class="bi bi-bullseye" aria-hidden="true"></i><span id="hitlistTitle">Hit List</span></h2>
-          <div class="small text-muted">Props that hit in 100% of recent games</div>
-        </div>
-        <div class="lh-shelf-arrows d-none d-lg-flex">
-          <button type="button" class="lh-shelf-arrow" data-shelf-target="#hitlistShelf" data-shelf-dir="-1" aria-label="Previous cards"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
-          <button type="button" class="lh-shelf-arrow" data-shelf-target="#hitlistShelf" data-shelf-dir="1" aria-label="Next cards"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-        </div>
+    <!-- TOP 5 HUNTS (lines mode): the Hunt Score engine's top hunts for the picked day (/api/hunt). "See all" opens hunt-score.html. -->
+    <section id="todayHunts" class="card lh-today-hunts lines-only mb-5" aria-labelledby="todayHuntsTitle">
+      <div class="card-header d-flex align-items-center flex-wrap gap-2 py-3">
+        <h2 class="lh-top-title mb-0" id="todayHuntsTitle"><i class="bi bi-crosshair" aria-hidden="true"></i>Top 5 Hunts</h2>
+        <span class="lh-label text-muted d-none d-sm-inline">Hunt Score</span>
+        <a class="lh-see-all ms-auto" id="todayHuntsAll" href="hunt-score.html">See all <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
       </div>
-      <div id="hitlistBody" class="text-muted">Loading picks...</div>
-      <!-- "How to read this": a small muted link that expands a plain-language explanation (Bootstrap collapse) -->
-      <div class="lh-explain">
-        <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainHitList" aria-expanded="false" aria-controls="explainHitList">
-          Why these made the list <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
-        </button>
-        <div class="collapse" id="explainHitList"><p class="lh-explain-text">Each card is built from past results: each player's recent games (their last 20 to 50, going back to January at most, so streaks and matchup counts only reach that far). Perfect Five needs a prop over the line in all of the last 5 games (5/5) and Under the Weather the same for unders. Home Cookin' / Road Warriors needs every one of the last 5+ games at tonight's venue over the line, Bad Blood every game against tonight's opponent (2+), BBQ Chicken (slang for an easy matchup) players facing one of the five weakest defenses for their main stat, Brick City players shooting well below their season rate over the last 5 games, Heat Check lists current over streaks of 6 or more, and Light It Up lists teams that scored at least a set number of points in each of their last 3 to 5 games. These are past results only, so they do not guarantee the next game.</p></div>
-      </div>
-      <div class="small text-muted mt-2">Spot a bug or have an idea? <a class="lh-discord-note" href="#" target="_blank" rel="noopener" data-discord-link>Tell us on Discord →</a></div>
-      <div class="small text-muted mt-2">Based on past results — not guarantees.</div>
+      <div class="card-body" id="todayHuntsList" aria-busy="true"></div>
     </section>
-
-    <section id="streaks" class="lh-shelf mb-5 research-only">
-      <div class="lh-shelf-head">
-        <div>
-          <h2 class="lh-top-title mb-1"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i><span id="streaksTitle">Streaks</span></h2>
-          <div class="small text-muted">Players on tonight's slate on a run</div>
-        </div>
-        <div class="lh-shelf-arrows d-none d-lg-flex">
-          <button type="button" class="lh-shelf-arrow" data-shelf-target="#streaksShelf" data-shelf-dir="-1" aria-label="Previous cards"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
-          <button type="button" class="lh-shelf-arrow" data-shelf-target="#streaksShelf" data-shelf-dir="1" aria-label="Next cards"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-        </div>
-      </div>
-      <div id="streaksBody" class="text-muted">Loading streaks...</div>
-      <div class="lh-explain">
-        <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainStreaks" aria-expanded="false" aria-controls="explainStreaks">
-          Why these made the list <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
-        </button>
-        <div class="collapse" id="explainStreaks"><p class="lh-explain-text">Most cards list players on tonight's slate who have reached the same mark in a row: 10+ rebounds, 8+ assists or 3+ three-pointers (3 games or more), and 30+ points for the Chicken Nuggets (2 or more). The streak counts back from their latest game and stops at the first game that falls short. BBQ Chicken, hoops slang for an easy matchup, lists players facing one of the five defenses that allow the most of the stat they produce the most of. Brick City lists players whose field-goal percentage over their last 5 games is at least 5 points below their season rate, on at least 30 attempts. These describe recent form and matchups only, and shooting rates swing from game to game, so they do not say what will happen next.</p></div>
-      </div>
-      <div class="small text-muted mt-2">Based on past results.</div>
-    </section>
-
-    <!-- TOP HIT RATES (lines mode) / HOT PLAYERS (research mode): full width, below the shelf. js/components/top-hit-rates.js and js/components/fanCards.js fill them in. -->
-    <div id="top-hit-rates" class="card lh-top-compact lines-only mb-5">
-      <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
-        <div>
-          <h2 class="lh-top-title mb-1"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i><span id="topHitRatesTitle">Top Hit Rates</span></h2>
-          <div class="small text-muted">Players who went over their line most often in their last 10 games</div>
-        </div>
-        <span class="lh-label text-muted">L10 · Over</span>
-      </div>
-      <div class="card-body">
-        <!-- Filter tabs: All / PTS / REB / AST / 3PM / PRA -->
-        <ul id="topHitRatesPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
-        <div id="topHitRatesList" class="text-muted">Loading hit rates...</div>
-      </div>
-    </div>
-
-    <div id="hotPlayers" class="card lh-top-compact research-only mb-5">
-      <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
-        <div>
-          <h2 class="lh-top-title mb-1"><i class="bi bi-fire" aria-hidden="true"></i><span id="hotPlayersTitle">Hot Players</span></h2>
-          <div class="small text-muted">Players whose last 5 games are furthest above their season average</div>
-        </div>
-        <span class="lh-label text-muted">L5 vs season</span>
-      </div>
-      <div class="card-body">
-        <!-- Filter tabs: PTS / REB / AST / 3PM / PRA -->
-        <ul id="hotPlayersPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
-        <div id="hotPlayersList" class="text-muted">Loading players...</div>
-      </div>
-    </div>
 
   </main>
 
   <!-- Bootstrap's JavaScript: makes interactive parts work (drawers, dropdowns, modals) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- ORDER MATTERS: js/core/api.js provides shared constants, js/components/nav.js injects the drawer, the shared code in js/core/stats.js talks to the /api/bdl proxy (no API key in the browser),
-       js/core/stats.js + js/components/top-hit-rates.js provide the hit rates card, then js/pages/app.js uses them all -->
+  <!-- ORDER MATTERS: js/core/api.js provides shared constants, js/components/nav.js injects the drawer (and LH_TOOLS), js/core/stats.js talks to the /api/bdl proxy (no API key in the browser),
+       js/components/top-hit-rates.js builds the slate the tool tiles read (its cards now live on top-hit-rates.html / hit-list.html), js/pages/today.js draws the tiles
+       and the Top 5 Hunts card, then js/pages/app.js uses them all -->
   <!-- Chart.js draws the bar chart in the player drawer (js/components/schedule-drawer.js) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
           integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
@@ -194,6 +129,8 @@
   <script src="js/components/brickCity.js"></script>
   <script src="js/components/fanCards.js"></script>
   <script src="js/components/quickLook.js"></script>
+  <script src="js/components/hunt-score.js"></script>
+  <script src="js/pages/today.js"></script>
   <script src="js/pages/app.js"></script>
 </body>
 </html>

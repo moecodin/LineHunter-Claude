@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- data-bs-theme (dark or light) is set on <html> by the script in <head>: Bootstrap 5.3 themes the whole page from it -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; js/components/nav.js has the toggle) -->
+  <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
+  <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Top Hit Rates · LineHunter</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
+  <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
+
+  <!-- Google Fonts: Barlow Condensed (display), JetBrains Mono (labels). Fontshare: Technor (headings), Satoshi (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=technor@400,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CSS, loaded from a CDN (someone else's server), so there's nothing to install -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- OUR design. Loaded after Bootstrap so our rules win. -->
+  <link href="css/styles.css" rel="stylesheet">
+</head>
+
+<body>
+  <!-- Research mode: applied before anything renders, so there's no flash (js/components/nav.js has the switch) -->
+  <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
+
+  <div id="site-nav"></div>
+
+  <main class="container-fluid lh-container px-3 px-lg-4 lh-schedule-page lh-tool-page" data-lh-slate="page">
+    <a class="lh-back-link" href="schedule.html"><i class="bi bi-chevron-left" aria-hidden="true"></i> Today</a>
+
+    <!-- TOP HIT RATES (lines mode) / HOT PLAYERS (research mode). js/components/top-hit-rates.js and js/components/fanCards.js fill them in. -->
+    <div id="top-hit-rates" class="card lh-top-compact lines-only mb-5">
+      <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
+        <div>
+          <h1 class="lh-top-title mb-1"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i><span id="topHitRatesTitle">Top Hit Rates</span></h1>
+          <div class="small text-muted">Players who went over their line most often in their last 10 games</div>
+        </div>
+        <span class="lh-label text-muted">L10 · Over</span>
+      </div>
+      <div class="card-body">
+        <!-- Filter tabs: All / PTS / REB / AST / 3PM / PRA -->
+        <ul id="topHitRatesPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
+        <div id="topHitRatesList" class="text-muted">Loading hit rates...</div>
+      </div>
+    </div>
+
+    <div id="hotPlayers" class="card lh-top-compact research-only mb-5">
+      <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
+        <div>
+          <h1 class="lh-top-title mb-1"><i class="bi bi-fire" aria-hidden="true"></i><span id="hotPlayersTitle">Hot Players</span></h1>
+          <div class="small text-muted">Players whose last 5 games are furthest above their season average</div>
+        </div>
+        <span class="lh-label text-muted">L5 vs season</span>
+      </div>
+      <div class="card-body">
+        <!-- Filter tabs: PTS / REB / AST / 3PM / PRA -->
+        <ul id="hotPlayersPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
+        <div id="hotPlayersList" class="text-muted">Loading players...</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bootstrap's JavaScript: makes interactive parts work (drawers, dropdowns, modals) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ORDER MATTERS: same order as schedule.html. js/components/top-hit-rates.js loads the slate itself here (<main data-lh-slate="page">:
+       ?date=YYYY-MM-DD from the Today page's links, else the next day with games) and hands it to the cards on this page. -->
+  <!-- Chart.js draws the bar chart in the player drawer (js/components/schedule-drawer.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
+          crossorigin="anonymous"></script>
+  <script src="js/core/api.js"></script>
+  <script src="js/core/hunts.js"></script>
+  <script src="js/components/nav.js"></script>
+  <script src="js/components/hunt-button.js"></script>
+  <script src="js/components/my-hunts.js"></script>
+  <script src="js/data/odds.js"></script>
+  <script src="js/data/teams.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/core/h2h.js"></script>
+  <script src="js/components/propChart.js"></script>
+  <script src="js/components/prop-toolbar.js"></script>
+  <script src="js/components/shelf.js"></script>
+  <script src="js/components/share.js"></script>
+  <script src="js/components/prop-list.js"></script>
+  <script src="js/components/top-hit-rates.js"></script>
+  <script src="js/components/schedule-drawer.js"></script>
+  <script src="js/components/hit-list.js"></script>
+  <script src="js/components/bbq.js"></script>
+  <script src="js/components/brickCity.js"></script>
+  <script src="js/components/fanCards.js"></script>
+</body>
+</html>

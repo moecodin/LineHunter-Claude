@@ -176,7 +176,9 @@ async function loadGames() {
     // the newer click's loadGames() will draw its own day, so stop here.
     if (day !== toApiDate(selectedDate)) return;
 
-    // The Top Hit Rates card under the games follows the same day (js/components/top-hit-rates.js).
+    // The tool tiles and the Top 5 Hunts card follow the same day (js/pages/today.js), then the slate they read is built
+    // (js/components/top-hit-rates.js, shared with the tool pages through its 10-minute cache).
+    if (typeof showTodayForDay === "function") showTodayForDay(day);
     showTopHitRatesForDay(day, games);
 
     if (games.length === 0) {

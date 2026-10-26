@@ -443,7 +443,7 @@ exports.handler = async (event) => {
           side,
           line,
           score: scored.score,
-          factors: scored.factors.map(({ key, label, points }) => ({ key, label, points })),
+          factors: scored.factors, // key, label, points + the numbers behind each one (hits / games, average, rank ...) for the Hunt Score page
           why: writeWhy(side, prop, line, info, scored, ctx),
           injured: Boolean(status && CONFIG.injuredStatuses.test(status)),   // Out / Doubtful / Questionable / Day-To-Day
           gtd: Boolean(status && CONFIG.injuredStatuses.test(status) && CONFIG.gtdStatuses.test(status) && !/out|doubt/i.test(status)),

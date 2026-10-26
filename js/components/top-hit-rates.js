@@ -11,7 +11,10 @@ const TOP_ROW_COUNT = 8;  // how many rows the card shows
 const TOP_WINDOWS = [5, 10, 20];  // schedule page: the L5 / L10 / L20 toggle
 const TOP_MIN_SAMPLE = 3;         // schedule page: fewer games than this in a window = no row (a real "3/4" still shows)
 // Schedule page only: the compact card gets the new row layout, window toggle and sort. The homepage card stays as it was.
-const TOP_NEW_LAYOUT = Boolean(document.querySelector("#top-hit-rates.lh-top-compact"));
+// Every page but the homepage uses the newer rules (L5 / L10 / L20, 3+ games). The Today page and the Hit List page build the same slate
+// without the card itself, so they share one cached slate with the Top Hit Rates page.
+const TOP_NEW_LAYOUT = !document.querySelector('#top-hit-rates[data-slate="next"]');
+const TOP_HAS_CARD = Boolean(document.getElementById("topHitRatesList"));
 const TOP_SORTS = [
   { code: "rate", label: "Hit rate" },
   { code: "streak", label: "Streak" },
@@ -463,7 +466,8 @@ function buildHitListLeg(prop, logs, showingCurrentSeason, { name, team, game })
 // "Top Hit Rates" in big white letters, with the date after it in blue.
 function setTopTitle(isoDate) {
   const date = isoDate ? ` <span class="lh-top-title-date">· ${slateDateLabel(isoDate)}</span>` : "";
-  document.getElementById("topHitRatesTitle").innerHTML = `Top Hit Rates${date}`;
+  const topTitle = document.getElementById("topHitRatesTitle");
+  if (topTitle) topTitle.innerHTML = `Top Hit Rates${date}`;
   const hitListTitle = document.getElementById("hitlistTitle"); // the Hit List card shares the slate
   if (hitListTitle) hitListTitle.innerHTML = `Hit List${date}`;
   const hotTitle = document.getElementById("hotPlayersTitle");   // research mode's cards share it too
@@ -482,18 +486,23 @@ function renderTopSkeleton() {
       <div class="lh-top-hit"><span class="placeholder col-9 rounded"></span></div>
     </div>`;
   const list = document.getElementById("topHitRatesList");
-  list.setAttribute("aria-busy", "true");
-  list.innerHTML = row.repeat(5);
+  if (list) {
+    list.setAttribute("aria-busy", "true");
+    list.innerHTML = row.repeat(5);
+  }
   if (typeof showHitListLoading === "function") showHitListLoading();
   if (typeof showFanLoading === "function") showFanLoading();
 }
 
 function renderTopMessage(html) {
-  document.getElementById("topHitRatesPills").hidden = true;
-  if (topUi) topUi.hide();
   const list = document.getElementById("topHitRatesList");
-  list.removeAttribute("aria-busy");
-  list.innerHTML = `<div class="lh-top-message">${html}</div>`;
+  if (list) {
+    document.getElementById("topHitRatesPills").hidden = true;
+    if (topUi) topUi.hide();
+    list.removeAttribute("aria-busy");
+    list.innerHTML = `<div class="lh-top-message">${html}</div>`;
+  }
+  document.dispatchEvent(new CustomEvent("lh-top-slate", { detail: { slate: topSlate, message: html } })); // the Today page's tiles
   if (typeof showHitListMessage === "function") showHitListMessage(html);
   if (typeof showFanMessage === "function") showFanMessage(html);
 }
@@ -508,7 +517,7 @@ function isInjuredOut(playerId) {
   return plIsInjuredOut(topSlate && topSlate.injuries ? topSlate.injuries[playerId] : null);
 }
 
-const topUi = TOP_NEW_LAYOUT ? createPropListBar({
+const topUi = TOP_NEW_LAYOUT && TOP_HAS_CARD ? createPropListBar({
   idPrefix: "topHitRates",
   anchor: document.getElementById("topHitRatesPills"),
   windows: TOP_WINDOWS,
@@ -749,8 +758,8 @@ async function ensureTopOdds(slate) {
   const gameIds = [...new Set(slate.rows.map((row) => row.gameId))];
   const lists = await Promise.all(gameIds.map((id) => bdlGet(`${PROPS_URL}?game_id=${id}`).then((json) => json.data).catch(() => [])));
   lhOdds.ingest(lists.flat());
-  if (topSlate === slate && lhOdds.vendors().length > 0) {
-    if (TOP_NEW_LAYOUT) topUi.render();
+  if (topSlate === slate && lhOdds.vendors().length > 0 && TOP_HAS_CARD) {
+    if (topUi) topUi.render();
     renderTopRows();
   }
 }
@@ -770,14 +779,17 @@ function showTopSlate(slate) {
     return;
   }
 
-  if (TOP_NEW_LAYOUT && topUi.state.game !== "all" && !slate.rows.some((row) => String(row.gameId) === String(topUi.state.game))) topUi.state.game = "all"; // another day was picked
-  renderTopPills();
-  renderTopRows();
+  if (topUi && topUi.state.game !== "all" && !slate.rows.some((row) => String(row.gameId) === String(topUi.state.game))) topUi.state.game = "all"; // another day was picked
+  if (TOP_HAS_CARD) {
+    renderTopPills();
+    renderTopRows();
+  }
   ensureTopOdds(slate);
   updateSlideLink();
   if (typeof showHitList === "function") showHitList(slate);
   if (typeof showFanCards === "function") showFanCards(slate);
   if (typeof refreshQuickLookTopProps === "function") refreshQuickLookTopProps(); // schedule page: open Quick looks fill in their top prop
+  document.dispatchEvent(new CustomEvent("lh-top-slate", { detail: { slate } })); // the Today page's tool tiles (js/pages/today.js)
 }
 
 // The shared loading steps for both pages.
@@ -785,7 +797,7 @@ function showTopSlate(slate) {
 //   titleDate: the date to show in the header while loading (null if we don't know it yet)
 //   getSlate:  how to find the games: returns { date, games }, or null if there are none
 async function loadTopHitRates({ cacheKey, titleDate, getSlate }) {
-  if (!document.getElementById("top-hit-rates")) return;
+  if (!document.querySelector("#top-hit-rates, [data-lh-slate]")) return;
   const requestNumber = ++topRequestNumber;
 
   // Saved in the last 10 minutes? Show it straight away, no downloads.
@@ -834,7 +846,25 @@ function showTopHitRatesForDay(day, games) {
 }
 
 // Homepage: the next slate. The card there has data-slate="next".
-// (On the schedule page js/pages/app.js decides the day, so nothing starts here.)
+// (On the Today page js/pages/app.js decides the day, so nothing starts here.)
 if (document.querySelector('#top-hit-rates[data-slate="next"]')) {
   loadTopHitRates({ cacheKey: "next", titleDate: null, getSlate: findNextSlate });
+}
+
+// The tool pages (top-hit-rates.html, hit-list.html; <body data-lh-slate="page">): the day from ?date=2026-10-26 (the Today page's
+// links pass the day picked there, so the saved slate opens instantly), else the next day with games.
+if (document.querySelector('[data-lh-slate="page"]')) {
+  const askedDate = new URLSearchParams(location.search).get("date");
+  if (askedDate && /^\d{4}-\d{2}-\d{2}$/.test(askedDate)) {
+    loadTopHitRates({
+      cacheKey: askedDate,
+      titleDate: askedDate,
+      getSlate: async () => {
+        const games = await bdlGetAllPages(`${BDL_BASE}/games?start_date=${askedDate}&end_date=${askedDate}&per_page=100`);
+        return games.length ? { date: askedDate, games } : null;
+      },
+    });
+  } else {
+    loadTopHitRates({ cacheKey: "next", titleDate: null, getSlate: findNextSlate });
+  }
 }

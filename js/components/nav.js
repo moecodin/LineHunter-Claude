@@ -29,6 +29,19 @@ function lhLockupHtml({ shine = false, color = "" } = {}) {
 }
 window.lhLockupHtml = lhLockupHtml;
 
+// ---------- Tools: one list for the navbar's Tools menu, the menu drawer, the phone Tools sheet and the Today page's tiles ----------
+// mode "lines" = lines mode only (class lines-only), "research" = research mode only (research-only), "both" = always.
+// Hot Players shares top-hit-rates.html and Streaks shares hit-list.html: each page swaps its card with the mode.
+const LH_TOOLS = [
+  { key: "hunt", href: "hunt-score.html", icon: "bi-crosshair", name: "Hunt Score", sub: "Tonight's best props, scored 0–100", mode: "lines" },
+  { key: "top", href: "top-hit-rates.html", icon: "bi-lightning-charge-fill", name: "Top Hit Rates", sub: "Who went over their line most often", mode: "lines" },
+  { key: "hitlist", href: "hit-list.html", icon: "bi-bullseye", name: "Hit List", sub: "Ready-made slips from past results", mode: "lines" },
+  { key: "hot", href: "top-hit-rates.html", icon: "bi-fire", name: "Hot Players", sub: "Last 5 games vs their season", mode: "research" },
+  { key: "streaks", href: "hit-list.html", icon: "bi-graph-up-arrow", name: "Streaks", sub: "Players on a run", mode: "research" },
+  { key: "matchup", href: "matchup.html", icon: "bi-intersect", name: "Matchup Analyzer", sub: "Any player against any team", mode: "both" },
+];
+const lhToolModeClass = (tool) => ({ lines: "lines-only", research: "research-only" }[tool.mode] || "");
+
 (function () {
   const target = document.getElementById("site-nav");
   if (!target) return;
@@ -40,7 +53,7 @@ window.lhLockupHtml = lhLockupHtml;
   const activePage = currentPage === "game.html" ? "schedule.html" : currentPage;
 
   // A page can hold the search bar itself: an empty <div id="lh-search-slot"></div> puts it there
-  // (schedule.html: above Top Hit Rates). Without a slot it lives in the navbar.
+  // (no page uses one right now). Without a slot it lives in the navbar.
   const slot = document.getElementById("lh-search-slot");
   const inPage = Boolean(slot);
   const searchMarkup = `
@@ -59,11 +72,29 @@ window.lhLockupHtml = lhLockupHtml;
     <a class="btn btn-ghost${onNfl ? "" : " active"}" href="schedule.html"${onNfl ? "" : ' aria-current="page"'}>NBA</a>
     <a class="btn btn-ghost${onNfl ? " active" : ""}" href="nfl.html"${onNfl ? ' aria-current="page"' : ""}>NFL <span class="lh-soon-tag">Soon</span></a>`;
 
+  // Today / Tools / Standings in the navbar (desktop). The Tools menu and the phone Tools sheet list LH_TOOLS.
+  const onToolPage = LH_TOOLS.some((tool) => tool.href === currentPage);
+  const toolMenuItems = LH_TOOLS.map((tool) => `
+          <li class="${lhToolModeClass(tool)}"><a class="dropdown-item lh-tools-item${tool.href === currentPage ? " active" : ""}" href="${tool.href}"${tool.href === currentPage ? ' aria-current="page"' : ""}>
+            <i class="bi ${tool.icon}" aria-hidden="true"></i><span><strong>${tool.name}</strong><small>${tool.sub}</small></span>
+          </a></li>`).join("");
+  const navLinks = `
+        <div class="lh-nav-links d-none d-lg-flex" role="group" aria-label="Sections">
+          <a class="lh-nav-link${activePage === "schedule.html" ? " active" : ""}" href="schedule.html"${activePage === "schedule.html" ? ' aria-current="page"' : ""}>Today</a>
+          <div class="dropdown">
+            <button type="button" class="lh-nav-link dropdown-toggle${onToolPage ? " active" : ""}" data-bs-toggle="dropdown" aria-expanded="false">Tools</button>
+            <ul class="dropdown-menu lh-tools-menu">${toolMenuItems}
+            </ul>
+          </div>
+          <a class="lh-nav-link${activePage === "standings.html" ? " active" : ""}" href="standings.html"${activePage === "standings.html" ? ' aria-current="page"' : ""}>Standings</a>
+        </div>`;
+
   const navMarkup = `
     <nav class="navbar lh-navbar sticky-top mb-4">
       <div class="container-fluid lh-container px-3 px-lg-4">
         <a class="navbar-brand lh-brand" href="index.html" aria-label="LineHunter">${lhLockupHtml({ shine: true })}</a>
         <div class="btn-group btn-group-sm lh-window-toggle lh-league d-none d-md-inline-flex" role="group" aria-label="League">${leagueLinks}</div>
+        ${navLinks}
         ${inPage ? "" : searchMarkup}
         <div class="lh-mode-nav d-none d-md-flex" id="lhModeNav"></div>
         <button type="button" class="lh-nav-hunts lines-only d-none d-md-inline-flex" data-lh-open-hunts aria-label="Open My Hunts">
@@ -101,7 +132,7 @@ window.lhLockupHtml = lhLockupHtml;
               <div class="col-12 col-md-6 col-lg-3">
                 <a class="lh-drawer-tile ${activePage === "schedule.html" ? "active" : ""}" href="schedule.html" data-page="schedule.html">
                   <i class="lh-drawer-tile-icon bi bi-calendar3"></i>
-                  <span>Schedule</span>
+                  <span>Today</span>
                 </a>
               </div>
               <div class="col-12 col-md-6 col-lg-3">
@@ -116,12 +147,20 @@ window.lhLockupHtml = lhLockupHtml;
                   <span>Player <span class="lines-only">Props</span><span class="research-only">Stats</span></span>
                 </a>
               </div>
-              <div class="col-12 col-md-6 col-lg-3">
-                <a class="lh-drawer-tile ${activePage === "matchup.html" ? "active" : ""}" href="matchup.html" data-page="matchup.html">
-                  <i class="lh-drawer-tile-icon bi bi-intersect"></i>
-                  <span>Matchup Analyzer</span>
+            </div>
+          </div>
+          <div class="lh-drawer-group">
+            <div class="lh-drawer-group-header lh-label">
+              <i class="bi bi-grid lh-drawer-tile-icon"></i>
+              Tools
+            </div>
+            <div class="row g-3 lh-drawer-link-grid">${LH_TOOLS.map((tool) => `
+              <div class="col-12 col-md-6 col-lg-3 ${lhToolModeClass(tool)}">
+                <a class="lh-drawer-tile ${activePage === tool.href ? "active" : ""}" href="${tool.href}" data-page="${tool.href}">
+                  <i class="lh-drawer-tile-icon bi ${tool.icon}"></i>
+                  <span>${tool.name}</span>
                 </a>
-              </div>
+              </div>`).join("")}
             </div>
           </div>
         </div>
@@ -326,7 +365,7 @@ window.lhLockupHtml = lhLockupHtml;
   initPlayerSearch(document.getElementById("lhSearch"), document.getElementById("lhSearchInput"), document.getElementById("lhSearchResults"));
 
   // ---------- Phone bottom tab bar (under 768px) ----------
-  // Today, Hit List, Search, My Hunts (lines mode) or Players (research mode), More. The bar and its two bottom sheets exist on every page, but the CSS only shows
+  // Today, Tools (a sheet listing LH_TOOLS), Search, My Hunts (lines mode) or Players (research mode), More. The bar and its two bottom sheets exist on every page, but the CSS only shows
   // them under 768px (css/styles.css, "Phone bottom tab bar"), where the top bar keeps just the logo.
   const LAST_PLAYER_KEY = "lh-last-player"; // the player page you last opened: the Players tab goes back to it
   if (currentPage === "player.html") {
@@ -344,8 +383,6 @@ window.lhLockupHtml = lhLockupHtml;
     lastPlayerId = null;
   }
 
-  // The Hit List shelf is #hitlist in lines mode and #streaks in research mode (the other one is hidden).
-  const shelfId = () => (isResearchMode() ? "streaks" : "hitlist");
   const playersTab = lastPlayerId
     ? `<a class="lh-tab research-only" href="player.html?id=${lastPlayerId}" data-tab="players"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Players</span></a>`
     : `<button type="button" class="lh-tab research-only" data-tab="players" data-bs-toggle="offcanvas" data-bs-target="#lhSearchSheet"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Players</span></button>`;
@@ -355,7 +392,7 @@ window.lhLockupHtml = lhLockupHtml;
   tabbar.setAttribute("aria-label", "Main");
   tabbar.innerHTML = `
     <a class="lh-tab" href="schedule.html" data-tab="today"><i class="bi bi-calendar3" aria-hidden="true"></i><span>Today</span></a>
-    <a class="lh-tab" href="schedule.html#hitlist" data-tab="hitlist" id="lhTabHitlist"><i class="bi bi-bullseye" aria-hidden="true"></i><span>Hit List</span></a>
+    <button type="button" class="lh-tab" data-tab="tools" data-bs-toggle="offcanvas" data-bs-target="#lhToolsSheet"><i class="bi bi-grid" aria-hidden="true"></i><span>Tools</span></button>
     <button type="button" class="lh-tab" data-tab="search" data-bs-toggle="offcanvas" data-bs-target="#lhSearchSheet"><i class="bi bi-search" aria-hidden="true"></i><span>Search</span></button>
     ${playersTab}
     <button type="button" class="lh-tab lines-only" data-tab="hunts" data-lh-open-hunts><span class="lh-tab-icon"><i class="bi bi-ticket-perforated" aria-hidden="true"></i><span class="lh-hunts-badge" data-hunts-count hidden>0</span></span><span>My Hunts</span></button>
@@ -365,6 +402,20 @@ window.lhLockupHtml = lhLockupHtml;
   // Bottom sheets (Bootstrap offcanvas from the bottom)
   const sheets = document.createElement("div");
   sheets.innerHTML = `
+    <div class="offcanvas offcanvas-bottom lh-sheet" tabindex="-1" id="lhToolsSheet" aria-labelledby="lhToolsSheetLabel">
+      <div class="offcanvas-header">
+        <h2 class="offcanvas-title lh-label" id="lhToolsSheetLabel">Tools</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">${LH_TOOLS.map((tool) => `
+        <a class="lh-sheet-row lh-tool-row ${lhToolModeClass(tool)}${tool.href === currentPage ? " is-active" : ""}" href="${tool.href}">
+          <span class="lh-tool-row-icon"><i class="bi ${tool.icon}" aria-hidden="true"></i></span>
+          <span class="me-auto"><strong>${tool.name}</strong><small>${tool.sub}</small></span>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </a>`).join("")}
+      </div>
+    </div>
+
     <div class="offcanvas offcanvas-bottom lh-sheet" tabindex="-1" id="lhSearchSheet" aria-labelledby="lhSearchSheetLabel">
       <div class="offcanvas-header">
         <h2 class="offcanvas-title lh-label" id="lhSearchSheetLabel">Search players</h2>
@@ -397,7 +448,6 @@ window.lhLockupHtml = lhLockupHtml;
         <div class="lh-sheet-row is-soon"><span><strong>Sign in</strong><small>Save your settings and picks</small></span><span class="lh-soon-badge">Coming soon</span></div>
         <div class="lh-sheet-row is-soon"><span><strong>My Picks</strong><small>Track the props you like</small></span><span class="lh-soon-badge">Coming soon</span></div>
         <a class="lh-sheet-row" href="${DISCORD_URL}" target="_blank" rel="noopener" data-discord-link><span><strong><i class="bi bi-discord me-2" aria-hidden="true"></i>Join our Discord</strong></span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
-        <a class="lh-sheet-row" href="matchup.html"><span><strong>Matchup Analyzer</strong><small>Any player against any team</small></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
         <a class="lh-sheet-row" href="standings.html"><span><strong>Standings</strong></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
         <a class="lh-sheet-row" href="props.html"><span><strong>Player <span class="lines-only">Props</span><span class="research-only">Stats</span></strong></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
       </div>
@@ -419,38 +469,24 @@ window.lhLockupHtml = lhLockupHtml;
   themeSwitch.addEventListener("change", () => setTheme(themeSwitch.checked ? "light" : "dark"));
   document.addEventListener("lh-mode-change", () => {
     modeSwitch.checked = isResearchMode();
-    updateHitlistTab();
-    watchShelf();
   });
 
-  // The Hit List tab: on the schedule page it scrolls to the shelf; elsewhere it is a link to schedule.html#hitlist.
-  const hitlistTab = document.getElementById("lhTabHitlist");
-  const updateHitlistTab = () => { hitlistTab.href = `schedule.html#${shelfId()}`; };
-  updateHitlistTab();
-  hitlistTab.addEventListener("click", (event) => {
-    if (currentPage !== "schedule.html") return;
-    event.preventDefault();
-    const target = document.getElementById(shelfId());
-    if (target) target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
-  });
-
-  // Which tab is highlighted: an open sheet wins; otherwise the page (Today = schedule and game pages, Players = a player page);
-  // on the schedule page, Hit List while its shelf is on screen.
+  // Which tab is highlighted: an open sheet wins; otherwise the page (Today = schedule and game pages, Tools = a tool page,
+  // Players = a player page).
   let openSheet = null;
-  let shelfVisible = false;
   const renderTabs = () => {
     let active = null;
     if (openSheet) active = openSheet;
     else if (currentPage === "player.html") active = "players";
-    else if (currentPage === "schedule.html") active = shelfVisible ? "hitlist" : "today";
-    else if (currentPage === "game.html") active = "today";
+    else if (currentPage === "schedule.html" || currentPage === "game.html") active = "today";
+    else if (onToolPage) active = "tools";
     tabbar.querySelectorAll(".lh-tab").forEach((tab) => {
       const isActive = tab.dataset.tab === active;
       tab.classList.toggle("is-active", isActive);
       if (isActive) tab.setAttribute("aria-current", "page"); else tab.removeAttribute("aria-current");
     });
   };
-  [["lhSearchSheet", "search"], ["lhMoreSheet", "more"]].forEach(([id, name]) => {
+  [["lhToolsSheet", "tools"], ["lhSearchSheet", "search"], ["lhMoreSheet", "more"]].forEach(([id, name]) => {
     const sheet = document.getElementById(id);
     sheet.addEventListener("show.bs.offcanvas", () => { openSheet = name; renderTabs(); });
     sheet.addEventListener("hidden.bs.offcanvas", () => { openSheet = null; renderTabs(); });
@@ -475,19 +511,6 @@ window.lhLockupHtml = lhLockupHtml;
     });
   }
 
-  let shelfObserver = null;
-  const watchShelf = () => {
-    if (currentPage !== "schedule.html") return;
-    if (shelfObserver) shelfObserver.disconnect();
-    const shelf = document.getElementById(shelfId());
-    if (!shelf) return;
-    shelfObserver = new IntersectionObserver((entries) => {
-      shelfVisible = entries.some((entry) => entry.isIntersecting);
-      renderTabs();
-    }, { threshold: 0.3 });
-    shelfObserver.observe(shelf);
-  };
-  watchShelf();
   renderTabs();
 
   // ---------- Responsible gaming footer ----------

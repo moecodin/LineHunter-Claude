@@ -1,5 +1,5 @@
 // LineHunter - js/components/fanCards.js
-// Research mode's two cards on the schedule page, shown where Top Hit Rates and the Hit List are in lines mode:
+// Research mode's two cards, shown where Top Hit Rates (top-hit-rates.html) and the Hit List (hit-list.html) are in lines mode:
 //   "Hot Players": players on tonight's slate whose last-5 average is furthest above their season average, per stat.
 //   "Streaks":     small cards of players on a run: 30+ PTS ("30 Piece Chicken Nuggets"), 10+ REB, 8+ AST, 3+ 3PM,
 //                  plus the BBQ Chicken card (js/components/bbq.js).
@@ -142,41 +142,49 @@ function renderStreaks() {
 }
 
 // ---------- Called by js/components/top-hit-rates.js ----------
+// Hot Players lives on top-hit-rates.html and Streaks on hit-list.html (research mode), so each part draws only when its card is on the page.
 
 function showFanCards(slate) {
-  if (!document.getElementById("hotPlayers")) return;
   fanSlate = slate;
-  renderHotPills();
-  renderHotRows();
-  renderStreaks();
+  if (document.getElementById("hotPlayersList")) {
+    renderHotPills();
+    renderHotRows();
+  }
+  if (document.getElementById("streaksBody")) renderStreaks();
 }
 
 function showFanLoading() {
   const list = document.getElementById("hotPlayersList");
   const body = document.getElementById("streaksBody");
-  if (!list || !body) return;
-  document.getElementById("hotPlayersPills").hidden = true;
-  list.setAttribute("aria-busy", "true");
-  list.className = "text-muted";
-  list.textContent = "Loading players...";
-  body.setAttribute("aria-busy", "true");
-  body.className = "text-muted";
-  body.textContent = "Loading streaks...";
+  if (list) {
+    document.getElementById("hotPlayersPills").hidden = true;
+    list.setAttribute("aria-busy", "true");
+    list.className = "text-muted";
+    list.textContent = "Loading players...";
+  }
+  if (body) {
+    body.setAttribute("aria-busy", "true");
+    body.className = "text-muted";
+    body.textContent = "Loading streaks...";
+  }
 }
 
 // html = the message the betting cards use. Those mention prop lines, so only "No games" passes through.
 function showFanMessage(html) {
   const list = document.getElementById("hotPlayersList");
   const body = document.getElementById("streaksBody");
-  if (!list || !body) return;
   const text = String(html).includes("No games")
     ? "No games scheduled for this day."
     : "Player stats for tonight's slate will appear here once the slate is set.";
-  document.getElementById("hotPlayersPills").hidden = true;
-  list.removeAttribute("aria-busy");
-  list.className = "";
-  list.innerHTML = `<div class="lh-top-message text-muted">${text}</div>`;
-  body.removeAttribute("aria-busy");
-  body.className = "";
-  body.innerHTML = `<div class="lh-top-message text-muted">${text}</div>`;
+  if (list) {
+    document.getElementById("hotPlayersPills").hidden = true;
+    list.removeAttribute("aria-busy");
+    list.className = "";
+    list.innerHTML = `<div class="lh-top-message text-muted">${text}</div>`;
+  }
+  if (body) {
+    body.removeAttribute("aria-busy");
+    body.className = "";
+    body.innerHTML = `<div class="lh-top-message text-muted">${text}</div>`;
+  }
 }
