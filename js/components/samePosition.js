@@ -197,12 +197,19 @@ function samePosNameHtml(row) {
   return `<a href="player.html?id=${row.playerId}&prop=${propCode(samePosState.propType)}" class="lh-sp-name">${row.name}</a>`;
 }
 
-// "7.8" over "+2.2" (green when they beat their norm against this team)
-function samePosNormHtml(row, value, stat) {
+// "7.8" over "+2.2" (green when they beat their norm against this team). compact (the phone table): "7.8" and a small
+// green ▲ / red ▼ badge instead of the number, nothing when equal.
+function samePosNormHtml(row, value, stat, compact) {
   const norm = samePosNorm(row.playerId, stat);
   if (norm === null) return `<span class="text-muted">–</span>`;
   const gap = value - norm;
-  return `<span class="lh-sp-norm">${norm.toFixed(1)}</span><span class="lh-sp-gap ${gap >= 0.05 ? "is-over" : gap <= -0.05 ? "is-under" : ""}">${samePosSigned(gap)}</span>`;
+  const tone = gap >= 0.05 ? "is-over" : gap <= -0.05 ? "is-under" : "";
+  if (compact) {
+    const arrow = tone === "is-over" ? "up" : tone === "is-under" ? "down" : "";
+    const label = tone === "is-over" ? "above" : "below";
+    return `<span class="lh-sp-norm">${norm.toFixed(1)}</span>${arrow ? ` <span class="lh-sp-arrow ${tone}" title="${samePosSigned(gap)} vs their L10" aria-label="${label} their L10 average"><i class="bi bi-arrow-${arrow}-short" aria-hidden="true"></i></span>` : ""}`;
+  }
+  return `<span class="lh-sp-norm">${norm.toFixed(1)}</span><span class="lh-sp-gap ${tone}">${samePosSigned(gap)}</span>`;
 }
 
 // Wide screens: one row of the game-grouped list.
@@ -231,7 +238,7 @@ function samePosTableRowHtml(row, stat, scoringLine, extra) {
         <span class="text-muted small">${row.position}</span></td>
       <td class="text-end">${Math.round(row.min)}</td>
       <td class="text-end lh-col-active ${samePosTone(value, scoringLine)}">${value}</td>
-      <td class="text-end text-nowrap">${samePosNormHtml(row, value, stat)}</td>
+      <td class="text-end text-nowrap">${samePosNormHtml(row, value, stat, true)}</td>
     </tr>`;
 }
 

@@ -2738,8 +2738,19 @@ a.lh-demo-button:focus-visible {
   color: var(--lh-muted);
 }
 .lh-sp-table td { font-size: 0.82rem; }
-.lh-sp-table .lh-sp-l10 { display: table-cell; }
-.lh-sp-table td .lh-sp-gap { margin-left: 0.3rem; }
+.lh-sp-arrow { /* phone table: ▲ above / ▼ below their L10 average */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-left: 0.2rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+.lh-sp-arrow.is-over  { color: var(--lh-over-text);  background: rgba(var(--lh-over-rgb), 0.18); }
+.lh-sp-arrow.is-under { color: var(--lh-under-text); background: rgba(var(--lh-under-rgb), 0.18); }
 .lh-sp-table td.is-over  { color: var(--lh-over-text); font-weight: 600; }
 .lh-sp-table td.is-under { color: var(--lh-under-text); font-weight: 600; }
 .lh-sp-table td.is-push  { color: var(--lh-push); }
@@ -2751,6 +2762,7 @@ a.lh-demo-button:focus-visible {
 .research-mode .lh-sp-table td.is-under,
 .research-mode .lh-sp-table td.is-push { color: var(--lh-muted); font-weight: 400; }
 .research-mode .lh-sp-value.is-under { color: var(--lh-muted); }
+.research-mode .lh-sp-arrow.is-under { color: var(--lh-muted); background: rgba(var(--lh-push-rgb), 0.18); }
 .research-mode .lh-sp-fill.is-under,
 .research-mode .lh-sp-dot.is-under { background: var(--lh-push); }
 
