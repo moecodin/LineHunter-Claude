@@ -59,7 +59,10 @@
     </section>
 
     <!-- 4. PROPS: stat tabs, window + home/away toggles, hit rate, chart with the alt line -->
-    <section class="card mb-4">
+    <section class="card mb-4" data-lh-collapse="chart" data-lh-collapse-name="Chart">
+      <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
+        <span class="lh-label"><span class="lines-only">Prop chart</span><span class="research-only">Stat chart</span></span>
+      </div>
       <div class="card-body">
         <!-- PROP TOOLBAR (lines mode): player + matchup, the stat tabs (moved in), the line stepper, Over / Under, the best
              odds and "Add to My Hunts". js/components/prop-toolbar.js. In research mode the tabs stay right here. -->
@@ -96,8 +99,8 @@
 
     <!-- 5. GAME LOG: full width, follows the window, home/away and teammate filters. -->
     <!-- GAME LOG: follows the window, home/away and teammate filters. Full width; scrolls sideways on narrow screens, and up/down for long lists. -->
-    <section class="card mb-4">
-      <div class="card-header lh-label py-3">Game log</div>
+    <section class="card mb-4" data-lh-collapse="gamelog">
+      <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label">Game log</span></div>
       <div class="card-body">
         <div class="table-responsive lh-gamelog-scroll">
           <table class="table table-sm align-middle mb-0 lh-game-log">
@@ -142,10 +145,10 @@
     <div class="row g-4 mb-4">
       <div class="col-lg-4">
     <!-- WITH / WITHOUT: click a teammate chip to cycle neutral -> with -> without. js/pages/player.js fills it in. -->
-    <section class="card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center py-3">
+    <section class="card h-100" data-lh-collapse="withwithout">
+      <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
         <span class="lh-label">With / Without</span>
-        <button type="button" id="withoutClear" class="btn btn-link btn-sm p-0 lh-ww-clear" hidden>Clear</button>
+        <button type="button" id="withoutClear" class="btn btn-link btn-sm p-0 lh-ww-clear ms-auto" hidden>Clear</button>
       </div>
       <div class="card-body">
         <div id="withoutChips" class="lh-ww-chips placeholder-glow">
@@ -158,12 +161,13 @@
 
       <div class="col-lg-4">
         <!-- OPPORTUNITY: three numbers for the selected prop tab, filtered games vs the season. js/pages/player.js fills it in. -->
-        <section class="card h-100">
+        <section class="card h-100" data-lh-collapse="opportunity">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
-              <h2 class="lh-label mb-0">Opportunity</h2>
-              <span class="lh-label text-muted"><span id="opportunityTab">Points</span> · filtered vs season</span>
+            <!-- Title row + collapse button; the "Points · filtered vs season" note sits on its own line under it -->
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-1" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Opportunity</h2>
             </div>
+            <div class="lh-label text-muted mb-3"><span id="opportunityTab">Points</span> · filtered vs season</div>
             <div id="opportunityBody" class="text-muted">Loading...</div>
             <!-- "How to read this": a small muted link that expands a plain-language explanation (Bootstrap collapse) -->
             <div class="lh-explain">
@@ -178,10 +182,10 @@
 
       <div class="col-lg-4">
         <!-- ROLE: minutes or usage % per game, for the same games as the chart above (js/components/roleChart.js) -->
-        <section class="card h-100">
+        <section class="card h-100" data-lh-collapse="role">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-              <h2 class="lh-label mb-0">Role</h2>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Role</h2>
               <!-- Minutes / Usage % -->
               <div id="roleMetric" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="Minutes or usage"></div>
             </div>
@@ -194,10 +198,10 @@
     <!-- 7. TWO EQUAL CARDS: Shot Chart and Zone Matchup. Season-level: the window / home-away / teammate filters don't change them. -->
     <div class="row g-4 mb-5">
       <div class="col-lg-6">
-        <section class="card h-100">
+        <section class="card h-100" data-lh-collapse="shotchart">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-baseline flex-wrap gap-2 mb-3">
-              <h2 class="lh-label mb-0">Shot Chart</h2>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Shot Chart</h2>
               <span id="shotChartSeason" class="lh-label text-muted"></span>
             </div>
             <div id="shotChartBody" class="text-muted small">Loading shot data...</div>
@@ -213,10 +217,10 @@
       </div>
       <div class="col-lg-6">
         <!-- ZONE MATCHUP: the player's shot zones against an opponent's defense. js/components/zoneMatchup.js fills it in. -->
-        <section class="card h-100">
+        <section class="card h-100" data-lh-collapse="zonematchup">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-              <h2 class="lh-label mb-0">Zone Matchup</h2>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Zone Matchup</h2>
               <div class="d-flex align-items-center gap-2">
                 <span id="zoneMatchupNote" class="small text-muted"></span>
                 <select id="zoneMatchupTeam" class="form-select form-select-sm lh-zm-select" aria-label="Opponent team" disabled></select>
@@ -238,9 +242,9 @@
 
     <!-- 6. OTHER PLAYERS: this team / the opponent in the next game. Switches player without going back a page. -->
     <aside class="col-lg-3">
-      <div class="card lh-players-card">
+      <div class="card lh-players-card" data-lh-collapse="players">
         <div class="card-header py-3">
-          <div class="lh-label mb-2">Players</div>
+          <div class="d-flex justify-content-between align-items-center mb-2" data-lh-collapse-head><span class="lh-label">Players</span></div>
           <div id="playerSideTabs" class="btn-group btn-group-sm lh-window-toggle w-100" role="group" aria-label="Team or opponent"></div>
         </div>
         <div id="playerSideList" class="list-group list-group-flush lh-players-list">
@@ -249,8 +253,8 @@
       </div>
 
       <!-- INJURY REPORT: who is hurt on this team and the next opponent. Each name opens its description. js/pages/player.js fills it in. -->
-      <div class="card lh-injury-card mt-3">
-        <div class="card-header py-3"><div class="lh-label">Injury report</div></div>
+      <div class="card lh-injury-card mt-3" data-lh-collapse="injuries">
+        <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label">Injury report</span></div>
         <div id="injuryList" class="lh-injury-list">
           <div class="text-muted small p-3">Loading…</div>
         </div>
@@ -295,6 +299,7 @@
   <script src="js/components/shotChart.js"></script>
   <script src="js/components/zoneMatchup.js"></script>
   <script src="js/components/share.js"></script>
+  <script src="js/components/cardCollapse.js"></script>
   <script src="js/pages/player.js"></script>
 </body>
 </html>

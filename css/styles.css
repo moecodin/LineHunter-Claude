@@ -4593,3 +4593,42 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hleg--link:focus-visible { outline: 2px solid rgba(var(--lh-accent-rgb), 0.6); outline-offset: 2px; }
 .lh-hleg-gone { padding: 0 0.35rem; text-align: center; font-size: 0.7rem; line-height: 1.2; color: var(--lh-muted); }
 @media (prefers-reduced-motion: reduce) { .lh-hleg--link { transition: none; } .lh-hleg--link:hover { transform: none; } }
+
+/* Player page card collapse (js/components/cardCollapse.js): a small chevron in each card's title row hides the rest */
+.lh-cc-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-left: 0.5rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--lh-muted);
+  font-size: 0.8rem;
+  line-height: 1;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.lh-cc-toggle:hover,
+.lh-cc-toggle:focus-visible {
+  color: var(--lh-accent-light);
+  border-color: var(--lh-border);
+  background: rgba(var(--lh-ink-rgb), 0.04);
+}
+.lh-cc-toggle:focus-visible { outline: 2px solid rgba(var(--lh-accent-rgb), 0.6); outline-offset: 1px; }
+.lh-cc-toggle .bi { transition: transform 0.2s ease; }
+.is-collapsed .lh-cc-toggle .bi { transform: rotate(180deg); }
+[data-lh-collapse].is-collapsed .lh-cc-part { display: none !important; }
+[data-lh-collapse].is-collapsed { height: auto !important; } /* an h-100 card shrinks to its title row */
+[data-lh-collapse].is-collapsed [data-lh-collapse-head] { margin-bottom: 0 !important; }
+[data-lh-collapse].is-collapsed > .card-header { border-bottom: 0; }
+[data-lh-collapse]:not(.is-collapsed) .lh-cc-part { animation: lh-cc-in 0.2s ease-out; }
+@keyframes lh-cc-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 767.98px) { .lh-cc-toggle { width: 2.5rem; height: 2.5rem; margin-right: -0.5rem; } }
+@media (prefers-reduced-motion: reduce) {
+  .lh-cc-toggle, .lh-cc-toggle .bi { transition: none; }
+  [data-lh-collapse]:not(.is-collapsed) .lh-cc-part { animation: none; }
+}
