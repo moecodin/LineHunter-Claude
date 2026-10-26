@@ -111,20 +111,22 @@ const huntOrdinal = (n) => {
   return `${n}${{ 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th"}`;
 };
 
-// The small grey line under each factor's name ("8 of 10 over"). Uses the numbers the engine sends with each factor.
+// The small grey line under each factor's name ("L5 34 min vs 31"). Uses the numbers the engine sends with each factor.
 function huntFactorDetail(factor, prop) {
-  const side = prop.side === "under" ? "under" : "over";
   switch (factor.key) {
-    case "l10": return factor.games ? `${factor.hits} of ${factor.games} ${side}` : "";
-    case "season": return factor.games ? `${factor.which || "season"} · ${factor.hits} of ${factor.games}` : "";
-    case "line": return Number.isFinite(factor.average) ? `avg ${factor.average} vs ${lineText(factor.line)}` : "";
+    case "minutes": return Number.isFinite(factor.now) ? `${factor.now} min vs ${factor.base} season` : "";
+    case "form": return Number.isFinite(factor.last) ? `last 3 avg ${factor.last}` : "";
     case "opponent": {
       if (!factor.rank) return "";
       const half = factor.of ? factor.rank <= factor.of / 2 : true;
       return `${prop.opp} · ${huntOrdinal(half ? factor.rank : factor.of - factor.rank + 1)} ${half ? "most" : "fewest"} allowed`;
     }
-    case "minutes": return Number.isFinite(factor.l5) ? `L5 ${factor.l5} vs ${factor.season}` : "";
+    case "pace": return factor.rank ? `${prop.opp} · ${huntOrdinal(factor.rank)} fastest` : "";
     case "b2b": return "second night";
+    case "spread":
+      if (factor.gtd) return "game-time decision";
+      if (factor.games < 8) return `${factor.games} ${factor.games === 1 ? "game" : "games"} this season`;
+      return factor.disagree ? "recent games swing" : "normal range";
     default: return "";
   }
 }
@@ -133,7 +135,7 @@ const huntPoints = (points) => (points === 0 ? "0" : `${points > 0 ? "+" : "−"
 
 // Short chip: "+12.0 Last 10". Help = accent tint, hurt = dashed grey.
 function huntChipHtml(factor) {
-  const short = { l10: "Last 10", season: "Season", line: "Line vs avg", opponent: "Opponent", minutes: "Minutes", b2b: "Back-to-back" }[factor.key] || factor.label;
+  const short = { minutes: "Minutes", form: "Form", opponent: "Matchup", pace: "Pace", b2b: "Back-to-back", spread: "Uncertainty" }[factor.key] || factor.label;
   return `<span class="lh-hs-chip${factor.points < 0 ? " is-hurt" : ""}">${huntPoints(factor.points)} ${short}</span>`;
 }
 
@@ -174,6 +176,7 @@ function huntFullRowHtml(prop, rank, expanded) {
   const factors = [...(prop.factors || [])];
   const top3 = [...factors].sort((a, b) => Math.abs(b.points) - Math.abs(a.points)).slice(0, 3);
   const total = factors.reduce((sum, factor) => sum + factor.points, 0);
+  const base = Number.isFinite(prop.base) ? prop.base : 50; // the season baseline's score (the sim before any factor)
   const b2b = factors.some((factor) => factor.key === "b2b");
   const tip = huntTipTime(prop);
   const key = `${prop.playerId}-${prop.stat}-${prop.side}`;
@@ -215,9 +218,9 @@ function huntFullRowHtml(prop, rank, expanded) {
           ${(prop.why || []).slice(1).map((sentence) => `<p>${sentence}</p>`).join("")}
         </div>
         <div class="lh-hs-section">
-          <div class="lh-hs-heading-row"><span class="lh-hs-heading">How we got ${prop.score}</span><span>starts at 50</span></div>
+          <div class="lh-hs-heading-row"><span class="lh-hs-heading">How we got ${prop.score}</span><span>season baseline ${base.toFixed(1)}</span></div>
           ${factors.map((factor) => huntFactorRowHtml(factor, prop)).join("")}
-          <div class="lh-hs-total"><span>50 ${total < 0 ? "−" : "+"} ${Math.abs(total).toFixed(1)} = ${(50 + total).toFixed(1)}${prop.score !== Math.round(50 + total) ? ", kept between 0 and 100" : ", rounded"}</span><strong>${prop.score}</strong></div>
+          <div class="lh-hs-total"><span>${base.toFixed(1)} ${total < 0 ? "−" : "+"} ${Math.abs(total).toFixed(1)} = ${(base + total).toFixed(1)}${prop.score !== Math.round(base + total) ? ", kept between 0 and 100" : ", rounded"}${Number.isFinite(prop.chance) ? ` · ${prop.chance}% chance` : ""}</span><strong>${prop.score}</strong></div>
         </div>
         <div class="lh-hs-actions">
           ${huntButtonHtml(huntLeg(prop, best), { labelOut: "ADD TO MY HUNTS", labelIn: "IN MY HUNTS", iconFirst: true, className: "lh-hs-add" })}

@@ -4,3 +4,6 @@ js/core/config.js
 # Local environment variables for `netlify dev` (the API key lives here, never in the code)
 .env
 .netlify/
+
+# dev/hunt-compare.js output
+dev/hunt-compare.txt

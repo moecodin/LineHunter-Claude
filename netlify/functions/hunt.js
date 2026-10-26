@@ -1,40 +1,63 @@
 // LineHunter - netlify/functions/hunt.js
 // The Hunt Score engine. GET /api/hunt?date=YYYY-MM-DD (default: today in America/New_York).
 //
-// For every player prop on that date's games that have not started, it scores the OVER and the UNDER separately
-// (start at 50, add the factors below, clamp 0-100, round), writes three plain-English "why" sentences from templates
-// (no AI), and returns the list plus the day's top hunts. The BALLDONTLIE key comes from the BALLDONTLIE_API_KEY
-// environment variable and never reaches the browser. The CDN shares one calculation for 10 minutes.
+// For every player prop on that date's games that have not started, it builds a projection of the stat and simulates the game
+// (Monte Carlo, CONFIG.sim.runs per player + prop, seeded so the same inputs always give the same answer). The Hunt Score of a
+// side (OVER / UNDER) is the simulated chance of that side hitting, mapped to 0-100: 50 = a coin flip, 65 = about 60%.
+//
+// How the projection is built (every number lives in CONFIG):
+//   rate per minute  this season's games, recency-weighted (a game's weight halves every 5 games), blended with a prior
+//                    (last season while this season has under 20 games, else this season's flat average) that counts as 5 games
+//   minutes          the same blend on minutes played
+//   opponent / pace  multipliers using half the gap between tonight's opponent and the league average
+//   back-to-back     a small multiplier when the team played yesterday
+//   spread           minutes noise (the player's own, wider for a game-time decision), uncertainty in the true rate (wider with
+//                    few games or when the last 3 games disagree with the projection) and game-to-game noise (from the logs)
+// Each piece is added one at a time on top of a "season baseline" (season-level rate and minutes, average opponent, normal spread),
+// so every factor shows how many points it moved the score ("Matchup +4.1", "Back-to-back -1.8") and they add up to the score.
+// Three plain-English "why" sentences come from templates (no AI): recent form, the matchup, the biggest risk.
+//
+// The BALLDONTLIE key comes from the BALLDONTLIE_API_KEY environment variable and never reaches the browser. The CDN shares one
+// calculation for 10 minutes and a warm function keeps its last answer per date for the same 10 minutes.
 //
 // BALLDONTLIE endpoints used (the same ones the site already uses through netlify/functions/bdl.js):
 //   /v1/games                                       the slate for the date, and yesterday's games (back-to-backs)
 //   /nba/v2/odds/player_props?game_id=              the lines
 //   /v1/players                                     names and teams
-//   /v1/stats?player_ids[]=&seasons[]=              game logs (this season, plus last season when a player has < 10 games)
+//   /v1/stats?player_ids[]=&seasons[]=              game logs (this season, plus last season while a player has < 20 games)
 //   /nba/v1/team_season_averages/general?type=opponent   points / rebounds / assists / threes each team ALLOWS per game
-//   /nba/v1/team_season_averages/general?type=advanced   each team's pace (only for the "why" sentences)
+//   /nba/v1/team_season_averages/general?type=advanced   each team's pace
 //   /v1/player_injuries                             Out / Doubtful / Questionable
 
 const API_ORIGIN = "https://api.balldontlie.io";
 
 // ============================ CONFIG: every weight lives here ============================
 const CONFIG = {
-  base: 50,
   min: 0,
   max: 100,
-  l10: { weight: 40, games: 10 },              // (L10 hit rate - 0.5) * 40
-  season: { weight: 20, minGames: 10 },        // (season hit rate - 0.5) * 20; under minGames this season -> last season
-  lineVsAvg: { weight: 0.5, cap: 8 },          // % gap between the L10 average and the line, * 0.5, capped at +-8
-  opponent: { best: 8, worst: -8 },            // rank 1 (allows the most) = best for an over ... rank 30 = worst
-  minutes: { weight: 1.5, cap: 6, recentGames: 5 },  // (L5 avg minutes - season avg minutes) * 1.5, capped at +-6
-  backToBack: -4,                              // the team played yesterday
+  probToScore: 150,                            // score = 50 + (chance - 0.5) * 150: 60% -> 65, 70% -> 80
+  sim: {
+    runs: 2000,                                // simulated games per player + prop (both sides read the same runs)
+    halfLife: 5,                               // recency weight halves every 5 games
+    priorGames: 5,                             // the prior (last season, or this season's flat average) counts like 5 games
+    priorUntilGames: 20,                       // last season is the prior until a player has this many games this season
+    minPriorGames: 5,                          // a last season with fewer games is ignored
+    opponentShrink: 0.5,                       // use half of the opponent's "allowed vs league" gap
+    paceShrink: 0.5,                           // and half of the pace gap
+    backToBack: 0.97,                          // second night of a back-to-back: 3% less of everything
+    minutesSd: { base: 4, min: 3, max: 8, gtd: 1.5, games: 15 }, // minutes noise: the player's own spread over 15 games, x1.5 if GTD
+    rateCv: { base: 0.05, sample: 0.3, ref: 0.1, minGames: 1 },  // rate uncertainty = 0.05 + 0.3 / sqrt(games); baseline uses 0.1
+    priorSampleGames: 10,                      // a full last season adds this many games to the sample above
+    disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
+    kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
+    kMax: 200,
+    minutesClamp: [4, 46],
+  },
+  l10Games: 10,                                // the record quoted in the first "why" sentence
   minGamesTotal: 5,                            // fewer games than this (this + last season) = prop skipped
-  // Deviation from the brief (it flips only the line and opponent factors for unders). These two are fatigue / role signals,
-  // so with the flags on they flip too: more minutes HELP an over and HURT an under. Set to false for the literal brief.
-  flipMinutesForUnder: true,
-  flipBackToBackForUnder: true,
   topHunts: { max: 5, minScore: 65 },
-  why: { paceTop: 5, b2bMinGames: 3, b2bMinDiff: 0.5, minutesMention: 2 }, // pace rank 1-5 / 26-30 is mentioned; B2B split needs 3+ games
+  why: { paceTop: 5, b2bMinGames: 3, b2bMinDiff: 0.5, minutesMention: 2, smallSample: 8 },
+  cacheMinutes: 10,                            // a warm function reuses its answer for a date this long (the CDN does the same)
 
   injuredStatuses: /out|doubt|question|day/i,  // Out, Doubtful, Questionable (the API calls Questionable "Day-To-Day")
   gtdStatuses: /question|day/i,                // the "game-time decision" ones: still scored, tagged GTD, never a top hunt
@@ -111,7 +134,8 @@ const chunk = (list, size) => Array.from({ length: Math.ceil(list.length / size)
 const playedInGame = (log) => Boolean(log.min) && log.min.split(":").some((part) => Number(part) > 0);
 const statOf = (log, keys) => keys.reduce((sum, key) => sum + (log[key] ?? 0), 0);
 const minutesOf = (log) => { const [m, s] = String(log.min).split(":").map(Number); return (m || 0) + (s || 0) / 60; };
-const average = (values) => (values.length ? values.reduce((a, b) => a + b, 0) / values.length : null);
+const sum = (values) => values.reduce((a, b) => a + b, 0);
+const average = (values) => (values.length ? sum(values) / values.length : null);
 
 function teamLabel(team) { // "Boston", "LA Clippers"
   return team.city === "Los Angeles" ? `LA ${team.name}` : team.city;
@@ -157,19 +181,21 @@ async function loadPlayers(ids) {
   return players;
 }
 
-// { playerId: logs newest first } for one season
-async function loadLogs(ids, season) {
+// { playerId: logs newest first } for one season, only games before `before` (a game in progress tonight never counts)
+async function loadLogs(ids, season, before) {
   const logs = Object.fromEntries(ids.map((id) => [id, []]));
   const groups = chunk(ids, CONFIG.playersPerLogRequest);
   const answers = await pool(groups.map((group) => async () => {
     try { return await bdlAllPages(`/v1/stats?${group.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${season}&per_page=100`); } catch (error) { return []; }
   }), CONFIG.concurrency);
-  answers.flat().forEach((log) => { if (logs[log.player.id]) logs[log.player.id].push(log); });
+  answers.flat().forEach((log) => {
+    if (logs[log.player.id] && String(log.game.date).slice(0, 10) < before) logs[log.player.id].push(log);
+  });
   Object.values(logs).forEach((list) => list.sort((a, b) => b.game.date.localeCompare(a.game.date)));
   return logs;
 }
 
-// { teamId: { opp_pts, ... , name } } for the season, or null when the season has no data yet
+// { teamId: { opp_pts, ... } } for the season, or null when the season has no data yet
 async function loadAllowed(season) {
   try {
     const rows = await bdlAllPages(`/nba/v1/team_season_averages/general?season=${season}&season_type=regular&type=opponent&per_page=100`);
@@ -185,14 +211,17 @@ async function loadAllowed(season) {
   }
 }
 
-// { teamId: { pace, rank, of } } (rank 1 = fastest), or null. Only used in the "why" sentences, never in the score.
+// { teams: { teamId: { pace, rank, of } } (rank 1 = fastest), league } or null.
 async function loadPace(season) {
   try {
     const rows = await bdlAllPages(`/nba/v1/team_season_averages/general?season=${season}&season_type=regular&type=advanced&per_page=100`);
-    const list = rows.map((row) => ({ id: row.team.id, pace: Number(row.stats.pace) })).filter((row) => Number.isFinite(row.pace));
+    const list = rows.map((row) => ({ id: row.team.id, pace: Number(row.stats.pace) })).filter((row) => Number.isFinite(row.pace) && row.pace > 0);
     if (!list.length) return null;
     list.sort((a, b) => b.pace - a.pace);
-    return Object.fromEntries(list.map((row, index) => [row.id, { pace: row.pace, rank: index + 1, of: list.length }]));
+    return {
+      teams: Object.fromEntries(list.map((row, index) => [row.id, { pace: row.pace, rank: index + 1, of: list.length }])),
+      league: average(list.map((row) => row.pace)),
+    };
   } catch (error) {
     return null;
   }
@@ -209,112 +238,241 @@ async function loadInjuries(teamIds) {
   }
 }
 
-// ---------- scoring ----------
+// ---------- random numbers (seeded, so a prop scores the same every time its inputs are the same) ----------
 
-// Opponent rank 1..30 for a prop (1 = allows the most). Returns null when we can't rank cleanly.
-function opponentRank(allowed, oppTeamId, prop) {
+function seededRandom(seedText) {
+  let h = 1779033703 ^ seedText.length;
+  for (let i = 0; i < seedText.length; i++) { h = Math.imul(h ^ seedText.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  let a = h >>> 0;
+  return () => { // mulberry32
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function normal(rnd) { return Math.sqrt(-2 * Math.log(1 - rnd())) * Math.cos(2 * Math.PI * rnd()); }
+function gamma(k, rnd) { // Marsaglia-Tsang, mean k
+  if (k < 1) return gamma(k + 1, rnd) * Math.pow(rnd(), 1 / k);
+  const d = k - 1 / 3;
+  const c = 1 / Math.sqrt(9 * d);
+  for (;;) {
+    let x; let v;
+    do { x = normal(rnd); v = 1 + c * x; } while (v <= 0);
+    v = v * v * v;
+    const u = rnd();
+    if (Math.log(u) < 0.5 * x * x + d - d * v + d * Math.log(v)) return d * v;
+  }
+}
+// Poisson draw from a fixed uniform u (inverse CDF), so every step of the score reuses the same random runs.
+function poissonFromU(mu, u) {
+  let k = 0;
+  let p = Math.exp(-mu);
+  let cdf = p;
+  while (u > cdf && k < 400) { k++; p *= mu / k; cdf += p; }
+  return k;
+}
+
+// ---------- the projection ----------
+
+// Opponent "allowed" for a prop: rank 1..30 (1 = allows the most), per game, and the league average. null when we can't rank.
+function opponentInfo(allowed, oppTeamId, prop) {
   if (!allowed || !allowed[oppTeamId]) return null;
-  const totals = Object.entries(allowed).map(([teamId, row]) => [Number(teamId), prop.allowed.reduce((sum, field) => sum + (row[field] || 0), 0)]);
+  const totals = Object.entries(allowed).map(([teamId, row]) => [Number(teamId), prop.allowed.reduce((total, field) => total + (row[field] || 0), 0)]);
   if (totals.some(([, value]) => !Number.isFinite(value))) return null;
   totals.sort((a, b) => b[1] - a[1]);
   const index = totals.findIndex(([teamId]) => teamId === oppTeamId);
-  return index < 0 ? null : { rank: index + 1, of: totals.length, perGame: totals[index][1] };
+  if (index < 0) return null;
+  const league = average(totals.map(([, value]) => value));
+  const perGame = totals[index][1];
+  return { rank: index + 1, of: totals.length, perGame, league, mult: 1 + CONFIG.sim.opponentShrink * (perGame / league - 1) };
 }
 
-// Everything the scorer needs about one player-prop, worked out once and used for both sides.
-function describe(prop, line, ctx) {
-  const { current, previous } = ctx.logs;
-  const played = [...current, ...previous].filter(playedInGame);          // newest first, both seasons
+// Pace: tonight's expected pace (both teams) against the player's usual games (his team vs an average team), half the gap.
+function paceInfo(pace, teamId, oppTeamId) {
+  if (!pace || !pace.teams[teamId] || !pace.teams[oppTeamId]) return null;
+  const team = pace.teams[teamId].pace;
+  const opp = pace.teams[oppTeamId];
+  const raw = ((team + opp.pace) / 2) / ((team + pace.league) / 2);
+  return { rank: opp.rank, of: opp.of, pace: round1(opp.pace), mult: 1 + CONFIG.sim.paceShrink * (raw - 1) };
+}
+
+// Weighted per-minute rate and minutes over games {v, m} (newest first). weights null = flat.
+function rateAndMinutes(games, recency) {
+  if (!games.length) return null;
+  const w = games.map((_, i) => (recency ? Math.pow(0.5, i / CONFIG.sim.halfLife) : 1));
+  const minutes = sum(games.map((g, i) => w[i] * g.m));
+  return { rate: minutes > 0 ? sum(games.map((g, i) => w[i] * g.v)) / minutes : 0, minutes: minutes / sum(w) };
+}
+
+// Everything about one player + prop that both sides use, worked out once.
+function describe(prop, ctx) {
+  const toGame = (log) => ({ v: statOf(log, prop.keys), m: minutesOf(log), date: log.game.date });
+  const cur = ctx.logs.current.filter(playedInGame).map(toGame);    // newest first
+  const prev = ctx.logs.previous.filter(playedInGame).map(toGame);
+  const played = [...cur, ...prev];
   if (played.length < CONFIG.minGamesTotal) return null;
+  const S = CONFIG.sim;
 
-  const valueOf = (log) => statOf(log, prop.keys);
-  const l10 = played.slice(0, CONFIG.l10.games).map(valueOf);
-  const currentPlayed = current.filter(playedInGame);
-  const seasonLogs = currentPlayed.length >= CONFIG.season.minGames ? currentPlayed : (previous.filter(playedInGame).length ? previous.filter(playedInGame) : currentPlayed);
-  const season = seasonLogs.map(valueOf);
-  const l5Minutes = average(played.slice(0, CONFIG.minutes.recentGames).map(minutesOf));
-  const seasonMinutes = average(seasonLogs.map(minutesOf));
+  // The prior: last season while this season is young, else this season's own flat average.
+  const usePrev = cur.length < S.priorUntilGames && prev.length >= S.minPriorGames;
+  const prior = usePrev ? rateAndMinutes(prev, false) : rateAndMinutes(cur, false);
+  const flat = rateAndMinutes(cur, false);
+  const recent = rateAndMinutes(cur, true);
+  const share = cur.length / (cur.length + S.priorGames);         // this season's share of the blend
+  const blend = (now, key) => (now ? share * now[key] + (1 - share) * prior[key] : prior[key]);
+  if (!prior) return null;
 
-  // Back-to-back split for the "why": games played the day after the player's previous game vs the rest (same season logs).
-  const dayMs = 24 * 60 * 60 * 1000;
-  const b2bValues = [];
-  const restValues = [];
-  seasonLogs.forEach((log, index) => {
-    const previous = seasonLogs[index + 1]; // newest first: the game before
-    const gap = previous ? (Date.parse(log.game.date) - Date.parse(previous.game.date)) / dayMs : null;
-    (gap === 1 ? b2bValues : restValues).push(valueOf(log));
-  });
-  const b2bSplit = b2bValues.length >= CONFIG.why.b2bMinGames && restValues.length >= 5
-    ? { games: b2bValues.length, b2bAvg: average(b2bValues), restAvg: average(restValues) } : null;
+  const baseRate = blend(flat, "rate");
+  const baseMinutes = blend(flat, "minutes");
+  const formRate = blend(recent, "rate");
+  const formMinutes = blend(recent, "minutes");
 
-  const run = (values, side) => values.filter((v) => (side === "over" ? v > line : v < line)).length;
+  // Spread pieces: minutes noise (the player's own), rate uncertainty (sample + disagreeing recent games), game-to-game noise.
+  const recentMinutes = played.slice(0, S.minutesSd.games).map((g) => g.m);
+  const mAvg = average(recentMinutes);
+  const ownSd = recentMinutes.length >= 5 ? Math.sqrt(average(recentMinutes.map((m) => (m - mAvg) ** 2))) : S.minutesSd.base;
+  const minutesSd = clamp(ownSd, S.minutesSd.min, S.minutesSd.max) * (ctx.gtd ? S.minutesSd.gtd : 1);
+
+  const sampleGames = Math.max(S.rateCv.minGames, cur.length + (usePrev ? S.priorSampleGames : 0));
+  const last = cur.slice(0, S.disagree.games);
+  const lastRate = last.length === S.disagree.games ? rateAndMinutes(last, false).rate : null;
+  const disagree = lastRate !== null && formRate > 0 ? Math.abs(lastRate / formRate - 1) : 0;
+  const disagreeCv = clamp((disagree - S.disagree.free) * S.disagree.weight, 0, S.disagree.cap);
+  const rateCv = S.rateCv.base + S.rateCv.sample / Math.sqrt(sampleGames) + disagreeCv;
+
+  const base = played.slice(0, 40);                                 // overdispersion: var = mu + mu^2 / k around each game's own minutes
+  const baseRateAll = sum(base.map((g) => g.v)) / Math.max(1, sum(base.map((g) => g.m)));
+  const mus = base.map((g) => g.m * baseRateAll);
+  const excess = average(base.map((g, i) => (g.v - mus[i]) ** 2 - mus[i]));
+  const meanMu = average(mus);
+  const k = excess > 0.05 ? clamp((meanMu * meanMu) / excess, S.kMin, S.kMax) : S.kMax;
+
+  const l10 = played.slice(0, CONFIG.l10Games).map((g) => g.v);
   return {
-    l10, season, l10Avg: average(l10), l5Minutes, seasonMinutes, b2bSplit,
-    seasonLabel: seasonLogs === currentPlayed ? "this season" : "last season",
-    count: (side) => ({ l10: run(l10, side), season: run(season, side) }),
+    cur, prev, usePrev, share, k,
+    baseRate, baseMinutes, formRate, formMinutes, minutesSd, rateCv, disagreeCv,
+    lastAvg: last.length === S.disagree.games ? average(last.map((g) => g.v)) : null,
+    l10, l10Avg: average(l10),
+    seasonAvg: average((cur.length >= 10 || !prev.length ? cur : prev).map((g) => g.v)),
+    seasonLabel: cur.length >= 10 || !prev.length ? "this season" : "last season",
+    b2bSplit: backToBackSplit(cur.length >= 10 || !prev.length ? cur : prev),
   };
 }
 
-function scoreSide(side, prop, line, info, ctx) {
-  const sign = side === "over" ? 1 : -1;
-  const factors = [];
-  const add = (key, label, points, detail = {}) => factors.push({ key, label, points: round1(points), ...detail });
+// Back-to-back split for the "why": games the day after the player's previous game vs the rest.
+function backToBackSplit(games) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const b2b = [];
+  const rest = [];
+  games.forEach((game, index) => {
+    const before = games[index + 1];
+    const gap = before ? (Date.parse(game.date) - Date.parse(before.date)) / dayMs : null;
+    (gap === 1 ? b2b : rest).push(game.v);
+  });
+  return b2b.length >= CONFIG.why.b2bMinGames && rest.length >= 5 ? { games: b2b.length, b2bAvg: average(b2b), restAvg: average(rest) } : null;
+}
 
-  const hits = info.count(side);
-  const l10Rate = info.l10.length ? hits.l10 / info.l10.length : 0.5;
-  add("l10", "Last 10 games", (l10Rate - 0.5) * CONFIG.l10.weight, { hits: hits.l10, games: info.l10.length });
+// The random runs for one player + prop: minutes noise, rate noise and game noise draws, plus the uniform for the final count.
+function makeRuns(seed, k) {
+  const rnd = seededRandom(seed);
+  return Array.from({ length: CONFIG.sim.runs }, () => ({ zm: normal(rnd), zr: normal(rnd), g: gamma(k, rnd) / k, u: rnd() }));
+}
 
-  const seasonRate = info.season.length ? hits.season / info.season.length : 0.5;
-  add("season", "Season hit rate", (seasonRate - 0.5) * CONFIG.season.weight, { hits: hits.season, games: info.season.length, which: info.seasonLabel });
-
-  const gapPct = ((info.l10Avg - line) / line) * 100 * sign;               // positive = the average favors this side
-  add("line", "Line vs recent average", clamp(gapPct * CONFIG.lineVsAvg.weight, -CONFIG.lineVsAvg.cap, CONFIG.lineVsAvg.cap), { average: round1(info.l10Avg), line });
-
-  if (ctx.opponent) {                                                       // skipped when the API gives no ranking
-    const { rank, of } = ctx.opponent;
-    const forOver = CONFIG.opponent.best + ((CONFIG.opponent.worst - CONFIG.opponent.best) * (rank - 1)) / (of - 1);
-    add("opponent", "Opponent", forOver * sign, { rank, of, perGame: round1(ctx.opponent.perGame) });
+// One simulation pass: { over, under } chances at the line (pushes left out), and the projection when `full`.
+function simulate(runs, input, line, full) {
+  const [lo, hi] = CONFIG.sim.minutesClamp;
+  let over = 0;
+  let under = 0;
+  let total = 0;
+  const values = full ? [] : null;
+  runs.forEach((run) => {
+    const minutes = clamp(input.minutes + input.minutesSd * run.zm, lo, hi);
+    const rate = input.rate * Math.exp(input.rateCv * run.zr - (input.rateCv * input.rateCv) / 2);
+    const mu = rate * minutes * input.mult * run.g;
+    const x = poissonFromU(mu, run.u);
+    if (x > line) over++; else if (x < line) under++;
+    total += x;
+    if (full) values.push(x);
+  });
+  const decided = over + under || 1;
+  const result = { over: over / decided, under: under / decided };
+  if (full) {
+    values.sort((a, b) => a - b);
+    result.mean = round1(total / runs.length);
+    result.p10 = values[Math.floor(values.length * 0.1)];
+    result.p90 = values[Math.floor(values.length * 0.9)];
   }
+  return result;
+}
 
-  if (info.l5Minutes !== null && info.seasonMinutes !== null) {
-    const raw = clamp((info.l5Minutes - info.seasonMinutes) * CONFIG.minutes.weight, -CONFIG.minutes.cap, CONFIG.minutes.cap);
-    add("minutes", "Minutes trend", side === "under" && CONFIG.flipMinutesForUnder ? -raw : raw, { l5: round1(info.l5Minutes), season: round1(info.seasonMinutes) });
-  }
+const toScore = (chance) => 50 + (chance - 0.5) * CONFIG.probToScore;
 
-  if (ctx.backToBack) {
-    add("b2b", "Back-to-back", side === "under" && CONFIG.flipBackToBackForUnder ? -CONFIG.backToBack : CONFIG.backToBack);
-  }
+// Builds the score step by step from the season baseline, so each factor carries the points it added for each side.
+function runSteps(prop, line, info, ctx) {
+  const runs = makeRuns(`${ctx.playerId}|${prop.code}|${line}`, info.k);
+  const S = CONFIG.sim;
+  let input = { rate: info.baseRate, minutes: info.baseMinutes, mult: 1, minutesSd: S.minutesSd.base, rateCv: S.rateCv.ref };
+  let before = simulate(runs, input, line, false);
+  const base = { over: toScore(before.over), under: toScore(before.under) };
+  const steps = [];
+  const step = (key, label, change, detail = {}) => {
+    input = { ...input, ...change };
+    const after = simulate(runs, input, line, false);
+    steps.push({ key, label, detail, over: toScore(after.over) - toScore(before.over), under: toScore(after.under) - toScore(before.under) });
+    before = after;
+  };
 
-  const total = factors.reduce((sum, f) => sum + f.points, 0);
-  return { score: Math.round(clamp(CONFIG.base + total, CONFIG.min, CONFIG.max)), factors, hits, sign };
+  step("minutes", "Minutes", { minutes: info.formMinutes }, { now: round1(info.formMinutes), base: round1(info.baseMinutes) });
+  step("form", "Recent form", { rate: info.formRate }, { last: info.lastAvg === null ? null : round1(info.lastAvg), games: info.cur.length });
+  if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
+  if (ctx.pace) step("pace", "Pace", { mult: input.mult * ctx.pace.mult }, { rank: ctx.pace.rank, of: ctx.pace.of, pace: ctx.pace.pace });
+  if (ctx.backToBack) step("b2b", "Back-to-back", { mult: input.mult * S.backToBack });
+  step("spread", "Uncertainty", { minutesSd: info.minutesSd, rateCv: info.rateCv }, {
+    games: info.cur.length, lastSeason: info.usePrev, disagree: info.disagreeCv > 0, gtd: Boolean(ctx.gtd),
+  });
+
+  const projection = simulate(runs, input, line, true);
+  return { base, steps, projection };
+}
+
+function scoreSide(side, sim) {
+  const factors = sim.steps.map((s) => ({ key: s.key, label: s.label, points: round1(s[side]), ...s.detail }));
+  const chance = sim.projection[side];
+  return {
+    score: Math.round(clamp(toScore(chance), CONFIG.min, CONFIG.max)),
+    base: round1(sim.base[side]),
+    chance: Math.round(chance * 100),
+    factors,
+  };
 }
 
 // ---------- the "why": three sentences from templates, every number real ----------
-// 1) recent form (L10 record + average, minutes when they moved), 2) the matchup (opponent rank, pace when it is extreme),
-// 3) the biggest risk, weighed against the biggest plus. Sentences name the player by last name, never "the player" or a pronoun.
+// 1) recent form (L10 record + average, minutes when they moved) and the projection, 2) the matchup (opponent rank, pace when it
+// is extreme), 3) the biggest risk, weighed against the biggest plus. Sentences name the player by last name, never a pronoun.
 
 function pick(options, playerId) { return options[playerId % options.length]; }
 
-const FACTOR_WORD = { l10: "the recent form", season: "the season rate", line: "the line", opponent: "the matchup", minutes: "the minutes trend" };
+const FACTOR_WORD = { base: "the season numbers", minutes: "the minutes", form: "the recent form", opponent: "the matchup", pace: "the pace", spread: "the steady numbers" };
 
-function writeWhy(side, prop, line, info, scored, ctx) {
+function writeWhy(side, prop, line, info, scored, sim, ctx) {
   const id = ctx.playerId;
   const over = side === "over";
   const f = Object.fromEntries(scored.factors.map((factor) => [factor.key, factor]));
-  const nGames = info.l10.length;
   const last = ctx.lastName;
   const opp = ctx.oppLabel;
-  const avg = round1(info.l10Avg);
+  const p = sim.projection;
+  const hits = info.l10.filter((v) => (over ? v > line : v < line)).length;
 
-  // 1) recent form
+  // 1) recent form + the projection
   const record = over ? `cleared ${line}` : `stayed under ${line}`;
   let s1 = pick([
-    `${last} has ${record} in ${f.l10.hits} of the last ${nGames} games, averaging ${avg} over that stretch`,
-    `${last} has ${record} in ${f.l10.hits} of the last ${nGames} games, with an average of ${avg} in that span`,
+    `${last} has ${record} in ${hits} of the last ${info.l10.length} games, averaging ${round1(info.l10Avg)}`,
+    `${last} has ${record} in ${hits} of the last ${info.l10.length} games, with an average of ${round1(info.l10Avg)} in that span`,
   ], id);
-  const minutes = f.minutes && Math.abs(f.minutes.l5 - f.minutes.season) >= CONFIG.why.minutesMention ? f.minutes : null;
-  if (minutes) s1 += `, and ${last}'s minutes are ${minutes.l5 > minutes.season ? "up" : "down"} to ${minutes.l5} a game over the last 5 (${minutes.season} on the season)`;
-  s1 += ".";
+  const m = f.minutes;
+  if (m && Math.abs(m.now - m.base) >= CONFIG.why.minutesMention) s1 += `, with minutes trending ${m.now > m.base ? "up" : "down"} (${m.now} projected against ${m.base})`;
+  s1 += `. The sim projects ${p.mean} (most games ${p.p10} to ${p.p90}), a ${scored.chance}% chance of going ${over ? "over" : "under"}.`;
 
   // 2) the matchup
   let s2;
@@ -329,7 +487,7 @@ function writeWhy(side, prop, line, info, scored, ctx) {
   } else {
     s2 = `There is no clear matchup edge against ${opp} this season`;
   }
-  const pace = ctx.oppPace;
+  const pace = f.pace;
   if (pace && (pace.rank <= CONFIG.why.paceTop || pace.rank > pace.of - CONFIG.why.paceTop)) {
     const fast = pace.rank <= CONFIG.why.paceTop;
     const helps = fast === over;
@@ -337,9 +495,10 @@ function writeWhy(side, prop, line, info, scored, ctx) {
   }
   s2 += ".";
 
-  // 3) the biggest risk, weighed against the biggest plus
-  const positives = scored.factors.filter((factor) => factor.points >= 1).sort((a, b) => b.points - a.points);
-  const negatives = scored.factors.filter((factor) => factor.points <= -1).sort((a, b) => a.points - b.points);
+  // 3) the biggest risk, weighed against the biggest plus (the season baseline counts as one of the pieces)
+  const pieces = [{ key: "base", points: scored.base - 50 }, ...scored.factors];
+  const positives = pieces.filter((piece) => piece.points >= 1).sort((a, b) => b.points - a.points);
+  const negatives = pieces.filter((piece) => piece.points <= -1).sort((a, b) => a.points - b.points);
   const best = positives[0];
   const worst = negatives[0];
   let risk;
@@ -347,28 +506,35 @@ function writeWhy(side, prop, line, info, scored, ctx) {
     const split = info.b2bSplit;
     const cost = split ? round1(split.restAvg - split.b2bAvg) : 0;
     risk = split && cost >= CONFIG.why.b2bMinDiff
-      ? `The one concern is a back-to-back, which has cost ${last} about ${cost} ${prop.word} a game (${split.games} games, ${info.seasonLabel})`
-      : "The one concern is the second night of a back-to-back";
+      ? `The biggest risk is a back-to-back, which has cost ${last} about ${cost} ${prop.word} a game (${split.games} games, ${info.seasonLabel})`
+      : "The biggest risk is the second night of a back-to-back";
   } else if (worst && worst.key === "opponent") {
-    risk = `The one concern is the matchup: ${opp} ranks ${ordinal(worst.rank)} of ${worst.of} in ${prop.word} allowed`;
+    risk = `The biggest risk is the matchup: ${opp} ranks ${ordinal(worst.rank)} of ${worst.of} in ${prop.word} allowed`;
+  } else if (worst && worst.key === "pace") {
+    risk = worst.rank > worst.of / 2
+      ? `The biggest risk is the pace: ${opp} plays one of the slower games in the league (${ordinal(worst.rank)} of ${worst.of})`
+      : `The biggest risk is the pace: ${opp} plays one of the faster games in the league (${ordinal(worst.rank)} of ${worst.of})`;
   } else if (worst && worst.key === "minutes") {
-    risk = `The one concern is playing time: ${worst.l5} minutes a game over the last 5, against ${worst.season} on the season`;
-  } else if (worst && worst.key === "l10") {
-    risk = `The one concern is recent form: only ${worst.hits} of the last ${worst.games} games ${over ? "went over" : "stayed under"}`;
-  } else if (worst && worst.key === "season") {
-    risk = `The one concern is the bigger picture: ${worst.hits} of ${worst.games} games ${over ? "cleared" : "stayed under"} this line (${worst.which})`;
-  } else if (worst && worst.key === "line") {
-    risk = `The one concern is the line itself: ${line} sits ${round1(Math.abs(worst.average - line))} ${over ? "above" : "below"} the recent average of ${worst.average}`;
+    risk = `The biggest risk is playing time: ${last}'s minutes project to ${worst.now}, against ${worst.base} on the season`;
+  } else if (worst && worst.key === "form") {
+    risk = worst.last !== null
+      ? `The biggest risk is recent form: the last 3 games averaged ${worst.last}, ${over ? "below" : "above"} the season pace`
+      : "The biggest risk is recent form";
+  } else if (worst && worst.key === "spread") {
+    if (worst.gtd) risk = `The biggest risk is availability: ${last} is a game-time decision (${ctx.injuryStatus}), so the minutes could swing`;
+    else if (worst.games < CONFIG.why.smallSample) risk = `The biggest risk is a small sample: only ${worst.games} ${worst.games === 1 ? "game" : "games"} this season, so the range is wide`;
+    else if (worst.disagree) risk = `The biggest risk is how much ${last}'s recent games swing (last 3 averaged ${round1(info.lastAvg)}), so the range is wide`;
+    else risk = `The biggest risk is how much ${last}'s ${prop.word} swing from game to game`;
+  } else if (worst && worst.key === "base") {
+    risk = `The biggest risk is the line itself: ${last} ${info.seasonLabel === "last season" ? "averaged" : "averages"} ${round1(info.seasonAvg)} ${info.seasonLabel}, ${info.seasonAvg > line ? "over" : "under"} ${line}`;
   }
   let s3;
   if (risk) {
     s3 = best && best.points > Math.abs(worst.points)
       ? `${risk}, but it isn't enough to outweigh ${FACTOR_WORD[best.key] || "the rest"}.`
       : `${risk}, and it outweighs what is in ${last}'s favor.`;
-  } else if (f.season && f.season.games) {
-    s3 = `No real red flags: ${f.season.hits} of ${f.season.games} games ${over ? "cleared" : "stayed under"} this line (${f.season.which}).`;
   } else {
-    s3 = `No real red flags: the line of ${line} sits ${round1(Math.abs(info.l10Avg - line))} ${info.l10Avg > line ? "below" : "above"} the recent average.`;
+    s3 = `No real red flags: ${last} ${info.seasonLabel === "last season" ? "averaged" : "averages"} ${round1(info.seasonAvg)} ${info.seasonLabel} against a line of ${line}.`;
   }
   return [s1, s2, s3];
 }
@@ -377,6 +543,107 @@ function writeWhy(side, prop, line, info, scored, ctx) {
 
 function reply(statusCode, body, headers = {}) {
   return { statusCode, headers: { "Content-Type": "application/json; charset=utf-8", ...headers }, body: JSON.stringify(body) };
+}
+
+const warmCache = {}; // date -> { savedAt, body }: a warm function answers repeat calls (Hunt Score page + Top 5) without recomputing
+
+async function computeHunts(date) {
+  const empty = { date, updatedAt: new Date().toISOString(), props: [], topHunts: [] };
+  const games = await loadSlate(date);
+  if (!games.length) return empty;
+
+  const gameById = Object.fromEntries(games.map((game) => [game.id, game]));
+  const lines = await loadLines(games);
+  if (!lines.length) return empty;
+
+  const season = seasonOf(date);
+  const playerIds = [...new Set(lines.map((line) => line.player_id))];
+  const teamIds = [...new Set(games.flatMap((game) => [game.home_team.id, game.visitor_team.id]))];
+
+  const [players, currentLogs, yesterday, injuries] = await Promise.all([
+    loadPlayers(playerIds),
+    loadLogs(playerIds, season, date),
+    bdlAllPages(`/v1/games?start_date=${addDays(date, -1)}&end_date=${addDays(date, -1)}&per_page=100`).catch(() => []),
+    loadInjuries(teamIds),
+  ]);
+  const needLastSeason = playerIds.filter((id) => currentLogs[id].filter(playedInGame).length < CONFIG.sim.priorUntilGames);
+  const [previousLogs, allowedNow, paceNow] = await Promise.all([
+    needLastSeason.length ? loadLogs(needLastSeason, season - 1, date) : {},
+    loadAllowed(season),
+    loadPace(season),
+  ]);
+  const allowed = allowedNow || (await loadAllowed(season - 1)); // same fallback rule as the rest of the site
+  const pace = paceNow || (await loadPace(season - 1));
+
+  const playedYesterday = new Set(yesterday.flatMap((game) => [game.home_team.id, game.visitor_team.id]));
+
+  const out = [];
+  lines.forEach((entry) => {
+    const prop = PROPS[entry.prop_type];
+    const player = players[entry.player_id];
+    const game = gameById[entry.game_id];
+    if (!player || !player.team || !game) return;
+    const teamId = player.team.id;
+    const home = teamId === game.home_team.id;
+    if (!home && teamId !== game.visitor_team.id) return; // team not in this game (just traded, data not updated)
+    const oppTeam = home ? game.visitor_team : game.home_team;
+    const line = Number(entry.line_value);
+    if (!Number.isFinite(line) || line <= 0) return;
+
+    const status = injuries[entry.player_id] || null;
+    const injured = Boolean(status && CONFIG.injuredStatuses.test(status));
+    const gtd = Boolean(injured && CONFIG.gtdStatuses.test(status) && !/out|doubt/i.test(status));
+    const ctx = {
+      playerId: entry.player_id,
+      logs: { current: currentLogs[entry.player_id] || [], previous: previousLogs[entry.player_id] || [] },
+      opponent: opponentInfo(allowed, oppTeam.id, prop),
+      pace: paceInfo(pace, teamId, oppTeam.id),
+      backToBack: playedYesterday.has(teamId),
+      oppLabel: teamLabel(oppTeam),
+      lastName: player.last_name,
+      gtd,
+      injuryStatus: status,
+    };
+    const info = describe(prop, ctx);
+    if (!info) return; // fewer than 5 games in total
+
+    const sim = runSteps(prop, line, info, ctx);
+    ["over", "under"].forEach((side) => {
+      const scored = scoreSide(side, sim);
+      out.push({
+        playerId: entry.player_id,
+        player: `${player.first_name} ${player.last_name}`,
+        team: player.team.abbreviation,
+        opp: oppTeam.abbreviation,
+        home,
+        stat: prop.code,
+        side,
+        line,
+        score: scored.score,
+        base: scored.base,       // the season baseline's score; base + every factor's points = the score before rounding
+        chance: scored.chance,   // simulated % chance of this side hitting (pushes left out)
+        projection: { mean: sim.projection.mean, p10: sim.projection.p10, p90: sim.projection.p90 },
+        factors: scored.factors, // key, label, points + the numbers behind each one, for the Hunt Score page
+        why: writeWhy(side, prop, line, info, scored, sim, ctx),
+        injured,                 // Out / Doubtful / Questionable / Day-To-Day
+        gtd,
+        injuryStatus: status,
+        gameId: game.id,
+        tipoff: game.datetime || null,
+      });
+    });
+  });
+
+  out.sort((a, b) => b.score - a.score);
+  const seen = new Set();
+  const topHunts = [];
+  for (const prop of out) {
+    if (topHunts.length >= CONFIG.topHunts.max || prop.score < CONFIG.topHunts.minScore) break;
+    if (prop.injured || seen.has(prop.playerId)) continue;
+    seen.add(prop.playerId);
+    topHunts.push(prop);
+  }
+  return { date, updatedAt: new Date().toISOString(), props: out, topHunts };
 }
 
 exports.handler = async (event) => {
@@ -388,99 +655,17 @@ exports.handler = async (event) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) return reply(400, { error: "date must look like 2026-10-20." }, { "Cache-Control": "no-store" });
 
   const cacheHeaders = { "Cache-Control": "public, s-maxage=600", "Netlify-CDN-Cache-Control": "public, s-maxage=600, stale-while-revalidate=600" };
-  const empty = { date, updatedAt: new Date().toISOString(), props: [], topHunts: [] };
-  if (date > todayET) return reply(200, empty, cacheHeaders); // future dates: an empty list
+  if (date > todayET) return reply(200, { date, updatedAt: new Date().toISOString(), props: [], topHunts: [] }, cacheHeaders); // future dates: an empty list
 
+  const warm = warmCache[date];
+  if (warm && Date.now() - warm.savedAt < CONFIG.cacheMinutes * 60 * 1000) return reply(200, warm.body, cacheHeaders);
   try {
-    const games = await loadSlate(date);
-    if (!games.length) return reply(200, empty, cacheHeaders);
-
-    const gameById = Object.fromEntries(games.map((game) => [game.id, game]));
-    const lines = await loadLines(games);
-    if (!lines.length) return reply(200, empty, cacheHeaders);
-
-    const season = seasonOf(date);
-    const playerIds = [...new Set(lines.map((line) => line.player_id))];
-    const teamIds = [...new Set(games.flatMap((game) => [game.home_team.id, game.visitor_team.id]))];
-
-    const [players, currentLogs, yesterday, injuries] = await Promise.all([
-      loadPlayers(playerIds),
-      loadLogs(playerIds, season),
-      bdlAllPages(`/v1/games?start_date=${addDays(date, -1)}&end_date=${addDays(date, -1)}&per_page=100`).catch(() => []),
-      loadInjuries(teamIds),
-    ]);
-    const needLastSeason = playerIds.filter((id) => currentLogs[id].filter(playedInGame).length < CONFIG.season.minGames);
-    const [previousLogs, allowedNow, paceNow] = await Promise.all([
-      needLastSeason.length ? loadLogs(needLastSeason, season - 1) : {},
-      loadAllowed(season),
-      loadPace(season),
-    ]);
-    const allowed = allowedNow || (await loadAllowed(season - 1)); // same fallback rule as the rest of the site
-    const pace = paceNow || (await loadPace(season - 1));
-
-    const playedYesterday = new Set(yesterday.flatMap((game) => [game.home_team.id, game.visitor_team.id]));
-
-    const out = [];
-    lines.forEach((entry) => {
-      const prop = PROPS[entry.prop_type];
-      const player = players[entry.player_id];
-      const game = gameById[entry.game_id];
-      if (!player || !player.team || !game) return;
-      const teamId = player.team.id;
-      const home = teamId === game.home_team.id;
-      if (!home && teamId !== game.visitor_team.id) return; // team not in this game (just traded, data not updated)
-      const oppTeam = home ? game.visitor_team : game.home_team;
-      const line = Number(entry.line_value);
-      if (!Number.isFinite(line) || line <= 0) return;
-
-      const logs = { current: currentLogs[entry.player_id] || [], previous: (previousLogs[entry.player_id]) || [] };
-      const info = describe(prop, line, { logs });
-      if (!info) return; // fewer than 5 games in total
-
-      const ctx = {
-        playerId: entry.player_id,
-        opponent: opponentRank(allowed, oppTeam.id, prop),
-        backToBack: playedYesterday.has(teamId),
-        oppLabel: teamLabel(oppTeam),
-        oppPace: pace ? pace[oppTeam.id] || null : null,
-        lastName: player.last_name,
-      };
-      const status = injuries[entry.player_id] || null;
-      ["over", "under"].forEach((side) => {
-        const scored = scoreSide(side, prop, line, info, ctx);
-        out.push({
-          playerId: entry.player_id,
-          player: `${player.first_name} ${player.last_name}`,
-          team: player.team.abbreviation,
-          opp: oppTeam.abbreviation,
-          home,
-          stat: prop.code,
-          side,
-          line,
-          score: scored.score,
-          factors: scored.factors, // key, label, points + the numbers behind each one (hits / games, average, rank ...) for the Hunt Score page
-          why: writeWhy(side, prop, line, info, scored, ctx),
-          injured: Boolean(status && CONFIG.injuredStatuses.test(status)),   // Out / Doubtful / Questionable / Day-To-Day
-          gtd: Boolean(status && CONFIG.injuredStatuses.test(status) && CONFIG.gtdStatuses.test(status) && !/out|doubt/i.test(status)),
-          injuryStatus: status,
-          gameId: game.id,
-          tipoff: game.datetime || null,
-        });
-      });
-    });
-
-    out.sort((a, b) => b.score - a.score);
-    const seen = new Set();
-    const topHunts = [];
-    for (const prop of out) {
-      if (topHunts.length >= CONFIG.topHunts.max || prop.score < CONFIG.topHunts.minScore) break;
-      if (prop.injured || seen.has(prop.playerId)) continue;
-      seen.add(prop.playerId);
-      topHunts.push(prop);
-    }
-
-    return reply(200, { date, updatedAt: new Date().toISOString(), props: out, topHunts }, cacheHeaders);
+    const body = await computeHunts(date);
+    warmCache[date] = { savedAt: Date.now(), body };
+    return reply(200, body, cacheHeaders);
   } catch (error) {
     return reply(502, { error: String(error.message || error) }, { "Cache-Control": "no-store" });
   }
 };
+
+exports.CONFIG = CONFIG; // for dev/hunt-compare.js
