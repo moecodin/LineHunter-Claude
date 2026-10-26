@@ -5081,7 +5081,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-see-all i { font-size: 0.75em; }
 .lh-hunt-row {
   display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1.6fr) minmax(0, 2fr) 3.25rem auto;
+  grid-template-columns: 1.5rem minmax(0, 1.6fr) minmax(0, 2fr) 3.5rem auto;
   align-items: center;
   gap: 0.75rem;
   padding: 0.65rem 0;
@@ -5098,15 +5098,13 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hunt-pick--over, .lh-hs-pick--over { color: var(--lh-over-text); }
 .lh-hunt-pick--under, .lh-hs-pick--under { color: var(--lh-under-text); }
 .lh-hunt-why { color: var(--lh-muted); font-size: 0.82rem; }
-.lh-hunt-score {
+.lh-hunt-score {                      /* the big plain number: no chip, no border */
   justify-self: start;
-  padding: 0.2rem 0.55rem;
-  border-radius: 8px;
-  background: rgba(var(--lh-over-rgb), 0.16);
   color: var(--lh-over-text);
   font-family: var(--lh-font-display);
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
 }
 .lh-hunt-add { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.5rem; }
 .lh-hunt-add .lh-top-add { position: static; transform: none; }   /* in the row's last column, not pinned like the Top Hit Rates tickets */
