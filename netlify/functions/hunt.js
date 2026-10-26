@@ -12,6 +12,7 @@
 //   /v1/players                                     names and teams
 //   /v1/stats?player_ids[]=&seasons[]=              game logs (this season, plus last season when a player has < 10 games)
 //   /nba/v1/team_season_averages/general?type=opponent   points / rebounds / assists / threes each team ALLOWS per game
+//   /nba/v1/team_season_averages/general?type=advanced   each team's pace (only for the "why" sentences)
 //   /v1/player_injuries                             Out / Doubtful / Questionable
 
 const API_ORIGIN = "https://api.balldontlie.io";
@@ -33,6 +34,8 @@ const CONFIG = {
   flipMinutesForUnder: true,
   flipBackToBackForUnder: true,
   topHunts: { max: 5, minScore: 65 },
+  why: { paceTop: 5, b2bMinGames: 3, b2bMinDiff: 0.5, minutesMention: 2 }, // pace rank 1-5 / 26-30 is mentioned; B2B split needs 3+ games
+
   injuredStatuses: /out|doubt|question|day/i,  // Out, Doubtful, Questionable (the API calls Questionable "Day-To-Day")
   gtdStatuses: /question|day/i,                // the "game-time decision" ones: still scored, tagged GTD, never a top hunt
   preferredBook: "draftkings",
@@ -182,6 +185,19 @@ async function loadAllowed(season) {
   }
 }
 
+// { teamId: { pace, rank, of } } (rank 1 = fastest), or null. Only used in the "why" sentences, never in the score.
+async function loadPace(season) {
+  try {
+    const rows = await bdlAllPages(`/nba/v1/team_season_averages/general?season=${season}&season_type=regular&type=advanced&per_page=100`);
+    const list = rows.map((row) => ({ id: row.team.id, pace: Number(row.stats.pace) })).filter((row) => Number.isFinite(row.pace));
+    if (!list.length) return null;
+    list.sort((a, b) => b.pace - a.pace);
+    return Object.fromEntries(list.map((row, index) => [row.id, { pace: row.pace, rank: index + 1, of: list.length }]));
+  } catch (error) {
+    return null;
+  }
+}
+
 async function loadInjuries(teamIds) {
   try {
     const rows = await bdlAllPages(`/v1/player_injuries?${teamIds.map((id) => `team_ids[]=${id}`).join("&")}&per_page=100`);
@@ -219,9 +235,21 @@ function describe(prop, line, ctx) {
   const l5Minutes = average(played.slice(0, CONFIG.minutes.recentGames).map(minutesOf));
   const seasonMinutes = average(seasonLogs.map(minutesOf));
 
+  // Back-to-back split for the "why": games played the day after the player's previous game vs the rest (same season logs).
+  const dayMs = 24 * 60 * 60 * 1000;
+  const b2bValues = [];
+  const restValues = [];
+  seasonLogs.forEach((log, index) => {
+    const previous = seasonLogs[index + 1]; // newest first: the game before
+    const gap = previous ? (Date.parse(log.game.date) - Date.parse(previous.game.date)) / dayMs : null;
+    (gap === 1 ? b2bValues : restValues).push(valueOf(log));
+  });
+  const b2bSplit = b2bValues.length >= CONFIG.why.b2bMinGames && restValues.length >= 5
+    ? { games: b2bValues.length, b2bAvg: average(b2bValues), restAvg: average(restValues) } : null;
+
   const run = (values, side) => values.filter((v) => (side === "over" ? v > line : v < line)).length;
   return {
-    l10, season, l10Avg: average(l10), l5Minutes, seasonMinutes,
+    l10, season, l10Avg: average(l10), l5Minutes, seasonMinutes, b2bSplit,
     seasonLabel: seasonLogs === currentPlayed ? "this season" : "last season",
     count: (side) => ({ l10: run(l10, side), season: run(season, side) }),
   };
@@ -262,101 +290,85 @@ function scoreSide(side, prop, line, info, ctx) {
 }
 
 // ---------- the "why": three sentences from templates, every number real ----------
+// 1) recent form (L10 record + average, minutes when they moved), 2) the matchup (opponent rank, pace when it is extreme),
+// 3) the biggest risk, weighed against the biggest plus. Sentences name the player by last name, never "the player" or a pronoun.
 
 function pick(options, playerId) { return options[playerId % options.length]; }
+
+const FACTOR_WORD = { l10: "the recent form", season: "the season rate", line: "the line", opponent: "the matchup", minutes: "the minutes trend" };
 
 function writeWhy(side, prop, line, info, scored, ctx) {
   const id = ctx.playerId;
   const over = side === "over";
   const f = Object.fromEntries(scored.factors.map((factor) => [factor.key, factor]));
   const nGames = info.l10.length;
-  const verb = over ? "cleared" : "stayed under";
+  const last = ctx.lastName;
   const opp = ctx.oppLabel;
-  const last = ctx.lastName; // sentences name the player by last name, never "the player" or a pronoun
+  const avg = round1(info.l10Avg);
 
-  // 1) the trend
-  const s1 = pick([
-    `${last} has ${verb} this line in ${f.l10.hits} of the last ${nGames} games.`,
-    `${last} ${over ? "went over" : "stayed under"} ${line} in ${f.l10.hits} of the last ${nGames} games.`,
-    `${f.l10.hits} of ${last}'s last ${nGames} games ${over ? "went over" : "stayed under"} this line.`,
+  // 1) recent form
+  const record = over ? `cleared ${line}` : `stayed under ${line}`;
+  let s1 = pick([
+    `${last} has ${record} in ${f.l10.hits} of the last ${nGames} games, averaging ${avg} over that stretch`,
+    `${last} has ${record} in ${f.l10.hits} of the last ${nGames} games, with an average of ${avg} in that span`,
   ], id);
+  const minutes = f.minutes && Math.abs(f.minutes.l5 - f.minutes.season) >= CONFIG.why.minutesMention ? f.minutes : null;
+  if (minutes) s1 += `, and ${last}'s minutes are ${minutes.l5 > minutes.season ? "up" : "down"} to ${minutes.l5} a game over the last 5 (${minutes.season} on the season)`;
+  s1 += ".";
 
-  // 2) the biggest matchup or situation factor (must be a real positive)
-  const candidates = ["opponent", "minutes", "season", "line"].map((key) => f[key]).filter((factor) => factor && factor.points >= 1);
-  candidates.sort((a, b) => b.points - a.points);
-  const top = candidates[0];
+  // 2) the matchup
   let s2;
-  if (top && top.key === "opponent") {
-    const nth = over ? top.rank : top.of - top.rank + 1;
-    const amount = nth === 1 ? "the most" : `the ${ordinal(nth)} most`;
-    const amountUnder = nth === 1 ? "the fewest" : `the ${ordinal(nth)} fewest`;
-    s2 = pick([
-      `${opp} allows ${over ? amount : amountUnder} ${prop.word} per game this season.`,
-      `${opp} gives up ${over ? amount : amountUnder} ${prop.word} a game this season (${top.perGame}).`,
-      `Matchup helps: ${opp} ranks ${ordinal(top.rank)} of ${top.of} in ${prop.word} allowed per game.`,
-    ], id);
-  } else if (top && top.key === "minutes") {
-    s2 = pick([
-      `${last}'s minutes are ${over ? "up" : "down"}: ${top.l5} a game over the last 5, against ${top.season} on the season.`,
-      `${last} is playing ${top.l5} minutes a game over the last 5 compared with ${top.season} on the season.`,
-    ], id);
-  } else if (top && top.key === "season") {
-    s2 = pick([
-      `Season rate backs it: ${top.hits} of ${top.games} games ${over ? "went over" : "stayed under"} (${top.which}).`,
-      `Across ${top.which}, ${top.hits} of ${top.games} games ${over ? "cleared" : "stayed under"} this line.`,
-    ], id);
-  } else if (top && top.key === "line") {
-    s2 = pick([
-      `The recent average of ${top.average} sits ${round1(Math.abs(top.average - line))} ${over ? "above" : "below"} the line.`,
-      `${last} is averaging ${top.average} over the last ${nGames} games against a line of ${line}.`,
-    ], id);
+  const o = f.opponent;
+  if (o) {
+    const most = o.rank <= o.of / 2;
+    const nth = most ? o.rank : o.of - o.rank + 1;
+    const amount = `${nth === 1 ? "the" : `the ${ordinal(nth)}`} ${most ? "most" : "fewest"}`;
+    s2 = nth <= 8
+      ? `Tonight's opponent, ${opp}, allows ${amount} ${prop.word} per game this season (${o.perGame})`
+      : `Tonight's opponent, ${opp}, sits in the middle of the league in ${prop.word} allowed (${ordinal(o.rank)} of ${o.of}, ${o.perGame} a game)`;
   } else {
-    s2 = `The line is ${line} against a recent average of ${round1(info.l10Avg)}.`;
+    s2 = `There is no clear matchup edge against ${opp} this season`;
   }
+  const pace = ctx.oppPace;
+  if (pace && (pace.rank <= CONFIG.why.paceTop || pace.rank > pace.of - CONFIG.why.paceTop)) {
+    const fast = pace.rank <= CONFIG.why.paceTop;
+    const helps = fast === over;
+    s2 += ` and plays at ${fast ? `a top ${CONFIG.why.paceTop} pace` : `one of the ${CONFIG.why.paceTop} slowest paces`} in the league, so ${fast ? "extra" : "fewer"} possessions ${helps ? "should help" : "work against this pick"}`;
+  }
+  s2 += ".";
 
-  // 3) the biggest negative factor, or a line note
+  // 3) the biggest risk, weighed against the biggest plus
+  const positives = scored.factors.filter((factor) => factor.points >= 1).sort((a, b) => b.points - a.points);
   const negatives = scored.factors.filter((factor) => factor.points <= -1).sort((a, b) => a.points - b.points);
+  const best = positives[0];
   const worst = negatives[0];
-  let s3;
+  let risk;
   if (worst && worst.key === "b2b") {
-    s3 = pick(["Only knock: second night of a back-to-back.", "The one concern is the second night of a back-to-back."], id);
+    const split = info.b2bSplit;
+    const cost = split ? round1(split.restAvg - split.b2bAvg) : 0;
+    risk = split && cost >= CONFIG.why.b2bMinDiff
+      ? `The one concern is a back-to-back, which has cost ${last} about ${cost} ${prop.word} a game (${split.games} games, ${info.seasonLabel})`
+      : "The one concern is the second night of a back-to-back";
   } else if (worst && worst.key === "opponent") {
-    s3 = pick([
-      `Only knock: ${opp} ranks ${ordinal(worst.rank)} of ${worst.of} in ${prop.word} allowed per game.`,
-      `The matchup works against it: ${opp} allows ${worst.perGame} ${prop.word} per game.`,
-    ], id);
+    risk = `The one concern is the matchup: ${opp} ranks ${ordinal(worst.rank)} of ${worst.of} in ${prop.word} allowed`;
   } else if (worst && worst.key === "minutes") {
-    s3 = pick([
-      `Only knock: ${last}'s minutes are ${over ? "down" : "up"} to ${worst.l5} over the last 5 from ${worst.season} on the season.`,
-      `Watch the minutes: ${last} is at ${worst.l5} a game over the last 5 against ${worst.season} on the season.`,
-    ], id);
+    risk = `The one concern is playing time: ${worst.l5} minutes a game over the last 5, against ${worst.season} on the season`;
   } else if (worst && worst.key === "l10") {
-    s3 = pick([
-      `Only knock: just ${worst.hits} of the last ${worst.games} games ${over ? "went over" : "stayed under"} this line.`,
-      `The recent trend is against it: ${worst.hits} of ${worst.games} games ${over ? "cleared" : "stayed under"}.`,
-    ], id);
+    risk = `The one concern is recent form: only ${worst.hits} of the last ${worst.games} games ${over ? "went over" : "stayed under"}`;
   } else if (worst && worst.key === "season") {
-    s3 = pick([
-      `Only knock: the season rate is ${worst.hits} of ${worst.games} games (${worst.which}).`,
-      `Over ${worst.which} only ${worst.hits} of ${worst.games} games ${over ? "went over" : "stayed under"} this line.`,
-    ], id);
+    risk = `The one concern is the bigger picture: ${worst.hits} of ${worst.games} games ${over ? "cleared" : "stayed under"} this line (${worst.which})`;
   } else if (worst && worst.key === "line") {
-    s3 = pick([
-      `Only knock: the recent average of ${worst.average} sits ${round1(Math.abs(worst.average - line))} ${over ? "below" : "above"} the line.`,
-      `The line of ${line} is ${over ? "above" : "below"} the recent average of ${worst.average}.`,
-    ], id);
+    risk = `The one concern is the line itself: ${line} sits ${round1(Math.abs(worst.average - line))} ${over ? "above" : "below"} the recent average of ${worst.average}`;
+  }
+  let s3;
+  if (risk) {
+    s3 = best && best.points > Math.abs(worst.points)
+      ? `${risk}, but it isn't enough to outweigh ${FACTOR_WORD[best.key] || "the rest"}.`
+      : `${risk}, and it outweighs what is in ${last}'s favor.`;
+  } else if (f.season && f.season.games) {
+    s3 = `No real red flags: ${f.season.hits} of ${f.season.games} games ${over ? "cleared" : "stayed under"} this line (${f.season.which}).`;
   } else {
-    const avg = round1(info.l10Avg);
-    const diff = round1(Math.abs(info.l10Avg - line));
-    if (diff >= 1) {
-      const size = diff === 1 ? "a full point" : `${diff} points`;
-      s3 = pick([
-        `The line sits ${size} ${info.l10Avg > line ? "below" : "above"} the recent average of ${avg}.`,
-        `Line note: ${line} against ${last}'s ${nGames}-game average of ${avg}.`,
-      ], id);
-    } else {
-      s3 = `Line note: ${line} is right in line with ${last}'s ${nGames}-game average of ${avg}.`;
-    }
+    s3 = `No real red flags: the line of ${line} sits ${round1(Math.abs(info.l10Avg - line))} ${info.l10Avg > line ? "below" : "above"} the recent average.`;
   }
   return [s1, s2, s3];
 }
@@ -398,11 +410,13 @@ exports.handler = async (event) => {
       loadInjuries(teamIds),
     ]);
     const needLastSeason = playerIds.filter((id) => currentLogs[id].filter(playedInGame).length < CONFIG.season.minGames);
-    const [previousLogs, allowedNow] = await Promise.all([
+    const [previousLogs, allowedNow, paceNow] = await Promise.all([
       needLastSeason.length ? loadLogs(needLastSeason, season - 1) : {},
       loadAllowed(season),
+      loadPace(season),
     ]);
     const allowed = allowedNow || (await loadAllowed(season - 1)); // same fallback rule as the rest of the site
+    const pace = paceNow || (await loadPace(season - 1));
 
     const playedYesterday = new Set(yesterday.flatMap((game) => [game.home_team.id, game.visitor_team.id]));
 
@@ -428,6 +442,7 @@ exports.handler = async (event) => {
         opponent: opponentRank(allowed, oppTeam.id, prop),
         backToBack: playedYesterday.has(teamId),
         oppLabel: teamLabel(oppTeam),
+        oppPace: pace ? pace[oppTeam.id] || null : null,
         lastName: player.last_name,
       };
       const status = injuries[entry.player_id] || null;
