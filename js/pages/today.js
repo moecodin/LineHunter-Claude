@@ -165,6 +165,20 @@ function renderTodayHuntsLoading() {
   TODAY_HUNTS.innerHTML = `<div class="lh-hunt-row placeholder-glow" aria-hidden="true"><span class="placeholder col-12 rounded"></span></div>`.repeat(5);
 }
 
+// ---------- Phones: Top Hunts | Top Hit Rates switch (one card at a time under 768px; CSS shows both on wider screens) ----------
+
+document.querySelectorAll("[data-today-pick]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const pair = document.querySelector(".lh-today-pair");
+    if (pair) pair.dataset.pick = button.dataset.todayPick;
+    document.querySelectorAll("[data-today-pick]").forEach((other) => {
+      const on = other === button;
+      other.classList.toggle("is-on", on);
+      other.setAttribute("aria-pressed", String(on));
+    });
+  });
+});
+
 // ---------- Called by js/pages/app.js ----------
 
 async function showTodayForDay(day) {
@@ -176,6 +190,8 @@ async function showTodayForDay(day) {
   renderTodayHuntsLoading();
   const seeAll = document.getElementById("todayHuntsAll");
   if (seeAll) seeAll.href = `hunt-score.html?date=${day}`;
+  const topAll = document.getElementById("topHitRatesAll");
+  if (topAll) topAll.href = `top-hit-rates.html?date=${day}`;
 
   const request = ++todayHuntsRequest;
   try {

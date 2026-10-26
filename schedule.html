@@ -85,8 +85,16 @@
          teaser from data this page already loads. js/pages/today.js draws them. -->
     <section id="todayTools" class="lh-today-tools mb-4" aria-label="Tools"></section>
 
-    <!-- TOP 5 HUNTS (lines mode): the Hunt Score engine's top hunts for the picked day (/api/hunt). "See all" opens hunt-score.html. -->
-    <section id="todayHunts" class="card lh-today-hunts lines-only mb-5" aria-labelledby="todayHuntsTitle">
+    <!-- TOP 5 HUNTS + TOP HIT RATES (lines mode), side by side from 1200px, stacked below. Phones show one at a time: the switch
+         below picks which (js/pages/today.js sets data-pick on .lh-today-pair). -->
+    <div class="lh-today-switch lines-only" role="group" aria-label="Show">
+      <button type="button" class="is-on" data-today-pick="hunts" aria-pressed="true">Top Hunts</button>
+      <button type="button" data-today-pick="top" aria-pressed="false">Top Hit Rates</button>
+    </div>
+    <div class="lh-today-pair lines-only mb-5" data-pick="hunts">
+
+    <!-- TOP 5 HUNTS: the Hunt Score engine's top hunts for the picked day (/api/hunt). "See all" opens hunt-score.html. -->
+    <section id="todayHunts" class="card lh-today-hunts" aria-labelledby="todayHuntsTitle">
       <div class="card-header d-flex align-items-center flex-wrap gap-2 py-3">
         <h2 class="lh-top-title mb-0" id="todayHuntsTitle"><i class="bi bi-crosshair" aria-hidden="true"></i>Top 5 Hunts</h2>
         <span class="lh-label text-muted d-none d-sm-inline">Hunt Score</span>
@@ -94,6 +102,23 @@
       </div>
       <div class="card-body" id="todayHuntsList" aria-busy="true"></div>
     </section>
+
+    <!-- TOP HIT RATES: the same card as top-hit-rates.html (tickets, stepper, Over / Under, odds, + ADD), top 5 rows.
+         js/components/top-hit-rates.js fills it; "See all" opens the full page on the same day. -->
+    <div id="top-hit-rates" class="card lh-top-compact">
+      <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
+        <div>
+          <h2 class="lh-top-title mb-1"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i><span id="topHitRatesTitle">Top Hit Rates</span></h2>
+          <div class="small text-muted">Players who went over their line most often in their last 10 games</div>
+        </div>
+        <a class="lh-see-all" id="topHitRatesAll" href="top-hit-rates.html">See all <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="card-body">
+        <ul id="topHitRatesPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
+        <div id="topHitRatesList" class="text-muted">Loading hit rates...</div>
+      </div>
+    </div>
+    </div>
 
   </main>
 

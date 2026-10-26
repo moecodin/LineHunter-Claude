@@ -7,7 +7,7 @@
 
 const TOP_WINDOW = 10;    // L10
 const TOP_MIN_GAMES = 8;  // fewer games than this in the window = too small a sample to rank
-const TOP_ROW_COUNT = 8;  // how many rows the card shows
+const TOP_ROW_COUNT = document.querySelector('[data-lh-slate="day"]') ? 5 : 8;  // how many rows the card shows (the Today page: 5, beside Top 5 Hunts)
 const TOP_WINDOWS = [5, 10, 20];  // schedule page: the L5 / L10 / L20 toggle
 const TOP_MIN_SAMPLE = 3;         // schedule page: fewer games than this in a window = no row (a real "3/4" still shows)
 // Schedule page only: the compact card gets the new row layout, window toggle and sort. The homepage card stays as it was.
