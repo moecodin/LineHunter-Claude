@@ -1,18 +1,28 @@
 // LineHunter - js/components/samePosition.js
-// The "Same Position vs BOS" card on player.html (right under the prop chart): how players at this player's position did
-// against the opponent in its last 10 finished games, each scored against THIS player's current line for the selected prop tab.
+// The "Same Position vs BOS" card on player.html (half width, right under the prop chart, Zone Matchup beside it): how players
+// at this player's position did against the opponent in its last 10 finished games, each scored against THIS player's current
+// line for the selected prop tab, and compared with their own norm (their last 10 games against other teams).
+//
+// The headline is the norm gap, not the over count: "Guards vs WAS: +0.1 AST vs their norm · Neutral". 2 of 13 going over
+// 6.5 AST says little when those guards only average 3.8 anyway; guards getting fewer than usual against WAS is the signal.
 //
 // Position groups go by the FIRST listed position: G and G-F = Guards, F, F-G and F-C = Forwards, C and C-F = Centers.
 // Lines under 10 minutes are left out (garbage time / DNP-CD rows would drag the numbers down).
 //
-// Data (two requests per opponent, cached in sessionStorage lh-same-pos:TEAM for 10 minutes):
+// Data (cached in sessionStorage lh-same-pos-v2:TEAM:GROUP for 10 minutes):
 //   GET /v1/games?team_ids[]=OPP&seasons[]=SEASON&per_page=100   -> the opponent's games (last season if none are Final yet)
 //   GET /v1/stats?game_ids[]=…&per_page=100 (paged)              -> every stat line in its last 10 Final games
-// Only the other team's lines are kept: the players who FACED the opponent.
+//   GET /v1/stats?player_ids[]=…(5 per request)&start_date=…     -> the listed players' recent games, for their norm
+// Wide screens: rows grouped by game, a bar per stat with a tick at the line, and an L10 column.
+// Under 992px the card is full width and keeps the plain table (Date, Player, MIN, stat, L10).
 
 const SAME_POS_GAMES = 10;
 const SAME_POS_MIN_MINUTES = 10;
-const SAME_POS_ROWS = 8;                      // rows shown before "Show all (N)"
+const SAME_POS_ROWS = 6;                      // rows shown before "Show all (N)"
+const SAME_POS_NORM_GAMES = 10;               // a player's norm = their last 10 games against other teams
+const SAME_POS_NORM_DAYS = 40;                // ...looked for in this many days (10 games fit easily)
+const SAME_POS_VERDICT_SHARE = 0.10;          // 10% above / below the norm = Favorable / Tough
+const SAME_POS_SMALL_SAMPLE = 5;              // under 5 opponent games = "Small sample"
 const SAME_POS_CACHE_MS = 10 * 60 * 1000;
 const SAME_POS_GROUPS = { G: "guards", F: "forwards", C: "centers" };
 
@@ -21,10 +31,11 @@ const samePosState = {
   group: null,       // "G", "F" or "C"
   opponents: [],     // [{ id, abbr, fullName }] for the dropdown
   opponent: null,    // the team on screen
-  data: null,        // { season, isLastSeason, games, rows } for that team, or null while loading
+  data: null,        // { season, isLastSeason, games, rows, norms } for that team, or null while loading
   status: "loading", // "loading", "ready", "failed"
   propType: "points",
   line: null,        // the chart's active line (the milestone in research mode)
+  open: false,       // "Show all" pressed (kept across redraws)
 };
 
 // "G-F" -> "G". Unknown or empty -> null.
@@ -64,9 +75,42 @@ async function samePosFinishedGames(teamId, season) {
   return games.filter((game) => game.status === "Final").sort((a, b) => b.date.localeCompare(a.date));
 }
 
-// Every stat line by the players who faced this team in its last 10 Final games (this season, else last season).
-async function loadSamePositionData(teamId) {
-  const key = `lh-same-pos:${teamId}`;
+// Each player's norm: totals over their last 10 games (10+ minutes) NOT against this team.
+// norms[playerId] = { games, pts, reb, ast, fg3m }. Players with no such games are left out.
+async function loadSamePosNorms(playerIds, teamId) {
+  if (playerIds.length === 0) return {};
+  const since = new Date();
+  since.setDate(since.getDate() - SAME_POS_NORM_DAYS);
+  const start = since.toLocaleDateString("en-CA");
+  const groups = splitIntoGroups(playerIds, PLAYERS_PER_REQUEST);
+  const answers = await Promise.all(groups.map((group) =>
+    bdlGetAllPages(`${BDL_BASE}/stats?${playerIdParams(group)}&start_date=${start}&per_page=100`)));
+
+  const byPlayer = {};
+  answers.flat().forEach((line) => {
+    if (!line.player || !line.game || line.game.home_team_id === teamId || line.game.visitor_team_id === teamId) return;
+    if (samePosMinutes(line.min) < SAME_POS_MIN_MINUTES) return;
+    (byPlayer[line.player.id] = byPlayer[line.player.id] || []).push(line);
+  });
+
+  const norms = {};
+  Object.entries(byPlayer).forEach(([id, lines]) => {
+    const recent = lines.sort((a, b) => b.game.date.localeCompare(a.game.date)).slice(0, SAME_POS_NORM_GAMES);
+    norms[id] = recent.reduce((total, line) => ({
+      games: total.games + 1,
+      pts: total.pts + (line.pts ?? 0),
+      reb: total.reb + (line.reb ?? 0),
+      ast: total.ast + (line.ast ?? 0),
+      fg3m: total.fg3m + (line.fg3m ?? 0),
+    }), { games: 0, pts: 0, reb: 0, ast: 0, fg3m: 0 });
+  });
+  return norms;
+}
+
+// Every 10+ minute line by players of this group who faced this team in its last 10 Final games (this season, else
+// last season), plus those players' norms.
+async function loadSamePositionData(teamId, group) {
+  const key = `lh-same-pos-v2:${teamId}:${group}`;
   const cached = readSamePosCache(key);
   if (cached) return cached;
 
@@ -91,18 +135,38 @@ async function loadSamePositionData(teamId) {
         position: line.player.position || "",
         team: line.team.abbreviation,
         isHome: line.game.home_team_id === line.team.id,
+        gameId: line.game.id,
         date: line.game.date,
         min: samePosMinutes(line.min),
         pts: line.pts ?? 0,
         reb: line.reb ?? 0,
         ast: line.ast ?? 0,
         fg3m: line.fg3m ?? 0,
-      }));
+      }))
+      .filter((row) => row.min >= SAME_POS_MIN_MINUTES && samePosGroup(row.position) === group);
   }
 
-  const data = { season, isLastSeason, games: games.length, rows };
+  // The norm is a nice extra: if it fails the card still shows, with "–" in the L10 column.
+  const norms = await loadSamePosNorms([...new Set(rows.map((row) => row.playerId))], teamId)
+    .catch((error) => { console.warn("Same position norms unavailable:", error); return {}; });
+
+  const data = { season, isLastSeason, games: games.length, rows, norms };
   writeSamePosCache(key, data);
   return data;
+}
+
+// ---------- Numbers ----------
+
+// A player's norm for one stat ("pts", "pts+reb+ast"...), or null.
+function samePosNorm(playerId, stat) {
+  const norm = samePosState.data.norms[playerId];
+  return norm && norm.games ? statValue(norm, stat) / norm.games : null;
+}
+
+// "+0.1" / "−1.6"
+function samePosSigned(value) {
+  const text = Math.abs(value).toFixed(1);
+  return value >= 0.05 ? `+${text}` : value <= -0.05 ? `−${text}` : "0.0";
 }
 
 // ---------- Drawing ----------
@@ -114,85 +178,146 @@ function samePosText(text) {
   document.getElementById("samePosToggle").hidden = true;
 }
 
-// "Show all (N)" / "Show fewer", like the game log's button.
-// The open / closed state survives redraws (tab, line or team changes).
-let samePosTotal = 0;
-let samePosOpen = false;
 function updateSamePosToggle(total) {
-  samePosTotal = total;
   const button = document.getElementById("samePosToggle");
   button.hidden = total <= SAME_POS_ROWS;
-  button.classList.toggle("collapsed", !samePosOpen);
-  button.setAttribute("aria-expanded", String(samePosOpen));
-  document.getElementById("samePosToggleText").textContent = samePosOpen ? "Show fewer" : `Show all (${total})`;
+  button.setAttribute("aria-expanded", String(samePosState.open));
+  button.classList.toggle("collapsed", !samePosState.open);
+  document.getElementById("samePosToggleText").textContent = samePosState.open ? "Show fewer" : `Show all (${total})`;
+  document.getElementById("samePosBody").classList.toggle("is-open", samePosState.open);
 }
 
-function samePosRowHtml(row, stat, scoringLine) {
+// over / under / push against the scoring line ("" with no line)
+function samePosTone(value, scoringLine) {
+  if (scoringLine === null) return "";
+  return value > scoringLine ? "is-over" : value < scoringLine ? "is-under" : "is-push";
+}
+
+function samePosNameHtml(row) {
+  return `<a href="player.html?id=${row.playerId}&prop=${propCode(samePosState.propType)}" class="lh-sp-name">${row.name}</a>`;
+}
+
+// "7.8" over "+2.2" (green when they beat their norm against this team)
+function samePosNormHtml(row, value, stat) {
+  const norm = samePosNorm(row.playerId, stat);
+  if (norm === null) return `<span class="text-muted">–</span>`;
+  const gap = value - norm;
+  return `<span class="lh-sp-norm">${norm.toFixed(1)}</span><span class="lh-sp-gap ${gap >= 0.05 ? "is-over" : gap <= -0.05 ? "is-under" : ""}">${samePosSigned(gap)}</span>`;
+}
+
+// Wide screens: one row of the game-grouped list.
+function samePosListRowHtml(row, stat, scoringLine, scale, extra) {
   const value = statValue(row, stat);
-  let tone = "";
-  if (scoringLine !== null) tone = value > scoringLine ? "is-over" : value < scoringLine ? "is-under" : "is-push";
+  const tick = samePosState.line === null ? "" : `<span class="lh-sp-tick" style="left: ${Math.min(100, (samePosState.line / scale) * 100)}%"></span>`;
+  return `<div class="lh-sp-row${row.playerId === samePosState.playerId ? " lh-sp-self" : ""}${extra ? " lh-sp-extra" : ""}">
+      <div class="lh-sp-who">${samePosNameHtml(row)}<span class="lh-sp-meta">${Math.round(row.min)} min · ${row.position}</span></div>
+      <div class="lh-sp-barwrap">
+        <span class="lh-sp-track"><span class="lh-sp-fill ${samePosTone(value, scoringLine)}" style="width: ${Math.min(100, (value / scale) * 100)}%"></span>${tick}</span>
+        <span class="lh-sp-value ${samePosTone(value, scoringLine)}">${value}</span>
+      </div>
+      <div class="lh-sp-l10">${samePosNormHtml(row, value, stat)}</div>
+    </div>`;
+}
+
+// Phones and tablets: the plain table row (Date, Player, MIN, stat, L10).
+function samePosTableRowHtml(row, stat, scoringLine, extra) {
+  const value = statValue(row, stat);
   const opp = samePosState.opponent.abbr;
   const badge = teamBadgeHtml(row.team, row.isHome ? opp : row.team, row.isHome ? row.team : opp);
-  return `<tr${row.playerId === samePosState.playerId ? ` class="lh-sp-self"` : ""}>
+  const classes = [row.playerId === samePosState.playerId ? "lh-sp-self" : "", extra ? "lh-sp-extra" : ""].filter(Boolean).join(" ");
+  return `<tr${classes ? ` class="${classes}"` : ""}>
       <td class="text-nowrap">${monthDayDate(row.date)}</td>
-      <td class="text-nowrap"><a href="player.html?id=${row.playerId}&prop=${propCode(samePosState.propType)}" class="lh-sp-name">${row.name}</a> ${badge}
+      <td class="text-nowrap">${samePosNameHtml(row)} ${badge}
         <span class="text-muted small">${row.position}</span></td>
       <td class="text-end">${Math.round(row.min)}</td>
-      <td class="text-end lh-col-active ${tone}">${value}</td>
+      <td class="text-end lh-col-active ${samePosTone(value, scoringLine)}">${value}</td>
+      <td class="text-end text-nowrap">${samePosNormHtml(row, value, stat)}</td>
     </tr>`;
 }
 
 function renderSamePositionCard() {
   if (!samePosState.opponent) return;
-  document.getElementById("samePosOpp").textContent = samePosState.opponent.abbr;
+  const oppAbbr = samePosState.opponent.abbr;
+  document.getElementById("samePosOpp").textContent = oppAbbr;
   if (!samePosState.group) { samePosText("No position is listed for this player."); return; }
-  if (samePosState.status === "loading") { samePosText(`Loading ${samePosState.opponent.abbr}'s recent games...`); return; }
+  if (samePosState.status === "loading") { samePosText(`Loading ${oppAbbr}'s recent games...`); return; }
   if (samePosState.status === "failed") { samePosText("Matchup data is unavailable right now."); return; }
 
   const data = samePosState.data;
   const groupWord = SAME_POS_GROUPS[samePosState.group];
-  if (data.games === 0) { samePosText(`${samePosState.opponent.abbr} hasn't finished a game yet.`); return; }
+  const GroupWord = groupWord.charAt(0).toUpperCase() + groupWord.slice(1);
+  if (data.games === 0) { samePosText(`${oppAbbr} hasn't finished a game yet.`); return; }
 
   const tab = CHART_STAT_TABS.find((option) => option.propType === samePosState.propType);
   const code = propCode(samePosState.propType).toUpperCase();
   const scoringLine = lineForScoring(samePosState.line);
-  const rows = data.rows
-    .filter((row) => row.min >= SAME_POS_MIN_MINUTES && samePosGroup(row.position) === samePosState.group)
-    .sort((a, b) => b.date.localeCompare(a.date) || statValue(b, tab.stat) - statValue(a, tab.stat));
+  const rows = [...data.rows].sort((a, b) => b.date.localeCompare(a.date) || statValue(b, tab.stat) - statValue(a, tab.stat));
 
-  const gamesText = `last ${data.games} game${data.games === 1 ? "" : "s"}${data.isLastSeason ? " of last season" : ""}`;
-  if (rows.length === 0) { samePosText(`No ${groupWord} played ${SAME_POS_MIN_MINUTES}+ minutes against ${samePosState.opponent.abbr} in its ${gamesText}.`); return; }
+  const gamesText = `${data.games} game${data.games === 1 ? "" : "s"}${data.isLastSeason ? " (last season)" : ""}`;
+  if (rows.length === 0) { samePosText(`No ${groupWord} played ${SAME_POS_MIN_MINUTES}+ minutes against ${oppAbbr} in its last ${gamesText}.`); return; }
 
+  // The headline: how much more (or less) than their own norm these players got against this team.
   const values = rows.map((row) => statValue(row, tab.stat));
   const average = values.reduce((sum, value) => sum + value, 0) / values.length;
-  let summary = `${groupWord.charAt(0).toUpperCase()}${groupWord.slice(1)} averaged <strong>${formatStatValue(average)} ${code}</strong>`;
+  const withNorm = rows.map((row, index) => ({ value: values[index], norm: samePosNorm(row.playerId, tab.stat) })).filter((item) => item.norm !== null);
+  let verdict = { label: "Neutral", tone: "neutral" };
+  let headline = `${GroupWord} vs ${oppAbbr}: avg <strong>${formatStatValue(average)} ${code}</strong>`;
+  let normText = "Their usual numbers are unavailable.";
+  if (withNorm.length) {
+    const vsAvg = withNorm.reduce((sum, item) => sum + item.value, 0) / withNorm.length;
+    const normAvg = withNorm.reduce((sum, item) => sum + item.norm, 0) / withNorm.length;
+    const gap = vsAvg - normAvg;
+    if (normAvg > 0 && gap / normAvg >= SAME_POS_VERDICT_SHARE) verdict = { label: "Favorable", tone: "over" };
+    if (normAvg > 0 && gap / normAvg <= -SAME_POS_VERDICT_SHARE) verdict = { label: "Tough", tone: "under" };
+    headline = `${GroupWord} vs ${oppAbbr}: <strong class="lh-sp-gap is-${verdict.tone}">${samePosSigned(gap)} ${code}</strong> vs their norm`;
+    normText = `${formatStatValue(vsAvg)} vs ${oppAbbr} · ${formatStatValue(normAvg)} in their last ${SAME_POS_NORM_GAMES}`;
+  }
+
+  // Under it: the over count against this player's line, one dot per row.
+  let countHtml = "";
   if (scoringLine !== null) {
     const hits = values.filter((value) => value > scoringLine).length;
-    summary = isResearchMode()
-      ? `<strong>${hits} of ${rows.length}</strong> ${groupWord} reached <strong>${samePosState.line}+ ${code}</strong> · avg ${formatStatValue(average)}`
-      : `<strong>${hits} of ${rows.length}</strong> ${groupWord} went over <strong>${lineText(samePosState.line)} ${code}</strong> · avg ${formatStatValue(average)}`;
+    const what = isResearchMode() ? `reached ${samePosState.line}+ ${code}` : `went over ${lineText(samePosState.line)} ${code}`;
+    const dots = values.map((value) => `<span class="lh-sp-dot ${samePosTone(value, scoringLine)}"></span>`).join("");
+    countHtml = `<div class="lh-sp-count"><span><strong>${hits} of ${rows.length}</strong> ${what}</span><span class="lh-sp-dots" aria-hidden="true">${dots}</span></div>`;
   }
+  const smallSample = data.games < SAME_POS_SMALL_SAMPLE ? ` · <span class="lh-sp-small">Small sample</span>` : "";
+
+  // Wide screens: grouped by game. A game header is "extra" when its first row is.
+  const scale = Math.max(...values, samePosState.line || 0, 1) * 1.15;
+  let listHtml = "";
+  let lastGame = null;
+  rows.forEach((row, index) => {
+    const extra = index >= SAME_POS_ROWS;
+    if (row.gameId !== lastGame) {
+      lastGame = row.gameId;
+      const opp = samePosState.opponent.abbr;
+      const badge = teamBadgeHtml(row.team, row.isHome ? opp : row.team, row.isHome ? row.team : opp);
+      listHtml += `<div class="lh-sp-game${extra ? " lh-sp-extra" : ""}">${monthDayDate(row.date)} · ${badge}</div>`;
+    }
+    listHtml += samePosListRowHtml(row, tab.stat, scoringLine, scale, extra);
+  });
 
   const body = document.getElementById("samePosBody");
   body.className = "";
-  const rowsHtml = rows.map((row) => samePosRowHtml(row, tab.stat, scoringLine));
   body.innerHTML = `
-    <div class="lh-sp-summary mb-2">${summary}</div>
-    <div class="lh-label text-muted mb-2">${samePosState.opponent.abbr}'s ${gamesText} · ${SAME_POS_MIN_MINUTES}+ minutes</div>
-    <div class="table-responsive">
+    <div class="lh-sp-head">
+      <div class="lh-sp-headline">${headline} <span class="lh-zm-pill is-${verdict.tone}">${verdict.label}</span></div>
+      <div class="small text-muted">${normText}</div>
+      ${countHtml}
+      <div class="lh-label text-muted mt-2">${oppAbbr}'s last ${gamesText} · ${SAME_POS_MIN_MINUTES}+ min${smallSample}</div>
+    </div>
+    <div class="lh-sp-list d-none d-lg-block">
+      <div class="lh-sp-row lh-sp-cols"><span>Player</span><span>${code}${samePosState.line === null ? "" : ` vs ${isResearchMode() ? `${samePosState.line}+` : lineText(samePosState.line)}`}</span><span>L10 avg</span></div>
+      ${listHtml}
+    </div>
+    <div class="table-responsive d-lg-none">
       <table class="table table-sm align-middle mb-0 lh-sp-table">
-        <thead><tr><th>Date</th><th>Player</th><th class="text-end">MIN</th><th class="text-end">${code}</th></tr></thead>
-        <tbody>${rowsHtml.slice(0, SAME_POS_ROWS).join("")}</tbody>
-        <tbody id="samePosMore" class="collapse${samePosOpen ? " show" : ""}">${rowsHtml.slice(SAME_POS_ROWS).join("")}</tbody>
+        <thead><tr><th>Date</th><th>Player</th><th class="text-end">MIN</th><th class="text-end">${code}</th><th class="text-end">L10</th></tr></thead>
+        <tbody>${rows.map((row, index) => samePosTableRowHtml(row, tab.stat, scoringLine, index >= SAME_POS_ROWS)).join("")}</tbody>
       </table>
     </div>`;
-  ["shown.bs.collapse", "hidden.bs.collapse"].forEach((eventName) => {
-    document.getElementById("samePosMore").addEventListener(eventName, () => {
-      samePosOpen = eventName === "shown.bs.collapse";
-      updateSamePosToggle(samePosTotal);
-    });
-  });
-  updateSamePosToggle(rowsHtml.length);
+  updateSamePosToggle(rows.length);
 }
 
 // Download (or reuse) one team's data, then draw. A newer pick wins if the user switches teams while it loads.
@@ -203,7 +328,7 @@ async function showSamePositionTeam(team) {
   renderSamePositionCard();
   if (!samePosState.group) return;
   try {
-    const data = await loadSamePositionData(team.id);
+    const data = await loadSamePositionData(team.id, samePosState.group);
     if (samePosState.opponent !== team) return;
     samePosState.data = data;
     samePosState.status = "ready";
@@ -224,6 +349,11 @@ async function loadSamePosition({ playerId, position, ownTeamId, opponentId }) {
   samePosState.group = samePosGroup(position);
   const select = document.getElementById("samePosTeam");
   const note = document.getElementById("samePosNote");
+
+  document.getElementById("samePosToggle").addEventListener("click", () => {
+    samePosState.open = !samePosState.open;
+    updateSamePosToggle(samePosState.data ? samePosState.data.rows.length : 0);
+  });
 
   try {
     const teams = (await bdlGet(`${BDL_BASE}/teams`)).data;
