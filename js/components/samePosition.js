@@ -237,8 +237,8 @@ function samePosTableRowHtml(row, stat, scoringLine, extra) {
       <td class="text-nowrap">${samePosNameHtml(row)} ${badge}
         <span class="text-muted small">${row.position}</span></td>
       <td class="text-end">${Math.round(row.min)}</td>
-      <td class="text-end lh-col-active ${samePosTone(value, scoringLine)}">${value}</td>
-      <td class="text-end text-nowrap">${samePosNormHtml(row, value, stat, true)}</td>
+      <td class="text-center lh-col-active ${samePosTone(value, scoringLine)}">${value}</td>
+      <td class="text-center text-nowrap">${samePosNormHtml(row, value, stat, true)}</td>
     </tr>`;
 }
 
@@ -320,7 +320,7 @@ function renderSamePositionCard() {
     </div>
     <div class="table-responsive d-lg-none">
       <table class="table table-sm align-middle mb-0 lh-sp-table">
-        <thead><tr><th>Date</th><th>Player</th><th class="text-end">MIN</th><th class="text-end">${code}</th><th class="text-end">L10</th></tr></thead>
+        <thead><tr><th>Date</th><th>Player</th><th class="text-end">MIN</th><th class="text-center">${code}</th><th class="text-center">L10</th></tr></thead>
         <tbody>${rows.map((row, index) => samePosTableRowHtml(row, tab.stat, scoringLine, index >= SAME_POS_ROWS)).join("")}</tbody>
       </table>
     </div>`;
