@@ -116,6 +116,12 @@ window.lhLockupHtml = lhLockupHtml;
                   <span>Player <span class="lines-only">Props</span><span class="research-only">Stats</span></span>
                 </a>
               </div>
+              <div class="col-12 col-md-6 col-lg-3">
+                <a class="lh-drawer-tile ${activePage === "matchup.html" ? "active" : ""}" href="matchup.html" data-page="matchup.html">
+                  <i class="lh-drawer-tile-icon bi bi-intersect"></i>
+                  <span>Matchup Analyzer</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -391,6 +397,7 @@ window.lhLockupHtml = lhLockupHtml;
         <div class="lh-sheet-row is-soon"><span><strong>Sign in</strong><small>Save your settings and picks</small></span><span class="lh-soon-badge">Coming soon</span></div>
         <div class="lh-sheet-row is-soon"><span><strong>My Picks</strong><small>Track the props you like</small></span><span class="lh-soon-badge">Coming soon</span></div>
         <a class="lh-sheet-row" href="${DISCORD_URL}" target="_blank" rel="noopener" data-discord-link><span><strong><i class="bi bi-discord me-2" aria-hidden="true"></i>Join our Discord</strong></span><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>
+        <a class="lh-sheet-row" href="matchup.html"><span><strong>Matchup Analyzer</strong><small>Any player against any team</small></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
         <a class="lh-sheet-row" href="standings.html"><span><strong>Standings</strong></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
         <a class="lh-sheet-row" href="props.html"><span><strong>Player <span class="lines-only">Props</span><span class="research-only">Stats</span></strong></span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
       </div>

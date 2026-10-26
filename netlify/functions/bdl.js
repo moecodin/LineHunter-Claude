@@ -30,7 +30,7 @@ const ALLOWED_PATHS = [
   /^\/v1\/standings$/,
   /^\/v1\/teams$/,
   /^\/nba\/v1\/team_season_averages\/(general|shooting)$/,
-  /^\/nba\/v1\/season_averages\/(general|shooting)$/,
+  /^\/nba\/v1\/season_averages\/(general|shooting|playtype|defense|tracking|hustle)$/, // play types / defense / tracking / hustle: matchup.html
   /^\/nba\/v2\/odds$/,
   /^\/nba\/v2\/odds\/player_props$/,
   /^\/nba\/v2\/stats\/advanced$/,

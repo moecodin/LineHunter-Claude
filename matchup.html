@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Theme: applied before anything renders, so there's no flash (default dark; js/components/nav.js has the toggle) -->
+  <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
+  <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Matchup Analyzer · LineHunter</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
+  <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=technor@400,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="css/styles.css" rel="stylesheet">
+</head>
+<body class="lh-tint-cards">
+  <!-- Research mode: applied before anything renders, so there's no flash (js/components/nav.js has the switch) -->
+  <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
+
+  <div id="site-nav"></div>
+
+  <!-- matchup.html?player=PLAYER_ID&opp=TEAM_ID&vs=PLAYER_ID&stat=pts. js/pages/matchup.js fills in every section. -->
+  <main class="container-fluid lh-container px-3 px-lg-4 my-4">
+    <h1 class="lh-top-title mb-3"><i class="bi bi-intersect" aria-hidden="true"></i><span>Matchup Analyzer</span></h1>
+
+    <!-- SETUP BAR: player, opponent team, the opposing player, stat, range, home / away, and which sections show -->
+    <section class="card mb-4 lh-mx-setup">
+      <div class="card-body">
+        <div class="lh-mx-pickers">
+          <div class="lh-mx-field">
+            <label class="lh-label" for="mxSearchInput">Player</label>
+            <div class="lh-search lh-mx-search" id="mxSearch" role="search">
+              <i class="bi bi-search lh-search-icon" aria-hidden="true"></i>
+              <input type="search" id="mxSearchInput" class="lh-search-input" placeholder="Search players" autocomplete="off">
+              <div class="lh-search-results" id="mxSearchResults" hidden></div>
+            </div>
+          </div>
+          <div class="lh-mx-field">
+            <label class="lh-label" for="mxOpp">Opponent</label>
+            <select id="mxOpp" class="form-select form-select-sm lh-mx-select" disabled></select>
+          </div>
+          <div class="lh-mx-field">
+            <label class="lh-label" for="mxVs">Matched up with</label>
+            <select id="mxVs" class="form-select form-select-sm lh-mx-select" disabled></select>
+          </div>
+        </div>
+        <div class="lh-mx-filters">
+          <div class="btn-group btn-group-sm lh-window-toggle" id="mxStat" role="group" aria-label="Stat"></div>
+          <div class="btn-group btn-group-sm lh-window-toggle" id="mxRange" role="group" aria-label="Range"></div>
+          <div class="btn-group btn-group-sm lh-window-toggle" id="mxSplit" role="group" aria-label="Home or away"></div>
+        </div>
+        <div class="lh-mx-sections" id="mxSections" role="group" aria-label="Sections"></div>
+      </div>
+    </section>
+
+    <!-- HEADER: the two players and the game -->
+    <section id="mxHeader" class="mb-4"></section>
+
+    <div id="mxEmpty" class="text-muted small py-4 text-center">Search a player to start.</div>
+
+    <div id="mxGrid" class="row g-4 mb-5" hidden>
+      <!-- 1. STYLE CLASH: the player's play types next to what the opponent allows on matching shots -->
+      <div class="col-lg-7" data-mx-section="style">
+        <section class="card h-100" data-lh-collapse="mx-style" data-lh-collapse-name="Style clash">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Style clash</h2>
+              <span id="mxStyleNote" class="small text-muted"></span>
+            </div>
+            <div id="mxStyleBody" class="text-muted small py-4 text-center">Loading...</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 2. TALE OF THE TAPE: both players side by side over the chosen range -->
+      <div class="col-lg-5" data-mx-section="tape">
+        <section class="card h-100" data-lh-collapse="mx-tape" data-lh-collapse-name="Tale of the tape">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Tale of the tape</h2>
+              <span id="mxTapeNote" class="small text-muted"></span>
+            </div>
+            <div id="mxTapeBody" class="text-muted small py-4 text-center">Loading...</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 3. DEFENDER CHECK: the opposing player's own defense numbers -->
+      <div class="col-lg-6" data-mx-section="defender">
+        <section class="card h-100" data-lh-collapse="mx-defender" data-lh-collapse-name="Defender check">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Defender check</h2>
+              <span id="mxDefNote" class="small text-muted"></span>
+            </div>
+            <div id="mxDefBody" class="text-muted small py-4 text-center">Loading...</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 4. STATUS & PACE: injuries, pace and defense ratings, rest -->
+      <div class="col-lg-6" data-mx-section="status">
+        <section class="card h-100" data-lh-collapse="mx-status" data-lh-collapse-name="Status &amp; pace">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
+              <h2 class="lh-label mb-0 me-auto">Status &amp; pace</h2>
+              <span id="mxStatusNote" class="small text-muted"></span>
+            </div>
+            <div id="mxStatusBody" class="text-muted small py-4 text-center">Loading...</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/core/api.js"></script>
+  <script src="js/core/hunts.js"></script>
+  <script src="js/components/nav.js"></script>
+  <script src="js/components/hunt-button.js"></script>
+  <script src="js/components/my-hunts.js"></script>
+  <script src="js/data/teams.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/core/h2h.js"></script>
+  <script src="js/components/cardCollapse.js"></script>
+  <script src="js/pages/matchup.js"></script>
+</body>
+</html>

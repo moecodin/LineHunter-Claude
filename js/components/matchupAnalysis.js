@@ -363,7 +363,8 @@ function renderMatchupCard() {
       <div class="lh-ma-tape">${matchupTapeHtml(mine, theirs)}</div>
     </div>
     <div class="lh-ma-battle">${matchupBattleHtml(mine, theirs, me.last, picked.last)}</div>
-    ${matchupPastHtml(picked, me.last)}`;
+    ${matchupPastHtml(picked, me.last)}
+    <a class="lh-ma-open" href="matchup.html?player=${me.id}&opp=${opp.id}&vs=${picked.id}">Open in Matchup Analyzer <span aria-hidden="true">›</span></a>`;
 }
 
 document.addEventListener("change", (event) => {
