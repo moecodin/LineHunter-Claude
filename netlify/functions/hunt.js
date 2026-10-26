@@ -35,7 +35,7 @@ const API_ORIGIN = "https://api.balldontlie.io";
 const CONFIG = {
   min: 0,
   max: 100,
-  probToScore: 150,                            // score = 50 + (chance - 0.5) * 150: 60% -> 65, 70% -> 80
+  probToScore: 100,                            // score = 50 + (chance - 0.5) * 100, so the score is the chance: 65% -> 65
   sim: {
     runs: 2000,                                // simulated games per player + prop (both sides read the same runs)
     halfLife: 5,                               // recency weight halves every 5 games
@@ -48,6 +48,9 @@ const CONFIG = {
     minutesSd: { base: 4, min: 3, max: 8, gtd: 1.5, games: 15 }, // minutes noise: the player's own spread over 15 games, x1.5 if GTD
     rateCv: { base: 0.05, sample: 0.3, ref: 0.1, minGames: 1 },  // rate uncertainty = 0.05 + 0.3 / sqrt(games); baseline uses 0.1
     priorSampleGames: 10,                      // a full last season adds this many games to the sample above
+    lastSeasonLogsFrom: "02-01",               // last season's game logs only from this day of its spring (L10, spreads); its
+                                               // full-season rate and minutes come from one season-averages request instead
+    market: { base: 0.2, thin: 0.3 },          // pull the projection toward the book's line: 20%, up to 50% with few games this season
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
     kMax: 200,
@@ -62,7 +65,7 @@ const CONFIG = {
   injuredStatuses: /out|doubt|question|day/i,  // Out, Doubtful, Questionable (the API calls Questionable "Day-To-Day")
   gtdStatuses: /question|day/i,                // the "game-time decision" ones: still scored, tagged GTD, never a top hunt
   preferredBook: "draftkings",
-  concurrency: 8,                              // requests in flight at once
+  concurrency: 10,                             // requests in flight at once
   playersPerLogRequest: 5,                     // same grouping the site uses for game logs
 };
 
@@ -182,17 +185,35 @@ async function loadPlayers(ids) {
 }
 
 // { playerId: logs newest first } for one season, only games before `before` (a game in progress tonight never counts)
-async function loadLogs(ids, season, before) {
+async function loadLogs(ids, season, before, from = null) {
   const logs = Object.fromEntries(ids.map((id) => [id, []]));
   const groups = chunk(ids, CONFIG.playersPerLogRequest);
   const answers = await pool(groups.map((group) => async () => {
-    try { return await bdlAllPages(`/v1/stats?${group.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${season}&per_page=100`); } catch (error) { return []; }
+    try { return await bdlAllPages(`/v1/stats?${group.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${season}${from ? `&start_date=${from}` : ""}&per_page=100`); } catch (error) { return []; }
   }), CONFIG.concurrency);
   answers.flat().forEach((log) => {
     if (logs[log.player.id] && String(log.game.date).slice(0, 10) < before) logs[log.player.id].push(log);
   });
   Object.values(logs).forEach((list) => list.sort((a, b) => b.game.date.localeCompare(a.game.date)));
   return logs;
+}
+
+// { playerId: last season's per-game numbers { gp, min, pts, reb, ast, fg3m } } from one request per 100 players
+async function loadSeasonAverages(ids, season) {
+  const result = {};
+  const answers = await pool(chunk(ids, 100).map((group) => async () => {
+    try {
+      return await bdlAllPages(`/nba/v1/season_averages/general?season=${season}&season_type=regular&type=base&per_page=100&${group.map((id) => `player_ids[]=${id}`).join("&")}`);
+    } catch (error) { return []; }
+  }), CONFIG.concurrency);
+  answers.flat().forEach((row) => {
+    const stats = row.stats || {};
+    const min = typeof stats.min === "string" && stats.min.includes(":") ? minutesOf({ min: stats.min }) : Number(stats.min);
+    if (row.player && Number(stats.gp) > 0 && min > 0) {
+      result[row.player.id] = { gp: Number(stats.gp), min, pts: Number(stats.pts) || 0, reb: Number(stats.reb) || 0, ast: Number(stats.ast) || 0, fg3m: Number(stats.fg3m) || 0 };
+    }
+  });
+  return result;
 }
 
 // { teamId: { opp_pts, ... } } for the season, or null when the season has no data yet
@@ -315,8 +336,11 @@ function describe(prop, ctx) {
   const S = CONFIG.sim;
 
   // The prior: last season while this season is young, else this season's own flat average.
-  const usePrev = cur.length < S.priorUntilGames && prev.length >= S.minPriorGames;
-  const prior = usePrev ? rateAndMinutes(prev, false) : rateAndMinutes(cur, false);
+  const avg = ctx.lastSeasonAvg;                                   // last season's per-game numbers (season averages)
+  const prevGames = avg ? avg.gp : prev.length;
+  const usePrev = cur.length < S.priorUntilGames && prevGames >= S.minPriorGames;
+  const fromAverages = usePrev && avg && avg.min > 0 ? { rate: statOf(avg, prop.keys) / avg.min, minutes: avg.min } : null;
+  const prior = usePrev ? fromAverages || rateAndMinutes(prev, false) : rateAndMinutes(cur, false);
   const flat = rateAndMinutes(cur, false);
   const recent = rateAndMinutes(cur, true);
   const share = cur.length / (cur.length + S.priorGames);         // this season's share of the blend
@@ -350,11 +374,11 @@ function describe(prop, ctx) {
 
   const l10 = played.slice(0, CONFIG.l10Games).map((g) => g.v);
   return {
-    cur, prev, usePrev, share, k,
+    cur, prev, usePrev, share, k, marketWeight: S.market.base + (S.market.thin * S.priorGames) / (S.priorGames + cur.length),
     baseRate, baseMinutes, formRate, formMinutes, minutesSd, rateCv, disagreeCv,
     lastAvg: last.length === S.disagree.games ? average(last.map((g) => g.v)) : null,
     l10, l10Avg: average(l10),
-    seasonAvg: average((cur.length >= 10 || !prev.length ? cur : prev).map((g) => g.v)),
+    seasonAvg: cur.length >= 10 || !prev.length ? average(cur.map((g) => g.v)) : (fromAverages ? statOf(avg, prop.keys) : average(prev.map((g) => g.v))),
     seasonLabel: cur.length >= 10 || !prev.length ? "this season" : "last season",
     b2bSplit: backToBackSplit(cur.length >= 10 || !prev.length ? cur : prev),
   };
@@ -406,6 +430,17 @@ function simulate(runs, input, line, full) {
   return result;
 }
 
+// The average of the simulated games' expected values (no count noise): the projection's mean, cheaply.
+function expectedMean(runs, input) {
+  const [lo, hi] = CONFIG.sim.minutesClamp;
+  let total = 0;
+  runs.forEach((run) => {
+    const minutes = clamp(input.minutes + input.minutesSd * run.zm, lo, hi);
+    total += input.rate * Math.exp(input.rateCv * run.zr - (input.rateCv * input.rateCv) / 2) * minutes * input.mult * run.g;
+  });
+  return total / runs.length;
+}
+
 const toScore = (chance) => 50 + (chance - 0.5) * CONFIG.probToScore;
 
 // Builds the score step by step from the season baseline, so each factor carries the points it added for each side.
@@ -428,6 +463,12 @@ function runSteps(prop, line, info, ctx) {
   if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
   if (ctx.pace) step("pace", "Pace", { mult: input.mult * ctx.pace.mult }, { rank: ctx.pace.rank, of: ctx.pace.of, pace: ctx.pace.pace });
   if (ctx.backToBack) step("b2b", "Back-to-back", { mult: input.mult * S.backToBack });
+  // The book's line carries information the logs don't (a new role, a rotation change): pull the projection part of the way there.
+  const simMean = expectedMean(runs, input);
+  if (simMean > 0) {
+    const target = (1 - info.marketWeight) * simMean + info.marketWeight * line;
+    step("market", "Book line", { mult: (input.mult * target) / simMean }, { line, sim: round1(simMean), weight: Math.round(info.marketWeight * 100) });
+  }
   step("spread", "Uncertainty", { minutesSd: info.minutesSd, rateCv: info.rateCv }, {
     games: info.cur.length, lastSeason: info.usePrev, disagree: info.disagreeCv > 0, gtd: Boolean(ctx.gtd),
   });
@@ -453,7 +494,7 @@ function scoreSide(side, sim) {
 
 function pick(options, playerId) { return options[playerId % options.length]; }
 
-const FACTOR_WORD = { base: "the season numbers", minutes: "the minutes", form: "the recent form", opponent: "the matchup", pace: "the pace", spread: "the steady numbers" };
+const FACTOR_WORD = { market: "the book line", base: "the season numbers", minutes: "the minutes", form: "the recent form", opponent: "the matchup", pace: "the pace", spread: "the steady numbers" };
 
 function writeWhy(side, prop, line, info, scored, sim, ctx) {
   const id = ctx.playerId;
@@ -520,6 +561,8 @@ function writeWhy(side, prop, line, info, scored, sim, ctx) {
     risk = worst.last !== null
       ? `The biggest risk is recent form: the last 3 games averaged ${worst.last}, ${over ? "below" : "above"} the season pace`
       : "The biggest risk is recent form";
+  } else if (worst && worst.key === "market") {
+    risk = `The biggest risk is that the book sees it differently: its line of ${line} sits ${worst.line > worst.sim ? "above" : "below"} the sim's ${worst.sim} before the line is factored in`;
   } else if (worst && worst.key === "spread") {
     if (worst.gtd) risk = `The biggest risk is availability: ${last} is a game-time decision (${ctx.injuryStatus}), so the minutes could swing`;
     else if (worst.games < CONFIG.why.smallSample) risk = `The biggest risk is a small sample: only ${worst.games} ${worst.games === 1 ? "game" : "games"} this season, so the range is wide`;
@@ -567,8 +610,9 @@ async function computeHunts(date) {
     loadInjuries(teamIds),
   ]);
   const needLastSeason = playerIds.filter((id) => currentLogs[id].filter(playedInGame).length < CONFIG.sim.priorUntilGames);
-  const [previousLogs, allowedNow, paceNow] = await Promise.all([
-    needLastSeason.length ? loadLogs(needLastSeason, season - 1, date) : {},
+  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow] = await Promise.all([
+    needLastSeason.length ? loadLogs(needLastSeason, season - 1, date, `${season}-${CONFIG.sim.lastSeasonLogsFrom}`) : {},
+    needLastSeason.length ? loadSeasonAverages(needLastSeason, season - 1) : {},
     loadAllowed(season),
     loadPace(season),
   ]);
@@ -596,6 +640,7 @@ async function computeHunts(date) {
     const ctx = {
       playerId: entry.player_id,
       logs: { current: currentLogs[entry.player_id] || [], previous: previousLogs[entry.player_id] || [] },
+      lastSeasonAvg: lastSeasonAvgs[entry.player_id] || null,
       opponent: opponentInfo(allowed, oppTeam.id, prop),
       pace: paceInfo(pace, teamId, oppTeam.id),
       backToBack: playedYesterday.has(teamId),

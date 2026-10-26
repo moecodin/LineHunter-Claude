@@ -123,6 +123,7 @@ function huntFactorDetail(factor, prop) {
     }
     case "pace": return factor.rank ? `${prop.opp} · ${huntOrdinal(factor.rank)} fastest` : "";
     case "b2b": return "second night";
+    case "market": return Number.isFinite(factor.sim) ? `line ${lineText(factor.line)} vs sim ${factor.sim}` : "";
     case "spread":
       if (factor.gtd) return "game-time decision";
       if (factor.games < 8) return `${factor.games} ${factor.games === 1 ? "game" : "games"} this season`;
@@ -135,7 +136,7 @@ const huntPoints = (points) => (points === 0 ? "0" : `${points > 0 ? "+" : "−"
 
 // Short chip: "+12.0 Last 10". Help = accent tint, hurt = dashed grey.
 function huntChipHtml(factor) {
-  const short = { minutes: "Minutes", form: "Form", opponent: "Matchup", pace: "Pace", b2b: "Back-to-back", spread: "Uncertainty" }[factor.key] || factor.label;
+  const short = { minutes: "Minutes", form: "Form", opponent: "Matchup", pace: "Pace", b2b: "Back-to-back", market: "Book line", spread: "Uncertainty" }[factor.key] || factor.label;
   return `<span class="lh-hs-chip${factor.points < 0 ? " is-hurt" : ""}">${huntPoints(factor.points)} ${short}</span>`;
 }
 
