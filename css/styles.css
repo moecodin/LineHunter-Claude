@@ -2643,6 +2643,25 @@ a.lh-demo-button:focus-visible {
 .lh-zm-rank.is-over  { border-color: var(--lh-over);  color: var(--lh-over-text); }
 .lh-zm-rank.is-under { border-color: var(--lh-under); color: var(--lh-under-text); }
 
+/* Player page: Same Position vs opponent card (js/components/samePosition.js) */
+.lh-sp-summary { font-size: 0.9rem; }
+.lh-sp-table th {
+  font-family: var(--lh-font-label);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-sp-table td { font-size: 0.82rem; }
+.lh-sp-name { color: var(--lh-text); text-decoration: none; }
+.lh-sp-name:hover { color: var(--lh-accent-light); text-decoration: underline; }
+.lh-sp-self .lh-sp-name { font-weight: 700; color: var(--lh-strong); } /* this player's own games vs the team */
+.lh-sp-table td.is-over  { color: var(--lh-over-text); font-weight: 600; }
+.lh-sp-table td.is-under { color: var(--lh-under-text); font-weight: 600; }
+.lh-sp-table td.is-push  { color: var(--lh-push); }
+.research-mode .lh-sp-table td.is-under,
+.research-mode .lh-sp-table td.is-push { color: var(--lh-muted); font-weight: 400; }
+
 /* ---------- Game page: Matchup Info card ---------- */
 
 .lh-mi-top {

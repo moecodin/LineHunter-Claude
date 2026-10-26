@@ -97,6 +97,27 @@
       </div>
     </section>
 
+    <!-- SAME POSITION vs the next opponent: players at this position against that team's last 10 games, scored against
+         this player's current line for the selected tab. js/components/samePosition.js fills it in. -->
+    <section class="card mb-4" data-lh-collapse="sameposition" data-lh-collapse-name="Same Position">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-3" data-lh-collapse-head>
+        <span class="lh-label me-auto">Same Position vs <span id="samePosOpp">…</span></span>
+        <div class="d-flex align-items-center gap-2">
+          <span id="samePosNote" class="small text-muted"></span>
+          <select id="samePosTeam" class="form-select form-select-sm lh-zm-select" aria-label="Opponent team" disabled></select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="samePosBody" class="text-muted small py-4 text-center">Loading matchup...</div>
+        <div class="text-center mt-3">
+          <button type="button" id="samePosToggle" class="btn btn-sm btn-outline-secondary lh-mi-toggle collapsed" hidden
+                  data-bs-toggle="collapse" data-bs-target="#samePosMore" aria-expanded="false" aria-controls="samePosMore">
+            <span id="samePosToggleText">Show all</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- 5. GAME LOG: full width, follows the window, home/away and teammate filters. -->
     <!-- GAME LOG: follows the window, home/away and teammate filters. Full width; scrolls sideways on narrow screens, and up/down for long lists. -->
     <section class="card mb-4" data-lh-collapse="gamelog">
@@ -298,6 +319,7 @@
   <script src="js/components/roleChart.js"></script>
   <script src="js/components/shotChart.js"></script>
   <script src="js/components/zoneMatchup.js"></script>
+  <script src="js/components/samePosition.js"></script>
   <script src="js/components/share.js"></script>
   <script src="js/components/cardCollapse.js"></script>
   <script src="js/pages/player.js"></script>

@@ -636,6 +636,7 @@ function renderProps() {
   // The number games are scored against: the alt line / book line (lines mode), or the milestone minus 0.5 (research
   // mode, where "25+" means >= 25: see lineForScoring in js/components/propChart.js).
   const line = lineForScoring(playerChart.activeLine());
+  renderSamePosition(pageState.propType, playerChart.activeLine()); // the Same Position card follows the tab and line
 
   // The games in this window and split, newest first (pickWindowLogs in js/core/stats.js),
   // scored against the line. The table below uses the very same games.
@@ -1250,6 +1251,8 @@ async function loadPlayerPage() {
       : null;
     loadInjuryCard(); // the sidebar's injury report (this team + the next opponent)
     loadShotChart(playerId).then((shotData) => loadZoneMatchup(shotData, opponentId, player.team ? player.team.id : null));
+    // Same Position vs the next opponent (js/components/samePosition.js), right under the chart.
+    loadSamePosition({ playerId, position: player.position, ownTeamId: player.team ? player.team.id : null, opponentId });
     // Usage % loads after the page is up: the Role card and the USG% column fill in when it arrives.
     loadAdvanced()
       .then(() => { usageStatus = "ready"; renderProps(); })
