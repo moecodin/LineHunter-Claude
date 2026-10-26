@@ -3,7 +3,7 @@
 // at this player's position did against the opponent in its last 10 finished games, each scored against THIS player's current
 // line for the selected prop tab, and compared with their own norm (their last 10 games against other teams).
 //
-// The headline is the norm gap, not the over count: "Guards vs WAS: +0.1 AST vs their norm · Neutral". 2 of 13 going over
+// The headline is the norm gap, not the over count: "Guards vs WAS: +0.1 AST vs their avg · Neutral". 2 of 13 going over
 // 6.5 AST says little when those guards only average 3.8 anyway; guards getting fewer than usual against WAS is the signal.
 //
 // Position groups go by the FIRST listed position: G and G-F = Guards, F, F-G and F-C = Forwards, C and C-F = Centers.
@@ -269,14 +269,14 @@ function renderSamePositionCard() {
   const withNorm = rows.map((row, index) => ({ value: values[index], norm: samePosNorm(row.playerId, tab.stat) })).filter((item) => item.norm !== null);
   let verdict = { label: "Neutral", tone: "neutral" };
   let headline = `${GroupWord} vs ${oppAbbr}: avg <strong>${formatStatValue(average)} ${code}</strong>`;
-  let normText = "Their usual numbers are unavailable.";
+  let normText = "Their averages are unavailable.";
   if (withNorm.length) {
     const vsAvg = withNorm.reduce((sum, item) => sum + item.value, 0) / withNorm.length;
     const normAvg = withNorm.reduce((sum, item) => sum + item.norm, 0) / withNorm.length;
     const gap = vsAvg - normAvg;
     if (normAvg > 0 && gap / normAvg >= SAME_POS_VERDICT_SHARE) verdict = { label: "Favorable", tone: "over" };
     if (normAvg > 0 && gap / normAvg <= -SAME_POS_VERDICT_SHARE) verdict = { label: "Tough", tone: "under" };
-    headline = `${GroupWord} vs ${oppAbbr}: <strong class="lh-sp-gap is-${verdict.tone}">${samePosSigned(gap)} ${code}</strong> vs their norm`;
+    headline = `${GroupWord} vs ${oppAbbr}: <strong class="lh-sp-gap is-${verdict.tone}">${samePosSigned(gap)} ${code}</strong> vs their avg`;
     normText = `${formatStatValue(vsAvg)} vs ${oppAbbr} · ${formatStatValue(normAvg)} in their last ${SAME_POS_NORM_GAMES}`;
   }
 
