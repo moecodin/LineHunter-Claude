@@ -242,7 +242,7 @@ function renderMatchupAnalysis(propType) {
 
 function matchupText(message) {
   const body = document.getElementById("matchupBody");
-  body.className = "text-muted small py-4 text-center";
+  body.className = `text-muted small py-4 text-center${body.classList.contains("lh-cc-part") ? " lh-cc-part" : ""}`; // keep the collapse toggle's class (cardCollapse.js)
   body.textContent = message;
 }
 
@@ -348,7 +348,7 @@ function renderMatchupCard() {
   const backupTag = matchupState.outStarter && picked.id === matchupState.defaultId ? `<span class="lh-ma-badge is-backup">BACKUP</span> ` : "";
   const seasonNote = mine.fromLastSeason || theirs.fromLastSeason ? "season avg · last season where needed" : "season avg";
 
-  body.className = "lh-ma";
+  body.className = `lh-ma${body.classList.contains("lh-cc-part") ? " lh-cc-part" : ""}`; // keep the collapse toggle's class (cardCollapse.js)
   body.innerHTML = `
     ${matchupFlagHtml(picked)}
     <div class="lh-ma-names">

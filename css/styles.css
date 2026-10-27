@@ -5381,13 +5381,17 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-swiss-page .lh-avg-box:first-child { border-left: 0; padding-left: 0; }
 .lh-swiss-page .lh-avg-value { font-family: var(--lh-font-heading); font-size: 2.2rem; font-weight: 400; letter-spacing: -0.02em; }
 
-/* Hunt Score section: the big number and the pick on the left, the build-up on the right (stacked under 768px) */
-.lh-ph { --lh-ph-side: var(--lh-over); --lh-ph-side-text: var(--lh-over-text); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1.5rem 3rem; }
+/* Hunt Score beside the name (#playerHuntHead) and the Score build-up section (#playerHunt). [hidden] must win over .card's display. */
+#playerHunt[hidden],
+#playerHuntHead[hidden] { display: none !important; }
+.lh-ph { --lh-ph-side: var(--lh-over); --lh-ph-side-text: var(--lh-over-text); }
 .lh-ph--under { --lh-ph-side: var(--lh-under); --lh-ph-side-text: var(--lh-under-text); }
-@media (max-width: 767.98px) { .lh-ph { grid-template-columns: minmax(0, 1fr); } }
-.lh-ph-head { display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+.lh-ph-headcard { border-top: 1px solid var(--lh-strong); padding-top: 0.75rem; }
+.lh-ph-top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem 2rem; }
+.lh-ph-scorebox { display: flex; flex-direction: column; gap: 0.5rem; }
+.lh-ph-head { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; flex: 1 1 14rem; min-width: 0; }
 .lh-ph-score {
-  font-size: clamp(5rem, 3rem + 6vw, 9rem);
+  font-size: clamp(5rem, 3rem + 5vw, 8rem);
   font-weight: 300;
   letter-spacing: -0.06em;
   line-height: 0.8;
@@ -5395,7 +5399,6 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 }
 .lh-ph-of { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
 .lh-ph-pick {
-  margin-top: 0.6rem;
   padding-left: 0.6rem;
   border-left: 3px solid var(--lh-ph-side);
   font-size: 1.5rem;
@@ -5404,8 +5407,13 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   line-height: 1.1;
   color: var(--lh-strong);
 }
-.lh-ph-facts { display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; color: var(--lh-muted); }
-.lh-ph-add { margin-top: 0.4rem; }
+.lh-ph-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; font-size: 0.9rem; color: var(--lh-muted); }
+.lh-ph-add { margin-top: 0.2rem; }
+/* The three reasons: one per line between hairlines */
+.lh-ph-why { list-style: none; margin: 1.25rem 0 0; padding: 0; }
+.lh-ph-why li { padding: 0.6rem 0; border-top: 1px solid var(--lh-border); font-size: 0.95rem; line-height: 1.45; color: var(--lh-text); }
+.lh-ph-steps { --lh-ph-side: var(--lh-over); --lh-ph-side-text: var(--lh-over-text); max-width: 56rem; }
+.lh-ph-steps.lh-ph--under { --lh-ph-side: var(--lh-under); --lh-ph-side-text: var(--lh-under-text); }
 
 .lh-ph-step {
   display: grid;
@@ -5445,3 +5453,20 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   .lh-ph-step { grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr) 3.2rem 3.2rem; column-gap: 0.6rem; }
   .lh-ph-name small { display: none; }
 }
+
+/* Player page prop toolbar: no charcoal panel and no name line (the page header already names the player), just the
+   stat tabs, then the stepper / Over-Under / odds / Add row between hairlines like the rest of the page. */
+.lh-swiss-page #playerToolbar .lh-ptb {
+  background: none;
+  border-top: 0;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+.lh-swiss-page #playerToolbar .lh-ptb-head { display: none; }
+.lh-swiss-page #playerToolbar .lh-ptb-stat { margin-bottom: 0; }
+.lh-swiss-page #playerToolbar .lh-ptb-controls { padding: 0.75rem 0; border-bottom: 1px solid var(--lh-border); }
+.lh-swiss-page #playerToolbar .lh-ptb-step,
+.lh-swiss-page #playerToolbar .lh-ptb-box { border-color: var(--lh-border); }
+.lh-swiss-page #playerToolbar .lh-ptb-value { border-color: var(--lh-border); font-family: var(--lh-font-heading); font-weight: 400; }
+.lh-swiss-page #playerToolbar .lh-ptb-side--over:not(.is-on),
+.lh-swiss-page #playerToolbar .lh-ptb-side--under:not(.is-on) { border-color: var(--lh-border); }

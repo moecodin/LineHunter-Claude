@@ -32,14 +32,22 @@
     <!-- 1. BACK: goes to the previous page (or the schedule if there isn't one) -->
     <a href="schedule.html" id="playerBack" class="btn btn-sm btn-ghost mb-3">‹ Back</a>
 
-    <!-- 2. HEADER: name, team, position, jersey, injury badge, next game -->
-    <section id="playerHeader" class="mb-4">
-      <div class="placeholder-glow" aria-busy="true">
-        <span class="placeholder col-6 col-md-3 rounded lh-skeleton-title"></span>
-        <div class="mt-2"><span class="placeholder col-4 col-md-2 rounded"></span></div>
-        <div class="mt-3"><span class="placeholder col-5 col-md-2 rounded"></span></div>
+    <!-- 2. HEADER: name, team, position, jersey, injury badge, next game. Beside it (lines mode): tonight's Hunt Score for the
+         selected stat tab, the pick and its three reasons (js/components/playerHunt.js). -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <section id="playerHeader">
+          <div class="placeholder-glow" aria-busy="true">
+            <span class="placeholder col-6 col-md-3 rounded lh-skeleton-title"></span>
+            <div class="mt-2"><span class="placeholder col-4 col-md-2 rounded"></span></div>
+            <div class="mt-3"><span class="placeholder col-5 col-md-2 rounded"></span></div>
+          </div>
+        </section>
       </div>
-    </section>
+      <div class="col-lg-6">
+        <section id="playerHuntHead" class="lh-ph-headcard lines-only" aria-label="Hunt Score" hidden></section>
+      </div>
+    </div>
 
     <div class="row g-4">
     <div class="col-lg-9 lh-player-main">
@@ -56,11 +64,11 @@
       </div>
     </section>
 
-    <!-- HUNT SCORE (lines mode): tonight's score for the selected stat tab and how it was built, step by step from the
+    <!-- SCORE BUILD-UP (lines mode): how tonight's Hunt Score (shown in the header) was built, step by step from the
          season baseline. Hidden when the engine has no scored prop for this player + stat. js/components/playerHunt.js -->
     <section id="playerHunt" class="card mb-4 lines-only" data-lh-collapse="hunt" data-lh-collapse-name="Hunt Score" hidden>
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
-        <span class="lh-label" data-lh-kicker="Score">Hunt Score</span>
+        <span class="lh-label" data-lh-kicker="Score">Score build-up</span>
       </div>
       <div class="card-body" id="playerHuntBody"></div>
     </section>

@@ -173,7 +173,7 @@ function samePosSigned(value) {
 
 function samePosText(text) {
   const body = document.getElementById("samePosBody");
-  body.className = "text-muted small py-4 text-center";
+  body.className = `text-muted small py-4 text-center${body.classList.contains("lh-cc-part") ? " lh-cc-part" : ""}`; // keep the collapse toggle's class (cardCollapse.js)
   body.textContent = text;
   document.getElementById("samePosToggle").hidden = true;
 }
@@ -306,7 +306,7 @@ function renderSamePositionCard() {
   });
 
   const body = document.getElementById("samePosBody");
-  body.className = "";
+  body.className = `${body.classList.contains("lh-cc-part") ? " lh-cc-part" : ""}`; // keep the collapse toggle's class (cardCollapse.js)
   body.innerHTML = `
     <div class="lh-sp-head">
       <div class="lh-sp-headline">${headline} <span class="lh-zm-pill is-${verdict.tone}">${verdict.label}</span></div>
