@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Player report · Swiss</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#000}
+a{color:#d2e0f8}a:hover{color:#fff}
+.n{font-variant-numeric:tabular-nums lining-nums}
+.k{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#8592ad}
+.g{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px}
+.rule{border-top:1px solid #d2e0f8}
+.hair{border-top:1px solid #1a2233}
+</style>
+</helmet>
+<div style="width:1440px;min-height:1900px;box-sizing:border-box;padding:40px 80px 96px;background:#000;color:#d2e0f8;font-family:'Inter Tight',Helvetica,Arial,sans-serif">
+
+<header class="g" style="align-items:baseline;padding-bottom:12px">
+<span style="grid-column:span 3;font-size:14px;font-weight:700;letter-spacing:.02em">[Wordmark]</span>
+<nav style="grid-column:span 6;display:flex;gap:28px;font-size:14px">
+<a href="#" style="text-decoration:none">Today</a><a href="#" style="text-decoration:none;color:#8592ad">Tools</a><a href="#" style="text-decoration:none;color:#8592ad">Standings</a>
+</nav>
+<span class="k n" style="grid-column:span 3;text-align:right">My Hunts 2</span>
+</header>
+
+<section class="g rule" style="padding-top:20px;row-gap:0">
+<div class="k" style="grid-column:span 3">Player report<br>Tue 27.10.2026</div>
+<div class="k" style="grid-column:span 3">SF · #25<br>New York Knicks</div>
+<div class="k" style="grid-column:span 3">Tonight 19:30 ET<br>NYK at BOS · TD Garden</div>
+<div class="k" style="grid-column:span 3;text-align:right">Active<br>Rest 1 day</div>
+
+<h1 style="grid-column:span 8;margin:56px 0 0;font-size:148px;line-height:.82;font-weight:700;letter-spacing:-.045em">Mikal<br>Bridges</h1>
+<div style="grid-column:span 4;align-self:end;text-align:right">
+<div class="n" style="font-size:240px;line-height:.75;font-weight:300;letter-spacing:-.06em;color:#F0997B">72</div>
+<div class="k" style="margin-top:14px">Hunt score / 100</div>
+</div>
+
+<div class="hair" style="grid-column:1 / -1;margin-top:40px"></div>
+<div style="grid-column:span 3;padding-top:14px">
+<div class="k">Pick</div>
+<div class="n" style="font-size:40px;font-weight:600;letter-spacing:-.02em;margin-top:6px">Under 11.5</div>
+<div class="k" style="margin-top:4px">Points</div>
+</div>
+<div style="grid-column:span 2;padding-top:14px">
+<div class="k">Chance</div>
+<div class="n" style="font-size:40px;font-weight:400;margin-top:6px">71.6%</div>
+</div>
+<div style="grid-column:span 2;padding-top:14px">
+<div class="k">Best odds</div>
+<div class="n" style="font-size:40px;font-weight:400;margin-top:6px">−115</div>
+<div class="k" style="margin-top:4px">FanDuel</div>
+</div>
+<div style="grid-column:span 2;padding-top:14px">
+<div class="k">Projection</div>
+<div class="n" style="font-size:40px;font-weight:400;margin-top:6px">10.5</div>
+<div class="k" style="margin-top:4px">P10–P90 5–16</div>
+</div>
+<div style="grid-column:span 3;padding-top:14px;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch">
+<div class="k">Last 10</div>
+<div class="n" style="font-size:40px;font-weight:400;margin-top:6px">7–3 <span style="font-size:14px;color:#8592ad;font-weight:500">U · avg 10.0</span></div>
+<button style="margin-top:14px;min-height:48px;background:#d2e0f8;color:#000;border:0;font:600 13px 'Inter Tight',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-align:left;padding:0 16px">Add to My Hunts&#160;&#160;+</button>
+</div>
+</section>
+
+<section class="g rule" style="margin-top:72px;padding-top:14px">
+<div style="grid-column:span 3">
+<div class="n" style="font-size:13px;font-weight:600">01</div>
+<h2 style="margin:4px 0 0;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1">Build-up</h2>
+<p class="k" style="margin:10px 0 0;text-transform:none;letter-spacing:0;font-size:13px">54.0 → 71.6, rounded 72</p>
+</div>
+<div style="grid-column:span 9">
+<div class="k" style="display:grid;grid-template-columns:48px 2fr 3fr 1fr 1fr;padding-bottom:10px"><span>Step</span><span>Factor</span><span>Input</span><span style="text-align:right">Δ</span><span style="text-align:right">Score</span></div>
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="8">
+<div class="hair n" style="display:grid;grid-template-columns:48px 2fr 3fr 1fr 1fr;align-items:baseline;padding:12px 0">
+<span style="font-size:13px;color:#8592ad">{{s.n}}</span>
+<span style="font-size:17px;font-weight:600">{{s.name}}</span>
+<span style="font-size:14px;color:#8592ad">{{s.input}}</span>
+<span style="font-size:17px;text-align:right;color:{{s.dcol}}">{{s.d}}</span>
+<span style="font-size:17px;text-align:right">{{s.run}}</span>
+</div>
+</sc-for>
+<div class="rule n" style="display:grid;grid-template-columns:48px 2fr 3fr 1fr 1fr;align-items:baseline;padding:14px 0">
+<span></span><span style="font-size:17px;font-weight:700">Hunt score</span><span></span><span></span><span style="font-size:28px;text-align:right;font-weight:600;color:#F0997B">72</span>
+</div>
+</div>
+</section>
+
+<section class="g rule" style="margin-top:72px;padding-top:14px">
+<div style="grid-column:span 3">
+<div class="n" style="font-size:13px;font-weight:600">02</div>
+<h2 style="margin:4px 0 0;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1">Over or under</h2>
+<p class="k" style="margin:10px 0 0;text-transform:none;letter-spacing:0;font-size:13px">Points of score, −10 to +10</p>
+</div>
+<div style="grid-column:span 9">
+<div class="k" style="display:grid;grid-template-columns:160px 1fr 1fr;padding-bottom:10px"><span></span><span style="color:#5DCAA5">Over</span><span style="text-align:right;color:#F0997B">Under</span></div>
+<sc-for list="{{push}}" as="p" hint-placeholder-count="7">
+<div style="display:grid;grid-template-columns:160px 1fr 1fr;align-items:center;height:34px">
+<span style="font-size:15px">{{p.name}}</span>
+<span class="n" style="display:flex;justify-content:flex-end;align-items:center;gap:8px;border-right:1px solid #d2e0f8;height:100%"><span style="font-size:13px;color:#5DCAA5">{{p.ol}}</span><span style="height:14px;width:{{p.ow}};background:#1D9E75"></span></span>
+<span class="n" style="display:flex;align-items:center;gap:8px;height:100%"><span style="height:14px;width:{{p.uw}};background:#D85A30"></span><span style="font-size:13px;color:#F0997B">{{p.ul}}</span></span>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section class="g rule" style="margin-top:72px;padding-top:14px">
+<div style="grid-column:span 3">
+<div class="n" style="font-size:13px;font-weight:600">03</div>
+<h2 style="margin:4px 0 0;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1">Last ten</h2>
+<p class="k" style="margin:10px 0 0;text-transform:none;letter-spacing:0;font-size:13px">Points per game, line 11.5</p>
+</div>
+<div style="grid-column:span 9">
+<div style="position:relative;height:240px;display:flex;align-items:flex-end;gap:12px;border-bottom:1px solid #d2e0f8">
+<sc-for list="{{games}}" as="g" hint-placeholder-count="10">
+<div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:6px">
+<span class="n" style="font-size:15px;color:{{g.tc}}">{{g.v}}</span>
+<span style="height:{{g.h}};background:{{g.c}}"></span>
+</div>
+</sc-for>
+<div style="flex:1;height:100%;display:flex;align-items:flex-end"><span style="width:100%;height:65%;border:1px solid #3a4766;box-sizing:border-box"></span></div>
+<span style="position:absolute;left:0;right:0;bottom:65%;border-top:1px solid #d2e0f8"></span>
+</div>
+<div style="display:flex;gap:12px;margin-top:8px">
+<sc-for list="{{games}}" as="g" hint-placeholder-count="10">
+<span class="k n" style="flex:1;line-height:1.5">{{g.opp}}<br>{{g.date}}</span>
+</sc-for>
+<span class="k" style="flex:1;line-height:1.5;color:#d2e0f8">BOS<br>Tonight</span>
+</div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const T = '#1D9E75', C = '#D85A30', Tt = '#5DCAA5', Ct = '#F0997B', M = '#8592ad';
+    const raw = [
+      ['00','Season baseline','13.4 pts · 33.8 min · average opponent','—',54.0,M],
+      ['01','Minutes','L10 31.2, projected 29.0','+5.3',59.3,Ct],
+      ['02','Form','Last 3 average 9.3','+8.4',67.7,Ct],
+      ['03','Matchup','Boston #4 fewest points to forwards','+3.6',71.3,Ct],
+      ['04','Position matchup','Forwards −1.8 vs their average','+1.9',73.2,Ct],
+      ['05','Pace','98.1 expected, #26 of 30','+1.4',74.6,Ct],
+      ['06','Book line','Sim 10.2 pulled to 10.5','−2.6',72.0,Tt],
+      ['07','Uncertainty','10 games, recent swing','−0.4',71.6,Tt]
+    ];
+    const steps = raw.map(([n,name,input,d,run,dcol]) => ({n,name,input,d,dcol,run:run.toFixed(1)}));
+    const pf = [['Form',8.4],['Minutes',5.3],['Matchup',3.6],['Position',1.9],['Pace',1.4],['Uncertainty',-0.4],['Book line',-2.6]];
+    const push = pf.map(([name,p]) => ({ name,
+      uw: p > 0 ? (p*9)+'%' : '0', ul: p > 0 ? '+'+p.toFixed(1) : '',
+      ow: p < 0 ? (-p*9)+'%' : '0', ol: p < 0 ? p.toFixed(1).replace('-','−') : '' }));
+    const gv = [[8,'DET','31.03'],[14,'MIA','02.04'],[9,'ATL','04.04'],[11,'ORL','06.04'],[7,'PHI','08.04'],[13,'TOR','10.04'],[10,'BKN','12.04'],[12,'CHI','21.10'],[6,'MIL','23.10'],[10,'CLE','25.10']];
+    const games = gv.map(([v,opp,date]) => ({ v, opp, date, h: (v/17.7*100)+'%', c: v > 11.5 ? T : C, tc: v > 11.5 ? Tt : Ct }));
+    return { steps, push, games };
+  }
+}
+</script>
+</body>
+</html>

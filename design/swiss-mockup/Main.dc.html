@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Player report · terminal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Inter+Tight:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#000}
+a{color:#8fa0ff}a:hover{color:#b8c3ff}
+.m{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.lbl{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8592ad}
+.sec{display:flex;align-items:baseline;gap:12px;border-top:1px solid #d2e0f8;padding-top:10px;margin-bottom:18px}
+.secn{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8fa0ff}
+.sect{font-family:'Inter Tight',sans-serif;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#d2e0f8}
+.secs{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8592ad;margin-left:auto}
+.row{display:grid;align-items:center;border-bottom:1px solid #141b2a}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 10px;border:1px solid #232d42;color:#8592ad;background:none;border-radius:0;cursor:pointer}
+.chip.on{border-color:#d2e0f8;color:#000;background:#d2e0f8}
+.scroll{overflow-x:auto}
+</style>
+</helmet>
+<div style="background:#000;color:#d2e0f8;font-family:'Inter Tight',system-ui,sans-serif;min-height:100%">
+
+<header style="border-bottom:1px solid #141b2a">
+<div style="max-width:1280px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+<span class="m" style="font-size:13px;font-weight:600;letter-spacing:.2em;border:1px solid #d2e0f8;padding:4px 8px">[WORDMARK]</span>
+<nav style="display:flex;gap:22px;font-size:13px;flex-wrap:wrap">
+<a href="#" style="color:#d2e0f8;text-decoration:none">Today</a>
+<a href="#" style="color:#8592ad;text-decoration:none">Tools</a>
+<a href="#" style="color:#8592ad;text-decoration:none">Standings</a>
+</nav>
+<label class="m" style="margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid #232d42;padding:6px 10px;font-size:12px;color:#8592ad;min-width:240px">
+<span aria-hidden="true">/</span>
+<input aria-label="Search players" placeholder="Search player" style="background:none;border:0;outline:0;color:#d2e0f8;font:inherit;width:100%">
+</label>
+<span class="m" style="font-size:12px;color:#8592ad">MY HUNTS <span style="color:#000;background:#5DCAA5;padding:1px 6px;margin-left:4px">2</span></span>
+</div>
+</header>
+
+<main style="max-width:1280px;margin:0 auto;padding:28px 32px 80px;display:flex;flex-direction:column;gap:56px">
+
+<!-- 00 banner -->
+<section aria-label="Player and tonight's game" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));border:1px solid #232d42">
+<div style="padding:28px;display:flex;flex-direction:column;gap:14px;border-right:1px solid #232d42">
+<div class="lbl">Player report · Tue Oct 27 2026</div>
+<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<h1 style="margin:0;font-size:56px;line-height:.9;font-weight:800;letter-spacing:-.02em">MIKAL<br>BRIDGES</h1>
+<div class="m" style="font-size:13px;color:#8592ad;padding-bottom:4px">#25 · SF · <span style="color:#d2e0f8;border-bottom:2px solid #1d6fd6">NYK</span></div>
+</div>
+<div class="m" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;border-top:1px solid #141b2a;padding-top:12px">
+<sc-for list="{{season}}" as="s" hint-placeholder-count="6">
+<div><div class="lbl" style="font-size:10px">{{s.k}}</div><div style="font-size:20px;font-weight:500;margin-top:2px">{{s.v}}</div></div>
+</sc-for>
+</div>
+<div class="m" style="font-size:11px;color:#8592ad;display:flex;gap:8px;align-items:center"><span style="color:#000;background:#5DCAA5;padding:1px 6px">ACTIVE</span> Not on the injury report</div>
+</div>
+<div style="padding:28px;display:flex;flex-direction:column;gap:16px;background:#05070d">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="lbl">Tonight · 7:30 PM ET · TD Garden</span><span class="lbl">B2B: No · Rest 1d</span></div>
+<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px">
+<div><div style="font-size:44px;font-weight:800;line-height:1">NYK</div><div class="m" style="font-size:12px;color:#8592ad">3-1 · ROAD</div></div>
+<div class="m" style="font-size:14px;color:#8592ad">@</div>
+<div style="text-align:right"><div style="font-size:44px;font-weight:800;line-height:1">BOS</div><div class="m" style="font-size:12px;color:#8592ad">2-2 · HOME</div></div>
+</div>
+<div style="display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;border-top:1px solid #232d42;padding-top:16px">
+<div>
+<div class="lbl">Pick</div>
+<div class="m" style="font-size:22px;font-weight:600;margin-top:4px;padding-left:10px;border-left:3px solid #D85A30">U 11.5 PTS</div>
+<div class="m" style="font-size:12px;color:#8592ad;margin-top:4px;padding-left:13px">−115 FD · 71.6% sim</div>
+</div>
+<div>
+<div class="lbl" style="display:flex;justify-content:space-between"><span>Hunt score</span><span>0 · 65 · 100</span></div>
+<div style="position:relative;height:8px;background:#141b2a;margin-top:8px">
+<div style="position:absolute;inset:0 auto 0 0;width:72%;background:#D85A30"></div>
+<div style="position:absolute;top:-4px;bottom:-4px;left:65%;width:1px;background:#d2e0f8"></div>
+</div>
+</div>
+<div class="m" style="font-size:56px;font-weight:600;line-height:1;color:#F0997B">72</div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="m" style="flex:1;min-height:44px;background:#d2e0f8;color:#000;border:0;font-size:12px;font-weight:600;letter-spacing:.1em;cursor:pointer">+ ADD TO MY HUNTS</button>
+<button class="m" aria-label="Share" style="min-height:44px;min-width:44px;background:none;color:#d2e0f8;border:1px solid #232d42;font-size:12px;cursor:pointer">SHARE</button>
+</div>
+</div>
+</section>
+
+<!-- 01 build-up -->
+<section>
+<div class="sec"><span class="secn">01 /</span><span class="sect">Score build-up</span><span class="secs">season baseline → 72</span></div>
+<div class="row lbl" style="grid-template-columns:40px 1.3fr 2fr 80px 1.6fr 64px;padding:0 0 8px">
+<span>#</span><span>Step</span><span>Input</span><span style="text-align:right">Δ</span><span style="padding-left:24px">Running</span><span style="text-align:right">Score</span>
+</div>
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="8">
+<div class="row" style="grid-template-columns:40px 1.3fr 2fr 80px 1.6fr 64px;padding:11px 0">
+<span class="m" style="font-size:12px;color:#8592ad">{{s.n}}</span>
+<span style="font-size:14px;font-weight:600">{{s.name}}</span>
+<span class="m" style="font-size:12px;color:#8592ad">{{s.input}}</span>
+<span class="m" style="font-size:14px;text-align:right;color:{{s.dcol}}">{{s.d}}</span>
+<span style="padding-left:24px"><span style="display:block;position:relative;height:6px;background:#0d1220"><span style="position:absolute;top:0;bottom:0;left:0;width:{{s.w}};background:#2a3a72"></span><span style="position:absolute;top:-3px;bottom:-3px;left:65%;width:1px;background:#8592ad"></span></span></span>
+<span class="m" style="font-size:14px;text-align:right;font-weight:600">{{s.run}}</span>
+</div>
+</sc-for>
+<div class="row m" style="grid-template-columns:40px 1.3fr 2fr 80px 1.6fr 64px;padding:14px 0;border-bottom:1px solid #d2e0f8">
+<span></span><span style="font-family:'Inter Tight';font-size:14px;font-weight:800;letter-spacing:.1em">FINAL</span><span style="font-size:12px;color:#8592ad">71.6 rounded · 71.6% chance under</span><span></span><span></span><span style="font-size:20px;text-align:right;font-weight:600;color:#F0997B">72</span>
+</div>
+</section>
+
+<!-- 02 push -->
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:48px">
+<div>
+<div class="sec"><span class="secn">02 /</span><span class="sect">What pushes it</span><span class="secs">pts of score</span></div>
+<div class="lbl" style="display:grid;grid-template-columns:120px 1fr 1fr;margin-bottom:8px"><span></span><span style="color:#5DCAA5">◂ Over</span><span style="text-align:right;color:#F0997B">Under ▸</span></div>
+<sc-for list="{{push}}" as="p" hint-placeholder-count="7">
+<div style="display:grid;grid-template-columns:120px 1fr 1fr;align-items:center;height:30px">
+<span style="font-size:13px">{{p.name}}</span>
+<span style="display:flex;justify-content:flex-end;align-items:center;gap:6px;border-right:1px solid #d2e0f8;height:100%"><span class="m" style="font-size:11px;color:#5DCAA5">{{p.ol}}</span><span style="height:12px;width:{{p.ow}};background:#1D9E75"></span></span>
+<span style="display:flex;align-items:center;gap:6px;height:100%"><span style="height:12px;width:{{p.uw}};background:#D85A30"></span><span class="m" style="font-size:11px;color:#F0997B">{{p.ul}}</span></span>
+</div>
+</sc-for>
+<div class="m" style="display:grid;grid-template-columns:120px 1fr 1fr;font-size:10px;color:#8592ad;margin-top:6px"><span></span><span style="display:flex;justify-content:space-between"><span>−10</span><span>0</span></span><span style="text-align:right">+10</span></div>
+</div>
+<div>
+<div class="sec"><span class="secn">03 /</span><span class="sect">Projection</span><span class="secs">2,000 sims</span></div>
+<div style="display:flex;align-items:flex-end;gap:2px;height:150px;position:relative">
+<sc-for list="{{dist}}" as="d" hint-placeholder-count="20">
+<span style="flex:1;height:{{d.h}};background:{{d.c}}"></span>
+</sc-for>
+<span style="position:absolute;top:0;bottom:0;left:57.5%;width:1px;background:#d2e0f8"></span>
+<span class="m" style="position:absolute;top:0;left:58.5%;font-size:11px;color:#d2e0f8">LINE 11.5</span>
+</div>
+<div class="m" style="display:flex;justify-content:space-between;font-size:10px;color:#8592ad;margin-top:6px;border-top:1px solid #232d42;padding-top:6px"><span>0</span><span>5</span><span>10</span><span>15</span><span>20 PTS</span></div>
+<div class="m" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:18px;border-top:1px solid #141b2a;padding-top:12px">
+<div><div class="lbl" style="font-size:10px">Mean</div><div style="font-size:20px">10.5</div></div>
+<div><div class="lbl" style="font-size:10px">P10–P90</div><div style="font-size:20px">5–16</div></div>
+<div><div class="lbl" style="font-size:10px">Under</div><div style="font-size:20px;color:#F0997B">71.6%</div></div>
+<div><div class="lbl" style="font-size:10px">Sim pre-line</div><div style="font-size:20px">10.2</div></div>
+</div>
+</div>
+</section>
+
+<!-- 04 chart -->
+<section>
+<div class="sec"><span class="secn">04 /</span><span class="sect">Game by game</span><span class="secs">U 7 / 10 · avg 10.0</span></div>
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px">
+<div role="group" aria-label="Stat" style="display:flex">
+<button class="chip on">PTS</button><button class="chip">REB</button><button class="chip">AST</button><button class="chip">3PM</button><button class="chip">PRA</button>
+</div>
+<div role="group" aria-label="Range" style="display:flex">
+<button class="chip">L5</button><button class="chip on">L10</button><button class="chip">L20</button><button class="chip">SZN</button>
+</div>
+<div role="group" aria-label="Split" style="display:flex">
+<button class="chip on">ALL</button><button class="chip">HOME</button><button class="chip">AWAY</button><button class="chip">H2H BOS</button>
+</div>
+<div class="m" style="margin-left:auto;display:flex;align-items:center;gap:0;border:1px solid #232d42">
+<button aria-label="Lower line" class="m" style="min-width:36px;min-height:34px;background:none;border:0;color:#d2e0f8;cursor:pointer">−</button>
+<span style="font-size:13px;padding:0 10px">11.5</span>
+<button aria-label="Raise line" class="m" style="min-width:36px;min-height:34px;background:none;border:0;color:#d2e0f8;cursor:pointer">+</button>
+</div>
+</div>
+<div style="position:relative;height:220px;display:flex;align-items:flex-end;gap:6px;border-bottom:1px solid #d2e0f8">
+<sc-for list="{{games}}" as="g" hint-placeholder-count="10">
+<div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px">
+<span class="m" style="font-size:11px;color:{{g.tc}}">{{g.v}}</span>
+<span style="width:100%;height:{{g.h}};background:{{g.c}}"></span>
+</div>
+</sc-for>
+<div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
+<span style="width:100%;height:65%;border:1px dashed #3a4766;box-sizing:border-box"></span>
+</div>
+<span style="position:absolute;left:0;right:0;bottom:65%;border-top:1px dashed #d2e0f8"></span>
+<span class="m" style="position:absolute;right:0;bottom:calc(65% + 4px);font-size:10px;color:#d2e0f8;background:#000;padding:0 4px">11.5</span>
+</div>
+<div style="display:flex;gap:6px;margin-top:6px">
+<sc-for list="{{games}}" as="g" hint-placeholder-count="10">
+<span class="m" style="flex:1;text-align:center;font-size:10px;color:#8592ad;line-height:1.4">{{g.opp}}<br>{{g.date}}</span>
+</sc-for>
+<span class="m" style="flex:1;text-align:center;font-size:10px;color:#d2e0f8;line-height:1.4">@BOS<br>TONIGHT</span>
+</div>
+</section>
+
+<!-- 05 log -->
+<section>
+<div class="sec"><span class="secn">05 /</span><span class="sect">Game log</span><span class="secs">last 10 · filters applied</span></div>
+<div class="scroll">
+<div style="min-width:860px">
+<div class="row lbl" style="grid-template-columns:90px 80px 60px 70px 60px 60px 90px 90px 80px 1fr;padding-bottom:8px">
+<span>Date</span><span>Opp</span><span>Res</span><span style="text-align:right">MIN</span><span style="text-align:right">PTS</span><span style="text-align:right">REB</span><span style="text-align:right">FG</span><span style="text-align:right">3P</span><span style="text-align:right">USG%</span><span style="text-align:right">vs 11.5</span>
+</div>
+<sc-for list="{{log}}" as="r" hint-placeholder-count="10">
+<div class="row m" style="grid-template-columns:90px 80px 60px 70px 60px 60px 90px 90px 80px 1fr;padding:9px 0;font-size:13px">
+<span style="color:#8592ad">{{r.date}}</span><span>{{r.opp}}</span><span style="color:#8592ad">{{r.res}}</span><span style="text-align:right">{{r.min}}</span><span style="text-align:right;font-weight:600">{{r.pts}}</span><span style="text-align:right">{{r.reb}}</span><span style="text-align:right">{{r.fg}}</span><span style="text-align:right">{{r.tp}}</span><span style="text-align:right">{{r.usg}}</span>
+<span style="text-align:right"><span style="font-size:11px;padding:1px 6px;color:#000;background:{{r.bc}}">{{r.side}}</span></span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<!-- 06/07 tape + same position -->
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:48px">
+<div>
+<div class="sec"><span class="secn">06 /</span><span class="sect">Tale of the tape</span><span class="secs">league pctl · 0–100</span></div>
+<div style="display:grid;grid-template-columns:1fr 64px 1fr;margin-bottom:10px;align-items:baseline">
+<span style="font-size:14px;font-weight:700">BRIDGES <span class="m" style="font-size:11px;color:#8592ad;font-weight:400">SF</span></span>
+<span></span>
+<span style="font-size:14px;font-weight:700;text-align:right">J. BROWN <span class="m" style="font-size:11px;color:#8592ad;font-weight:400">SF</span></span>
+</div>
+<sc-for list="{{tape}}" as="t" hint-placeholder-count="6">
+<div style="display:grid;grid-template-columns:1fr 64px 1fr;align-items:center;height:30px;background:{{t.bg}}">
+<span style="display:flex;justify-content:flex-end;align-items:center;gap:8px"><span class="m" style="font-size:12px">{{t.a}}</span><span style="width:60%;height:8px;background:#0d1220;display:flex;justify-content:flex-end"><span style="height:100%;width:{{t.aw}};background:{{t.ac}}"></span></span></span>
+<span class="lbl" style="text-align:center;color:#d2e0f8">{{t.k}}</span>
+<span style="display:flex;align-items:center;gap:8px"><span style="width:60%;height:8px;background:#0d1220"><span style="display:block;height:100%;width:{{t.bw}};background:{{t.bcol}}"></span></span><span class="m" style="font-size:12px">{{t.b}}</span></span>
+</div>
+</sc-for>
+<div class="m" style="font-size:11px;color:#8592ad;margin-top:12px;border-top:1px solid #141b2a;padding-top:10px">H2H · 9 GP since 2022-23 · 12.1 PTS · U 6/9</div>
+</div>
+<div>
+<div class="sec"><span class="secn">07 /</span><span class="sect">Forwards vs BOS</span><span class="secs">last 10 games</span></div>
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+<span class="m" style="font-size:44px;font-weight:600;line-height:1;color:#F0997B">−1.8</span>
+<span class="m" style="font-size:12px;color:#8592ad">PTS vs their avg · 12.4 vs 14.2</span>
+<span class="m" style="font-size:11px;padding:2px 8px;color:#000;background:#F0997B;margin-left:auto">TOUGH</span>
+</div>
+<div style="display:flex;gap:6px;margin:18px 0 6px;flex-wrap:wrap" aria-label="3 of 13 went over 11.5">
+<sc-for list="{{dots}}" as="d" hint-placeholder-count="13">
+<span style="width:14px;height:14px;background:{{d}}"></span>
+</sc-for>
+</div>
+<div class="m" style="font-size:11px;color:#8592ad">3 of 13 went over 11.5</div>
+<div style="margin-top:16px">
+<sc-for list="{{fwd}}" as="f" hint-placeholder-count="5">
+<div class="row m" style="grid-template-columns:70px 1fr 50px 50px 60px;padding:8px 0;font-size:12px">
+<span style="color:#8592ad">{{f.date}}</span><span style="font-family:'Inter Tight';font-size:13px">{{f.name}}</span><span style="text-align:right;color:#8592ad">{{f.min}}</span><span style="text-align:right;font-weight:600">{{f.pts}}</span><span style="text-align:right;color:{{f.dc}}">{{f.d}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const T = '#1D9E75', C = '#D85A30', Tt = '#5DCAA5', Ct = '#F0997B', M = '#8592ad', L = '#d2e0f8';
+    const season = [['PTS','13.4'],['REB','3.6'],['AST','3.1'],['3PM','1.6'],['MIN','33.8'],['USG%','18.9']].map(([k,v]) => ({k,v}));
+    const raw = [
+      ['00','Season baseline','13.4 pts/g · 33.8 min · avg opp','—',54.0,M],
+      ['01','Minutes','L10 31.2 → proj 29.0','+5.3',59.3,Ct],
+      ['02','Form','last 3 avg 9.3 · 10 games','+8.4',67.7,Ct],
+      ['03','Matchup','BOS #4 fewest PTS to SF · 20.1/g','+3.6',71.3,Ct],
+      ['04','Position matchup','forwards −1.8 vs avg','+1.9',73.2,Ct],
+      ['05','Pace','98.1 exp · #26 of 30','+1.4',74.6,Ct],
+      ['06','Book line','sim 10.2 → 10.5 · weight 20%','−2.6',72.0,Tt],
+      ['07','Uncertainty','10 games · recent swing','−0.4',71.6,Tt]
+    ];
+    const steps = raw.map(([n,name,input,d,run,dcol]) => ({n,name,input,d,dcol,run:run.toFixed(1),w:run+'%'}));
+    const pf = [['Form',8.4],['Minutes',5.3],['Matchup',3.6],['Position',1.9],['Pace',1.4],['Uncertainty',-0.4],['Book line',-2.6]];
+    const push = pf.map(([name,p]) => ({ name,
+      uw: p > 0 ? (p*10)+'%' : '0', ul: p > 0 ? '+'+p.toFixed(1) : '',
+      ow: p < 0 ? (-p*10)+'%' : '0', ol: p < 0 ? p.toFixed(1).replace('-','−') : '' }));
+    const dv = [1,2,4,7,11,16,22,30,38,46,52,55,51,44,36,27,18,11,6,3];
+    const dist = dv.map((v,i) => ({ h: (v/55*100)+'%', c: i < 11.5 ? '#7a3a24' : '#145f48' }));
+    const gv = [[8,'@DET','3/31'],[14,'MIA','4/2'],[9,'@ATL','4/4'],[11,'ORL','4/6'],[7,'@PHI','4/8'],[13,'TOR','4/10'],[10,'@BKN','4/12'],[12,'CHI','10/21'],[6,'@MIL','10/23'],[10,'CLE','10/25']];
+    const games = gv.map(([v,opp,date]) => ({ v, opp, date, h: (v/17.7*100)+'%', c: v > 11.5 ? T : C, tc: v > 11.5 ? Tt : Ct }));
+    const lg = [
+      ['10/25/26','CLE','W',31,10,4,'4-11','1-4','17.2'],
+      ['10/23/26','@MIL','L',28,6,3,'3-9','0-3','15.1'],
+      ['10/21/26','CHI','W',33,12,5,'5-12','2-5','18.8'],
+      ['4/12/26','@BKN','W',32,10,2,'4-10','2-6','17.9'],
+      ['4/10/26','TOR','W',34,13,4,'5-11','1-3','19.4'],
+      ['4/8/26','@PHI','L',30,7,3,'3-10','1-5','16.0'],
+      ['4/6/26','ORL','W',33,11,6,'5-12','1-4','18.1'],
+      ['4/4/26','@ATL','L',35,9,3,'4-13','1-6','17.5'],
+      ['4/2/26','MIA','W',36,14,4,'6-12','2-4','20.3'],
+      ['3/31/26','@DET','W',31,8,5,'3-9','2-5','16.4']
+    ];
+    const log = lg.map(([date,opp,res,min,pts,reb,fg,tp,usg]) => ({date,opp,res,min,pts,reb,fg,tp,usg, side: pts > 11.5 ? 'O' : 'U', bc: pts > 11.5 ? Tt : Ct}));
+    const tp = [['PTS','13.4',48,'23.8',92,true],['REB','3.6',35,'5.9',70,false],['AST','3.1',55,'4.2',71,false],['3PM','1.6',58,'2.1',72,false],['MIN','33.8',88,'33.9',89,false],['USG%','18.9',41,'30.1',95,false]];
+    const tape = tp.map(([k,a,ap,b,bp,hl]) => ({k,a,b,aw:ap+'%',bw:bp+'%', ac: ap>=bp ? L : '#3a4766', bcol: bp>=ap ? L : '#3a4766', bg: hl ? '#0b1020' : 'transparent'}));
+    const dots = [1,0,0,1,0,0,0,0,1,0,0,0,0].map(o => o ? T : '#3a2016');
+    const fw = [['10/25','J. Tatum','36','24','−3.1'],['10/25','S. Hauser','22','8','−1.4'],['10/22','P. Banchero','35','19','−4.6'],['10/22','F. Wagner','33','22','+0.8'],['10/19','Z. Williams','24','6','−2.0']];
+    const fwd = fw.map(([date,name,min,pts,d]) => ({date,name,min,pts,d, dc: d.startsWith('+') ? Tt : Ct}));
+    return { season, steps, push, dist, games, log, tape, dots, fwd };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cream tints</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#000}
+.n{font-variant-numeric:tabular-nums lining-nums}
+</style>
+</helmet>
+<div style="width:1440px;box-sizing:border-box;padding:56px 80px 80px;background:#000;color:#d2e0f8;font-family:'Inter Tight',Helvetica,Arial,sans-serif">
+<div style="display:flex;align-items:baseline;gap:24px;border-top:1px solid #d2e0f8;padding-top:14px;margin-bottom:32px">
+<h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em">Cream tints</h1>
+<span style="font-size:13px;color:#8592ad">Light theme ground · navy ink #052350</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+<sc-for list="{{creams}}" as="c" hint-placeholder-count="6">
+<div style="background:{{c.hex}};color:#052350;padding:24px 24px 20px;display:flex;flex-direction:column;gap:0">
+<div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid #052350;padding-top:8px">
+<span class="n" style="font-size:13px;font-weight:700">{{c.n}} {{c.name}}</span>
+<span class="n" style="font-size:12px;font-weight:500;color:#4a5878">{{c.hex}}</span>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:28px">
+<div style="font-size:44px;line-height:.85;font-weight:700;letter-spacing:-.045em">Mikal<br>Bridges</div>
+<div class="n" style="font-size:96px;line-height:.75;font-weight:300;letter-spacing:-.06em;color:#B4441E">72</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border-top:1px solid {{c.hair}};margin-top:22px;padding-top:10px">
+<div><div style="font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#4a5878">Pick</div><div class="n" style="font-size:18px;font-weight:600;margin-top:2px">U 11.5</div></div>
+<div><div style="font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#4a5878">Chance</div><div class="n" style="font-size:18px;margin-top:2px">71.6%</div></div>
+<div><div style="font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#4a5878">L10</div><div class="n" style="font-size:18px;margin-top:2px">7–3</div></div>
+</div>
+<div style="display:flex;align-items:flex-end;gap:5px;height:56px;margin-top:16px;border-bottom:1px solid #052350;position:relative">
+<span style="flex:1;height:45%;background:#D85A30"></span><span style="flex:1;height:79%;background:#1D9E75"></span><span style="flex:1;height:51%;background:#D85A30"></span><span style="flex:1;height:62%;background:#D85A30"></span><span style="flex:1;height:40%;background:#D85A30"></span><span style="flex:1;height:73%;background:#1D9E75"></span><span style="flex:1;height:56%;background:#D85A30"></span><span style="flex:1;height:68%;background:#1D9E75"></span><span style="flex:1;height:34%;background:#D85A30"></span><span style="flex:1;height:56%;background:#D85A30"></span>
+<span style="position:absolute;left:0;right:0;bottom:65%;border-top:1px solid #052350"></span>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;font-weight:600">
+<span style="color:#0B6E50">Over 3</span><span style="color:#B4441E">Under 7</span>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const list = [
+      ['01','Paper','#FAF7F0','#E4DED0'],
+      ['02','Ivory','#F7F2E7','#E0D8C6'],
+      ['03','Bone','#F2EBDD','#DCD2BE'],
+      ['04','Oat','#ECE3D0','#D6CAB2'],
+      ['05','Sand','#E8DCC4','#D1C2A5'],
+      ['06','Stone','#F1EFE8','#DAD6CB']
+    ];
+    return { creams: list.map(([n,name,hex,hair]) => ({n,name,hex,hair})) };
+  }
+}
+</script>
+</body>
+</html>
