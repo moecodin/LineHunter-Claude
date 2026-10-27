@@ -489,10 +489,10 @@ html {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* The 3 rotating shades: pale blue, mid indigo, royal indigo */
-.shade-1 { --shade: 210, 224, 248; }
-.shade-2 { --shade: 74, 60, 200; }
-.shade-3 { --shade: 33, 7, 169; }
+/* The 3 rotating shades: since the Swiss restyle all three are the ink (no purple) */
+.shade-1,
+.shade-2,
+.shade-3 { --shade: var(--lh-ink-rgb); }
 
 /* Hover: lift up a little and glow blue */
 .game-card:hover {
@@ -5304,4 +5304,144 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 }
 .form-switch .form-check-input:not(:checked) {
   --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3crect x='-3' y='-3' width='6' height='6' fill='%239a9284'/%3e%3c/svg%3e");
+}
+
+
+/* ---------- Swiss restyle, step 2: the player page (body.lh-swiss-page on player.html) ----------
+   Cards lose their box: no fill, no border, just a strong rule on top. Each section title has a small muted label above it
+   (data-lh-kicker="Form" in player.html), the name is set big (first name smaller, last name + jersey), the season averages
+   are plain numerals between hairlines, and the Hunt Score section (js/components/playerHunt.js) shows the build-up table. */
+.lh-swiss-page .card {
+  --bs-card-bg: transparent;
+  border: 0;
+  border-top: 1px solid var(--lh-strong);
+  box-shadow: none;
+}
+.lh-swiss-page .card > .card-header {
+  padding: 0.75rem 0 0.5rem !important;
+  border: 0;
+  background: none;
+}
+.lh-swiss-page .card > .card-body { padding: 0.5rem 0 0; }
+.lh-swiss-page .lh-players-card .card-body,
+.lh-swiss-page .lh-injury-card .card-body { padding-top: 0; }
+
+/* Section titles: a bold title with its one-word label above */
+.lh-swiss-page [data-lh-kicker] {
+  font-family: var(--lh-font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-transform: none;
+  color: var(--lh-strong);
+}
+.lh-swiss-page [data-lh-kicker]::before {
+  content: attr(data-lh-kicker);
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-swiss-page aside [data-lh-kicker] { font-size: 1.15rem; }
+
+/* Header: first name about 70% of the last name, the jersey number light and muted beside the last name */
+.lh-swiss-page .lh-player-name {
+  font-family: var(--lh-font-heading);
+  font-weight: 700;
+  color: var(--lh-strong);
+  font-size: clamp(2.6rem, 1.4rem + 5vw, 6rem);
+  letter-spacing: -0.045em;
+  line-height: 0.85;
+}
+.lh-player-first { display: block; font-size: 0.7em; line-height: 0.9; }
+.lh-player-last { display: flex; align-items: flex-start; gap: 0.25em; }
+.lh-swiss-page .lh-player-last .lh-player-jersey {
+  font-size: 0.38em;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  padding-top: 0.15em;
+  color: var(--lh-muted);
+}
+
+/* Season averages: numerals between hairlines, no boxes */
+.lh-swiss-page .lh-avg-strip { gap: 0; border-top: 1px solid var(--lh-border); padding-top: 0.75rem; }
+.lh-swiss-page .lh-avg-box {
+  background: none;
+  border: 0;
+  border-left: 1px solid var(--lh-border);
+  padding: 0 0 0 0.9rem;
+  min-height: 0;
+}
+.lh-swiss-page .lh-avg-box:first-child { border-left: 0; padding-left: 0; }
+.lh-swiss-page .lh-avg-value { font-family: var(--lh-font-heading); font-size: 2.2rem; font-weight: 400; letter-spacing: -0.02em; }
+
+/* Hunt Score section: the big number and the pick on the left, the build-up on the right (stacked under 768px) */
+.lh-ph { --lh-ph-side: var(--lh-over); --lh-ph-side-text: var(--lh-over-text); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1.5rem 3rem; }
+.lh-ph--under { --lh-ph-side: var(--lh-under); --lh-ph-side-text: var(--lh-under-text); }
+@media (max-width: 767.98px) { .lh-ph { grid-template-columns: minmax(0, 1fr); } }
+.lh-ph-head { display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+.lh-ph-score {
+  font-size: clamp(5rem, 3rem + 6vw, 9rem);
+  font-weight: 300;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+  color: var(--lh-ph-side-text);
+}
+.lh-ph-of { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-ph-pick {
+  margin-top: 0.6rem;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--lh-ph-side);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--lh-strong);
+}
+.lh-ph-facts { display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; color: var(--lh-muted); }
+.lh-ph-add { margin-top: 0.4rem; }
+
+.lh-ph-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 4rem 4rem;
+  align-items: center;
+  column-gap: 1rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--lh-border);
+}
+.lh-ph-step--head {
+  border-top: 0;
+  padding-top: 0;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-ph-step--head span:nth-child(n + 3),
+.lh-ph-delta,
+.lh-ph-run { text-align: right; }
+.lh-ph-step--total { border-top-color: var(--lh-strong); }
+.lh-ph-step--total .lh-ph-name { font-weight: 700; }
+.lh-ph-step--total .lh-ph-run { font-size: 1.5rem; font-weight: 600; color: var(--lh-ph-side-text); }
+.lh-ph-name { font-size: 1rem; font-weight: 600; color: var(--lh-strong); }
+.lh-ph-name small { display: block; margin-top: 0.1rem; font-size: 0.8rem; font-weight: 400; color: var(--lh-muted); }
+.lh-ph-delta { font-size: 1rem; color: var(--lh-muted); }
+.lh-ph-delta.is-help { color: var(--lh-ph-side-text); }
+.lh-ph-run { font-size: 1rem; color: var(--lh-strong); }
+/* A bar from the center line: right = helps the pick (the pick's side color), left = hurts it (gray) */
+.lh-ph-bar { position: relative; height: 10px; }
+.lh-ph-bar::before { content: ""; position: absolute; top: -4px; bottom: -4px; left: 50%; width: 1px; background: var(--lh-border); }
+.lh-ph-bar span { position: absolute; top: 0; bottom: 0; }
+.lh-ph-bar .is-help { left: 50%; background: var(--lh-ph-side); }
+.lh-ph-bar .is-hurt { right: 50%; background: var(--lh-push); }
+@media (max-width: 575.98px) {
+  .lh-ph-step { grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr) 3.2rem 3.2rem; column-gap: 0.6rem; }
+  .lh-ph-name small { display: none; }
 }

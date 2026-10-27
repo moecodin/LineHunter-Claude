@@ -198,15 +198,19 @@ function renderHeader(injury) {
   }
 
   const badge = injury ? injuryBadge(injury) : null;
+  // First name smaller on its own line, the last name big with the jersey number beside it (Swiss layout).
   document.getElementById("playerHeader").innerHTML = `
     <div>
-      <div class="d-flex flex-wrap align-items-center gap-2">
-        <h1 class="lh-display lh-player-name mb-0">${name}${player.jersey_number ? ` <span class="lh-player-jersey">#${player.jersey_number}</span>` : ""}</h1>
+      <h1 class="lh-player-name mb-0">
+        <span class="lh-player-first">${player.first_name}</span>
+        <span class="lh-player-last">${player.last_name}${player.jersey_number ? `<span class="lh-player-jersey">#${player.jersey_number}</span>` : ""}</span>
+      </h1>
+      <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
         ${teamBadge}
+        <span class="lh-label">${meta}</span>
         ${badge ? `<button type="button" class="lh-injury-badge ${badge.className}" id="injuryBadge"
                      aria-label="Injury: ${injury.status}. Show details">${badge.label}</button>` : ""}
       </div>
-      <div class="lh-label mt-2">${meta}</div>
       <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
         <span class="lh-label">Next game</span>
         ${nextGameHtml}
@@ -638,6 +642,7 @@ function renderProps() {
   const line = lineForScoring(playerChart.activeLine());
   renderSamePosition(pageState.propType, playerChart.activeLine()); // the Same Position card follows the tab and line
   renderMatchupAnalysis(pageState.propType); // the Matchup Analysis battle section follows the tab
+  renderPlayerHunt(playerId, pageState.propType, nextGame); // tonight's Hunt Score for this tab (js/components/playerHunt.js)
 
   // The games in this window and split, newest first (pickWindowLogs in js/core/stats.js),
   // scored against the line. The table below uses the very same games.

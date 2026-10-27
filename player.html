@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="css/styles.css" rel="stylesheet">
 </head>
-<body class="lh-tint-cards">
+<body class="lh-tint-cards lh-swiss-page">
   <!-- Research mode: applied before anything renders, so there's no flash (js/components/nav.js has the switch) -->
   <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
 
@@ -56,10 +56,19 @@
       </div>
     </section>
 
+    <!-- HUNT SCORE (lines mode): tonight's score for the selected stat tab and how it was built, step by step from the
+         season baseline. Hidden when the engine has no scored prop for this player + stat. js/components/playerHunt.js -->
+    <section id="playerHunt" class="card mb-4 lines-only" data-lh-collapse="hunt" data-lh-collapse-name="Hunt Score" hidden>
+      <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
+        <span class="lh-label" data-lh-kicker="Score">Hunt Score</span>
+      </div>
+      <div class="card-body" id="playerHuntBody"></div>
+    </section>
+
     <!-- 4. PROPS: stat tabs, window + home/away toggles, hit rate, chart with the alt line -->
     <section class="card mb-4" data-lh-collapse="chart" data-lh-collapse-name="Chart">
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
-        <span class="lh-label"><span class="lines-only">Prop chart</span><span class="research-only">Stat chart</span></span>
+        <span class="lh-label" data-lh-kicker="Form"><span class="lines-only">Prop chart</span><span class="research-only">Stat chart</span></span>
       </div>
       <div class="card-body">
         <!-- PROP TOOLBAR (lines mode): player + matchup, the stat tabs (moved in), the line stepper, Over / Under, the best
@@ -102,7 +111,7 @@
         <section class="card h-100" data-lh-collapse="sameposition" data-lh-collapse-name="Same Position">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Same Position vs <span id="samePosOpp">…</span></h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Matchup">Same Position vs <span id="samePosOpp">…</span></h2>
               <div class="d-flex align-items-center gap-2">
                 <span id="samePosNote" class="small text-muted"></span>
                 <select id="samePosTeam" class="form-select form-select-sm lh-zm-select" aria-label="Opponent team" disabled></select>
@@ -124,7 +133,7 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
               <div class="me-auto">
-                <h2 class="lh-label mb-0">Matchup Analysis</h2>
+                <h2 class="lh-label mb-0" data-lh-kicker="Matchup">Matchup Analysis</h2>
                 <div id="matchupSub" class="small text-muted"></div>
               </div>
               <select id="matchupPick" class="form-select form-select-sm lh-zm-select lh-ma-select" aria-label="Compare with" disabled></select>
@@ -138,7 +147,7 @@
     <!-- 5. GAME LOG: full width, follows the window, home/away and teammate filters. -->
     <!-- GAME LOG: follows the window, home/away and teammate filters. Full width; scrolls sideways on narrow screens, and up/down for long lists. -->
     <section class="card mb-4" data-lh-collapse="gamelog">
-      <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label">Game log</span></div>
+      <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label" data-lh-kicker="History">Game log</span></div>
       <div class="card-body">
         <div class="table-responsive lh-gamelog-scroll">
           <table class="table table-sm align-middle mb-0 lh-game-log">
@@ -185,7 +194,7 @@
     <!-- WITH / WITHOUT: click a teammate chip to cycle neutral -> with -> without. js/pages/player.js fills it in. -->
     <section class="card h-100" data-lh-collapse="withwithout">
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
-        <span class="lh-label">With / Without</span>
+        <span class="lh-label" data-lh-kicker="Lineup">With / Without</span>
         <button type="button" id="withoutClear" class="btn btn-link btn-sm p-0 lh-ww-clear ms-auto" hidden>Clear</button>
       </div>
       <div class="card-body">
@@ -203,7 +212,7 @@
           <div class="card-body">
             <!-- Title row + collapse button; the "Points · filtered vs season" note sits on its own line under it -->
             <div class="d-flex justify-content-between align-items-center gap-2 mb-1" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Opportunity</h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Volume">Opportunity</h2>
             </div>
             <div class="lh-label text-muted mb-3"><span id="opportunityTab">Points</span> · filtered vs season</div>
             <div id="opportunityBody" class="text-muted">Loading...</div>
@@ -223,7 +232,7 @@
         <section class="card h-100" data-lh-collapse="role">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Role</h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Minutes">Role</h2>
               <!-- Minutes / Usage % -->
               <div id="roleMetric" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="Minutes or usage"></div>
             </div>
@@ -239,7 +248,7 @@
         <section class="card h-100" data-lh-collapse="shotchart">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Shot Chart</h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Shooting">Shot Chart</h2>
               <span id="shotChartSeason" class="lh-label text-muted"></span>
             </div>
             <div id="shotChartBody" class="text-muted small">Loading shot data...</div>
@@ -258,7 +267,7 @@
         <section class="card h-100" data-lh-collapse="zonematchup">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Zone Matchup</h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Shooting">Zone Matchup</h2>
               <div class="d-flex align-items-center gap-2">
                 <span id="zoneMatchupNote" class="small text-muted"></span>
                 <select id="zoneMatchupTeam" class="form-select form-select-sm lh-zm-select" aria-label="Opponent team" disabled></select>
@@ -282,7 +291,7 @@
     <aside class="col-lg-3">
       <div class="card lh-players-card" data-lh-collapse="players">
         <div class="card-header py-3">
-          <div class="d-flex justify-content-between align-items-center mb-2" data-lh-collapse-head><span class="lh-label">Players</span></div>
+          <div class="d-flex justify-content-between align-items-center mb-2" data-lh-collapse-head><span class="lh-label" data-lh-kicker="Roster">Players</span></div>
           <div id="playerSideTabs" class="btn-group btn-group-sm lh-window-toggle w-100" role="group" aria-label="Team or opponent"></div>
         </div>
         <div id="playerSideList" class="list-group list-group-flush lh-players-list">
@@ -292,7 +301,7 @@
 
       <!-- INJURY REPORT: who is hurt on this team and the next opponent. Each name opens its description. js/pages/player.js fills it in. -->
       <div class="card lh-injury-card mt-3" data-lh-collapse="injuries">
-        <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label">Injury report</span></div>
+        <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label" data-lh-kicker="Status">Injury report</span></div>
         <div id="injuryList" class="lh-injury-list">
           <div class="text-muted small p-3">Loading…</div>
         </div>
@@ -339,6 +348,8 @@
   <script src="js/components/samePosition.js"></script>
   <script src="js/components/matchupAnalysis.js"></script>
   <script src="js/components/share.js"></script>
+  <script src="js/components/hunt-score.js"></script>
+  <script src="js/components/playerHunt.js"></script>
   <script src="js/components/cardCollapse.js"></script>
   <script src="js/pages/player.js"></script>
 </body>
