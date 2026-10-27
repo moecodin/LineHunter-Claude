@@ -33,7 +33,7 @@ function playerHuntHeadHtml(prop) {
           <span class="lh-ph-score">${prop.score}</span>
         </div>
         <div class="lh-ph-head">
-          <span class="lh-ph-pick">${huntPickText(prop)}</span>
+          <span class="lh-ph-pickrow"><span class="lh-ph-pick">${huntPickText(prop)}</span><span class="lh-ph-of">Hunt model pick</span></span>
           <span class="lh-ph-facts">${Number.isFinite(prop.chance) ? `${prop.chance}% chance` : ""}${huntOddsHtml(best)}${prop.gtd ? `<span class="lh-hs-tag lh-hs-tag--gtd">GTD</span>` : ""}</span>
           ${huntButtonHtml(huntLeg(prop, best), { labelOut: "ADD TO MY HUNTS", labelIn: "IN MY HUNTS", iconFirst: true, className: "lh-hs-add lh-ph-add" })}
         </div>

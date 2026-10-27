@@ -49,6 +49,13 @@
       </div>
     </div>
 
+    <!-- JUMP BAR: one link per [data-lh-jump] section below. It sits under the name and sticks under the navbar once the
+         name scrolls away (then the short name shows in front and the current section is underlined). js/components/playerJump.js -->
+    <nav id="playerJump" class="lh-pj mb-4" aria-label="On this page">
+      <span id="playerJumpName" class="lh-pj-name" aria-hidden="true"></span>
+      <div id="playerJumpLinks" class="lh-pj-links"></div>
+    </nav>
+
     <div class="row g-4">
     <div class="col-lg-9 lh-player-main">
 
@@ -66,7 +73,7 @@
 
     <!-- SCORE BUILD-UP (lines mode): how tonight's Hunt Score (shown in the header) was built, step by step from the
          season baseline. Hidden when the engine has no scored prop for this player + stat. js/components/playerHunt.js -->
-    <section id="playerHunt" class="card mb-4 lines-only" data-lh-collapse="hunt" data-lh-collapse-name="Hunt Score" hidden>
+    <section id="playerHunt" class="card mb-4 lines-only" data-lh-jump="Score" data-lh-collapse="hunt" data-lh-collapse-name="Hunt Score" hidden>
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
         <span class="lh-label" data-lh-kicker="Score">Score build-up</span>
       </div>
@@ -74,7 +81,7 @@
     </section>
 
     <!-- 4. PROPS: stat tabs, window + home/away toggles, hit rate, chart with the alt line -->
-    <section class="card mb-4" data-lh-collapse="chart" data-lh-collapse-name="Chart">
+    <section class="card mb-4" data-lh-jump="Chart" data-lh-collapse="chart" data-lh-collapse-name="Chart">
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
         <span class="lh-label" data-lh-kicker="Form"><span class="lines-only">Prop chart</span><span class="research-only">Stat chart</span></span>
       </div>
@@ -114,7 +121,7 @@
 
     <!-- MATCHUP ROW: Same Position (players at this position vs the next opponent's last 10 games, vs this player's line
          and their own norm: js/components/samePosition.js) and Matchup Analysis. Stacked on tablets and phones. -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4" data-lh-jump="Matchup">
       <div class="col-lg-6">
         <section class="card h-100" data-lh-collapse="sameposition" data-lh-collapse-name="Same Position">
           <div class="card-body">
@@ -154,7 +161,7 @@
 
     <!-- 5. GAME LOG: full width, follows the window, home/away and teammate filters. -->
     <!-- GAME LOG: follows the window, home/away and teammate filters. Full width; scrolls sideways on narrow screens, and up/down for long lists. -->
-    <section class="card mb-4" data-lh-collapse="gamelog">
+    <section class="card mb-4" data-lh-jump="Log" data-lh-collapse="gamelog">
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label" data-lh-kicker="History">Game log</span></div>
       <div class="card-body">
         <div class="table-responsive lh-gamelog-scroll">
@@ -197,7 +204,7 @@
     </section>
 
     <!-- 6. THREE EQUAL CARDS: With / Without, Opportunity, Role. h-100 = same height; stacked on tablets and phones. -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4" data-lh-jump="Lineup">
       <div class="col-lg-4">
     <!-- WITH / WITHOUT: click a teammate chip to cycle neutral -> with -> without. js/pages/player.js fills it in. -->
     <section class="card h-100" data-lh-collapse="withwithout">
@@ -251,7 +258,7 @@
     </div>
 
     <!-- 7. SHOT CHART + ZONE MATCHUP: season-level, the window / home-away / teammate filters don't change the Shot Chart. -->
-    <div class="row g-4 mb-5">
+    <div class="row g-4 mb-5" data-lh-jump="Shooting">
       <div class="col-lg-6">
         <section class="card h-100" data-lh-collapse="shotchart">
           <div class="card-body">
@@ -297,7 +304,7 @@
 
     <!-- 6. OTHER PLAYERS: this team / the opponent in the next game. Switches player without going back a page. -->
     <aside class="col-lg-3">
-      <div class="card lh-players-card" data-lh-collapse="players">
+      <div class="card lh-players-card" data-lh-jump="Players" data-lh-collapse="players">
         <div class="card-header py-3">
           <div class="d-flex justify-content-between align-items-center mb-2" data-lh-collapse-head><span class="lh-label" data-lh-kicker="Roster">Players</span></div>
           <div id="playerSideTabs" class="btn-group btn-group-sm lh-window-toggle w-100" role="group" aria-label="Team or opponent"></div>
@@ -308,7 +315,7 @@
       </div>
 
       <!-- INJURY REPORT: who is hurt on this team and the next opponent. Each name opens its description. js/pages/player.js fills it in. -->
-      <div class="card lh-injury-card mt-3" data-lh-collapse="injuries">
+      <div class="card lh-injury-card mt-3" data-lh-jump="Injuries" data-lh-collapse="injuries">
         <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label" data-lh-kicker="Status">Injury report</span></div>
         <div id="injuryList" class="lh-injury-list">
           <div class="text-muted small p-3">Loading…</div>
@@ -358,6 +365,7 @@
   <script src="js/components/share.js"></script>
   <script src="js/components/hunt-score.js"></script>
   <script src="js/components/playerHunt.js"></script>
+  <script src="js/components/playerJump.js"></script>
   <script src="js/components/cardCollapse.js"></script>
   <script src="js/pages/player.js"></script>
 </body>

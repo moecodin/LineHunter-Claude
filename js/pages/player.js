@@ -218,6 +218,9 @@ function renderHeader(injury) {
     </div>`;
 
   if (badge) setUpInjuryPopover(document.getElementById("injuryBadge"), injury);
+  if (typeof setPlayerJumpName === "function") {
+    setPlayerJumpName(`${player.first_name ? `${player.first_name[0]}. ` : ""}${player.last_name}`, player.jersey_number);
+  }
 }
 
 // ---------- 3. Season averages ----------

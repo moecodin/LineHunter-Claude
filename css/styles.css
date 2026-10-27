@@ -5407,6 +5407,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   line-height: 1.1;
   color: var(--lh-strong);
 }
+.lh-ph-pickrow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem; }
 .lh-ph-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; font-size: 0.9rem; color: var(--lh-muted); }
 .lh-ph-add { margin-top: 0.2rem; }
 /* The three reasons: one per line between hairlines */
@@ -5470,3 +5471,57 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-swiss-page #playerToolbar .lh-ptb-value { border-color: var(--lh-border); font-family: var(--lh-font-heading); font-weight: 400; }
 .lh-swiss-page #playerToolbar .lh-ptb-side--over:not(.is-on),
 .lh-swiss-page #playerToolbar .lh-ptb-side--under:not(.is-on) { border-color: var(--lh-border); }
+
+/* ---------- Player page jump bar (#playerJump, js/components/playerJump.js) ----------
+   One row of section links under the name, between a strong rule and a hairline; swipe sideways when they don't fit.
+   It sticks under the navbar (top = the navbar's height, set by the script); stuck, it gets the page color, the short name
+   in front and an underline on the section in view. */
+.lh-pj {
+  position: sticky;
+  top: var(--lh-pj-top, 0px);
+  z-index: 1020;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  background: var(--lh-bg);
+  border-top: 1px solid var(--lh-strong);
+  border-bottom: 1px solid var(--lh-border);
+}
+.lh-pj.is-stuck { border-top-color: transparent; }
+.lh-pj-name {
+  display: none;
+  flex: none;
+  padding-right: 0.75rem;
+  margin-right: 0.25rem;
+  border-right: 1px solid var(--lh-border);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--lh-strong);
+  white-space: nowrap;
+}
+.lh-pj.is-stuck .lh-pj-name:not(:empty) { display: block; }
+.lh-pj-jersey { font-weight: 300; color: var(--lh-muted); }
+.lh-pj-links {
+  display: flex;
+  gap: 1.25rem;
+  min-width: 0;
+  padding-left: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.lh-pj-links::-webkit-scrollbar { display: none; }
+.lh-pj-link {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  color: var(--lh-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.lh-pj-link[hidden] { display: none; }
+.lh-pj-link:hover, .lh-pj-link:focus-visible { color: var(--lh-strong); }
+.lh-pj-link.is-active { color: var(--lh-strong); font-weight: 600; border-bottom-color: var(--lh-strong); }
