@@ -162,19 +162,26 @@ async function loadSlate(date) {
   });
 }
 
-// One line per player per prop (DraftKings first), over/under markets only.
+// One line per player per prop (DraftKings first), over/under markets only, and only markets with at least one price.
+// Each line gets `priced` = which sides some book prices at that exact line; a side no book prices is never scored.
 async function loadLines(games) {
   const lists = await pool(games.map((game) => async () => {
     try { return (await bdl(`/nba/v2/odds/player_props?game_id=${game.id}`)).data; } catch (error) { return []; }
   }), CONFIG.concurrency);
-  const picked = {};
-  lists.flat()
+  const hasPrice = (value) => value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+  const markets = lists.flat()
     .filter((prop) => prop.market && prop.market.type === "over_under" && PROPS[prop.prop_type])
-    .forEach((prop) => {
-      const key = `${prop.player_id}-${prop.prop_type}`;
-      if (!picked[key] || prop.vendor === CONFIG.preferredBook) picked[key] = prop;
-    });
-  return Object.values(picked);
+    .filter((prop) => hasPrice(prop.market.over_odds) || hasPrice(prop.market.under_odds));
+  const picked = {};
+  markets.forEach((prop) => {
+    const key = `${prop.player_id}-${prop.prop_type}`;
+    if (!picked[key] || prop.vendor === CONFIG.preferredBook) picked[key] = prop;
+  });
+  return Object.values(picked).map((entry) => {
+    const same = markets.filter((prop) => prop.player_id === entry.player_id && prop.prop_type === entry.prop_type
+      && Number(prop.line_value) === Number(entry.line_value));
+    return { ...entry, priced: { over: same.some((prop) => hasPrice(prop.market.over_odds)), under: same.some((prop) => hasPrice(prop.market.under_odds)) } };
+  });
 }
 
 async function loadPlayers(ids) {
@@ -653,7 +660,7 @@ async function computeHunts(date) {
     if (!info) return; // fewer than 5 games in total
 
     const sim = runSteps(prop, line, info, ctx);
-    ["over", "under"].forEach((side) => {
+    ["over", "under"].filter((side) => entry.priced[side]).forEach((side) => {
       const scored = scoreSide(side, sim);
       out.push({
         playerId: entry.player_id,
