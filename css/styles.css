@@ -15,35 +15,36 @@
 :root,
 [data-bs-theme="dark"] {
   /* Our colors */
-  --lh-bg: #050506;                 /* page background: near-black */
-  --lh-surface: #071a38;            /* cards: navy */
-  --lh-surface-2: #0b2347;          /* hover / raised parts */
-  --lh-card-bg: rgba(7, 26, 56, 0.55);   /* cards: see-through navy, so the dark page shows through */
-  --lh-card-tint: 0.14;                   /* how much blue the gradient cards start with (0 = none, 1 = solid) */
-  --lh-border: #13305e;             /* lighter navy */
-  --lh-text: #e7e9f3;
-  --lh-muted: #8a92a8;
-  --lh-faint: #93a0bc;              /* a touch lighter than muted (the jersey number) */
-  --lh-strong: #fff;                /* the strongest text: headings, big numbers, names (white here, near-black in light) */
-  --lh-text-rgb: 231, 233, 243;     /* --lh-text as "r, g, b" (chart lines and labels) */
+  --lh-bg: #000000;                 /* page background: near-black */
+  --lh-surface: #0d0c0a;            /* cards: navy */
+  --lh-surface-2: #171512;          /* hover / raised parts */
+  --lh-card-bg: rgba(242, 235, 221, 0.025);   /* cards: see-through navy, so the dark page shows through */
+  --lh-card-tint: 0.04;                   /* how much blue the gradient cards start with (0 = none, 1 = solid) */
+  --lh-border: #26231e;             /* lighter navy */
+  --lh-text: #f2ebdd;
+  --lh-muted: #9a9284;
+  --lh-faint: #aaa294;              /* a touch lighter than muted (the jersey number) */
+  --lh-strong: #f2ebdd;                /* the strongest text: headings, big numbers, names (white here, near-black in light) */
+  --lh-text-rgb: 242, 235, 221;     /* --lh-text as "r, g, b" (chart lines and labels) */
 
-  /* Brand colors: navy #052350, pale blue #d2e0f8, royal indigo #2107a9.
+  /* Swiss restyle (Oct 2026): black + bone (#f2ebdd) here, bone + navy (#052350) in light. Teal / coral are the only colors; the accent is the ink itself.
+     Older note: brand colors navy #052350, pale blue #d2e0f8, royal indigo #2107a9.
      --lh-accent = marks: text, links, underlines, icons, chart lines (pale blue on dark: indigo is too dark to read there).
      --lh-fill   = filled elements: primary buttons, selected pills, active switches (indigo, white text on top). */
-  --lh-accent: #d2e0f8;             /* pale blue: text, underlines, icons, chart lines */
-  --lh-accent-2: #a9c1ee;           /* the other end of accent gradients (progress bars) */
-  --lh-accent-light: #d2e0f8;       /* accent text on dark backgrounds */
-  --lh-accent-rgb: 210, 224, 248;   /* same pale blue as numbers, for faint tints and glows */
-  --lh-logo-ink: #d2e0f8;           /* the logo's letters: pale blue */
-  --lh-slip-bg: #141516;            /* My Hunts drawer */
-  --lh-slip-leg: #1c1e20;           /* a My Hunts ticket */
-  --lh-slip-line: #2b2e32;          /* My Hunts dividers */
-  --lh-pill-bg: #1f2124;             /* the floating My Hunts pill: lighter than the page */
-  --lh-pill-border: #33363b;
-  --lh-fill: #2107a9;               /* indigo: filled elements */
-  --lh-fill-2: #3b22c9;             /* the other end of the fill gradient (buttons) */
-  --lh-fill-rgb: 33, 7, 169;
-  --lh-on-fill: #ffffff;            /* text on a fill */
+  --lh-accent: #f2ebdd;             /* pale blue: text, underlines, icons, chart lines */
+  --lh-accent-2: #d9cfbb;           /* the other end of accent gradients (progress bars) */
+  --lh-accent-light: #f2ebdd;       /* accent text on dark backgrounds */
+  --lh-accent-rgb: 242, 235, 221;   /* same pale blue as numbers, for faint tints and glows */
+  --lh-logo-ink: #f2ebdd;           /* the logo's letters: pale blue */
+  --lh-slip-bg: #0d0c0a;            /* My Hunts drawer */
+  --lh-slip-leg: #171512;           /* a My Hunts ticket */
+  --lh-slip-line: #2c2924;          /* My Hunts dividers */
+  --lh-pill-bg: #171512;             /* the floating My Hunts pill: lighter than the page */
+  --lh-pill-border: #34302a;
+  --lh-fill: #f2ebdd;               /* indigo: filled elements */
+  --lh-fill-2: #f2ebdd;             /* the other end of the fill gradient (buttons) */
+  --lh-fill-rgb: 242, 235, 221;
+  --lh-on-fill: #000000;            /* text on a fill */
 
   /* Division colors (Standings page): one per division, never the over / under teal and coral */
   --lh-div-atlantic: #a78bfa;  --lh-div-central: #60a5fa;  --lh-div-southeast: #fbbf24;
@@ -67,16 +68,16 @@
   --lh-warn: #f5c542;                                       /* small-sample warning */
 
   /* "Ink": the color of faint fills, dividers and soft text on cards (white tints here, dark tints in light mode) */
-  --lh-ink-rgb: 255, 255, 255;
-  --lh-line-rgb: 148, 163, 184;     /* court lines, skeletons */
-  --lh-bg-rgb: 5, 5, 6;             /* the page background as "r, g, b": see-through bars and panels */
-  --lh-surface-rgb: 7, 26, 56;      /* the card surface as "r, g, b" */
-  --lh-deep-rgb: 3, 9, 20;          /* the dark wash behind the homepage carousel slides */
-  --lh-hero-rgb: 33, 7, 169;        /* indigo: second tint of the game header gradient */
-  --lh-hero-from: rgba(5, 35, 80, 0.85);   /* game header gradient: navy ... */
-  --lh-hero-to: rgba(33, 7, 169, 0.32);    /* ... to indigo */
-  --lh-popover-bg: #071a38;
-  --lh-tab-hover: #d2e0f8;
+  --lh-ink-rgb: 242, 235, 221;
+  --lh-line-rgb: 154, 146, 132;     /* court lines, skeletons */
+  --lh-bg-rgb: 0, 0, 0;             /* the page background as "r, g, b": see-through bars and panels */
+  --lh-surface-rgb: 13, 12, 10;      /* the card surface as "r, g, b" */
+  --lh-deep-rgb: 8, 7, 6;          /* the dark wash behind the homepage carousel slides */
+  --lh-hero-rgb: 242, 235, 221;        /* indigo: second tint of the game header gradient */
+  --lh-hero-from: rgba(242, 235, 221, 0.05);   /* game header gradient: navy ... */
+  --lh-hero-to: rgba(242, 235, 221, 0);    /* ... to indigo */
+  --lh-popover-bg: #0d0c0a;
+  --lh-tab-hover: #f2ebdd;
 
   /* Glows and shadows: the colors, and a strength multiplier (1 = as designed; light mode turns them down) */
   --lh-shadow-rgb: 0, 0, 0;
@@ -84,10 +85,10 @@
   --lh-shadow-k: 1;
   --lh-glow-k: 1;
   --lh-tint-k: 1;                   /* strength of the blue washes (game header, etc.) */
-  --lh-team-tint: 0.15;             /* the faint team-color wash on each side of a matchup card */
-  --lh-city-alpha: 0.16;            /* the city watermark letters */
+  --lh-team-tint: 0.08;             /* the faint team-color wash on each side of a matchup card */
+  --lh-city-alpha: 0.09;            /* the city watermark letters */
   --lh-city-shine-keep: 45%;        /* the sweep over the watermark: how much of the team color the light band keeps (the rest is white) */
-  --lh-city-shine-alpha: 60%;       /* ...and how strong the band is */
+  --lh-city-shine-alpha: 35%;       /* ...and how strong the band is */
 
   /* The hover lift on Hit List cards: a faint white glow in dark mode, a soft blue-gray shadow in light mode */
   --lh-lift-shadow: 0 8px 24px rgba(var(--lh-accent-rgb), 0.10);   /* faint pale-blue glow */
@@ -96,20 +97,23 @@
   color-scheme: dark;
 
   /* Our fonts */
-  --lh-font-display: "Barlow Condensed", sans-serif;   /* big numbers, team abbreviations, logo */
-  --lh-font-heading: "Technor", sans-serif;              /* headings and titles (Fontshare) */
-  --lh-font-label: "JetBrains Mono", monospace;        /* tiny caps labels */
-  --lh-font-body: "Satoshi", sans-serif;               /* everything else (Fontshare) */
+  --lh-font-display: "Inter Tight", sans-serif;   /* big numbers, team abbreviations, logo */
+  --lh-font-heading: "Inter Tight", sans-serif;              /* headings and titles (Fontshare) */
+  --lh-font-label: "Inter Tight", sans-serif;        /* tiny caps labels */
+  --lh-font-body: "Inter Tight", sans-serif;               /* everything else (Fontshare) */
 
   /* Point Bootstrap at our values */
+
+  /* Square corners everywhere (Swiss look) */
+  --bs-border-radius: 0; --bs-border-radius-sm: 0; --bs-border-radius-lg: 0; --bs-border-radius-xl: 0; --bs-border-radius-xxl: 0; --bs-border-radius-pill: 0;
   --bs-body-bg: var(--lh-bg);
   --bs-body-color: var(--lh-text);
   --bs-body-font-family: var(--lh-font-body);
   --bs-border-color: var(--lh-border);
   --bs-secondary-color: var(--lh-muted);   /* used by .text-muted */
   --bs-primary-rgb: var(--lh-accent-rgb);  /* used by .text-primary */
-  --bs-link-color-rgb: 210, 224, 248;
-  --bs-link-hover-color-rgb: 236, 242, 253;
+  --bs-link-color-rgb: 242, 235, 221;
+  --bs-link-hover-color-rgb: 255, 255, 255;
 }
 
 
@@ -117,39 +121,39 @@
    A soft off-white page with the faintest lavender tint, white cards with thin light-blue borders, near-black headings,
    dark gray body text, deeper blue for anything active, darker teal / coral for over / under. */
 [data-bs-theme="light"] {
-  --lh-bg: #f6f9fe;
-  --lh-surface: #ffffff;
-  --lh-surface-2: #eef3fc;
-  --lh-card-bg: rgba(255, 255, 255, 0.9);
-  --lh-card-tint: 0.08;
-  --lh-border: #d2e0f8;
-  --lh-text: #24314d;               /* body: dark navy-gray */
-  --lh-muted: #5d6b88;              /* labels: medium gray-blue */
-  --lh-faint: #7080a0;
+  --lh-bg: #f2ebdd;
+  --lh-surface: #f7f2e8;
+  --lh-surface-2: #ebe3d3;
+  --lh-card-bg: rgba(247, 242, 232, 0.9);
+  --lh-card-tint: 0.04;
+  --lh-border: #dcd2be;
+  --lh-text: #1c2a47;               /* body: dark navy-gray */
+  --lh-muted: #4a5878;              /* labels: medium gray-blue */
+  --lh-faint: #5d6a86;
   --lh-strong: #052350;             /* headings, player names, team abbreviations, big numbers: navy */
-  --lh-text-rgb: 36, 49, 77;
+  --lh-text-rgb: 28, 42, 71;
 
-  --lh-accent: #2107a9;             /* royal indigo: links, active tabs, underlines, icons */
-  --lh-accent-2: #4a32c8;
-  --lh-accent-light: #2107a9;       /* indigo text and links: dark enough on white */
-  --lh-accent-rgb: 33, 7, 169;
+  --lh-accent: #052350;             /* royal indigo: links, active tabs, underlines, icons */
+  --lh-accent-2: #1a3a6e;
+  --lh-accent-light: #052350;       /* indigo text and links: dark enough on white */
+  --lh-accent-rgb: 5, 35, 80;
   --lh-logo-ink: #052350;           /* the logo's letters: navy */
-  --lh-slip-bg: #eef3fc;            /* My Hunts drawer: the light raised-card color */
-  --lh-slip-leg: #ffffff;           /* a My Hunts ticket: the light card color */
-  --lh-slip-line: #d2e0f8;          /* My Hunts dividers: the light border */
-  --lh-pill-bg: #ffffff;            /* the floating My Hunts pill: the light card color */
-  --lh-pill-border: #d2e0f8;
-  --lh-fill: #2107a9;               /* filled elements: primary buttons, selected pills, switches */
-  --lh-fill-2: #3b22c9;
-  --lh-fill-rgb: 33, 7, 169;
-  --lh-on-fill: #ffffff;
+  --lh-slip-bg: #ebe3d3;            /* My Hunts drawer: the light raised-card color */
+  --lh-slip-leg: #f7f2e8;           /* a My Hunts ticket: the light card color */
+  --lh-slip-line: #dcd2be;          /* My Hunts dividers: the light border */
+  --lh-pill-bg: #f7f2e8;            /* the floating My Hunts pill: the light card color */
+  --lh-pill-border: #dcd2be;
+  --lh-fill: #052350;               /* filled elements: primary buttons, selected pills, switches */
+  --lh-fill-2: #052350;
+  --lh-fill-rgb: 5, 35, 80;
+  --lh-on-fill: #f2ebdd;
   --lh-div-atlantic: #7c3aed;  --lh-div-central: #2563eb;  --lh-div-southeast: #d97706;
   --lh-div-northwest: #0891b2; --lh-div-pacific: #db2777;  --lh-div-southwest: #64748b;
 
   --lh-over: #138a67;               /* darker teal / coral */
-  --lh-over-text: #0b6b4e;
+  --lh-over-text: #0b6e50;
   --lh-under: #c4471f;
-  --lh-under-text: #a63a14;
+  --lh-under-text: #b4441e;
   --lh-push: #8a8982;
   --lh-over-rgb: 19, 138, 103;
   --lh-under-rgb: 196, 71, 31;
@@ -162,23 +166,23 @@
   --lh-warn: #8a5a00;
 
   --lh-ink-rgb: 5, 35, 80;
-  --lh-line-rgb: 90, 120, 190;
-  --lh-bg-rgb: 246, 249, 254;
-  --lh-surface-rgb: 255, 255, 255;
-  --lh-deep-rgb: 238, 243, 252;
-  --lh-hero-rgb: 210, 224, 248;
-  --lh-hero-from: rgba(210, 224, 248, 0.75);   /* game header gradient: faint pale blue ... */
-  --lh-hero-to: rgba(255, 255, 255, 0.55);     /* ... to white */
-  --lh-popover-bg: #ffffff;
+  --lh-line-rgb: 120, 110, 90;
+  --lh-bg-rgb: 242, 235, 221;
+  --lh-surface-rgb: 247, 242, 232;
+  --lh-deep-rgb: 235, 227, 211;
+  --lh-hero-rgb: 5, 35, 80;
+  --lh-hero-from: rgba(5, 35, 80, 0.05);   /* game header gradient: faint pale blue ... */
+  --lh-hero-to: rgba(5, 35, 80, 0);     /* ... to white */
+  --lh-popover-bg: #f7f2e8;
   --lh-tab-hover: #052350;
 
-  --lh-shadow-rgb: 5, 35, 80;
+  --lh-shadow-rgb: 60, 45, 20;
   --lh-demo-shadow-rgb: 5, 35, 80;
   --lh-shadow-k: 0.25;              /* softer shadows */
   --lh-glow-k: 0.35;                /* much softer glows */
   --lh-tint-k: 0.45;
-  --lh-team-tint: 0.2;              /* 15% is much fainter on white: these are clearly visible but still subtle */
-  --lh-city-alpha: 0.26;
+  --lh-team-tint: 0.1;              /* 15% is much fainter on white: these are clearly visible but still subtle */
+  --lh-city-alpha: 0.12;
   --lh-city-shine-keep: 100%;       /* light page: a lighter band would vanish, so the band is the team color itself, a bit stronger */
   --lh-city-shine-alpha: 70%;
 
@@ -188,20 +192,23 @@
   color-scheme: light;
 
   /* Our fonts */
-  --lh-font-display: "Barlow Condensed", sans-serif;   /* big numbers, team abbreviations, logo */
-  --lh-font-heading: "Technor", sans-serif;              /* headings and titles (Fontshare) */
-  --lh-font-label: "JetBrains Mono", monospace;        /* tiny caps labels */
-  --lh-font-body: "Satoshi", sans-serif;               /* everything else (Fontshare) */
+  --lh-font-display: "Inter Tight", sans-serif;   /* big numbers, team abbreviations, logo */
+  --lh-font-heading: "Inter Tight", sans-serif;              /* headings and titles (Fontshare) */
+  --lh-font-label: "Inter Tight", sans-serif;        /* tiny caps labels */
+  --lh-font-body: "Inter Tight", sans-serif;               /* everything else (Fontshare) */
 
   /* Point Bootstrap at our values */
+
+  /* Square corners everywhere (Swiss look) */
+  --bs-border-radius: 0; --bs-border-radius-sm: 0; --bs-border-radius-lg: 0; --bs-border-radius-xl: 0; --bs-border-radius-xxl: 0; --bs-border-radius-pill: 0;
   --bs-body-bg: var(--lh-bg);
   --bs-body-color: var(--lh-text);
   --bs-body-font-family: var(--lh-font-body);
   --bs-border-color: var(--lh-border);
   --bs-secondary-color: var(--lh-muted);   /* used by .text-muted */
   --bs-primary-rgb: var(--lh-accent-rgb);  /* used by .text-primary */
-  --bs-link-color-rgb: 33, 7, 169;
-  --bs-link-hover-color-rgb: 5, 35, 80;
+  --bs-link-color-rgb: 5, 35, 80;
+  --bs-link-hover-color-rgb: 28, 42, 71;
 }
 
 
@@ -210,6 +217,7 @@
 body {
   min-height: 100vh;
   background-color: var(--lh-bg);
+  font-variant-numeric: tabular-nums lining-nums;   /* numbers line up in columns */
 }
 
 /* Page width: full screen (container-fluid) with a small side gutter (px-3 / px-lg-4 in the HTML),
@@ -289,7 +297,7 @@ html {
 .lh-nav-toggle {
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
   background: rgba(var(--lh-ink-rgb), 0.02);
-  border-radius: 999px;
+  border-radius: 0;
   width: 42px;
   height: 42px;
   padding: 0;
@@ -378,7 +386,7 @@ html {
 .lh-drawer-close {
   width: 38px;
   height: 38px;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.9);
   background: transparent;
   color: var(--lh-accent-light);
@@ -417,7 +425,7 @@ html {
   min-height: 52px;
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--lh-border);
-  border-radius: 16px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.02);
   text-decoration: none;
   color: var(--lh-text);
@@ -469,8 +477,8 @@ html {
 .card {
   --bs-card-bg: var(--lh-card-bg);
   --bs-card-border-color: var(--lh-border);
-  --bs-card-border-radius: 16px;
-  --bs-card-inner-border-radius: 15px;
+  --bs-card-border-radius: 0;
+  --bs-card-inner-border-radius: 0;
   --bs-card-cap-bg: transparent;     /* card headers and footers blend in */
 }
 
@@ -526,7 +534,7 @@ html {
 .btn-lh-primary {
   background: linear-gradient(135deg, var(--lh-fill) 0%, var(--lh-fill-2) 100%);
   border: none;
-  border-radius: 999px;
+  border-radius: 0;
   padding: 0.8rem 1.4rem;
   font-family: var(--lh-font-label);
   font-size: 0.76rem;
@@ -545,7 +553,7 @@ html {
 .lh-home-preview {
   background: linear-gradient(160deg, rgba(var(--lh-accent-rgb), var(--lh-card-tint)), var(--lh-card-bg));
   border: 1px solid var(--lh-border);
-  border-radius: 22px;
+  border-radius: 0;
   padding: 1.2rem;
   min-height: 100%;
   box-shadow: inset 0 0 0 1px rgba(var(--lh-ink-rgb), 0.04);
@@ -564,7 +572,7 @@ html {
   padding: 0.7rem 0.8rem;
   background: rgba(var(--lh-ink-rgb), 0.02);
   border: 1px solid var(--lh-border);
-  border-radius: 12px;
+  border-radius: 0;
   margin-bottom: 0.7rem;
 }
 
@@ -582,7 +590,7 @@ html {
   padding: 0.45rem 0.65rem;
   font-size: 0.74rem;
   font-family: var(--lh-font-label);
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(var(--lh-accent-rgb), 0.1);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.38);
   color: var(--lh-strong);
@@ -619,7 +627,7 @@ html {
   min-height: 30rem;
   padding: 2rem 1.4rem 1rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.18);
-  border-radius: 22px;
+  border-radius: 0;
   background: linear-gradient(180deg, rgba(var(--lh-deep-rgb), 0.28) 0%, rgba(var(--lh-deep-rgb), 0.0) 18%, rgba(var(--lh-deep-rgb), 0.1) 100%);
 }
 
@@ -696,7 +704,7 @@ html {
   min-height: 2rem;
   padding: 0.5rem 0.9rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.5);
-  border-radius: 999px;
+  border-radius: 0;
   color: var(--lh-accent-light);
   font-family: var(--lh-font-label);
   font-size: 0.7rem;
@@ -708,7 +716,7 @@ html {
   width: min(100%, 380px);
   background: var(--lh-card-bg);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
-  border-radius: 24px;
+  border-radius: 0;
   padding: 1rem 1rem 0.9rem;
   box-shadow: 0 24px 50px rgba(var(--lh-demo-shadow-rgb), calc(0.4 * var(--lh-shadow-k))), 0 0 0 1px rgba(var(--lh-accent-rgb), 0.08), 0 0 26px rgba(var(--lh-accent-rgb), calc(0.1 * var(--lh-glow-k)));
   position: relative;
@@ -771,7 +779,7 @@ html {
   justify-content: center;
   padding: 0.35rem 0.7rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.8);
-  border-radius: 999px;
+  border-radius: 0;
   color: var(--lh-accent-light);
   font-family: var(--lh-font-label);
   font-size: 0.62rem;
@@ -793,7 +801,7 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.8rem;
+  border-radius: 0;
   color: #0c1220;
   font-family: var(--lh-font-label);
   font-size: 0.65rem;
@@ -825,7 +833,7 @@ html {
 .lh-demo-stat-box {
   background: rgba(var(--lh-ink-rgb), 0.02);
   border: 1px solid rgba(var(--lh-ink-rgb), 0.08);
-  border-radius: 12px;
+  border-radius: 0;
   padding: 0.7rem 0.65rem 0.6rem;
 }
 
@@ -853,7 +861,7 @@ html {
   width: 100%;
   height: 6px;
   background: rgba(var(--lh-ink-rgb), 0.08);
-  border-radius: 999px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -861,7 +869,7 @@ html {
   display: block;
   height: 100%;
   background: linear-gradient(90deg, var(--lh-accent-light) 0%, var(--lh-accent) 100%);
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 .lh-demo-row-small {
@@ -871,7 +879,7 @@ html {
   gap: 0.8rem;
   padding: 0.7rem 0.7rem;
   border: 1px solid rgba(var(--lh-ink-rgb), 0.08);
-  border-radius: 12px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.02);
   margin-bottom: 0.55rem;
   font-size: 0.8rem;
@@ -900,7 +908,7 @@ html {
 .lh-demo-button {
   width: 100%;
   border: none;
-  border-radius: 12px;
+  border-radius: 0;
   background: linear-gradient(90deg, var(--lh-fill) 0%, var(--lh-fill-2) 100%);
   color: var(--lh-on-fill);
   padding: 0.9rem 1rem;
@@ -920,7 +928,7 @@ html {
 .lh-carousel-indicators [data-bs-target] {
   width: 0.7rem;
   height: 0.7rem;
-  border-radius: 999px;
+  border-radius: 0;
   background-color: rgba(var(--lh-ink-rgb), 0.4);
   margin: 0 0.3rem;
   border: none;
@@ -938,7 +946,7 @@ html {
   height: 2.5rem;
   top: 50%;
   transform: translateY(-50%);
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
   background: rgba(var(--lh-surface-rgb), 0.68);
   color: var(--lh-strong);
@@ -1013,7 +1021,7 @@ html {
 .lh-step-card {
   background: var(--lh-card-bg);
   border: 1px solid var(--lh-border);
-  border-radius: 18px;
+  border-radius: 0;
   padding: 1.25rem;
   height: 100%;
 }
@@ -1136,7 +1144,7 @@ html {
   --bs-btn-hover-border-color: rgba(var(--lh-accent-rgb), 0.5);
   --bs-btn-active-color: var(--lh-strong);
   --bs-btn-active-bg: var(--lh-surface-2);
-  border-radius: 999px;
+  border-radius: 0;
   font-family: var(--lh-font-label);
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -1239,10 +1247,10 @@ html {
   border-radius: 0;
 }
 .lh-window-toggle .btn-ghost:first-child {
-  border-radius: 999px 0 0 999px;
+  border-radius: 0;
 }
 .lh-window-toggle .btn-ghost:last-child {
-  border-radius: 0 999px 999px 0;
+  border-radius: 0;
 }
 .lh-window-toggle .btn-ghost.active {
   color: var(--lh-on-fill);
@@ -1259,7 +1267,7 @@ html {
   --bs-btn-hover-border-color: var(--lh-accent);
   --bs-btn-active-color: var(--lh-strong);
   --bs-btn-active-bg: rgba(var(--lh-accent-rgb), 0.25);
-  border-radius: 999px;
+  border-radius: 0;
   font-family: var(--lh-font-label);
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -1277,7 +1285,7 @@ html {
   display: inline-flex;
   align-items: center;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.45);
-  border-radius: 999px;
+  border-radius: 0;
   overflow: hidden;
 }
 .lh-alt-btn {
@@ -1334,7 +1342,7 @@ html {
   top: 0;
   transform: translateY(-50%);
   color: var(--lh-muted);
-  font: 10px "JetBrains Mono", monospace;
+  font: 10px "Inter Tight", sans-serif;
 }
 .lh-bars-tick.is-leaving { opacity: 0; }
 .lh-bars-line,
@@ -1363,7 +1371,7 @@ html {
   right: 2px;
   bottom: 3px;
   color: rgba(var(--lh-text-rgb), 0.55);
-  font: 500 10px "JetBrains Mono", monospace;
+  font: 500 10px "Inter Tight", sans-serif;
 }
 .lh-bar {
   position: absolute;
@@ -1392,7 +1400,7 @@ html {
   margin-bottom: 4px;
   transform: translateX(-50%);
   color: var(--lh-text);
-  font: 700 12px Satoshi, sans-serif;
+  font: 700 12px "Inter Tight", sans-serif;
   transition: opacity 160ms;
 }
 .lh-bar-label {
@@ -1405,7 +1413,7 @@ html {
   flex-direction: column;
   align-items: center;
   color: var(--lh-muted);
-  font: 10px/1.3 "JetBrains Mono", monospace;
+  font: 10px/1.3 "Inter Tight", sans-serif;
   white-space: nowrap;
   transition: opacity 160ms;
 }
@@ -1461,7 +1469,7 @@ html {
   padding: 0.5rem 0.65rem;
   background: rgba(var(--lh-bg-rgb), 0.95);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.45);
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 0.78rem;
   line-height: 1.45;
   color: var(--lh-text);
@@ -1493,7 +1501,7 @@ html {
   display: inline-block;
   padding: 0 0.4rem;
   border: 1px solid var(--lh-border);
-  border-radius: 999px;
+  border-radius: 0;
   color: var(--lh-muted);
   font-size: 0.65rem;
   font-weight: 600;
@@ -1537,7 +1545,7 @@ html {
   flex: 1 1 0;          /* every bar gets an equal share of the width */
   max-width: 10px;
   min-width: 1px;
-  border-radius: 2px 2px 0 0;
+  border-radius: 0;
 }
 .lh-mini-bar--over  { background: var(--lh-over); }
 .lh-mini-bar--under { background: var(--lh-under); }
@@ -1708,7 +1716,7 @@ a.lh-top-row:focus-visible {
 /* Injury badge: red OUT, yellow Q / Doubtful. A button, so tap and keyboard open the details. */
 .lh-injury-badge {
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: 0;
   background: transparent;
   padding: 0.2rem 0.65rem;
   font-family: var(--lh-font-label);
@@ -1754,7 +1762,7 @@ a.lh-top-row:focus-visible {
 .lh-avg-box {
   background: var(--lh-card-bg);
   border: 1px solid var(--lh-border);
-  border-radius: 14px;
+  border-radius: 0;
   padding: 0.75rem 0.9rem;
   min-height: 4.4rem;
 }
@@ -1827,7 +1835,7 @@ a.lh-top-row:focus-visible {
   background: rgba(var(--lh-accent-rgb), 0.15);
 }
 .lh-players-line {
-  font-family: var(--lh-font-mono, "JetBrains Mono", monospace);
+  font-family: var(--lh-font-label);
   font-size: 0.85rem;
 }
 @media (max-width: 991.98px) {
@@ -1855,7 +1863,7 @@ a.lh-top-row:focus-visible {
   width: 100%;
   height: 42px;
   padding: 0 1rem 0 2.4rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
   background: rgba(var(--lh-ink-rgb), 0.02);
   color: var(--lh-text);
@@ -1874,7 +1882,7 @@ a.lh-top-row:focus-visible {
   z-index: 1050;
   background: var(--lh-surface);
   border: 1px solid var(--lh-border);
-  border-radius: 12px;
+  border-radius: 0;
   overflow: hidden;
   box-shadow: 0 12px 32px rgba(var(--lh-shadow-rgb), calc(0.5 * var(--lh-shadow-k)));
 }
@@ -1941,7 +1949,7 @@ a.lh-top-row:focus-visible {
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.75rem 0.25rem 0.3rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid var(--lh-border);
   background: transparent;
   color: var(--lh-text);
@@ -1990,7 +1998,7 @@ a.lh-top-row:focus-visible {
   display: inline-block;
   margin-top: 0.25rem;
   padding: 0.15rem 0.6rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid var(--lh-warn);
   color: var(--lh-warn);
   font-size: 0.75rem;
@@ -2017,7 +2025,7 @@ a.lh-top-row:focus-visible {
   .lh-top-compact .lh-top-graph { justify-self: end; }
 }
 
-/* ---------- Headings: Technor ----------
+/* ---------- Headings: Inter Tight ----------
    Page titles, card titles and section headings. Team abbreviations (div.lh-display), the logo, big stat
    numbers, labels and body text keep their own fonts. Placed late in the file, so it wins over the earlier rules. */
 h1.lh-display,
@@ -2056,7 +2064,7 @@ h3.lh-display,
   flex-direction: column;
   height: 100%;
   border: 1px solid var(--lh-border);
-  border-radius: 12px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.02);
   overflow: hidden;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -2092,7 +2100,7 @@ h3.lh-display,
   transform: translateY(-50%);
   padding: 0.2rem 0.35rem;
   border: 0;
-  border-radius: 6px;
+  border-radius: 0;
   background: none;
   color: var(--lh-muted);
 }
@@ -2445,7 +2453,7 @@ body > main {
 .lh-demo-toggle {
   display: inline-flex;
   border: 1px solid var(--lh-border);
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   font-family: var(--lh-font-label);
   font-size: 0.6rem;
@@ -2527,7 +2535,7 @@ a.lh-demo-button:focus-visible {
 .lh-diet {
   display: flex;
   height: 2.6rem;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   gap: 2px;
 }
@@ -2573,7 +2581,7 @@ a.lh-demo-button:focus-visible {
 }
 .lh-zm-pill {
   padding: 0.25rem 0.8rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid;
   font-family: var(--lh-font-label);
   font-size: 0.75rem;
@@ -2616,14 +2624,14 @@ a.lh-demo-button:focus-visible {
 .lh-zm-bar {
   flex: 1;
   height: 6px;
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.08);
   overflow: hidden;
 }
 .lh-zm-bar > span {
   display: block;
   height: 100%;
-  border-radius: 999px;
+  border-radius: 0;
   background: linear-gradient(90deg, var(--lh-accent-light) 0%, var(--lh-accent) 100%);
 }
 .lh-zm-allowed { font-family: var(--lh-font-label); font-size: 0.75rem; white-space: nowrap; }
@@ -2633,7 +2641,7 @@ a.lh-demo-button:focus-visible {
 .lh-zm-rank {
   justify-self: end;
   padding: 0.1rem 0.45rem;
-  border-radius: 6px;
+  border-radius: 0;
   border: 1px solid var(--lh-push);
   font-family: var(--lh-font-label);
   font-size: 0.7rem;
@@ -2648,7 +2656,7 @@ a.lh-demo-button:focus-visible {
 .lh-ma { display: flex; flex-direction: column; gap: 1rem; }
 .lh-ma-flag {
   display: flex; align-items: flex-start; gap: 0.6rem;
-  padding: 0.6rem 0.75rem; border-radius: 8px; font-size: 0.82rem; line-height: 1.4;
+  padding: 0.6rem 0.75rem; border-radius: 0; font-size: 0.82rem; line-height: 1.4;
   color: var(--lh-muted); background: rgba(var(--lh-ink-rgb), 0.03); border: 1px solid var(--lh-border);
 }
 .lh-ma-flag b { color: var(--lh-strong); font-weight: 700; }
@@ -2656,7 +2664,7 @@ a.lh-demo-button:focus-visible {
 .lh-ma-flag.is-gtd { color: var(--lh-text); background: rgba(var(--lh-dtd-rgb), 0.08); border-color: rgba(var(--lh-dtd-rgb), 0.45); }
 .lh-ma-badge {
   flex: none; font-family: var(--lh-font-label); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
-  border-radius: 4px; padding: 0.1rem 0.4rem; margin-top: 0.1rem;
+  border-radius: 0; padding: 0.1rem 0.4rem; margin-top: 0.1rem;
 }
 .lh-ma-badge.is-ok { color: var(--lh-over-text); border: 1px solid var(--lh-over); }
 .lh-ma-badge.is-out { color: #fff; background: var(--lh-out); }
@@ -2676,7 +2684,7 @@ a.lh-demo-button:focus-visible {
 .lh-ma-tape { display: flex; flex-direction: column; gap: 0.25rem; }
 .lh-ma-row {
   display: grid; grid-template-columns: 2.6rem 1fr 3rem 1fr 2.6rem; align-items: center; gap: 0.4rem;
-  padding: 0.1rem 0.25rem; border-radius: 6px; font-variant-numeric: tabular-nums;
+  padding: 0.1rem 0.25rem; border-radius: 0; font-variant-numeric: tabular-nums;
 }
 .lh-ma-row.is-selected { background: rgba(var(--lh-accent-rgb), 0.07); }
 .lh-ma-row.is-selected .lh-ma-label { color: var(--lh-accent); }
@@ -2684,12 +2692,12 @@ a.lh-demo-button:focus-visible {
 .lh-ma-val.is-right { text-align: right; }
 .lh-ma-val.is-win { color: var(--lh-strong); font-weight: 800; }
 .lh-ma-label { font-family: var(--lh-font-label); font-size: 0.62rem; letter-spacing: 0.05em; text-align: center; color: var(--lh-muted); }
-.lh-ma-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: rgba(var(--lh-accent-rgb), 0.06); }
+.lh-ma-bar { display: flex; height: 6px; border-radius: 0; overflow: hidden; background: rgba(var(--lh-accent-rgb), 0.06); }
 .lh-ma-bar.is-left { justify-content: flex-end; }
-.lh-ma-bar > i { display: block; height: 100%; border-radius: 3px; background: rgba(var(--lh-push-rgb), 0.55); }
+.lh-ma-bar > i { display: block; height: 100%; border-radius: 0; background: rgba(var(--lh-push-rgb), 0.55); }
 .lh-ma-bar > i.is-win { background: var(--lh-accent); }
 .lh-ma-battle { display: flex; flex-direction: column; }
-.lh-ma-split { display: flex; gap: 2px; height: 22px; border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem; }
+.lh-ma-split { display: flex; gap: 2px; height: 22px; border-radius: 0; overflow: hidden; margin-bottom: 0.5rem; }
 .lh-ma-split > div {
   display: flex; align-items: center; min-width: 2.6rem; padding: 0 0.5rem; white-space: nowrap;
   font-family: var(--lh-font-display); font-weight: 700; font-size: 0.85rem;
@@ -2765,10 +2773,10 @@ a.lh-demo-button:focus-visible {
   position: relative;
   flex: 1;
   height: 8px;
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.08);
 }
-.lh-sp-fill { display: block; height: 100%; border-radius: 999px; background: var(--lh-push); }
+.lh-sp-fill { display: block; height: 100%; border-radius: 0; background: var(--lh-push); }
 .lh-sp-fill.is-over  { background: var(--lh-over); }
 .lh-sp-fill.is-under { background: var(--lh-under); }
 .lh-sp-tick { /* the line */
@@ -2777,7 +2785,7 @@ a.lh-demo-button:focus-visible {
   width: 2px;
   height: 16px;
   margin-left: -1px;
-  border-radius: 1px;
+  border-radius: 0;
   background: var(--lh-strong);
   opacity: 0.6;
 }
@@ -2804,7 +2812,7 @@ a.lh-demo-button:focus-visible {
   width: 1.1rem;
   height: 1.1rem;
   margin-left: 0.2rem;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 0.9rem;
   vertical-align: middle;
 }
@@ -2879,7 +2887,7 @@ a.lh-demo-button:focus-visible {
   display: inline-block;
   padding: 0 0.35rem;
   border: 1px solid var(--lh-under);
-  border-radius: 6px;
+  border-radius: 0;
   font-family: var(--lh-font-label);
   font-size: 0.6rem;
   color: var(--lh-under-text);
@@ -2952,7 +2960,7 @@ a.lh-demo-button:focus-visible {
 .lh-tc-bar {
   display: flex;
   height: 0.7rem;
-  border-radius: 4px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.05);
 }
 .lh-tc-bar.is-away { justify-content: flex-end; } /* grows LEFT from the center */
@@ -2960,7 +2968,7 @@ a.lh-demo-button:focus-visible {
 .lh-tc-bar > span {
   display: block;
   height: 100%;
-  border-radius: 4px;
+  border-radius: 0;
 }
 .lh-tc-bar > .is-over    { background: var(--lh-over); }
 .lh-tc-bar > .is-under   { background: var(--lh-under); }
@@ -2968,7 +2976,7 @@ a.lh-demo-button:focus-visible {
 .lh-tc-rank {
   padding: 0 0.35rem;
   border: 1px solid var(--lh-push);
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 0.62rem;
   color: var(--lh-muted);
   cursor: help;
@@ -3035,7 +3043,7 @@ a.lh-demo-button:focus-visible {
 .lh-inj-badge {
   padding: 0.05rem 0.5rem;
   border: 1px solid currentColor;
-  border-radius: 999px;
+  border-radius: 0;
   font-family: var(--lh-font-label);
   font-size: 0.62rem;
   font-weight: 700;
@@ -3091,7 +3099,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-mode-badge {
   padding: 0.15rem 0.6rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.6);
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(var(--lh-accent-rgb), 0.15);
   color: var(--lh-accent-light);
   font-family: var(--lh-font-label);
@@ -3140,7 +3148,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 /* "New" badge next to the research mode link */
 .lh-new-badge {
   padding: 0.05rem 0.45rem;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--lh-fill);
   color: var(--lh-on-fill);
   font-family: var(--lh-font-label);
@@ -3182,7 +3190,7 @@ body:not(.research-mode) .research-only { display: none !important; }
    team's secondary color where the clash rule applies); --tc-text = that color brightened for text. js/data/teams.js sets both. */
 .lh-team-badge {
   display: inline-block;
-  font-family: var(--lh-font-display); /* Barlow Condensed, like the team abbreviations on the matchup cards */
+  font-family: var(--lh-font-display); /* like the team abbreviations on the matchup cards */
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -3226,7 +3234,8 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-city-mark.is-away { left: 0; }
 .lh-city-mark.is-home { right: 0; }
 .lh-city-text {
-  font-family: "Comico", sans-serif;
+  font-family: var(--lh-font-heading);
+  font-weight: 800;
   font-size: 24px;           /* js/data/teams.js refits it so the whole word fits the card height */
   line-height: 1;
   letter-spacing: 0.04em;
@@ -3432,7 +3441,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   --bs-offcanvas-bg: var(--lh-bg);
   --bs-offcanvas-border-color: var(--lh-border);
   max-height: 80vh;
-  border-radius: 16px 16px 0 0;
+  border-radius: 0;
   padding-bottom: env(safe-area-inset-bottom);
 }
 .lh-sheet .lh-search-results { position: static; margin-top: 0.5rem; box-shadow: none; } /* the results list sits in the page flow here */
@@ -3452,7 +3461,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-soon-badge {
   padding: 0.1rem 0.5rem;
   border: 1px solid var(--lh-border);
-  border-radius: 999px;
+  border-radius: 0;
   font-family: var(--lh-font-label);
   font-size: 0.58rem;
   letter-spacing: 0.06em;
@@ -3524,7 +3533,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-soon-tag {
   padding: 0 0.35rem;
   border: 1px solid var(--lh-border);
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 0.5rem;
   letter-spacing: 0.06em;
   line-height: 1.5;
@@ -3535,9 +3544,10 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-nfl-icon { font-size: 3rem; line-height: 1; margin-bottom: 0.75rem; }
 .lh-nfl-headline {
   margin: 0 0 0.5rem;
-  font-family: "Comico", var(--lh-font-heading), sans-serif;
+  font-family: var(--lh-font-heading);
   font-size: clamp(2.4rem, 1.6rem + 3.5vw, 3.8rem);
-  font-weight: 400;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   line-height: 1;
   color: var(--lh-strong);
 }
@@ -3663,7 +3673,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   margin-bottom: 0.5rem;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--lh-border);   /* (replaces the old thin divider between rows) */
-  border-radius: 12px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.02);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
@@ -3695,8 +3705,8 @@ body:not(.research-mode) .research-only { display: none !important; }
 #top-hit-rates > .card,
 #hotPlayers.card {
   --bs-card-bg: rgba(var(--lh-ink-rgb), 0.02);
-  --bs-card-border-radius: 12px;
-  --bs-card-inner-border-radius: 11px;
+  --bs-card-border-radius: 0;
+  --bs-card-inner-border-radius: 0;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 @media (hover: hover) {
@@ -3720,7 +3730,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 .lh-top-controls[hidden], .lh-top-chips[hidden] { display: none; }
 .lh-top-controls .dropdown { position: relative; }
-.lh-top-ctl { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 999px; }
+.lh-top-ctl { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 0; }
 
 /* Filter / Sort dropdowns (Bootstrap dropdown menus, anchored under their own button): frosted glass in the card's colors.
    The card background (--lh-bg-rgb) at 78%, blurred behind; browsers without backdrop-filter get it fully opaque. */
@@ -3730,13 +3740,13 @@ body:not(.research-mode) .research-only { display: none !important; }
   --bs-dropdown-padding-y: 0.75rem;
   --bs-dropdown-color: var(--lh-strong);
   --bs-dropdown-border-color: var(--lh-border);
-  --bs-dropdown-border-radius: 12px;
+  --bs-dropdown-border-radius: 0;
   --bs-dropdown-box-shadow: var(--lh-lift-shadow);
   --bs-dropdown-zindex: 1050;
   min-width: 16rem;
   background-color: rgb(var(--lh-bg-rgb));   /* the card's own (page) background, not the old navy surface */
   border: 1px solid var(--lh-border);
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: var(--lh-lift-shadow);
 }
 @supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
@@ -3762,13 +3772,13 @@ body:not(.research-mode) .research-only { display: none !important; }
   flex: 1 1 auto;
   padding: 0.3rem 0.75rem;
   border: 1px solid var(--lh-border);
-  border-radius: 999px;
+  border-radius: 0;
   background: transparent;
   color: var(--lh-text, inherit);
   font-size: 0.85rem;
   text-align: center;
 }
-.lh-top-opts--list .lh-top-opt { text-align: left; border-radius: 8px; padding: 0.5rem 0.75rem; }
+.lh-top-opts--list .lh-top-opt { text-align: left; border-radius: 0; padding: 0.5rem 0.75rem; }
 .lh-top-opt.active {
   color: var(--lh-on-fill);
   background: var(--lh-fill);
@@ -3782,7 +3792,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-top-chip {
   padding: 0.15rem 0.6rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.5);
-  border-radius: 999px;
+  border-radius: 0;
   background: rgba(var(--lh-accent-rgb), 0.12);
   color: var(--lh-strong);
   font-size: 0.78rem;
@@ -3833,7 +3843,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   display: block;
   padding: 0;
   border: 0;
-  border-radius: 12px;
+  border-radius: 0;
   background: none;
   box-shadow: none;
 }
@@ -3844,7 +3854,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   grid-template-columns: var(--tk-stub) minmax(0, 1fr);
   align-items: stretch;
   border: 1px solid var(--tk-line);
-  border-radius: 12px;
+  border-radius: 0;
   background-origin: border-box;
   background-image:
     radial-gradient(circle at var(--tk-n1x) var(--tk-n1y), transparent var(--tk-r), var(--tk-line) var(--tk-r), var(--tk-line) calc(var(--tk-r) + 1px), transparent calc(var(--tk-r) + 1px)),
@@ -4080,7 +4090,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   position: relative;
   padding: 0.75rem 0.9rem 0.5rem;
   border: 1px solid var(--lh-border);
-  border-radius: 3px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.02);
 }
 .lh-st-card::before {          /* the triangle tab, top-left */
@@ -4635,13 +4645,13 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 @media (min-width: 768px) { .lh-ticket-main { grid-template-columns: minmax(0, 13rem) 2.75rem 140px minmax(0, 1fr); grid-template-areas: "player count graph ."; gap: 0.25rem 0.6rem; } }
 .lh-top-linectl { display: flex; align-items: center; gap: 0.75rem; position: static; margin: 0; flex-wrap: wrap; }
 .lh-top-addwrap > .lh-top-linectl { margin: 0.35rem 0 0.2rem 1rem; }
-.lh-top-step { display: inline-flex; align-items: stretch; height: 30px; border: 1px solid var(--lh-border); border-radius: 6px; overflow: hidden; }
+.lh-top-step { display: inline-flex; align-items: stretch; height: 30px; border: 1px solid var(--lh-border); border-radius: 0; overflow: hidden; }
 .lh-top-stepbtn { width: 28px; border: 0; background: none; color: var(--lh-strong); font-size: 1.05rem; line-height: 1; cursor: pointer; }
 .lh-top-stepbtn:hover:not(:disabled), .lh-top-stepbtn:focus-visible { background: rgba(var(--lh-accent-rgb), 0.12); }
 .lh-top-stepbtn:disabled { opacity: 0.35; cursor: default; }
 .lh-top-line { min-width: 3rem; display: flex; align-items: center; justify-content: center; border-left: 1px solid var(--lh-border); border-right: 1px solid var(--lh-border); font-family: var(--lh-font-display); font-size: 1rem; font-weight: 700; color: var(--lh-strong); }
 .lh-top-sides { display: inline-flex; gap: 6px; }
-.lh-top-sidebtn { height: 30px; padding: 0 0.7rem; border: 1px solid var(--lh-border); border-radius: 6px; background: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
+.lh-top-sidebtn { height: 30px; padding: 0 0.7rem; border: 1px solid var(--lh-border); border-radius: 0; background: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
 .lh-top-sidebtn--over { color: var(--lh-over-text); border-color: var(--lh-over); }
 .lh-top-sidebtn--under { color: var(--lh-under-text); border-color: var(--lh-under); }
 .lh-top-sidebtn--over.is-on { background: var(--lh-over); color: #fff; }
@@ -4679,7 +4689,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-top-search[hidden] { display: none; }
 .lh-top-search-input {
   width: 100%; height: 36px; padding: 0 2.2rem 0 2.15rem;
-  border: 1px solid var(--lh-border); border-radius: 8px;
+  border: 1px solid var(--lh-border); border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.04); color: var(--lh-text);
   font-size: 0.9rem;
 }
@@ -4689,7 +4699,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-top-search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--lh-muted); font-size: 0.85rem; pointer-events: none; }
 .lh-top-search-clear {
   position: absolute; right: 0.3rem; top: 50%; transform: translateY(-50%);
-  width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--lh-muted); cursor: pointer;
+  width: 28px; height: 28px; border: 0; border-radius: 0; background: none; color: var(--lh-muted); cursor: pointer;
 }
 .lh-top-search-clear:hover, .lh-top-search-clear:focus-visible { color: var(--lh-strong); background: rgba(var(--lh-accent-rgb), 0.12); }
 @media (max-width: 575.98px) {
@@ -4787,7 +4797,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   margin-left: 0.5rem;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 0;
   background: none;
   color: var(--lh-muted);
   font-size: 0.8rem;
@@ -4821,13 +4831,13 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-mx-field { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
 .lh-mx-search { max-width: none; margin: 0; }
 .lh-mx-search .lh-search-input { height: 38px; }
-.lh-mx-select { height: 38px; border-radius: 999px; }
+.lh-mx-select { height: 38px; border-radius: 0; }
 .lh-mx-result { width: 100%; border: 0; background: transparent; text-align: left; }
 .lh-mx-filters { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; }
 .lh-mx-sections { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; padding-top: 0.75rem; border-top: 1px dashed var(--lh-border); }
 .lh-mx-chip {
   display: inline-flex; align-items: center; gap: 0.3rem;
-  padding: 0.25rem 0.7rem; border-radius: 999px;
+  padding: 0.25rem 0.7rem; border-radius: 0;
   border: 1px solid var(--lh-border); background: transparent; color: var(--lh-muted);
   font-family: var(--lh-font-label); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
 }
@@ -4854,8 +4864,8 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-mx-play-name { display: flex; flex-direction: column; min-width: 0; }
 .lh-mx-play-name b { font-weight: 600; color: var(--lh-strong); font-size: 0.88rem; }
 .lh-mx-play-name span, .lh-mx-play-eff span, .lh-mx-play-def span { font-size: 0.7rem; color: var(--lh-muted); }
-.lh-mx-play-bar { height: 6px; border-radius: 3px; background: rgba(var(--lh-accent-rgb), 0.06); overflow: hidden; }
-.lh-mx-play-bar > i { display: block; height: 100%; border-radius: 3px; background: var(--lh-accent); }
+.lh-mx-play-bar { height: 6px; border-radius: 0; background: rgba(var(--lh-accent-rgb), 0.06); overflow: hidden; }
+.lh-mx-play-bar > i { display: block; height: 100%; border-radius: 0; background: var(--lh-accent); }
 .lh-mx-play-eff, .lh-mx-play-def { font-family: var(--lh-font-display); font-weight: 700; font-size: 1rem; color: var(--lh-text); line-height: 1.15; }
 .lh-mx-play-eff span, .lh-mx-play-def span { display: block; font-family: var(--lh-font-body, inherit); font-weight: 400; }
 
@@ -4868,14 +4878,14 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-mx-allowed-val { font-family: var(--lh-font-display); font-weight: 700; font-size: 1.05rem; color: var(--lh-text); white-space: nowrap; }
 .lh-mx-allowed-val span { font-family: inherit; font-weight: 500; font-size: 0.8rem; color: var(--lh-muted); }
 .lh-mx-diff {
-  justify-self: end; min-width: 3rem; text-align: center; padding: 0.1rem 0.4rem; border-radius: 6px;
+  justify-self: end; min-width: 3rem; text-align: center; padding: 0.1rem 0.4rem; border-radius: 0;
   border: 1px solid var(--lh-push); font-family: var(--lh-font-label); font-size: 0.7rem; color: var(--lh-muted); cursor: help;
 }
 .lh-mx-diff.is-over  { border-color: var(--lh-over);  color: var(--lh-over-text); }
 .lh-mx-diff.is-under { border-color: var(--lh-under); color: var(--lh-under-text); }
 .lh-mx-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
 .lh-mx-tile {
-  display: flex; flex-direction: column; gap: 0.1rem; padding: 0.5rem 0.6rem; border-radius: 8px;
+  display: flex; flex-direction: column; gap: 0.1rem; padding: 0.5rem 0.6rem; border-radius: 0;
   border: 1px solid var(--lh-border); background: rgba(var(--lh-ink-rgb), 0.02);
 }
 .lh-mx-tile b { font-family: var(--lh-font-display); font-weight: 700; font-size: 1.15rem; color: var(--lh-strong); line-height: 1.1; }
@@ -4976,7 +4986,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   --bs-dropdown-zindex: 1050;
   background-color: rgb(var(--lh-bg-rgb));
   border: 1px solid var(--lh-border);
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: var(--lh-lift-shadow);
 }
 .lh-tools-item {
@@ -5002,7 +5012,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 9px;
+  border-radius: 0;
   background: rgba(var(--lh-accent-rgb), 0.12);
   color: var(--lh-accent-light);
 }
@@ -5021,7 +5031,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   min-height: 6.5rem;
   padding: 1rem 1.1rem;
   border: 1px solid var(--lh-border);
-  border-radius: 12px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.02);
   color: var(--lh-text);
   text-decoration: none;
@@ -5060,8 +5070,8 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 /* ---------- Today page: Top 5 Hunts card (the Top Hit Rates card's outer style) ---------- */
 .lh-today-hunts.card {
   --bs-card-bg: rgba(var(--lh-ink-rgb), 0.02);
-  --bs-card-border-radius: 12px;
-  --bs-card-inner-border-radius: 11px;
+  --bs-card-border-radius: 0;
+  --bs-card-inner-border-radius: 0;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 @media (hover: hover) {
@@ -5130,8 +5140,8 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 /* ---------- Hunt Score page (the approved mockup in the site's tokens) ---------- */
 .lh-hs-card.card {
   --bs-card-bg: rgba(var(--lh-ink-rgb), 0.02);
-  --bs-card-border-radius: 12px;
-  --bs-card-inner-border-radius: 11px;
+  --bs-card-border-radius: 0;
+  --bs-card-inner-border-radius: 0;
   --bs-card-cap-bg: transparent;
 }
 .lh-hs-card .card-footer { background: transparent; border-top: 1px solid var(--lh-border); }
@@ -5148,7 +5158,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hs-tag {
   padding: 0 0.3rem;
   border: 1px solid var(--lh-border);
-  border-radius: 3px;
+  border-radius: 0;
   color: var(--lh-muted);
   font-family: var(--lh-font-label);
   font-size: 0.62rem;
@@ -5159,7 +5169,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hs-pick {
   padding: 0.15rem 0.55rem 0.15rem 0.5rem;
   border-left: 3px solid var(--lh-over);
-  border-radius: 4px;
+  border-radius: 0;
   background: rgba(var(--lh-ink-rgb), 0.04);
   font-family: var(--lh-font-display);
   font-weight: 700;
@@ -5173,7 +5183,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hs-chip {
   padding: 0.15rem 0.45rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
-  border-radius: 4px;
+  border-radius: 0;
   background: rgba(var(--lh-accent-rgb), 0.1);
   color: var(--lh-accent-light);
   font-size: 0.72rem;
@@ -5193,8 +5203,8 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hs-more:hover { color: var(--lh-strong); }
 .lh-hs-scorebox { flex: 0 0 5rem; display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; }
 .lh-hs-score { font-family: var(--lh-font-display); font-weight: 700; font-size: 2.5rem; line-height: 0.9; color: var(--lh-strong); }
-.lh-hs-meter { position: relative; width: 4.5rem; height: 6px; border-radius: 3px; background: rgba(var(--lh-accent-rgb), 0.15); }
-.lh-hs-meter > span { position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px; background: rgba(var(--lh-accent-rgb), 0.55); }
+.lh-hs-meter { position: relative; width: 4.5rem; height: 6px; border-radius: 0; background: rgba(var(--lh-accent-rgb), 0.15); }
+.lh-hs-meter > span { position: absolute; left: 0; top: 0; height: 100%; border-radius: 0; background: rgba(var(--lh-accent-rgb), 0.55); }
 .lh-hs-meter > span.is-high { background: var(--lh-accent-light); }
 .lh-hs-meter > i { position: absolute; top: -3px; width: 1px; height: 12px; background: var(--lh-muted); }  /* the 65 mark */
 .lh-hs-score-label { font-family: var(--lh-font-label); font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
@@ -5206,7 +5216,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   margin: 0.9rem 0 0 2.5rem;
   padding: 0.9rem 1rem;
   border: 1px solid var(--lh-border);
-  border-radius: 10px;
+  border-radius: 0;
   background: rgba(var(--lh-bg-rgb), 0.55);
 }
 .lh-hs-section { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -5216,9 +5226,9 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hs-factor { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr) 3rem; align-items: center; gap: 0.6rem; min-height: 1.7rem; }
 .lh-hs-factor-name { display: flex; flex-direction: column; font-size: 0.78rem; color: var(--lh-text); }
 .lh-hs-factor-name small { font-size: 0.7rem; color: var(--lh-muted); }
-.lh-hs-factor-bar { position: relative; height: 8px; border-radius: 4px; background: rgba(var(--lh-accent-rgb), 0.1); }
+.lh-hs-factor-bar { position: relative; height: 8px; border-radius: 0; background: rgba(var(--lh-accent-rgb), 0.1); }
 .lh-hs-factor-bar::before { content: ""; position: absolute; left: 50%; top: -3px; width: 1px; height: 14px; background: var(--lh-border); }
-.lh-hs-factor-bar > span { position: absolute; top: 0; height: 100%; border-radius: 4px; }
+.lh-hs-factor-bar > span { position: absolute; top: 0; height: 100%; border-radius: 0; }
 .lh-hs-factor-bar > span.is-help { left: 50%; background: var(--lh-accent-light); }
 .lh-hs-factor-bar > span.is-hurt { right: 50%; background: var(--lh-muted); }
 .lh-hs-factor-pts { text-align: right; font-size: 0.82rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--lh-muted); }
@@ -5274,4 +5284,24 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   .lh-today-pair[data-pick="top"] > #todayHunts { display: none; }
   .lh-today-pair .lh-hunt-row { grid-template-columns: 1.25rem minmax(0, 1fr) auto; }
   .lh-today-pair .lh-hunt-score { grid-column: 3; }
+}
+
+
+/* ---------- Swiss restyle (Oct 2026): checkbox / switch marks ----------
+   The fill is now the ink color (bone on dark, navy on light), so Bootstrap's white tick and switch knob would vanish on it.
+   These draw them in the page color instead. */
+[data-bs-theme="dark"] .form-check-input:checked[type="checkbox"] {
+  --bs-form-check-bg-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='square' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+[data-bs-theme="light"] .form-check-input:checked[type="checkbox"] {
+  --bs-form-check-bg-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23f2ebdd' stroke-linecap='square' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+[data-bs-theme="dark"] .form-switch .form-check-input:checked {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3crect x='-3' y='-3' width='6' height='6' fill='%23000'/%3e%3c/svg%3e");
+}
+[data-bs-theme="light"] .form-switch .form-check-input:checked {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3crect x='-3' y='-3' width='6' height='6' fill='%23f2ebdd'/%3e%3c/svg%3e");
+}
+.form-switch .form-check-input:not(:checked) {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3crect x='-3' y='-3' width='6' height='6' fill='%239a9284'/%3e%3c/svg%3e");
 }

@@ -103,7 +103,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
     const startX = (width - groupWidth) / 2;
     const slot = barWidth + BAR_GAP;
     const labelEvery = Math.max(1, Math.ceil(BAR_LABEL_MIN_SLOT / slot));
-    const radius = `${Math.min(6, barWidth / 2)}px ${Math.min(6, barWidth / 2)}px 0 0`;
+    const radius = `${Math.min(0, barWidth / 2)}px ${Math.min(0, barWidth / 2)}px 0 0`;
 
     layout = { width, plotHeight, scaleMax, ticks, line, bookLine, bookLabel, bars: [] };
     const wanted = new Set();
@@ -217,7 +217,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
     const baseY = PLOT_TOP + layout.plotHeight;
     const yOf = (value) => baseY - (Math.min(value, layout.scaleMax) / layout.scaleMax) * layout.plotHeight;
 
-    ctx.font = "10px 'JetBrains Mono', monospace";
+    ctx.font = "10px 'Inter Tight', sans-serif";
     layout.ticks.forEach((tick) => {
       ctx.strokeStyle = `rgba(${colors.lineRgb}, 0.12)`;
       ctx.beginPath();
@@ -233,7 +233,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
     layout.bars.forEach((bar) => {
       const x = AXIS_WIDTH + bar.x;
       const top = baseY - bar.height;
-      const radius = Math.min(6, bar.width / 2);
+      const radius = Math.min(0, bar.width / 2);
       ctx.beginPath();
       ctx.moveTo(x, baseY);
       ctx.lineTo(x, top + radius);
@@ -258,14 +258,14 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       const centerX = x + bar.width / 2;
       if (bar.showValue) {
         ctx.fillStyle = colors.text;
-        ctx.font = "700 12px Satoshi, sans-serif";
+        ctx.font = "700 12px 'Inter Tight', sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
         if (!bar.isTonight) ctx.fillText(bar.game.value, centerX, top - 4);
       }
       if (bar.showLabel) {
         ctx.fillStyle = colors.muted;
-        ctx.font = "10px 'JetBrains Mono', monospace";
+        ctx.font = "10px 'Inter Tight', sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.fillText(bar.isTonight ? bar.tonightLabel : opponentLabel(bar.game), centerX, baseY + 6);

@@ -221,7 +221,7 @@ function addCityWatermarks(card, awayAbbreviation, homeAbbreviation) {
   };
   const resizeObserver = new ResizeObserver(fit); // the card grows when its Quick look opens, and on other screen sizes
   resizeObserver.observe(card);
-  if (document.fonts) document.fonts.ready.then(fit); // measure again once Comico has loaded
+  if (document.fonts) document.fonts.ready.then(fit); // measure again once the font has loaded
 
   // Reduced motion: the still word only (the stylesheet also hides the shine).
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
