@@ -33,8 +33,8 @@ proxy:
   `--replay`: rebuild `{ games, props, injuries }` per day from the snapshot, run `engine.computeWith(date, { replay })` with
   the current engine, grade that too, and print saved vs replay side by side. (Team-level numbers are season-to-date as of
   the replay: a small leak.)
-- TODO: `.gitignore` `dev/snapshots/`; cron lines for the user's machine (hourly noon-10pm ET snapshot, morning grade; use the
-  full path from `which node`, `cd` into the repo, append to `dev/snapshots/cron.log`; check the machine's time zone).
+- Snapshots are taken from this cloud thread for now (scheduled check-ins); the local cron was skipped. LATER: move the nightly
+  snapshot + grade to a Netlify scheduled function with Netlify Blobs (same data as the parked "results on The Board").
 
 ## Parked engine ideas
 Rank top hunts by edge (top 10); lineup then vs now in Role (Reaves' "without Luka" games still had LeBron); a position matchup

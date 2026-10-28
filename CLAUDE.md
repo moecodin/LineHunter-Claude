@@ -202,6 +202,7 @@
 
 
 ## Parked ideas (for later)
+- Move the Hunt Score nightly snapshot + grading (`dev/hunt-snapshot.js`, the grader) to a Netlify scheduled function saving to Netlify Blobs, so every night is saved without a computer or a cloud session running.
 - Hunt Score: rank the top hunts by edge (chance − the book's fair chance) instead of the raw chance, top 10, once the what-if shows it works.
 - Hunt Score Role step: compare the whole lineup then vs now, not only tonight's missing players (Reaves' "without Luka" games last February still had LeBron, who has left).
 - Hunt Score: a position matchup step ("centers vs MIL: +3.1 PTS vs their avg") from the Same Position card's data.
