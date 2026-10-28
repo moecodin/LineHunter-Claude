@@ -71,12 +71,12 @@ const CONFIG = {
                                                // team once there are 10 (his old team's role and numbers left out)
     // Role: tonight's lineup. Teammates listed Out / Doubtful who usually play 15+ minutes AND have played for the team this
     // season are "missing" (a player out all season is already in the numbers). The player's past regular-season games on this
-    // team where at least half of those minutes were also missing are his role games, except the last 10 days of last regular
-    // season (rest games) and his own short nights (under 80% of his usual minutes: injury, a limit, a blowout; teammates out
-    // should RAISE his minutes, so a game well under his usual is not a lineup game). Newest count
+    // team where at least half of those minutes were also missing are his role games, except his own short nights (under 80%
+    // of his usual minutes: injury, a limit, a blowout, a rest night; teammates out should RAISE his minutes, so a game well
+    // under his usual is not a lineup game; a late-season game where he played big minutes still counts). Newest count
     // most (weight halves every 10 role games), last season's count half. With 3+ role games, their minutes replace the form
     // minutes in proportion n / (n + 2) and their per-minute output the form rate in proportion n / (n + 6), n = total weight.
-    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, restDays: 10, shortNight: 0.8 },
+    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, shortNight: 0.8 },
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
     kMax: 200,
@@ -430,13 +430,17 @@ function roleInfo(prop, logs, teamId, missing, season) {
     .sort((a, b) => b.game.date.localeCompare(a.game.date));
   if (!own.length) return null;
   const usual = average(own.map(minutesOf));
-  // the end of last regular season (rest and tank games): the last 10 days before his last regular-season game then
-  const lastPrev = own.filter((log) => log.game.season !== season).map((log) => log.game.date.slice(0, 10)).sort().pop();
-  const restFrom = lastPrev ? new Date(Date.parse(lastPrev) - R.restDays * 864e5).toISOString().slice(0, 10) : null;
   const games = [];
+  const skipped = []; // CONFIG.debug: games without tonight's missing players that did not count, and why
   own.forEach((log) => {
-    if (restFrom && log.game.season !== season && log.game.date.slice(0, 10) > restFrom) return;
-    if (minutesOf(log) < R.shortNight * usual) return;
+    if (minutesOf(log) < R.shortNight * usual) {
+      if (CONFIG.debug) {
+        const counted = missing.filter((m) => m.seasons.has(log.game.season));
+        const without = counted.filter((m) => !m.played.has(log.game.id)).map((m) => m.last);
+        if (without.length) skipped.push({ log, without, why: `short night (${round1(minutesOf(log))} of his usual ${round1(usual)} min)` });
+      }
+      return;
+    }
     const counted = missing.filter((m) => m.seasons.has(log.game.season));
     const total = sum(counted.map((m) => m.minutes));
     if (!total) return;
@@ -445,7 +449,16 @@ function roleInfo(prop, logs, teamId, missing, season) {
     const weight = match * Math.pow(0.5, games.length / R.halfLife) * (log.game.season === season ? 1 : R.lastSeason);
     games.push({ weight, v: statOf(log, prop.keys), m: minutesOf(log), log, without: counted.filter((m) => !m.played.has(log.game.id)).map((m) => m.last) });
   });
-  if (games.length < R.minGames) return null;
+  if (games.length < R.minGames) {
+    if (!CONFIG.debug) return null;
+    const row = (g, why) => ({ date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(minutesOf(g.log)), v: statOf(g.log, prop.keys), without: g.without, why });
+    return { miss: {
+      out: missing.map((m) => m.last).join(", "),
+      reason: `${games.length} role ${games.length === 1 ? "game" : "games"}, ${R.minGames} needed`,
+      games: [...games.map((g) => row(g, "counted")), ...skipped.map((g) => row(g, g.why))].sort((a, b) => b.date.localeCompare(a.date)),
+      loadedFrom: `last season's logs from ${season}-${CONFIG.sim.lastSeasonLogsFrom} on`,
+    } };
+  }
   const n = sum(games.map((g) => g.weight));
   const minutesTotal = sum(games.map((g) => g.weight * g.m));
   return {
@@ -894,7 +907,9 @@ async function computeHunts(date) {
     const info = describe(prop, ctx);
     if (!info) return; // fewer than 5 games in total
     ctx.zone = zoneInfo(prop, playerZones[entry.player_id], zoneDefense, oppTeam.id, info.baseRate * info.baseMinutes);
-    ctx.role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season);
+    const role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season);
+    ctx.role = role && !role.miss ? role : null;
+    ctx.roleMiss = role && role.miss ? role.miss : null; // CONFIG.debug only
     ctx.extra = whatIf ? whatIf({ playerId: entry.player_id, stat: prop.code, line, info }) : null;
 
     const sim = runSteps(prop, line, info, ctx);
@@ -914,6 +929,7 @@ async function computeHunts(date) {
         chance: scored.chance,   // simulated % chance of this side hitting (pushes left out)
         projection: { mean: sim.projection.mean, p10: sim.projection.p10, p90: sim.projection.p90 },
         teamPrior: info.teamPrior,
+        ...(ctx.roleMiss ? { roleMiss: ctx.roleMiss } : {}), // dev/hunt-whatif.js only: teammates out but no Role step, and why
         // dev/hunt-whatif.js only: how his past games (this season + last season's logs) finished against this line
         ...(CONFIG.debug ? { history: { over: [...info.cur, ...info.prev].filter((g) => g.v > line).length, under: [...info.cur, ...info.prev].filter((g) => g.v < line).length } } : {}),  // traded during last season: { team, games, other } = the prior used only his games with team
         factors: scored.factors, // key, label, points + the numbers behind each one, for the Hunt Score page

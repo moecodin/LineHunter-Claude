@@ -78,6 +78,13 @@ function detailText(target, old, abbr) {
     out.push(`  ROLE GAMES (${role.games}): minutes ${role.from} -> ${role.minutes} (role games ${role.roleMinutes}) · ${statWord(target.stat)} per 36 ${role.from36} -> ${role.rate36} (role games ${role.roleRate36})`);
     role.list.forEach((g) => out.push(`    ${g.date} ${g.lastSeason ? "LS" : "  "} vs ${pad(abbr[g.oppId] || "?", 4)} ${padL(g.min.toFixed(0), 3)} min ${padL(g.v, 3)} ${statWord(target.stat)}   without ${g.without.join(", ")}`));
   }
+  if (target.roleMiss) {
+    const m = target.roleMiss;
+    out.push("");
+    out.push(`  NO ROLE STEP: ${m.out} out, but ${m.reason} (${m.loadedFrom})`);
+    m.games.forEach((g) => out.push(`    ${g.date} ${g.lastSeason ? "LS" : "  "} ${padL(g.min.toFixed(0), 3)} min ${padL(g.v, 3)} ${statWord(target.stat)}   without ${g.without.join(", ")}   ${g.why}`));
+    if (!m.games.length) out.push("    no games without them in the loaded logs");
+  }
   return out.join("\n");
 }
 
@@ -201,7 +208,7 @@ function countText(label, body) {
   targets.forEach((t) => {
     const was = old.props.find((p) => sameProp(p, t) && p.side === t.side);
     const role = t.factors.find((f) => f.key === "role");
-    out.push(`  ${pad(t.player, 22)} ${pad(pickText(t), 18)} ${padL(was ? was.score : "–", 3)} -> ${padL(t.score, 3)}  proj ${was ? was.projection.mean : "–"} -> ${t.projection.mean}${t.score >= 65 ? "" : "  [below 65]"}${role ? `  [Role ${signed(role.points)}: ${role.out} out, ${role.from} -> ${role.minutes} min]` : ""}${t.teamPrior ? "  [traded]" : ""}`);
+    out.push(`  ${pad(t.player, 22)} ${pad(pickText(t), 18)} ${padL(was ? was.score : "–", 3)} -> ${padL(t.score, 3)}  proj ${was ? was.projection.mean : "–"} -> ${t.projection.mean}${t.score >= 65 ? "" : "  [below 65]"}${role ? `  [Role ${signed(role.points)}: ${role.out} out, ${role.from} -> ${role.minutes} min]` : ""}${t.teamPrior ? "  [traded]" : ""}${t.roleMiss ? `  [no Role: ${t.roleMiss.reason}]` : ""}`);
   });
   out.push("");
   out.push(`New top 5: ${now.topHunts.map((p) => `${p.player} ${pickText(p)} ${p.score}`).join(" | ") || "none"}`);
@@ -217,7 +224,7 @@ function countText(label, body) {
   out.push(calibrationText(now));
   targets.forEach((t) => out.push("", "-".repeat(110), "", detailText(t, old, abbr)));
   out.push("");
-  out.push("LS = a last-season game (counts half). Role games skip the last 10 days of last regular season and his own short nights.");
+  out.push("LS = a last-season game (counts half). Role games skip his own short nights (under 80% of his usual minutes).");
 
   const text = out.join("\n");
   console.log(`\n${text}`);
