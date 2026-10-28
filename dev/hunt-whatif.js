@@ -1,11 +1,11 @@
 // LineHunter - dev/hunt-whatif.js
 // What if the Hunt Score used everything the Matchup Analyzer shows? A console tool, not part of the site.
-// Takes one prop (tonight's top hunt by default), scores it with the real engine, then scores it again with five test steps
+// Takes tonight's top hunts (or one prop), scores it with the real engine, then scores it again with five test steps
 // added INSIDE the same simulation (netlify/functions/hunt.js setWhatIf), so each step's points are measured the way the
 // engine measures its own factors. Prints both and writes dev/hunt-whatif.txt (gitignored).
 //
-//   node dev/hunt-whatif.js                          today, the top hunt
-//   node dev/hunt-whatif.js 2026-10-28               that date's top hunt
+//   node dev/hunt-whatif.js                          today, every top hunt (a summary table, then each one in full)
+//   node dev/hunt-whatif.js 2026-10-28               that date's top hunts
 //   node dev/hunt-whatif.js 2026-10-28 "Brunson" pts one player + stat (the side the engine likes better)
 //
 // The five test steps (weights in WHATIF below, all guesses to tune, none of them live):
@@ -22,7 +22,6 @@ const path = require("path");
 const WHATIF = {
   // role games: 50%+ of tonight's missing minutes also missing, newest count most (halves every 10 role games), last season's
   // games count half; minutes trust them like `n` games against 2 for the engine's form, the per-minute rate against 6
-  team: { minGames: 10 },     // last season's games with his current team needed to use them alone
   role: { minMinutes: 15, minMatch: 0.5, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, showGames: 8 },
   playtypes: { minShare: 0.05, shrink: 0.5, cap: 0.05 },
   h2h: { minGames: 3, priorGames: 20, cap: 0.06, seasons: 5 },
@@ -103,27 +102,6 @@ async function seasonRow(category, type, playerId, season) {
 }
 
 // ---------- the five test steps ----------
-
-// Team: the engine's prior (while a player has under 20 games this season) is last season's FULL averages, every team he
-// played for. A player traded during last season gets last season's games with his current team only, when there are enough.
-async function teamStep(ctx) {
-  const W = WHATIF.team;
-  const logs = (await all(`/v1/stats?player_ids[]=${ctx.playerId}&seasons[]=${ctx.season - 1}&per_page=100`)).filter(played)
-    .sort((a, b) => String(b.game.date).localeCompare(String(a.game.date)));
-  const here = logs.filter((log) => log.team.id === ctx.teamId);
-  const elsewhere = logs.filter((log) => log.team.id !== ctx.teamId);
-  const sumUp = (list) => {
-    const m = list.reduce((a, l) => a + minutesOf(l.min), 0);
-    return `${list.length} games, ${(m / (list.length || 1)).toFixed(1)} min, ${m > 0 ? ((list.reduce((a, l) => a + statOf(l, ctx.stat), 0) / m) * 36).toFixed(1) : "–"} per 36`;
-  };
-  if (!elsewhere.length) return { note: `every game last season was with ${ctx.teamAbbr}: no change` };
-  const other = [...new Set(elsewhere.map((log) => ctx.abbrOf(log.team.id)))].join(" / ");
-  if (here.length < W.minGames) return { note: `last season: ${other} ${sumUp(elsewhere)}; ${ctx.teamAbbr} only ${here.length} games, not enough, kept as is` };
-  return {
-    team: { prev: here.map((log) => ({ v: statOf(log, ctx.stat), m: minutesOf(log.min) })) },
-    note: `last season: ${other} ${sumUp(elsewhere)} · ${ctx.teamAbbr} ${sumUp(here)} -> the prior uses the ${ctx.teamAbbr} games only`,
-  };
-}
 
 // Role: tonight's lineup. Teammates listed Out / Doubtful who play 15+ minutes are "missing". Each of his past games on this team
 // (this season + last) is scored by how much of that missing minutes total was also missing then (a teammate counts only in
@@ -321,19 +299,8 @@ async function runEngine() {
   return body;
 }
 
-(async () => {
-  console.log(`Scoring ${date} with the real engine...`);
-  const before = await runEngine();
-  if (!before.props.length) throw new Error(`No scored props for ${date} (no games, every game started, or no lines yet).`);
-  let target;
-  if (nameArg) {
-    const list = before.props.filter((p) => p.player.toLowerCase().includes(nameArg) && (!statArg || p.stat === statArg)).sort((a, b) => b.score - a.score);
-    target = list[0];
-    if (!target) throw new Error(`No prop for "${process.argv[3]}"${statArg ? ` ${statArg}` : ""} on ${date}.`);
-  } else {
-    target = before.topHunts[0] || [...before.props].sort((a, b) => b.score - a.score)[0];
-  }
-
+// Everything about one prop before the second engine run: its context, the steps' results, and the callback's numbers.
+async function prepare(target, teamsAbbr) {
   const game = (await bdl(`/v1/games/${target.gameId}`)).data;
   const player = (await bdl(`/v1/players/${target.playerId}`)).data;
   const season = seasonOf(date);
@@ -344,13 +311,10 @@ async function runEngine() {
   const praAvg = avg(recent.map((l) => statOf(l, "pra"))) || 1;
   const ctx = {
     playerId: target.playerId, stat: target.stat, season, teamId, oppId, teamAbbr: target.team, oppAbbr: target.opp,
-    position: player.position, ptsShare: ptsAvg / praAvg,
-    abbrOf: ((teams) => (id) => (teams[id] || "?"))(Object.fromEntries((await all("/v1/teams?per_page=100")).map((t) => [t.id, t.abbreviation]))),
+    position: player.position, ptsShare: ptsAvg / praAvg, abbrOf: (id) => teamsAbbr[id] || "?",
   };
-
-  console.log(`Loading the Matchup Analyzer numbers for ${target.player}...`);
+  console.log(`Loading the Matchup Analyzer numbers for ${target.player} (${target.stat.toUpperCase()})...`);
   const STEPS = [
-    ["team", "Team (current team only)", teamStep],
     ["role", "Role (lineup tonight)", roleStep],
     ["playtypes", "Play types vs defense", playTypesStep],
     ["h2h", "Head-to-head", h2hStep],
@@ -359,74 +323,42 @@ async function runEngine() {
   ];
   const results = [];
   for (const [key, label, fn] of STEPS) results.push({ key, label, ...(await soft(fn(ctx), { note: "data unavailable" })) });
-
+  const prep = { target, results, roleUsed: null };
   const multSteps = results.filter((r) => r.mult && Math.abs(r.mult - 1) > 1e-9).map((r) => ({ key: r.key, label: r.label, mult: r.mult }));
   const roleResult = results.find((r) => r.role);
-  let roleUsed = null; // the engine's form numbers and the blended role numbers, filled in when the engine calls back
-  const teamResult = results.find((r) => r.team);
-  let teamUsed = null;
-  // The engine's own form blend (describe in hunt.js), with last season's games for the current team as the prior.
-  const flatRM = (games) => { const m = games.reduce((a, g) => a + g.m, 0); return { rate: m > 0 ? games.reduce((a, g) => a + g.v, 0) / m : 0, minutes: m / games.length }; };
-  const recentRM = (games) => {
-    const w = games.map((_, i) => Math.pow(0.5, i / engine.CONFIG.sim.halfLife));
-    const m = games.reduce((a, g, i) => a + w[i] * g.m, 0);
-    return { rate: m > 0 ? games.reduce((a, g, i) => a + w[i] * g.v, 0) / m : 0, minutes: m / w.reduce((a, b) => a + b, 0) };
+  prep.keys = new Set(["role", ...multSteps.map((m) => m.key)]);
+  prep.extra = (info) => {
+    if (!roleResult) return multSteps;
+    const r = roleResult.role;
+    const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * info.formMinutes;
+    const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * info.formRate;
+    prep.roleUsed = { fromMinutes: info.formMinutes, fromRate: info.formRate, minutes, rate };
+    return [{ key: "role", label: "Role (lineup tonight)", set: { minutes, rate } }, ...multSteps];
   };
-  const extra = (info) => {
-    const steps = [];
-    let formMinutes = info.formMinutes;
-    let formRate = info.formRate;
-    if (teamResult && info.usePrev) {
-      const prior = flatRM(teamResult.team.prev);
-      const recent = info.cur.length ? recentRM(info.cur) : null;
-      const share = info.cur.length / (info.cur.length + engine.CONFIG.sim.priorGames);
-      formMinutes = recent ? share * recent.minutes + (1 - share) * prior.minutes : prior.minutes;
-      formRate = recent ? share * recent.rate + (1 - share) * prior.rate : prior.rate;
-      teamUsed = { fromMinutes: info.formMinutes, fromRate: info.formRate, minutes: formMinutes, rate: formRate };
-      steps.push({ key: "team", label: "Team (current team only)", set: { minutes: formMinutes, rate: formRate } });
-    }
-    if (roleResult) {
-      const r = roleResult.role;
-      const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * formMinutes;
-      const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * formRate;
-      roleUsed = { fromMinutes: formMinutes, fromRate: formRate, minutes, rate };
-      steps.push({ key: "role", label: "Role (lineup tonight)", set: { minutes, rate } });
-    }
-    return [...steps, ...multSteps];
-  };
-  const keys = new Set(["team", "role", ...multSteps.map((m) => m.key)]);
-  engine.setWhatIf(({ playerId, stat, info }) => (playerId === target.playerId && stat === target.stat ? extra(info) : null));
-  const after = await runEngine();
-  engine.setWhatIf(null);
-  const sameProp = (p) => p.playerId === target.playerId && p.stat === target.stat && p.side === target.side;
-  const now = after.props.find(sameProp);
-  const otherSide = (body) => body.props.find((p) => p.playerId === target.playerId && p.stat === target.stat && p.side !== target.side);
+  return prep;
+}
 
-  const signed = (v) => `${v > 0 ? "+" : v < 0 ? "−" : "±"}${Math.abs(v).toFixed(1)}`;
+const signed = (v) => `${v > 0 ? "+" : v < 0 ? "−" : "±"}${Math.abs(v).toFixed(1)}`;
+const statWord = (code) => (code === "3pm" ? "3PM" : code.toUpperCase());
+const pickText = (p) => `${p.side === "over" ? "Over" : "Under"} ${p.line} ${statWord(p.stat)}`;
+
+function detailText(prep, before, after) {
+  const { target, results, roleUsed, keys } = prep;
+  const same = (p) => p.playerId === target.playerId && p.stat === target.stat;
+  const now = after.props.find((p) => same(p) && p.side === target.side);
   const out = [];
-  out.push(`${target.player} (${target.team} ${target.home ? "vs" : "@"} ${target.opp}) · ${target.side === "over" ? "Over" : "Under"} ${target.line} ${target.stat.toUpperCase()} · ${date}`);
+  out.push(`${target.player} (${target.team} ${target.home ? "vs" : "@"} ${target.opp}) · ${pickText(target)} · ${date}`);
   out.push("");
   out.push("TODAY'S HUNT SCORE");
-  out.push(`  ${pad("Season baseline", 26)} ${padL(target.base.toFixed(1), 6)}`);
+  out.push(`  ${pad("Season baseline", 26)} ${padL(target.base.toFixed(1), 6)}${target.teamPrior ? `   last season = his ${target.teamPrior.games} games with ${target.teamPrior.team} only${target.teamPrior.other ? ` (not ${target.teamPrior.other})` : ""}` : ""}`);
   target.factors.forEach((f) => out.push(`  ${pad(f.label, 26)} ${padL(signed(f.points), 6)}`));
   out.push(`  ${pad("= Hunt Score", 26)} ${padL(target.score, 6)}   ${target.chance}% chance · projects ${target.projection.mean} (${target.projection.p10}-${target.projection.p90})`);
   out.push("");
   out.push("MATCHUP ANALYZER PIECES (test weights)");
   results.forEach((r) => {
-    if (r.team && teamUsed) {
-      const w = (code) => (code === "3pm" ? "3PM" : code.toUpperCase());
-      out.push(`  ${pad(r.label, 26)} ${padL("", 8)}   minutes ${teamUsed.fromMinutes.toFixed(1)} -> ${teamUsed.minutes.toFixed(1)} · ${w(target.stat)} per 36 ${(teamUsed.fromRate * 36).toFixed(1)} -> ${(teamUsed.rate * 36).toFixed(1)}`);
-      out.push(`      ${r.note}`);
-      return;
-    }
-    if (r.team) {
-      out.push(`  ${pad(r.label, 26)} ${padL("not used", 8)}   ${r.note} (but 20+ games this season, so the engine no longer leans on last season)`);
-      return;
-    }
     if (r.role && roleUsed) {
-      const w = (code) => (code === "3pm" ? "3PM" : code.toUpperCase());
       out.push(`  ${pad(r.label, 26)} ${padL("", 8)}   minutes ${roleUsed.fromMinutes.toFixed(1)} -> ${roleUsed.minutes.toFixed(1)} (role games ${r.role.minutes.toFixed(1)}, trusted ${Math.round(r.role.minutesWeight * 100)}%)`);
-      out.push(`  ${pad("", 26)} ${padL("", 8)}   ${w(target.stat)} per 36 ${(roleUsed.fromRate * 36).toFixed(1)} -> ${(roleUsed.rate * 36).toFixed(1)} (role games ${(r.role.rate * 36).toFixed(1)}, trusted ${Math.round(r.role.rateWeight * 100)}%)`);
+      out.push(`  ${pad("", 26)} ${padL("", 8)}   ${statWord(target.stat)} per 36 ${(roleUsed.fromRate * 36).toFixed(1)} -> ${(roleUsed.rate * 36).toFixed(1)} (role games ${(r.role.rate * 36).toFixed(1)}, trusted ${Math.round(r.role.rateWeight * 100)}%)`);
       out.push(`      ${r.note}`);
       return;
     }
@@ -435,21 +367,55 @@ async function runEngine() {
   out.push("");
   out.push("WITH EVERYTHING");
   out.push(`  ${pad("Season baseline", 26)} ${padL(now.base.toFixed(1), 6)}`);
-  now.factors.forEach((f) => {
-    const isNew = keys.has(f.key);
-    out.push(`  ${pad(f.label, 26)} ${padL(signed(f.points), 6)}${isNew ? "   NEW" : ""}`);
-  });
+  now.factors.forEach((f) => out.push(`  ${pad(f.label, 26)} ${padL(signed(f.points), 6)}${keys.has(f.key) ? "   NEW" : ""}`));
   out.push(`  ${pad("= Hunt Score", 26)} ${padL(now.score, 6)}   ${now.chance}% chance · projects ${now.projection.mean} (${now.projection.p10}-${now.projection.p90})`);
   out.push("");
   const diff = now.score - target.score;
   out.push(`RESULT: ${target.score} -> ${now.score} (${diff > 0 ? "+" : ""}${diff})${now.score >= 65 ? "" : " · below the 65 top-hunt bar"}`);
-  const flipA = otherSide(before);
-  const flipB = otherSide(after);
+  const flipA = before.props.find((p) => same(p) && p.side !== target.side);
+  const flipB = after.props.find((p) => same(p) && p.side !== target.side);
   if (flipA && flipB && flipB.score > now.score) out.push(`The other side now scores higher: ${flipB.side} ${flipB.score} (was ${flipA.score}).`);
+  return { text: out.join("\n"), now, flip: flipA && flipB && flipB.score > now.score ? flipB : null };
+}
+
+(async () => {
+  console.log(`Scoring ${date} with the real engine...`);
+  const before = await runEngine();
+  if (!before.props.length) throw new Error(`No scored props for ${date} (no games, every game started, or no lines yet).`);
+  let targets;
+  if (nameArg) {
+    const list = before.props.filter((p) => p.player.toLowerCase().includes(nameArg) && (!statArg || p.stat === statArg)).sort((a, b) => b.score - a.score);
+    if (!list.length) throw new Error(`No prop for "${process.argv[3]}"${statArg ? ` ${statArg}` : ""} on ${date}.`);
+    targets = [list[0]];
+  } else {
+    targets = before.topHunts.length ? before.topHunts : [[...before.props].sort((a, b) => b.score - a.score)[0]];
+  }
+
+  const teamsAbbr = Object.fromEntries((await all("/v1/teams?per_page=100")).map((t) => [t.id, t.abbreviation]));
+  const preps = [];
+  for (const target of targets) preps.push(await prepare(target, teamsAbbr));
+  const byKey = Object.fromEntries(preps.map((p) => [`${p.target.playerId}-${p.target.stat}`, p]));
+  engine.setWhatIf(({ playerId, stat, info }) => (byKey[`${playerId}-${stat}`] ? byKey[`${playerId}-${stat}`].extra(info) : null));
+  console.log("Scoring again with the new steps...");
+  const after = await runEngine();
+  engine.setWhatIf(null);
+
+  const details = preps.map((prep) => detailText(prep, before, after));
+  const out = [];
+  out.push(`${nameArg ? "ONE PROP" : "TONIGHT'S TOP HUNTS"} · ${date} (today's score -> with the new steps)`);
+  preps.forEach((prep, i) => {
+    const t = prep.target;
+    const d = details[i];
+    const diff = d.now.score - t.score;
+    const role = prep.results.find((r) => r.role);
+    out.push(`  ${pad(t.player, 22)} ${pad(pickText(t), 18)} ${padL(t.score, 3)} -> ${padL(d.now.score, 3)} (${diff > 0 ? "+" : ""}${diff})  proj ${t.projection.mean} -> ${d.now.projection.mean}${t.teamPrior ? `  [traded: ${t.teamPrior.team} games only]` : ""}${role ? "  [role change]" : ""}${d.flip ? `  [other side ${d.flip.score}]` : ""}`);
+  });
+  details.forEach((d) => { out.push("", "-".repeat(110), "", d.text); });
   out.push("");
   out.push("New steps run inside the same 2,000 simulated games, after back-to-back and before the book line (the book-line pull");
   out.push("and the uncertainty step then act on the new projection, as they do on the engine's own factors).");
   out.push("The Role step swaps in the role games' minutes and per-minute output. LS = a last-season game (counts half).");
+  out.push("The traded-player rule (last season's games with his current team only) is in the engine now, so it is part of today's score.");
 
   const text = out.join("\n");
   console.log(`\n${text}`);

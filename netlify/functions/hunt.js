@@ -8,6 +8,7 @@
 // How the projection is built (every number lives in CONFIG):
 //   rate per minute  this season's games, recency-weighted (a game's weight halves every 5 games), blended with a prior
 //                    (last season while this season has under 20 games, else this season's flat average) that counts as 5 games
+//                    (a player traded during last season: only last season's games with his current team, once he has 10)
 //   minutes          the same blend on minutes played
 //   opponent / pace  multipliers using half the gap between tonight's opponent and the league average
 //   zone matchup     PTS / 3PM / PRA only: the player's shots per game in each zone x (the FG% tonight's opponent allows there - the
@@ -27,6 +28,8 @@
 //   /nba/v2/odds/player_props?game_id=              the lines
 //   /v1/players                                     names and teams
 //   /v1/stats?player_ids[]=&seasons[]=              game logs (this season, plus last season while a player has < 20 games)
+//                                                   + one page per 5 of those players to spot a trade last season (then that
+//                                                   player's full last season, to keep his games with his current team)
 //   /nba/v1/team_season_averages/general?type=opponent   points / rebounds / assists / threes each team ALLOWS per game
 //   /nba/v1/team_season_averages/general?type=advanced   each team's pace
 //   /nba/v1/season_averages/shooting?type=by_zone&player_ids[]=          each player's FGA per game by zone (this + last season)
@@ -56,7 +59,9 @@ const CONFIG = {
     priorSampleGames: 10,                      // a full last season adds this many games to the sample above
     lastSeasonLogsFrom: "02-01",               // last season's game logs only from this day of its spring (L10, spreads); its
                                                // full-season rate and minutes come from one season-averages request instead
-    market: { base: 0.2, thin: 0.3 },          // pull the projection toward the book's line: 20%, up to 50% with few games this season
+    market: { base: 0.2, thin: 0.3 },
+    teamPrior: { minGames: 10 },               // traded during last season: the prior is last season's games with his current
+                                               // team once there are 10 (his old team's role and numbers left out)          // pull the projection toward the book's line: 20%, up to 50% with few games this season
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
     kMax: 200,
@@ -225,6 +230,27 @@ async function loadSeasonAverages(ids, season) {
     if (row.player && Number(stats.gp) > 0 && min > 0) {
       result[row.player.id] = { gp: Number(stats.gp), min, pts: Number(stats.pts) || 0, reb: Number(stats.reb) || 0, ast: Number(stats.ast) || 0, fg3m: Number(stats.fg3m) || 0 };
     }
+  });
+  return result;
+}
+
+// Players traded during `season`: { playerId: { games: logs with his current team (newest first), other: "PHI" } }, only when
+// he has CONFIG.sim.teamPrior.minGames of them. One page per 5 players spots a second team (any page order works: a traded
+// player has many games with each team); only the traded players then get their full season, one paged request per 5.
+async function loadTeamChanges(ids, season, before, players) {
+  const current = (id) => players[id] && players[id].team && players[id].team.id;
+  const pages = await pool(chunk(ids, CONFIG.playersPerLogRequest).map((group) => async () => {
+    try { return (await bdl(`/v1/stats?${group.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${season}&per_page=100`)).data; } catch (error) { return []; }
+  }), CONFIG.concurrency);
+  const traded = [...new Set(pages.flat().filter((log) => log.team && current(log.player.id) && log.team.id !== current(log.player.id)).map((log) => log.player.id))];
+  if (!traded.length) return {};
+  const full = await loadLogs(traded, season, before);
+  const result = {};
+  traded.forEach((id) => {
+    const games = full[id].filter((log) => log.team && log.team.id === current(id) && playedInGame(log));
+    if (games.length < CONFIG.sim.teamPrior.minGames) return; // a summer move, or too few games with the new team: no change
+    const other = [...new Set(full[id].filter((log) => log.team && log.team.id !== current(id)).map((log) => log.team.abbreviation).filter(Boolean))];
+    result[id] = { games, team: players[id].team.abbreviation, other: other.join(" / ") };
   });
   return result;
 }
@@ -429,7 +455,9 @@ function describe(prop, ctx) {
   const prevGames = avg ? avg.gp : prev.length;
   const usePrev = cur.length < S.priorUntilGames && prevGames >= S.minPriorGames;
   const fromAverages = usePrev && avg && avg.min > 0 ? { rate: statOf(avg, prop.keys) / avg.min, minutes: avg.min } : null;
-  const prior = usePrev ? fromAverages || rateAndMinutes(prev, false) : rateAndMinutes(cur, false);
+  // a player traded during last season: only his games with his current team (his old role left out)
+  const teamGames = usePrev && ctx.teamPrior ? ctx.teamPrior.games.map(toGame) : null;
+  const prior = usePrev ? (teamGames && rateAndMinutes(teamGames, false)) || fromAverages || rateAndMinutes(prev, false) : rateAndMinutes(cur, false);
   const flat = rateAndMinutes(cur, false);
   const recent = rateAndMinutes(cur, true);
   const share = cur.length / (cur.length + S.priorGames);         // this season's share of the blend
@@ -467,8 +495,9 @@ function describe(prop, ctx) {
     baseRate, baseMinutes, formRate, formMinutes, minutesSd, rateCv, disagreeCv,
     lastAvg: last.length === S.disagree.games ? average(last.map((g) => g.v)) : null,
     l10, l10Avg: average(l10),
-    seasonAvg: cur.length >= 10 || !prev.length ? average(cur.map((g) => g.v)) : (fromAverages ? statOf(avg, prop.keys) : average(prev.map((g) => g.v))),
-    seasonLabel: cur.length >= 10 || !prev.length ? "this season" : "last season",
+    seasonAvg: cur.length >= 10 || !prev.length ? average(cur.map((g) => g.v)) : teamGames ? average(teamGames.map((g) => g.v)) : (fromAverages ? statOf(avg, prop.keys) : average(prev.map((g) => g.v))),
+    seasonLabel: cur.length >= 10 || !prev.length ? "this season" : teamGames ? `last season with ${ctx.teamPrior.team}` : "last season",
+    teamPrior: teamGames ? { team: ctx.teamPrior.team, games: teamGames.length, other: ctx.teamPrior.other } : null,
     b2bSplit: backToBackSplit(cur.length >= 10 || !prev.length ? cur : prev),
   };
 }
@@ -667,7 +696,7 @@ function writeWhy(side, prop, line, info, scored, sim, ctx) {
     else if (worst.disagree) risk = `The biggest risk is how much ${last}'s recent games swing (last 3 averaged ${round1(info.lastAvg)}), so the range is wide`;
     else risk = `The biggest risk is how much ${last}'s ${prop.word} swing from game to game`;
   } else if (worst && worst.key === "base") {
-    risk = `The biggest risk is the line itself: ${last} ${info.seasonLabel === "last season" ? "averaged" : "averages"} ${round1(info.seasonAvg)} ${info.seasonLabel}, ${info.seasonAvg > line ? "over" : "under"} ${line}`;
+    risk = `The biggest risk is the line itself: ${last} ${info.seasonLabel.startsWith("last season") ? "averaged" : "averages"} ${round1(info.seasonAvg)} ${info.seasonLabel}, ${info.seasonAvg > line ? "over" : "under"} ${line}`;
   }
   let s3;
   if (risk) {
@@ -675,7 +704,7 @@ function writeWhy(side, prop, line, info, scored, sim, ctx) {
       ? `${risk}, but it isn't enough to outweigh ${FACTOR_WORD[best.key] || "the rest"}.`
       : `${risk}, and it outweighs what is in ${last}'s favor.`;
   } else {
-    s3 = `No real red flags: ${last} ${info.seasonLabel === "last season" ? "averaged" : "averages"} ${round1(info.seasonAvg)} ${info.seasonLabel} against a line of ${line}.`;
+    s3 = `No real red flags: ${last} ${info.seasonLabel.startsWith("last season") ? "averaged" : "averages"} ${round1(info.seasonAvg)} ${info.seasonLabel} against a line of ${line}.`;
   }
   return [s1, s2, s3];
 }
@@ -712,7 +741,7 @@ async function computeHunts(date) {
   // Shooting players' shot profiles: this season for players with enough games, last season for the rest.
   const ownZoneIds = playerIds.filter((id) => !needLastSeason.includes(id) || currentLogs[id].filter(playedInGame).length >= CONFIG.sim.zone.ownSeasonGames);
   const lastZoneIds = playerIds.filter((id) => !ownZoneIds.includes(id));
-  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow, zonesNow, zonesLast, zoneDefNow] = await Promise.all([
+  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow, zonesNow, zonesLast, zoneDefNow, teamChanges] = await Promise.all([
     needLastSeason.length ? loadLogs(needLastSeason, season - 1, date, `${season}-${CONFIG.sim.lastSeasonLogsFrom}`) : {},
     needLastSeason.length ? loadSeasonAverages(needLastSeason, season - 1) : {},
     loadAllowed(season),
@@ -720,6 +749,7 @@ async function computeHunts(date) {
     ownZoneIds.length ? loadPlayerZones(ownZoneIds, season) : {},
     lastZoneIds.length ? loadPlayerZones(lastZoneIds, season - 1) : {},
     loadZoneDefense(season),
+    needLastSeason.length ? loadTeamChanges(needLastSeason, season - 1, date, players) : {},
   ]);
   const allowed = allowedNow || (await loadAllowed(season - 1)); // same fallback rule as the rest of the site
   const pace = paceNow || (await loadPace(season - 1));
@@ -748,6 +778,7 @@ async function computeHunts(date) {
       playerId: entry.player_id,
       logs: { current: currentLogs[entry.player_id] || [], previous: previousLogs[entry.player_id] || [] },
       lastSeasonAvg: lastSeasonAvgs[entry.player_id] || null,
+      teamPrior: teamChanges[entry.player_id] || null,
       opponent: opponentInfo(allowed, oppTeam.id, prop),
       pace: paceInfo(pace, teamId, oppTeam.id),
       backToBack: playedYesterday.has(teamId),
@@ -777,6 +808,7 @@ async function computeHunts(date) {
         base: scored.base,       // the season baseline's score; base + every factor's points = the score before rounding
         chance: scored.chance,   // simulated % chance of this side hitting (pushes left out)
         projection: { mean: sim.projection.mean, p10: sim.projection.p10, p90: sim.projection.p90 },
+        teamPrior: info.teamPrior,  // traded during last season: { team, games, other } = the prior used only his games with team
         factors: scored.factors, // key, label, points + the numbers behind each one, for the Hunt Score page
         why: writeWhy(side, prop, line, info, scored, sim, ctx),
         injured,                 // Out / Doubtful / Questionable / Day-To-Day
