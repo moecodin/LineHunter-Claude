@@ -13,6 +13,8 @@
 //   opponent / pace  multipliers using half the gap between tonight's opponent and the league average
 //   zone matchup     PTS / 3PM / PRA only: the player's shots per game in each zone x (the FG% tonight's opponent allows there - the
 //                    league's), worth 2 or 3 points a make, as a share of his usual output; half of it, capped at 6% (CONFIG.sim.zone)
+//   role             tonight's lineup: with rotation teammates (15+ min) Out / Doubtful, minutes and per-minute output lean on
+//                    his past games without them, in proportion to how many there are (CONFIG.sim.role)
 //   back-to-back     a small multiplier when the team played yesterday
 //   spread           minutes noise (the player's own, wider for a game-time decision), uncertainty in the true rate (wider with
 //                    few games or when the last 3 games disagree with the projection) and game-to-game noise (from the logs)
@@ -34,7 +36,8 @@
 //   /nba/v1/team_season_averages/general?type=advanced   each team's pace
 //   /nba/v1/season_averages/shooting?type=by_zone&player_ids[]=          each player's FGA per game by zone (this + last season)
 //   /nba/v1/team_season_averages/shooting?type=by_zone_opponent          the FG% each team allows by zone (the league = all teams)
-//   /v1/player_injuries                             Out / Doubtful / Questionable
+//   /v1/player_injuries                             Out / Doubtful / Questionable (+ the Out / Doubtful players' logs, this season
+//                                                   and last season from Feb 1, for the role step)
 
 const API_ORIGIN = "https://api.balldontlie.io";
 
@@ -60,7 +63,12 @@ const CONFIG = {
     lastSeasonLogsFrom: "02-01",               // last season's game logs only from this day of its spring (L10, spreads); its
                                                // full-season rate and minutes come from one season-averages request instead
     market: { base: 0.2, thin: 0.3 },
-    teamPrior: { minGames: 10 },               // traded during last season: the prior is last season's games with his current
+    teamPrior: { minGames: 10 },
+    // Role: tonight's lineup. Teammates listed Out / Doubtful who usually play 15+ minutes are "missing"; the player's past games
+    // on this team where at least half of those minutes were also missing are his role games (newest count most: weight halves
+    // every 10 role games; last season's count half). Their minutes replace the form minutes in proportion n / (n + 2), their
+    // per-minute output the form rate in proportion n / (n + 6), n = the role games' total weight.
+    role: { minMinutes: 15, minMatch: 0.5, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6 },               // traded during last season: the prior is last season's games with his current
                                                // team once there are 10 (his old team's role and numbers left out)          // pull the projection toward the book's line: 20%, up to 50% with few games this season
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
@@ -363,15 +371,73 @@ async function loadPace(season) {
   }
 }
 
+// { status: { playerId: "Out" }, rows: the injury report rows (player with team_id, status) } for the slate's teams
 async function loadInjuries(teamIds) {
   try {
     const rows = await bdlAllPages(`/v1/player_injuries?${teamIds.map((id) => `team_ids[]=${id}`).join("&")}&per_page=100`);
     const status = {};
     rows.forEach((row) => { if (row.player) status[row.player.id] = row.status || "Out"; });
-    return status;
+    return { status, rows: rows.filter((row) => row.player) };
   } catch (error) {
-    return {};
+    return { status: {}, rows: [] };
   }
+}
+
+// ---------- role (tonight's lineup) ----------
+
+// { teamId: [{ last, minutes, seasons: Set, played: Set of game ids }] }: each team's players listed Out / Doubtful tonight who
+// usually play CONFIG.sim.role.minMinutes+ (this season once they have 3 games, else last season from Feb 1). A missing player
+// counts in this season (he is on the team now) and in last season when he played 5+ games for the team then.
+async function loadMissing(injuryRows, teamIds, season, before) {
+  const out = injuryRows.filter((row) => /out|doubt/i.test(row.status || "Out") && teamIds.includes(row.player.team_id));
+  if (!out.length) return {};
+  const ids = [...new Set(out.map((row) => row.player.id))];
+  const [now, last] = await Promise.all([
+    loadLogs(ids, season, before),
+    loadLogs(ids, season - 1, before, `${season}-${CONFIG.sim.lastSeasonLogsFrom}`),
+  ]);
+  const byTeam = {};
+  out.forEach((row) => {
+    const teamId = row.player.team_id;
+    const mine = (list) => (list[row.player.id] || []).filter((log) => log.team && log.team.id === teamId && playedInGame(log));
+    const thisSeason = mine(now);
+    const lastSeason = mine(last);
+    const usual = average((thisSeason.length >= 3 ? thisSeason : [...thisSeason, ...lastSeason]).map(minutesOf));
+    if (!(usual >= CONFIG.sim.role.minMinutes)) return;
+    (byTeam[teamId] = byTeam[teamId] || []).push({
+      id: row.player.id, last: row.player.last_name, minutes: usual,
+      seasons: new Set([season, ...(lastSeason.length >= 5 ? [season - 1] : [])]),
+      played: new Set([...thisSeason, ...lastSeason].map((log) => log.game.id)),
+    });
+  });
+  return byTeam;
+}
+
+// The player's role games for tonight's lineup -> { minutes, rate, n, games, out } or null (nobody missing, or no such games).
+function roleInfo(prop, logs, teamId, missing, season) {
+  if (!missing || !missing.length) return null;
+  const R = CONFIG.sim.role;
+  const own = [...logs.current, ...logs.previous].filter((log) => log.team && log.team.id === teamId && playedInGame(log))
+    .sort((a, b) => b.game.date.localeCompare(a.game.date));
+  const games = [];
+  own.forEach((log) => {
+    const counted = missing.filter((m) => m.seasons.has(log.game.season));
+    const total = sum(counted.map((m) => m.minutes));
+    if (!total) return;
+    const match = sum(counted.filter((m) => !m.played.has(log.game.id)).map((m) => m.minutes)) / total;
+    if (match < R.minMatch) return;
+    const weight = match * Math.pow(0.5, games.length / R.halfLife) * (log.game.season === season ? 1 : R.lastSeason);
+    games.push({ weight, v: statOf(log, prop.keys), m: minutesOf(log) });
+  });
+  if (!games.length) return null;
+  const n = sum(games.map((g) => g.weight));
+  const minutesTotal = sum(games.map((g) => g.weight * g.m));
+  return {
+    minutes: minutesTotal / n,
+    rate: minutesTotal > 0 ? sum(games.map((g) => g.weight * g.v)) / minutesTotal : 0,
+    n, games: games.length, out: missing.map((m) => m.last).join(", "),
+    minutesWeight: n / (n + R.minutesPrior), rateWeight: n / (n + R.ratePrior),
+  };
 }
 
 // ---------- random numbers (seeded, so a prop scores the same every time its inputs are the same) ----------
@@ -578,6 +644,12 @@ function runSteps(prop, line, info, ctx) {
 
   step("minutes", "Minutes", { minutes: info.formMinutes }, { now: round1(info.formMinutes), base: round1(info.baseMinutes) });
   step("form", "Recent form", { rate: info.formRate }, { last: info.lastAvg === null ? null : round1(info.lastAvg), games: info.cur.length });
+  if (ctx.role) {
+    const r = ctx.role;
+    const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * input.minutes;
+    const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * input.rate;
+    step("role", "Role", { minutes, rate }, { out: r.out, games: r.games, from: round1(input.minutes), minutes: round1(minutes) });
+  }
   if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
   if (ctx.zone) step("zone", "Zone matchup", { mult: input.mult * ctx.zone.mult }, { extra: ctx.zone.points, zone: ctx.zone.zone, gap: ctx.zone.gap });
   if (ctx.pace) step("pace", "Pace", { mult: input.mult * ctx.pace.mult }, { rank: ctx.pace.rank, of: ctx.pace.of, pace: ctx.pace.pace });
@@ -615,7 +687,7 @@ function scoreSide(side, sim) {
 
 function pick(options, playerId) { return options[playerId % options.length]; }
 
-const FACTOR_WORD = { zone: "the zone matchup", market: "the book line", base: "the season numbers", minutes: "the minutes", form: "the recent form", opponent: "the matchup", pace: "the pace", spread: "the steady numbers" };
+const FACTOR_WORD = { role: "the bigger role", zone: "the zone matchup", market: "the book line", base: "the season numbers", minutes: "the minutes", form: "the recent form", opponent: "the matchup", pace: "the pace", spread: "the steady numbers" };
 
 function writeWhy(side, prop, line, info, scored, sim, ctx) {
   const id = ctx.playerId;
@@ -682,6 +754,8 @@ function writeWhy(side, prop, line, info, scored, sim, ctx) {
     risk = worst.rank > worst.of / 2
       ? `The biggest risk is the pace: ${opp} plays one of the slower games in the league (${ordinal(worst.rank)} of ${worst.of})`
       : `The biggest risk is the pace: ${opp} plays one of the faster games in the league (${ordinal(worst.rank)} of ${worst.of})`;
+  } else if (worst && worst.key === "role") {
+    risk = `The biggest risk is the lineup: with ${worst.out} out, ${last} projects to ${worst.minutes} minutes (${worst.from} before)`;
   } else if (worst && worst.key === "minutes") {
     risk = `The biggest risk is playing time: ${last}'s minutes project to ${worst.now}, against ${worst.base} on the season`;
   } else if (worst && worst.key === "form") {
@@ -741,7 +815,7 @@ async function computeHunts(date) {
   // Shooting players' shot profiles: this season for players with enough games, last season for the rest.
   const ownZoneIds = playerIds.filter((id) => !needLastSeason.includes(id) || currentLogs[id].filter(playedInGame).length >= CONFIG.sim.zone.ownSeasonGames);
   const lastZoneIds = playerIds.filter((id) => !ownZoneIds.includes(id));
-  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow, zonesNow, zonesLast, zoneDefNow, teamChanges] = await Promise.all([
+  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow, zonesNow, zonesLast, zoneDefNow, teamChanges, missingByTeam] = await Promise.all([
     needLastSeason.length ? loadLogs(needLastSeason, season - 1, date, `${season}-${CONFIG.sim.lastSeasonLogsFrom}`) : {},
     needLastSeason.length ? loadSeasonAverages(needLastSeason, season - 1) : {},
     loadAllowed(season),
@@ -750,6 +824,7 @@ async function computeHunts(date) {
     lastZoneIds.length ? loadPlayerZones(lastZoneIds, season - 1) : {},
     loadZoneDefense(season),
     needLastSeason.length ? loadTeamChanges(needLastSeason, season - 1, date, players) : {},
+    CONFIG.sim.role.off ? {} : loadMissing(injuries.rows, teamIds, season, date),
   ]);
   const allowed = allowedNow || (await loadAllowed(season - 1)); // same fallback rule as the rest of the site
   const pace = paceNow || (await loadPace(season - 1));
@@ -771,7 +846,7 @@ async function computeHunts(date) {
     const line = Number(entry.line_value);
     if (!Number.isFinite(line) || line <= 0) return;
 
-    const status = injuries[entry.player_id] || null;
+    const status = injuries.status[entry.player_id] || null;
     const injured = Boolean(status && CONFIG.injuredStatuses.test(status));
     const gtd = Boolean(injured && CONFIG.gtdStatuses.test(status) && !/out|doubt/i.test(status));
     const ctx = {
@@ -790,6 +865,7 @@ async function computeHunts(date) {
     const info = describe(prop, ctx);
     if (!info) return; // fewer than 5 games in total
     ctx.zone = zoneInfo(prop, playerZones[entry.player_id], zoneDefense, oppTeam.id, info.baseRate * info.baseMinutes);
+    ctx.role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season);
     ctx.extra = whatIf ? whatIf({ playerId: entry.player_id, stat: prop.code, line, info }) : null;
 
     const sim = runSteps(prop, line, info, ctx);
