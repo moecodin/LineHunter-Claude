@@ -9,3 +9,5 @@ js/core/config.js
 dev/hunt-compare.txt
 # dev/hunt-whatif.js output
 dev/hunt-whatif.txt
+# dev/hunt-backtest-check.js output
+dev/hunt-backtest-check.txt

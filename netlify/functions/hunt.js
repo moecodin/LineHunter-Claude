@@ -77,9 +77,9 @@ const CONFIG = {
     // most (weight halves every 10 role games), last season's count half. With 3+ role games, their minutes replace the form
     // minutes in proportion n / (n + 2) and their per-minute output the form rate in proportion n / (n + 6), n = total weight.
     role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, shortNight: 0.8,
-      // the missing minutes are mostly at HIS position (Sengun out, Capela the next center): his minutes going up is close to
-      // certain, so the role games' minutes are trusted like n / (n + 0.5) instead of n / (n + 2)
-      samePosShare: 0.5, samePosMinutesPrior: 0.5 },
+      // a missing teammate plays HIS position (Sengun out, Capela the next center): his minutes going up is close to certain,
+      // so the role games' minutes are trusted like n / (n + 0.5) instead of n / (n + 2)
+      samePosMinutesPrior: 0.5 },
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
     kMax: 200,
@@ -473,13 +473,13 @@ function roleInfo(prop, logs, teamId, missing, season, group) {
   }
   const n = sum(games.map((g) => g.weight));
   const minutesTotal = sum(games.map((g) => g.weight * g.m));
-  const samePos = group ? sum(missing.filter((m) => m.group === group).map((m) => m.minutes)) / sum(missing.map((m) => m.minutes)) : 0;
-  const minutesPrior = samePos >= R.samePosShare ? R.samePosMinutesPrior : R.minutesPrior;
+  const samePos = Boolean(group) && missing.some((m) => m.group === group);
+  const minutesPrior = samePos ? R.samePosMinutesPrior : R.minutesPrior;
   return {
     minutes: minutesTotal / n,
     rate: minutesTotal > 0 ? sum(games.map((g) => g.weight * g.v)) / minutesTotal : 0,
     n, games: games.length, out: missing.map((m) => m.last).join(", "),
-    minutesWeight: n / (n + minutesPrior), rateWeight: n / (n + R.ratePrior), samePos: samePos >= R.samePosShare,
+    minutesWeight: n / (n + minutesPrior), rateWeight: n / (n + R.ratePrior), samePos,
     // the role games themselves, for dev/hunt-whatif.js only (CONFIG.debug)
     list: CONFIG.debug ? games.map((g) => ({
       date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(g.m), v: g.v, without: g.without,
