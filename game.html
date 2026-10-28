@@ -116,6 +116,21 @@
       </div>
     </div>
 
+    <!-- GAME BREAKDOWN (test): projected score from both teams' offensive / defensive efficiency and pace vs the book's total.
+         js/components/gameBreakdown.js loads its data when this card scrolls into view. Swiss look (.lh-swiss-card). -->
+    <section class="card lh-swiss-card mb-5" id="gameBreakdown">
+      <div class="card-header py-3"><h2 class="lh-label mb-0" data-lh-kicker="Totals">Game Breakdown</h2></div>
+      <div class="card-body">
+        <div id="gameBreakdownBody"></div>
+        <div class="lh-explain">
+          <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainBreakdown" aria-expanded="false" aria-controls="explainBreakdown">
+            How this works <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+          </button>
+          <div class="collapse" id="explainBreakdown"><p class="lh-explain-text">Offensive rating is points scored per 100 possessions and defensive rating is points allowed. Each team's offense is paired with the other team's defense, scaled by how many possessions both teams' pace points to, which gives a projected score. Season ratings don't know who is injured tonight, and books already price them in, so most games land close to the posted total; this is a test of where they don't.</p></div>
+        </div>
+      </div>
+    </section>
+
     <!-- MATCHUP DETAILS: the team comparison (butterfly bars), full width, always visible. js/components/teamCompare.js loads its data
          when this card scrolls into view. -->
     <div class="card lh-tint-card mb-5" id="matchupDetails">
@@ -193,6 +208,7 @@
   <script src="js/components/matchupInfo.js"></script>
   <script src="js/components/gameInjuries.js"></script>
   <script src="js/components/teamCompare.js"></script>
+  <script src="js/components/gameBreakdown.js"></script>
   <script src="js/pages/game.js"></script>
   <script src="js/components/player-drawer.js"></script>
 </body>

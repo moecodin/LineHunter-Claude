@@ -627,6 +627,7 @@ async function loadPage() {
     const game = gameJson.data;
     renderGameHeader(game);
     setUpTeamComparison(game); // the Team Comparison panel (js/components/teamCompare.js): closed unless the visitor left it open
+    setUpGameBreakdown(game); // the Game Breakdown card (js/components/gameBreakdown.js): projected score vs the book total
     loadGameInjuries(game); // the Injury report card beside it (js/components/gameInjuries.js)
     loadMatchupInfo(game); // the Matchup Info card next to it (js/components/matchupInfo.js): loads on its own and never blocks the table
 

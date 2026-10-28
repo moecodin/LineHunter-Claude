@@ -5311,23 +5311,27 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
    Cards lose their box: no fill, no border, just a strong rule on top. Each section title has a small muted label above it
    (data-lh-kicker="Form" in player.html), the name is set big (first name smaller, last name + jersey), the season averages
    are plain numerals between hairlines, and the Hunt Score section (js/components/playerHunt.js) shows the build-up table. */
-.lh-swiss-page .card {
+.lh-swiss-page .card,
+.card.lh-swiss-card { /* .lh-swiss-card = one Swiss card on a page that isn't restyled yet (game.html's Game Breakdown) */
   --bs-card-bg: transparent;
   border: 0;
   border-top: 1px solid var(--lh-strong);
   box-shadow: none;
 }
-.lh-swiss-page .card > .card-header {
+.lh-swiss-page .card > .card-header,
+.lh-swiss-card > .card-header {
   padding: 0.75rem 0 0.5rem !important;
   border: 0;
   background: none;
 }
-.lh-swiss-page .card > .card-body { padding: 0.5rem 0 0; }
+.lh-swiss-page .card > .card-body,
+.lh-swiss-card > .card-body { padding: 0.5rem 0 0; }
 .lh-swiss-page .lh-players-card .card-body,
 .lh-swiss-page .lh-injury-card .card-body { padding-top: 0; }
 
 /* Section titles: a bold title with its one-word label above */
-.lh-swiss-page [data-lh-kicker] {
+.lh-swiss-page [data-lh-kicker],
+.lh-swiss-card [data-lh-kicker] {
   font-family: var(--lh-font-heading);
   font-size: 1.5rem;
   font-weight: 700;
@@ -5336,7 +5340,8 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   text-transform: none;
   color: var(--lh-strong);
 }
-.lh-swiss-page [data-lh-kicker]::before {
+.lh-swiss-page [data-lh-kicker]::before,
+.lh-swiss-card [data-lh-kicker]::before {
   content: attr(data-lh-kicker);
   display: block;
   margin-bottom: 0.3rem;
@@ -5528,3 +5533,77 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-pj-link[hidden] { display: none; }
 .lh-pj-link:hover, .lh-pj-link:focus-visible { color: var(--lh-strong); }
 .lh-pj-link.is-active { color: var(--lh-strong); font-weight: 600; border-bottom-color: var(--lh-strong); }
+
+
+/* ---------- Game Breakdown (game.html, js/components/gameBreakdown.js): projected score vs the book total ----------
+   Swiss look like the player page: big light numerals, hairlines, a model vs book number line and a total build-up table
+   (it reuses the player page's .lh-ph-step rows). Teal = toward the Over / more points, coral = toward the Under / fewer. */
+.lh-gb-top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.25rem 3rem; padding-bottom: 1rem; }
+.lh-gb-score { display: flex; align-items: flex-end; gap: 1rem; }
+.lh-gb-team { display: flex; align-items: flex-end; gap: 0.6rem; }
+.lh-gb-abbr { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; color: var(--lh-muted); padding-bottom: 0.45rem; }
+.lh-gb-pts {
+  font-size: clamp(3rem, 2rem + 3.5vw, 5.5rem);
+  font-weight: 300;
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+  color: var(--lh-strong);
+}
+.lh-gb-dash { font-size: 2rem; font-weight: 300; color: var(--lh-muted); padding-bottom: 0.4rem; }
+.lh-gb-facts { display: flex; flex-wrap: wrap; gap: 0.75rem 0; margin: 0; flex: 1 1 22rem; }
+.lh-gb-facts > div { padding: 0 1.25rem; border-left: 1px solid var(--lh-border); }
+.lh-gb-facts > div:first-child { border-left: 0; padding-left: 0; }
+.lh-gb-facts dt { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-gb-facts dd { margin: 0.2rem 0 0; font-size: 1.5rem; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: var(--lh-strong); }
+.lh-gb-facts dd small { display: block; margin-top: 0.15rem; font-size: 0.8rem; letter-spacing: 0; color: var(--lh-muted); }
+.lh-gb-lean { display: inline-block; padding-left: 0.5rem; border-left: 3px solid var(--lh-push); font-size: 1.1rem; font-weight: 600; }
+.lh-gb-lean.is-over { border-color: var(--lh-over); color: var(--lh-over-text); }
+.lh-gb-lean.is-under { border-color: var(--lh-under); color: var(--lh-under-text); }
+
+.lh-gb-section { border-top: 1px solid var(--lh-border); padding-top: 0.75rem; margin-top: 0.5rem; }
+.lh-gb-subhead {
+  display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem;
+  font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted);
+}
+.lh-gb-note { margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--lh-muted); }
+
+/* Model vs book: a number line, the book in the middle, the gap colored toward the side the model leans */
+.lh-gb-strip { position: relative; height: 5.25rem; margin: 0 1.5rem; }
+.lh-gb-axis { position: absolute; left: 0; right: 0; top: 2.5rem; height: 1px; background: var(--lh-border); }
+.lh-gb-gap { position: absolute; top: calc(2.5rem - 4px); height: 9px; }
+.lh-gb-gap.is-over { background: var(--lh-over); }
+.lh-gb-gap.is-under { background: var(--lh-under); }
+.lh-gb-mark { position: absolute; top: 1.85rem; width: 0; height: 1.35rem; }
+.lh-gb-mark::before { content: ""; position: absolute; left: -1px; top: 0; bottom: 0; width: 2px; background: var(--lh-strong); }
+.lh-gb-mark b { position: absolute; transform: translateX(-50%); white-space: nowrap; font-size: 0.8rem; font-weight: 600; color: var(--lh-strong); }
+.lh-gb-mark.is-book b { top: -1.4rem; }
+.lh-gb-mark.is-model::before { left: -6px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--lh-push); }
+.lh-gb-mark.is-model.is-over::before { background: var(--lh-over); }
+.lh-gb-mark.is-model.is-under::before { background: var(--lh-under); }
+.lh-gb-mark.is-model b { top: 1.6rem; }
+.lh-gb-mark.is-model.is-over b { color: var(--lh-over-text); }
+.lh-gb-mark.is-model.is-under b { color: var(--lh-under-text); }
+.lh-gb-mark.is-final::before { width: 0; border-left: 2px dashed var(--lh-muted); background: none; }
+.lh-gb-mark.is-final b { top: -1.4rem; font-weight: 500; color: var(--lh-muted); transform: translateX(4px); }
+.lh-gb-mark.is-end b { transform: translateX(calc(-100% + 6px)); }
+.lh-gb-mark.is-start b { transform: translateX(-6px); }
+.lh-gb-mark.is-final.is-end b { transform: translateX(calc(-100% - 4px)); }
+.lh-gb-ticks { position: absolute; left: 0; right: 0; top: 4.15rem; }
+.lh-gb-tick { position: absolute; transform: translateX(-50%); font-size: 0.7rem; color: var(--lh-muted); }
+
+/* The build-up's bars: right = adds points (teal), left = takes them away (coral) */
+.lh-gb-steps { max-width: none; }
+.lh-gb-bar { position: relative; height: 10px; }
+.lh-gb-bar::before { content: ""; position: absolute; top: -4px; bottom: -4px; left: 50%; width: 1px; background: var(--lh-border); }
+.lh-gb-bar span { position: absolute; top: 0; bottom: 0; }
+.lh-gb-bar .is-over { left: 50%; background: var(--lh-over); }
+.lh-gb-bar .is-under { right: 50%; background: var(--lh-under); }
+.lh-gb-delta.is-over { color: var(--lh-over-text); }
+.lh-gb-delta.is-under { color: var(--lh-under-text); }
+.lh-gb-steps .lh-ph-step--total .lh-ph-run { color: var(--lh-strong); }
+@media (max-width: 575.98px) {
+  .lh-gb-score { gap: 0.6rem; }
+  .lh-gb-facts > div { padding: 0 0.9rem; }
+  .lh-gb-facts dd { font-size: 1.2rem; }
+  .lh-gb-strip { margin: 0 1rem; }
+}
