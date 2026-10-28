@@ -280,7 +280,7 @@ async function loadGames() {
             <button type="button" class="lh-gc-ql collapsed" data-bs-toggle="collapse" data-bs-target="#ql-${game.id}" aria-expanded="false" aria-controls="ql-${game.id}">
               Quick look <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
             </button>
-            <a href="game.html?id=${game.id}" class="lh-gc-go">View <span class="lines-only">props</span><span class="research-only">stats</span> ›</a>
+            <a href="game.html?id=${game.id}" class="lh-gc-go stretched-link">View <span class="lines-only">props</span><span class="research-only">stats</span> ›</a>
           </div>
         </article>
       `;

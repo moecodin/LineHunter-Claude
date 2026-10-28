@@ -5940,6 +5940,9 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-gc-ql { padding: 0; background: none; border: 0; border-right: 1px solid var(--lh-border); color: var(--lh-muted); text-align: left; }
 .lh-gc-ql:hover, .lh-gc-ql:focus-visible { color: var(--lh-strong); }
 .lh-gc-ql[aria-expanded="true"] .lh-mi-chevron { transform: rotate(180deg); }
+/* The whole card opens the game page (VIEW PROPS is the stretched-link); Quick look and its panel sit above that link */
+.lh-gc-ql, .lh-gc .collapse, .lh-gc .collapsing { position: relative; z-index: 2; }
+.lh-gc:hover .lh-gc-abbr { opacity: 0.85; }
 .lh-gc-go { justify-content: flex-end; font-weight: 700; color: var(--lh-strong); text-decoration: none; }
 .lh-gc-go:hover { text-decoration: underline; }
 .lh-game-slot { transition: opacity 200ms; }
