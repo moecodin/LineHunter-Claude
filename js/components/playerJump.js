@@ -1,6 +1,6 @@
 // LineHunter - js/components/playerJump.js
 // The jump bar on player.html (#playerJump): one link per [data-lh-jump="Label"] section, in page order. It sits under the
-// name and sticks under the navbar once the name scrolls away (CSS position: sticky); then it gets .is-stuck, the short
+// name and sticks at the top of the screen once the name scrolls away (CSS position: sticky); then it gets .is-stuck, the short
 // name ("P. Reed #7", set by renderHeader in js/pages/player.js) shows in front and the section in view is underlined.
 // A link is hidden while its section is (Score with no scored prop, research mode) and, from 992px, for the sidebar cards
 // (Players, Injuries sit beside the main column there, not below it).
@@ -22,15 +22,16 @@ function setPlayerJumpName(name, jersey) {
   const links = [...track.querySelectorAll(".lh-pj-link")];
 
   const shown = (el) => el.offsetParent !== null && !(playerJumpWide.matches && el.closest("aside"));
-  // Navbar height = where the bar sticks; the bar's own height is added when scrolling to a section.
-  const navHeight = () => {
+  // Where the bar sticks: right under the navbar while it is on screen, else the very top. The navbar sits inside #site-nav,
+  // so it scrolls away with the page and the bar ends up at 0; were the navbar ever to stay put, the bar stays under it.
+  const stickTop = () => {
     const nav = document.querySelector(".lh-navbar");
-    return nav ? nav.getBoundingClientRect().height : 0;
+    return nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
   };
 
   let active = "";
   function update() {
-    const top = navHeight();
+    const top = stickTop();
     bar.style.setProperty("--lh-pj-top", `${top}px`);
     bar.classList.toggle("is-stuck", bar.getBoundingClientRect().top <= top + 1);
     const line = top + bar.offsetHeight + 24;
@@ -58,7 +59,9 @@ function setPlayerJumpName(name, jersey) {
     const el = document.getElementById(link.dataset.jumpTo);
     if (!el) return;
     event.preventDefault();
-    const y = el.getBoundingClientRect().top + window.scrollY - navHeight() - bar.offsetHeight - 8;
+    const nav = document.querySelector(".lh-navbar");
+    const navStays = nav && getComputedStyle(nav).position === "fixed"; // a navbar that never scrolls away
+    const y = el.getBoundingClientRect().top + window.scrollY - (navStays ? nav.offsetHeight : 0) - bar.offsetHeight - 8;
     const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: Math.max(0, y), behavior: smooth ? "smooth" : "auto" });
   });

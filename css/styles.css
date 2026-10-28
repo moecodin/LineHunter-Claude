@@ -5457,7 +5457,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 
 /* Player page prop toolbar: no charcoal panel and no name line (the page header already names the player), just the
    stat tabs, then the stepper / Over-Under / odds / Add row between hairlines like the rest of the page. */
-.lh-swiss-page #playerToolbar .lh-ptb {
+.lh-swiss-page #playerToolbar.lh-ptb { /* the toolbar div itself carries .lh-ptb */
   background: none;
   border-top: 0;
   padding: 0;
@@ -5474,7 +5474,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 
 /* ---------- Player page jump bar (#playerJump, js/components/playerJump.js) ----------
    One row of section links under the name, between a strong rule and a hairline; swipe sideways when they don't fit.
-   It sticks under the navbar (top = the navbar's height, set by the script); stuck, it gets the page color, the short name
+   It sticks at the top of the screen (under the navbar while that is on screen; top set by the script); stuck, it gets the page color, the short name
    in front and an underline on the section in view. */
 .lh-pj {
   position: sticky;
@@ -5486,6 +5486,9 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   background: var(--lh-bg);
   border-top: 1px solid var(--lh-strong);
   border-bottom: 1px solid var(--lh-border);
+  /* the page color reaches past the container's side padding, so nothing shows beside the bar while it is stuck */
+  box-shadow: 0 0 0 100vmax var(--lh-bg);
+  clip-path: inset(-1px -100vmax 0);
 }
 .lh-pj.is-stuck { border-top-color: transparent; }
 .lh-pj-name {
