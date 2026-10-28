@@ -6019,3 +6019,24 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   .lh-date-nav { width: 100%; }
   .lh-date-nav .lh-date-tabs { justify-content: center; }
 }
+
+/* Game Breakdown teaser (gbScoreHtml): scoreboard + a short labeled list, side by side on desktop, stacked on phones */
+.lh-gb-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 1rem 3rem; align-items: end; padding-bottom: 0.75rem; }
+.lh-gb-board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto auto; }
+.lh-gb-boardlabel { grid-column: 1 / -1; margin-bottom: 0.4rem; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-gb-side { display: flex; flex-direction: column; padding-right: 1rem; }
+.lh-gb-side.is-home { padding: 0 0 0 1rem; border-left: 1px solid var(--lh-border); }
+.lh-gb-side .lh-gb-abbr { padding: 0; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; color: var(--lh-muted); }
+.lh-gb-side .lh-gb-pts { font-size: clamp(2.75rem, 2rem + 2.5vw, 4rem); font-weight: 300; letter-spacing: -0.05em; line-height: 1; color: var(--lh-muted); }
+.lh-gb-side.is-lead .lh-gb-pts,
+.lh-gb-side.is-lead .lh-gb-abbr { color: var(--lh-strong); }
+.lh-gb-list { margin: 0; }
+.lh-gb-list > div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 0.75rem; align-items: baseline; padding: 0.55rem 0; border-top: 1px solid var(--lh-border); }
+.lh-gb-list dt { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-gb-list dd { margin: 0; font-size: 1rem; color: var(--lh-text); }
+.lh-gb-list dd b { font-weight: 600; color: var(--lh-strong); }
+.lh-gb-vs, .lh-gb-src { font-size: 0.8rem; color: var(--lh-muted); }
+.lh-gb-list .lh-gb-lean { font-size: 1rem; padding-left: 0.45rem; }
+@media (max-width: 767.98px) {
+  .lh-gb-top { grid-template-columns: minmax(0, 1fr); }
+}

@@ -168,31 +168,38 @@ function gbBookName(vendor) {
   return vendor;
 }
 
-// The big projected score: AWY 112.4 – 116.1 HME, then the total, margin and the book's numbers
+// The teaser: a two-team scoreboard (the team the model has ahead in full ink, the other muted), then a short labeled list:
+// Total (model vs book), Spread (model margin vs the book's), Lean, and the final score once the game is over.
+// Research mode hides the book parts (lines-only).
 function gbScoreHtml(game, model, odds, lean) {
   const a = game.visitor_team.abbreviation;
   const h = game.home_team.abbreviation;
   const margin = model.homePts - model.awayPts;
   const marginText = Math.abs(margin) < 0.05 ? "Even" : `${margin > 0 ? h : a} by ${gbNum(Math.abs(margin))}`;
   const bookSpread = odds && odds.spreadHome !== null
-    ? `book ${odds.spreadHome < 0 ? `${h} −${Math.abs(odds.spreadHome)}` : odds.spreadHome > 0 ? `${a} −${odds.spreadHome}` : "pick'em"}`
-    : "";
+    ? (odds.spreadHome < 0 ? `${h} −${Math.abs(odds.spreadHome)}` : odds.spreadHome > 0 ? `${a} −${odds.spreadHome}` : "pick'em")
+    : null;
   const final = game.status === "Final" && Number.isFinite(game.home_team_score) && game.home_team_score + game.visitor_team_score > 0;
+  const side = (abbr, pts, lead, home) => `
+        <div class="lh-gb-side${home ? " is-home" : ""}${lead ? " is-lead" : ""}">
+          <span class="lh-gb-abbr">${abbr}</span>
+          <span class="lh-gb-pts">${gbNum(pts)}</span>
+        </div>`;
+  const row = (label, value, cls = "") => `<div class="${cls}"><dt>${label}</dt><dd>${value}</dd></div>`;
+  const book = odds ? `<span class="lines-only"> <span class="lh-gb-vs">vs</span> <b>${odds.total}</b> <span class="lh-gb-src">${gbBookName(odds.vendor)}</span></span>` : "";
 
   return `
     <div class="lh-gb-top">
-      <div class="lh-gb-score" aria-label="Projected score ${a} ${gbNum(model.awayPts)}, ${h} ${gbNum(model.homePts)}">
-        <div class="lh-gb-team"><span class="lh-gb-abbr">${a}</span><span class="lh-gb-pts">${gbNum(model.awayPts)}</span></div>
-        <span class="lh-gb-dash" aria-hidden="true">–</span>
-        <div class="lh-gb-team is-home"><span class="lh-gb-pts">${gbNum(model.homePts)}</span><span class="lh-gb-abbr">${h}</span></div>
+      <div class="lh-gb-board" role="img" aria-label="Projected score ${a} ${gbNum(model.awayPts)}, ${h} ${gbNum(model.homePts)}">
+        <span class="lh-gb-boardlabel">Projected score</span>
+        ${side(a, model.awayPts, margin < 0, false)}
+        ${side(h, model.homePts, margin > 0, true)}
       </div>
-      <dl class="lh-gb-facts">
-        <div><dt>Model total</dt><dd>${gbNum(model.total)}</dd></div>
-        <div><dt>Margin</dt><dd>${marginText}<small class="lines-only">${bookSpread}</small></dd></div>
-        <div><dt>Possessions</dt><dd>${gbNum(model.possessions)}</dd></div>
-        ${odds ? `<div class="lines-only"><dt>Book O/U · ${gbBookName(odds.vendor)}</dt><dd>${odds.total}</dd></div>` : ""}
-        ${lean ? `<div class="lines-only"><dt>Lean</dt><dd><span class="lh-gb-lean is-${lean.side}">${lean.text}</span><small>${gbSigned(lean.gap)} vs book</small></dd></div>` : ""}
-        ${final ? `<div><dt>Final</dt><dd>${game.visitor_team_score + game.home_team_score}<small>${a} ${game.visitor_team_score} – ${game.home_team_score} ${h}</small></dd></div>` : ""}
+      <dl class="lh-gb-list">
+        ${row("Total", `<b>${gbNum(model.total)}</b> <span class="lh-gb-src">model</span>${book}`)}
+        ${row("Spread", `<b>${marginText}</b>${bookSpread ? `<span class="lines-only"> <span class="lh-gb-vs">vs</span> <b>${bookSpread}</b> <span class="lh-gb-src">book</span></span>` : ""}`)}
+        ${lean ? row("Lean", `<span class="lh-gb-lean is-${lean.side}">${lean.text}</span> <span class="lh-gb-src">${gbSigned(lean.gap)} vs book</span>`, "lines-only") : ""}
+        ${final ? row("Final", `<b>${game.visitor_team_score + game.home_team_score}</b> <span class="lh-gb-src">${a} ${game.visitor_team_score} – ${game.home_team_score} ${h}</span>`) : ""}
       </dl>
     </div>`;
 }
@@ -329,6 +336,7 @@ async function loadGameBreakdown(game) {
         <span class="lh-when-closed">Show breakdown details</span><span class="lh-when-open">Hide breakdown details</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
       </button>
       <div class="collapse" id="gameBreakdownMore">
+        <p class="lh-gb-note">Expected possessions: ${gbNum(model.possessions)} (both teams' pace).</p>
         ${gbStripHtml(game, model, odds, lean)}
         ${gbStepsHtml(model, odds)}
         <p class="lh-gb-note">${gbSourceText(ratings, current, last, game)}</p>
