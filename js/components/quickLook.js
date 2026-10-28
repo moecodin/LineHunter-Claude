@@ -91,9 +91,6 @@ function renderQuickLook(game, body, data) {
   const away = game.visitor_team.abbreviation;
   const line = (label, value, extraClass = "") => `<div class="${extraClass}"><span class="lh-label">${label}</span>${value}</div>`;
 
-  let odds = `<span class="text-muted">${data.oddsFailed ? "unavailable" : "not posted yet"}</span>`;
-  if (data.odds) odds = `${home} ${spreadText(data.odds.spreadHome)} · O/U ${data.odds.total}`;
-
   // "J. Tatum (Out), D. Carter (DTD)". The first few names show; the rest become "+N more".
   const shortStatus = (status) => (/^out/i.test(status) ? "Out" : /day/i.test(status) ? "DTD" : /question/i.test(status) ? "Q" : /doubt/i.test(status) ? "D" : status);
   const names = (players) => {
@@ -106,11 +103,21 @@ function renderQuickLook(game, body, data) {
   const injuryLines = (abbr, players) => `<div class="lh-ql-injury"><strong>${abbr}</strong> ${players === null ? `<span class="text-muted">unavailable</span>` : names(players)}</div>`;
 
   body.innerHTML = `
-    ${line("Spread / Total", odds, "lines-only")}
     <div><span class="lh-label">Injury report</span></div>
     ${injuryLines(away, data.injuryAway)}
     ${injuryLines(home, data.injuryHome)}
-    <div data-top-prop class="lines-only">${line("Top prop", topPropText(game))}</div>`;
+    <div data-top-prop class="lines-only">${line("Top prop", topPropText(game))}</div>
+    <div data-model class="lines-only">${line("Model total", `<span class="text-muted">loading…</span>`)}</div>`;
+  // The Game Breakdown's projected total and lean (js/components/gameBreakdown.js), from shared team-rating requests.
+  if (typeof gameModelFor === "function") {
+    gameModelFor(game).then((result) => {
+      const slot = body.querySelector("[data-model]");
+      if (!slot) return;
+      if (result.error) { slot.innerHTML = line("Model total", `<span class="text-muted">not available</span>`); return; }
+      const lean = result.lean && result.lean.side !== "none" ? ` · <span class="lh-ql-lean is-${result.lean.side}">${result.lean.text}</span>` : result.lean ? " · no lean" : "";
+      slot.innerHTML = line("Model total", `${result.model.total.toFixed(1)}${lean}`);
+    }).catch(() => {});
+  }
 }
 
 // ---------- Hooking up one card ----------

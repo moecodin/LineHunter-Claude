@@ -294,33 +294,45 @@ function renderBreakdownSkeleton() {
   body.innerHTML = `<div class="placeholder-glow" aria-hidden="true">${line("4rem")}<div class="mt-3">${line("1.5rem")}</div><div class="mt-3">${line("10rem")}</div></div>`;
 }
 
+// Everything the card and the Today page's Quick look need for one game: { current, last, ratings, model, odds, lean },
+// or { error: "..." } when the ratings are missing. The team ratings are shared requests (bdlGet keeps them in memory).
+async function gameModelFor(game) {
+  const [current, last, odds] = await Promise.all([
+    loadBreakdownSeason(game.season).catch(() => null),
+    loadBreakdownSeason(game.season - 1).catch(() => null),
+    loadBreakdownOdds(game.id).catch(() => null),
+  ]);
+  if (!current && !last) return { error: "Team ratings aren't available yet." };
+  const ratings = blendRatings(current, last);
+  const model = breakdownModel(game, ratings);
+  if (!model) return { error: "Ratings aren't available for these teams." };
+  return { current, last, ratings, model, odds, lean: gbLean(model, odds) };
+}
+
+// The card: the teaser (projected score, model total, book O/U, lean) always shows; the number line, the build-up and the
+// ratings note sit behind "Show breakdown details" (a Bootstrap collapse).
 async function loadGameBreakdown(game) {
   const body = document.getElementById("gameBreakdownBody");
   renderBreakdownSkeleton();
   try {
-    const [current, last, odds] = await Promise.all([
-      loadBreakdownSeason(game.season).catch(() => null),
-      loadBreakdownSeason(game.season - 1).catch(() => null),
-      loadBreakdownOdds(game.id).catch(() => null),
-    ]);
-    if (!current && !last) {
-      body.innerHTML = `<p class="lh-gb-note">Team ratings aren't available yet.</p>`;
+    const result = await gameModelFor(game);
+    if (result.error) {
+      body.innerHTML = `<p class="lh-gb-note">${result.error}</p>`;
       return;
     }
-    const ratings = blendRatings(current, last);
-    const model = breakdownModel(game, ratings);
-    if (!model) {
-      body.innerHTML = `<p class="lh-gb-note">Ratings aren't available for these teams.</p>`;
-      return;
-    }
-    const lean = gbLean(model, odds);
+    const { current, last, ratings, model, odds, lean } = result;
     window.lhGameBreakdown = { game, current, last, ratings, model, odds, lean }; // for testing in the console
 
     body.innerHTML = `
       ${gbScoreHtml(game, model, odds, lean)}
-      ${gbStripHtml(game, model, odds, lean)}
-      ${gbStepsHtml(model, odds)}
-      <p class="lh-gb-note">${gbSourceText(ratings, current, last, game)}</p>`;
+      <button type="button" class="lh-sec-toggle lh-gb-more collapsed" data-bs-toggle="collapse" data-bs-target="#gameBreakdownMore" aria-expanded="false" aria-controls="gameBreakdownMore">
+        <span class="lh-when-closed">Show breakdown details</span><span class="lh-when-open">Hide breakdown details</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+      </button>
+      <div class="collapse" id="gameBreakdownMore">
+        ${gbStripHtml(game, model, odds, lean)}
+        ${gbStepsHtml(model, odds)}
+        <p class="lh-gb-note">${gbSourceText(ratings, current, last, game)}</p>
+      </div>`;
   } catch (error) {
     console.error("Game breakdown failed:", error);
     body.innerHTML = `<p class="lh-gb-note">The game breakdown is unavailable right now.</p>`;

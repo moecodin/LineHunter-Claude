@@ -87,6 +87,64 @@ function updateGamesCarousel() {
   next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 1;
 }
 
+// Phones: the card that is only peeking in from the side is faded, so the cards read as separate.
+function markPeekingCards() {
+  const track = document.getElementById("games-list");
+  const left = track.getBoundingClientRect().left;
+  const right = left + track.clientWidth;
+  track.querySelectorAll(".lh-game-slot").forEach((slot) => {
+    const box = slot.getBoundingClientRect();
+    const visible = Math.max(0, Math.min(box.right, right) - Math.max(box.left, left));
+    slot.classList.toggle("is-peek", visible < box.width * 0.75);
+  });
+}
+
+// Phones, first visit only: the row slides a little to the left and back, so it's clear there are more games to swipe to.
+const SWIPE_HINT_KEY = "lh-swipe-hint";
+function swipeHintOnce() {
+  const track = document.getElementById("games-list");
+  const phone = window.matchMedia("(max-width: 575.98px)").matches;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!phone || reduced || track.querySelectorAll(".lh-game-slot").length < 2) return;
+  try {
+    if (localStorage.getItem(SWIPE_HINT_KEY)) return;
+    localStorage.setItem(SWIPE_HINT_KEY, "1");
+  } catch (error) {
+    return; // storage blocked: no hint rather than one on every visit
+  }
+  track.classList.add("is-hinting");
+  setTimeout(() => track.classList.remove("is-hinting"), 1700);
+}
+
+// Each card's season record (the standings, one request) and the spread / total line (one odds request for every game).
+async function fillGameCardExtras(games, day) {
+  const track = document.getElementById("games-list");
+  const season = games[0] ? games[0].season : null;
+  if (season && typeof fetchStandings === "function") {
+    fetchStandings(season).then((records) => {
+      if (day !== toApiDate(selectedDate) || !records) return;
+      track.querySelectorAll("[data-record]").forEach((el) => {
+        const record = records[el.dataset.record];
+        el.textContent = record && record.overall ? record.overall : "";
+      });
+    }).catch(() => {});
+  }
+  try {
+    const json = await bdlGet(`${ODDS_URL}?${games.map((game) => `game_ids[]=${game.id}`).join("&")}`);
+    if (day !== toApiDate(selectedDate)) return;
+    games.forEach((game) => {
+      const row = pickOddsRow((json.data || []).filter((item) => item.game_id === game.id));
+      const el = track.querySelector(`[data-game-id="${game.id}"] [data-odds-line]`);
+      if (!el) return;
+      el.textContent = row
+        ? `${game.home_team.abbreviation} ${spreadText(Number(row.spread_home_value))} · O/U ${Number(row.total_value)}`
+        : "Lines not posted yet";
+    });
+  } catch (error) {
+    track.querySelectorAll("[data-odds-line]").forEach((el) => { el.textContent = ""; });
+  }
+}
+
 // Scrolls one page left (-1) or right (1). Instant for people who prefer reduced motion.
 function scrollGames(direction) {
   const track = document.getElementById("games-list");
@@ -96,8 +154,8 @@ function scrollGames(direction) {
 
 document.getElementById("gamesPrev").addEventListener("click", () => scrollGames(-1));
 document.getElementById("gamesNext").addEventListener("click", () => scrollGames(1));
-document.getElementById("games-list").addEventListener("scroll", updateGamesCarousel, { passive: true });
-window.addEventListener("resize", updateGamesCarousel);
+document.getElementById("games-list").addEventListener("scroll", () => { updateGamesCarousel(); markPeekingCards(); }, { passive: true });
+window.addEventListener("resize", () => { updateGamesCarousel(); markPeekingCards(); });
 
 // Add one tab to the date pager (same underline tabs as the rest of the site: lh-tabs in css/styles.css).
 // When clicked, it makes "date" the selected day and loads that day's games.
@@ -194,58 +252,45 @@ async function loadGames() {
     gamesList.innerHTML = "";
     gamesList.scrollLeft = 0;
 
-    // forEach can also give us the position (index) of each game: 0, 1, 2, 3...
-    games.forEach((game, index) => {
-      // One slide per game. css/styles.css sizes them: 3 per page on desktop, 2 on tablets, 1 on phones.
+    // One card per game in the Swiss look of the game page header: tip time, both abbreviations underlined in the team colors,
+    // city + record, the spread / total line, then Quick look and View props. css/styles.css sizes the slides (3 / 2 / 1 per page).
+    games.forEach((game) => {
       const col = document.createElement("div");
       col.className = "lh-game-slot";
-
-      // Pick shade 1, 2 or 3 in turn. % gives the remainder after dividing:
-      // index 0 -> 0 -> shade-1, index 1 -> shade-2, index 2 -> shade-3, index 3 -> shade-1 again...
-      const shade = `shade-${(index % 3) + 1}`;
-
-      // The card's HTML, written as a template string so ${...} fills in the game's data.
-      // The whole card is a link (<a>) to that game's page: game.html?id=12345
-      // game-card + shade-N = our blue gradient (css/styles.css). h-100 = same height in a row.
-      // text-reset + text-decoration-none = keep normal text colors, no underline.
-  const visitorShade = getNeutralTeamIndex(game.visitor_team.abbreviation); // which gray (.lh-abbr-N, one set per theme)
-  const homeShade = getNeutralTeamIndex(game.home_team.abbreviation);
-
-      // The card is a normal box (not one big link) so the "Quick look" button can live inside it.
-      // The "View props ›" footer is the link; stretched-link stretches it over the whole card.
+      const away = game.visitor_team;
+      const home = game.home_team;
+      const colors = matchupColors(away.abbreviation, home.abbreviation);
       col.innerHTML = `
-        <div class="card game-card ${shade} h-100 text-reset">
-          <div class="card-body p-3">
-            <div class="lh-label text-center mb-2">${describeTime(game)}</div>
-            <div class="d-flex justify-content-between align-items-center text-center">
-              <div class="flex-fill">
-                <div class="lh-display display-6 lh-abbr lh-abbr-${visitorShade}">${game.visitor_team.abbreviation}</div>
-                <div class="small text-muted mt-1">${game.visitor_team.full_name}</div>
-              </div>
-              <div class="lh-label px-2">@</div>
-              <div class="flex-fill">
-                <div class="lh-display display-6 lh-abbr lh-abbr-${homeShade}">${game.home_team.abbreviation}</div>
-                <div class="small text-muted mt-1">${game.home_team.full_name}</div>
-              </div>
+        <article class="lh-gc" data-game-id="${game.id}">
+          <div class="lh-gc-when"><span>${describeTime(game)}</span></div>
+          <div class="lh-gc-teams">
+            <div class="lh-gc-team">
+              <span class="lh-gc-abbr" style="border-bottom-color: ${colors.away}">${away.abbreviation}</span>
+              <span class="lh-gc-city">${away.city} <span class="lh-gc-rec" data-record="${away.id}"></span></span>
+            </div>
+            <span class="lh-gc-at" aria-hidden="true">@</span>
+            <div class="lh-gc-team is-home">
+              <span class="lh-gc-abbr" style="border-bottom-color: ${colors.home}">${home.abbreviation}</span>
+              <span class="lh-gc-city">${home.city} <span class="lh-gc-rec" data-record="${home.id}"></span></span>
             </div>
           </div>
-          <div class="lh-ql">
-            <button type="button" class="btn btn-sm btn-outline-secondary lh-mi-toggle collapsed" data-bs-toggle="collapse"
-                    data-bs-target="#ql-${game.id}" aria-expanded="false" aria-controls="ql-${game.id}">
+          <div class="lh-gc-line lines-only" data-odds-line>&nbsp;</div>
+          <div class="collapse" id="ql-${game.id}"><div class="lh-ql-body">Loading...</div></div>
+          <div class="lh-gc-foot">
+            <button type="button" class="lh-gc-ql collapsed" data-bs-toggle="collapse" data-bs-target="#ql-${game.id}" aria-expanded="false" aria-controls="ql-${game.id}">
               Quick look <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
             </button>
-            <div class="collapse" id="ql-${game.id}"><div class="lh-ql-body">Loading...</div></div>
+            <a href="game.html?id=${game.id}" class="lh-gc-go">View <span class="lines-only">props</span><span class="research-only">stats</span> ›</a>
           </div>
-          <a href="game.html?id=${game.id}" class="card-footer lh-label text-accent text-center py-2 text-decoration-none stretched-link">View <span class="lines-only">props</span><span class="research-only">stats</span> ›</a>
-        </div>
+        </article>
       `;
-      // Team colors: the slash tint and edge glows (js/data/teams.js, css/styles.css .lh-team-card)
-      applyMatchupColors(col.querySelector(".game-card"), game.visitor_team.abbreviation, game.home_team.abbreviation);
       setUpQuickLook(col, game);
-
       gamesList.appendChild(col);
     });
+    fillGameCardExtras(games, day);
     updateGamesCarousel();
+    markPeekingCards();
+    swipeHintOnce();
   } catch (error) {
     if (day !== toApiDate(selectedDate)) return; // an old day's error, the user has moved on
     console.error(error); // full details go to the browser console (F12)
