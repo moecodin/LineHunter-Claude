@@ -403,6 +403,11 @@ function boardFactsHtml(item) {
     const tone = opponent.rank <= 10 ? "is-over" : opponent.rank > opponent.of - 10 ? "is-under" : "";
     facts.push({ label: `${row.opp} allows ${stat}`, note: `${opponent.perGame ?? ""} a game · 1 = allows the most`.replace(/^ a game · /, ""), value: `#${opponent.rank} of ${opponent.of}`, tone });
   }
+  const zone = boardFactor(any, "zone");
+  if (zone && Number.isFinite(zone.extra) && Math.abs(zone.extra) >= 0.1) {
+    const what = row.code === "3pm" ? "threes" : "pts";
+    facts.push({ label: `${row.opp} zone defense`, note: `vs an average defense${zone.zone ? ` · biggest gap ${zone.zone}` : ""}`, value: `${zone.extra > 0 ? "+" : "−"}${Math.abs(zone.extra).toFixed(1)} ${what}`, tone: zone.extra > 0 ? "is-over" : "is-under" });
+  }
   const pace = boardFactor(any, "pace");
   if (pace && pace.rank) {
     const tone = pace.rank <= 10 ? "is-over" : pace.rank > pace.of - 10 ? "is-under" : "";
