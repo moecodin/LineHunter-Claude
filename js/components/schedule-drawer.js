@@ -81,12 +81,12 @@
     return hitRateForWindow(view.logs, optionFor(state.propType).stat, line ?? 0, windowSize, view.showingCurrentSeason ?? data.showingCurrentSeason);
   }
 
-  // The H2H download for this game's two teams starts the first time the pill is picked (shared by every player in the matchup).
+  // The H2H download for this player (his games against tonight's opponent, whichever team he was on) starts the first time the pill is picked.
   function loadH2HNow() {
     if (state.h2h === "loading" || state.h2h === "ready") return;
     state.h2h = "loading";
     const token = state.token;
-    loadH2HForGame(state.info.gameId)
+    loadPlayerH2HForGame(state.info.playerId, state.info.gameId, state.info.opp)
       .then((data) => { if (token === state.token) { state.h2hData = data; state.h2h = "ready"; } })
       .catch((error) => { console.warn("Head-to-head games unavailable:", error); if (token === state.token) state.h2h = "failed"; })
       .finally(() => {
@@ -204,8 +204,8 @@
     state.info = info;
     state.data = null;
     state.split = "all";
-    if (!state.h2hData || state.info.gameId !== state.h2hGameId) { state.h2h = "idle"; state.h2hData = null; }
-    state.h2hGameId = info.gameId;
+    state.h2h = "idle"; // H2H is per player (loadPlayerH2H memoizes, so reopening the same player is instant)
+    state.h2hData = null;
     state.propType = PROP_CODES[info.code] || "points";
     state.windowSize = typeof topUi !== "undefined" && topUi ? topUi.state.window : 10;
     toolbar.setSide(info.side);

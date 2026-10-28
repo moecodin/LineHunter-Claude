@@ -93,7 +93,7 @@ function ensureH2H() {
   const opponent = h2hOpponent();
   if (!opponent || h2hStatus === "loading" || h2hStatus === "ready") return;
   h2hStatus = "loading";
-  loadH2H(player.team.id, opponent.id)
+  loadPlayerH2H(playerId, opponent.id)
     .then((data) => { h2hData = data; h2hStatus = "ready"; })
     .catch((error) => { console.warn("Head-to-head games unavailable:", error); h2hStatus = "failed"; })
     .finally(() => {

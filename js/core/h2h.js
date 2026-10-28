@@ -50,6 +50,42 @@ async function fetchH2H(teamId, opponentId) {
   return { games, logsByPlayer };
 }
 
+// One player's games against one team over the same seasons, WHICHEVER team the player was on (a player traded in this
+// summer still gets his games against that opponent). Same shape as loadH2H, so h2hLogsFor works on it. Used by the H2H
+// chip on the player page and in both drawers; loadH2H (team pair) stays for the Matchup Analysis card and the Analyzer.
+// One /v1/stats request per season (in parallel), memoized per player + opponent.
+const playerH2HLoads = {}; // "playerId-opponentId" -> Promise
+
+function loadPlayerH2H(playerId, opponentId) {
+  const key = `${playerId}-${opponentId}`;
+  if (!playerH2HLoads[key]) {
+    playerH2HLoads[key] = fetchPlayerH2H(playerId, Number(opponentId)).catch((error) => { delete playerH2HLoads[key]; throw error; });
+  }
+  return playerH2HLoads[key];
+}
+
+async function fetchPlayerH2H(playerId, opponentId) {
+  const [seasons, teams] = await Promise.all([
+    Promise.all(h2hSeasonYears().map((year) =>
+      bdlGetAllPages(`${BDL_BASE}/stats?player_ids[]=${playerId}&seasons[]=${year}&per_page=100`)
+    )),
+    getTeamAbbreviations(),
+  ]);
+  const opponentOf = (row) => (row.game.home_team_id === row.team.id ? row.game.visitor_team_id : row.game.home_team_id);
+  const rows = seasons.flat().filter((row) => row.game && row.team && row.game.status === "Final" && opponentOf(row) === opponentId);
+  addOpponentInfo(rows, teams);
+  sortNewestFirst(rows);
+  return { games: rows.map((row) => row.game), logsByPlayer: { [playerId]: rows } };
+}
+
+// The id of the team called opponentAbbreviation in a game (drawers know the opponent by its abbreviation), or null.
+function h2hTeamIdIn(game, opponentAbbreviation) {
+  if (!game || !opponentAbbreviation) return null;
+  if (game.home_team && game.home_team.abbreviation === opponentAbbreviation) return game.home_team.id;
+  if (game.visitor_team && game.visitor_team.abbreviation === opponentAbbreviation) return game.visitor_team.id;
+  return null;
+}
+
 function h2hLogsFor(h2h, playerId) {
   return (h2h && h2h.logsByPlayer[playerId]) || [];
 }
@@ -100,4 +136,12 @@ function h2hNoteHtml(opponentAbbreviation, h2hLogs) {
 async function loadH2HForGame(gameId) {
   const json = await bdlGet(`${BDL_BASE}/games/${gameId}`);
   return loadH2H(json.data.home_team.id, json.data.visitor_team.id);
+}
+
+// One player's games against the opponent in one game (named by abbreviation), whichever team he played for.
+async function loadPlayerH2HForGame(playerId, gameId, opponentAbbreviation) {
+  const json = await bdlGet(`${BDL_BASE}/games/${gameId}`);
+  const opponentId = h2hTeamIdIn(json.data, opponentAbbreviation);
+  if (opponentId === null) throw new Error(`No ${opponentAbbreviation} in game ${gameId}`);
+  return loadPlayerH2H(playerId, opponentId);
 }

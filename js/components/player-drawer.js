@@ -16,17 +16,21 @@ const drawerState = {
   split: "all", // all, home, away or h2h (this player's games against the other team in this game: js/core/h2h.js)
 };
 
-// The H2H download for this game's two teams (one per page), and the players who turned out to have no games in it.
-const drawerH2H = { status: "idle", data: null, noGames: new Set() };
-function ensureDrawerH2H() {
-  if (drawerH2H.status === "loading" || drawerH2H.status === "ready" || !currentGame) return;
+// The H2H download for the player in the drawer (his games against the other team in this game, whichever team he was on),
+// and the players who turned out to have no games against it.
+const drawerH2H = { status: "idle", data: null, playerId: null, noGames: new Set() };
+function ensureDrawerH2H(opponent) {
+  if (drawerH2H.playerId !== drawerState.playerId) Object.assign(drawerH2H, { status: "idle", data: null, playerId: drawerState.playerId });
+  const opponentId = h2hTeamIdIn(currentGame, opponent);
+  if (drawerH2H.status === "loading" || drawerH2H.status === "ready" || opponentId === null) return;
   drawerH2H.status = "loading";
-  loadH2H(currentGame.home_team.id, currentGame.visitor_team.id)
-    .then((data) => { drawerH2H.data = data; drawerH2H.status = "ready"; })
-    .catch((error) => { console.warn("Head-to-head games unavailable:", error); drawerH2H.status = "failed"; })
+  const id = drawerState.playerId;
+  loadPlayerH2H(id, opponentId)
+    .then((data) => { if (drawerH2H.playerId === id) { drawerH2H.data = data; drawerH2H.status = "ready"; } })
+    .catch((error) => { console.warn("Head-to-head games unavailable:", error); if (drawerH2H.playerId === id) drawerH2H.status = "failed"; })
     .finally(() => {
-      const id = drawerState.playerId;
-      if (drawerH2H.status === "ready" && id !== null && !h2hLogsFor(drawerH2H.data, id).some(playedInGame)) {
+      if (drawerH2H.playerId !== id) return; // another player was opened meanwhile
+      if (drawerH2H.status === "ready" && !h2hLogsFor(drawerH2H.data, id).some(playedInGame)) {
         drawerH2H.noGames.add(id);              // nothing to chart: back to All and grey the pill out
         if (drawerState.split === "h2h") drawerState.split = "all";
       }
@@ -111,7 +115,7 @@ function renderDrawerWindows() {
 function renderDrawerSplits(opponent) {
   renderToggleButtons(document.getElementById("playerDrawerSplits"), h2hSplitOptions(opponent, drawerH2H.noGames.has(drawerState.playerId)), drawerState.split, (split) => {
     drawerState.split = split;
-    if (split === "h2h") ensureDrawerH2H();
+    if (split === "h2h") ensureDrawerH2H(opponent);
     renderPlayerDrawer();
   });
 }
