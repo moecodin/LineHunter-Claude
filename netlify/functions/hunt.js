@@ -76,7 +76,10 @@ const CONFIG = {
     // under his usual is not a lineup game; a late-season game where he played big minutes still counts). Newest count
     // most (weight halves every 10 role games), last season's count half. With 3+ role games, their minutes replace the form
     // minutes in proportion n / (n + 2) and their per-minute output the form rate in proportion n / (n + 6), n = total weight.
-    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, shortNight: 0.8 },
+    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, shortNight: 0.8,
+      // the missing minutes are mostly at HIS position (Sengun out, Capela the next center): his minutes going up is close to
+      // certain, so the role games' minutes are trusted like n / (n + 0.5) instead of n / (n + 2)
+      samePosShare: 0.5, samePosMinutesPrior: 0.5 },
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
     kMax: 200,
@@ -207,7 +210,13 @@ async function loadLines(games) {
   return Object.values(picked).map((entry) => {
     const same = markets.filter((prop) => prop.player_id === entry.player_id && prop.prop_type === entry.prop_type
       && Number(prop.line_value) === Number(entry.line_value));
-    return { ...entry, priced: { over: same.some((prop) => hasPrice(prop.market.over_odds)), under: same.some((prop) => hasPrice(prop.market.under_odds)) } };
+    // the price of each side at this line: the picked book's (DraftKings first), else the first book that prices it
+    const price = (key) => {
+      const own = hasPrice(entry.market[key]) ? entry : same.find((prop) => hasPrice(prop.market[key]));
+      return own ? { odds: Number(own.market[key]), vendor: own.vendor } : null;
+    };
+    const prices = { over: price("over_odds"), under: price("under_odds") };
+    return { ...entry, priced: { over: Boolean(prices.over), under: Boolean(prices.under) }, prices };
   });
 }
 
@@ -414,7 +423,7 @@ async function loadMissing(injuryRows, teamIds, season, before) {
     const usual = average((thisSeason.length >= 3 ? thisSeason : [...thisSeason, ...lastSeason]).map(minutesOf));
     if (!(usual >= CONFIG.sim.role.minMinutes)) return;
     (byTeam[teamId] = byTeam[teamId] || []).push({
-      id: row.player.id, last: row.player.last_name, minutes: usual,
+      id: row.player.id, last: row.player.last_name, minutes: usual, group: posGroup(row.player.position),
       seasons: new Set([season, ...(lastSeason.length >= 5 ? [season - 1] : [])]),
       played: new Set([...thisSeason, ...lastSeason].map((log) => log.game.id)),
     });
@@ -422,8 +431,11 @@ async function loadMissing(injuryRows, teamIds, season, before) {
   return byTeam;
 }
 
+// Position group by the first listed position: G, F or C ("G-F" = guard), like the site's Same Position card
+const posGroup = (position) => { const first = String(position || "").trim().charAt(0).toUpperCase(); return "GFC".includes(first) && first ? first : null; };
+
 // The player's role games for tonight's lineup -> { minutes, rate, n, games, out } or null (nobody missing, or no such games).
-function roleInfo(prop, logs, teamId, missing, season) {
+function roleInfo(prop, logs, teamId, missing, season, group) {
   if (!missing || !missing.length) return null;
   const R = CONFIG.sim.role;
   const own = [...logs.current, ...logs.previous].filter((log) => log.team && log.team.id === teamId && playedInGame(log) && !log.game.postseason)
@@ -461,11 +473,13 @@ function roleInfo(prop, logs, teamId, missing, season) {
   }
   const n = sum(games.map((g) => g.weight));
   const minutesTotal = sum(games.map((g) => g.weight * g.m));
+  const samePos = group ? sum(missing.filter((m) => m.group === group).map((m) => m.minutes)) / sum(missing.map((m) => m.minutes)) : 0;
+  const minutesPrior = samePos >= R.samePosShare ? R.samePosMinutesPrior : R.minutesPrior;
   return {
     minutes: minutesTotal / n,
     rate: minutesTotal > 0 ? sum(games.map((g) => g.weight * g.v)) / minutesTotal : 0,
     n, games: games.length, out: missing.map((m) => m.last).join(", "),
-    minutesWeight: n / (n + R.minutesPrior), rateWeight: n / (n + R.ratePrior),
+    minutesWeight: n / (n + minutesPrior), rateWeight: n / (n + R.ratePrior), samePos: samePos >= R.samePosShare,
     // the role games themselves, for dev/hunt-whatif.js only (CONFIG.debug)
     list: CONFIG.debug ? games.map((g) => ({
       date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(g.m), v: g.v, without: g.without,
@@ -659,6 +673,17 @@ function expectedMean(runs, input) {
   return total / runs.length;
 }
 
+// American odds -> the chance they imply ("−300" -> 75%, "+240" -> 29%)
+const impliedChance = (odds) => (odds < 0 ? -odds / (-odds + 100) : 100 / (odds + 100));
+// The book's fair chance of each side: both sides' implied chances scaled to add up to 100% (the book's cut taken out). With
+// one side priced, its implied chance minus half a typical cut (4.5% in all).
+function fairChances(prices) {
+  const o = prices.over ? impliedChance(prices.over.odds) : null;
+  const u = prices.under ? impliedChance(prices.under.odds) : null;
+  if (o !== null && u !== null) return { over: o / (o + u), under: u / (o + u) };
+  return { over: o !== null ? o - 0.0225 : null, under: u !== null ? u - 0.0225 : null };
+}
+
 const toScore = (chance) => 50 + (chance - 0.5) * CONFIG.probToScore;
 
 // Builds the score step by step from the season baseline, so each factor carries the points it added for each side.
@@ -682,7 +707,7 @@ function runSteps(prop, line, info, ctx) {
     const r = ctx.role;
     const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * input.minutes;
     const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * input.rate;
-    step("role", "Role", { minutes, rate }, { out: r.out, games: r.games, from: round1(input.minutes), minutes: round1(minutes), ...(r.list ? { list: r.list, roleMinutes: round1(r.minutes), roleRate36: round1(r.rate * 36), from36: round1(input.rate * 36), rate36: round1(rate * 36) } : {}) });
+    step("role", "Role", { minutes, rate }, { out: r.out, games: r.games, from: round1(input.minutes), minutes: round1(minutes), samePos: r.samePos, ...(r.list ? { list: r.list, roleMinutes: round1(r.minutes), roleRate36: round1(r.rate * 36), from36: round1(input.rate * 36), rate36: round1(rate * 36) } : {}) });
   }
   if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
   if (ctx.zone) step("zone", "Zone matchup", { mult: input.mult * ctx.zone.mult }, { extra: ctx.zone.points, zone: ctx.zone.zone, gap: ctx.zone.gap });
@@ -907,12 +932,13 @@ async function computeHunts(date) {
     const info = describe(prop, ctx);
     if (!info) return; // fewer than 5 games in total
     ctx.zone = zoneInfo(prop, playerZones[entry.player_id], zoneDefense, oppTeam.id, info.baseRate * info.baseMinutes);
-    const role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season);
+    const role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season, posGroup(player.position));
     ctx.role = role && !role.miss ? role : null;
     ctx.roleMiss = role && role.miss ? role.miss : null; // CONFIG.debug only
     ctx.extra = whatIf ? whatIf({ playerId: entry.player_id, stat: prop.code, line, info }) : null;
 
     const sim = runSteps(prop, line, info, ctx);
+    const fair = fairChances(entry.prices);
     ["over", "under"].filter((side) => entry.priced[side]).forEach((side) => {
       const scored = scoreSide(side, sim);
       out.push({
@@ -927,6 +953,9 @@ async function computeHunts(date) {
         score: scored.score,
         base: scored.base,       // the season baseline's score; base + every factor's points = the score before rounding
         chance: scored.chance,   // simulated % chance of this side hitting (pushes left out)
+        odds: entry.prices[side].odds, book: entry.prices[side].vendor, // the price of this side (American odds)
+        fair: Math.round(fair[side] * 100),            // the book's fair chance of this side (its cut taken out), %
+        edge: scored.chance - Math.round(fair[side] * 100), // our chance minus the book's: what the price leaves on the table
         projection: { mean: sim.projection.mean, p10: sim.projection.p10, p90: sim.projection.p90 },
         teamPrior: info.teamPrior,
         ...(ctx.roleMiss ? { roleMiss: ctx.roleMiss } : {}), // dev/hunt-whatif.js only: teammates out but no Role step, and why

@@ -45,6 +45,8 @@ const signed = (v) => `${v > 0 ? "+" : v < 0 ? "−" : "±"}${Math.abs(v).toFixe
 const statWord = (code) => (code === "3pm" ? "3PM" : code.toUpperCase());
 const pickText = (p) => `${p.side === "over" ? "Over" : "Under"} ${p.line} ${statWord(p.stat)}`;
 const sameProp = (a, b) => a.playerId === b.playerId && a.stat === b.stat;
+const oddsText = (o) => (o === null || o === undefined ? "–" : o > 0 ? `+${o}` : `${o}`);
+const priceText = (p) => `${oddsText(p.odds)} · fair ${p.fair}% · edge ${p.edge > 0 ? "+" : ""}${p.edge}`;
 
 async function runEngine({ roleOff }) {
   engine.CONFIG.sim.role.off = roleOff;
@@ -72,10 +74,11 @@ function detailText(target, old, abbr) {
   out.push(`  ${pad("Season baseline", 26)} ${padL(target.base.toFixed(1), 6)}${target.teamPrior ? `   last season = his ${target.teamPrior.games} games with ${target.teamPrior.team} only${target.teamPrior.other ? ` (not ${target.teamPrior.other})` : ""}` : ""}`);
   target.factors.forEach((f) => out.push(`  ${pad(f.label, 26)} ${padL(signed(f.points), 6)}${f.key === "role" ? `   ${f.out} out` : f.key === "market" ? `   line ${f.line} vs projection ${f.sim} before the pull (gap ${f.gap}%, pulled ${f.weight}%)` : f.key === "spread" && f.bookGap ? "   wider: far from the book" : ""}`));
   out.push(`  ${pad("= Hunt Score", 26)} ${padL(target.score, 6)}   ${target.chance}% chance · projects ${target.projection.mean} (${target.projection.p10}-${target.projection.p90})`);
+  out.push(`  ${pad("Price", 26)} ${padL(oddsText(target.odds), 6)}   ${target.book} · the book's fair chance ${target.fair}% · edge ${target.edge > 0 ? "+" : ""}${target.edge} points`);
   const role = target.factors.find((f) => f.key === "role");
   if (role && role.list) {
     out.push("");
-    out.push(`  ROLE GAMES (${role.games}): minutes ${role.from} -> ${role.minutes} (role games ${role.roleMinutes}) · ${statWord(target.stat)} per 36 ${role.from36} -> ${role.rate36} (role games ${role.roleRate36})`);
+    out.push(`  ROLE GAMES (${role.games}${role.samePos ? ", the missing minutes are at his position: minutes trusted more" : ""}): minutes ${role.from} -> ${role.minutes} (role games ${role.roleMinutes}) · ${statWord(target.stat)} per 36 ${role.from36} -> ${role.rate36} (role games ${role.roleRate36})`);
     role.list.forEach((g) => out.push(`    ${g.date} ${g.lastSeason ? "LS" : "  "} vs ${pad(abbr[g.oppId] || "?", 4)} ${padL(g.min.toFixed(0), 3)} min ${padL(g.v, 3)} ${statWord(target.stat)}   without ${g.without.join(", ")}`));
   }
   if (target.roleMiss) {
@@ -171,6 +174,33 @@ function calibrationText(body) {
   return out.filter((l) => l !== null).join("\n");
 }
 
+// The top 10 by edge: the best edge per player (like the top hunts), our chance 55%+, not injured.
+const EDGE_LIST = { size: 10, minChance: 55 };
+function edgeList(body) {
+  const best = {};
+  body.props.filter((p) => !p.injured && p.chance >= EDGE_LIST.minChance && Number.isFinite(p.edge)).forEach((p) => {
+    if (!best[p.playerId] || p.edge > best[p.playerId].edge) best[p.playerId] = p;
+  });
+  return Object.values(best).sort((a, b) => b.edge - a.edge).slice(0, EDGE_LIST.size);
+}
+
+function edgeText(body) {
+  const list = edgeList(body);
+  const out = [];
+  out.push(`TOP 10 BY EDGE (our chance minus the book's fair chance; chance ${EDGE_LIST.minChance}%+, one per player, not injured)`);
+  out.push(`  ${pad("", 22)} ${pad("", 18)} ${padL("odds", 5)}  ${padL("ours", 5)}  ${padL("fair", 5)}  ${padL("edge", 5)}  score`);
+  list.forEach((p) => {
+    const role = p.factors.find((f) => f.key === "role");
+    out.push(`  ${pad(p.player, 22)} ${pad(pickText(p), 18)} ${padL(oddsText(p.odds), 5)}  ${padL(`${p.chance}%`, 5)}  ${padL(`${p.fair}%`, 5)}  ${padL(`${p.edge > 0 ? "+" : ""}${p.edge}`, 5)}  ${padL(p.score, 5)}${role ? `  [Role: ${role.out} out]` : ""}${p.gtd ? "  [GTD]" : ""}`);
+  });
+  const overs = list.filter((p) => p.side === "over").length;
+  out.push(`  ${overs} overs / ${list.length - overs} unders`);
+  const all = body.props.filter((p) => Number.isFinite(p.edge));
+  const avgEdge = (side) => { const l = all.filter((p) => p.side === side); return l.length ? (l.reduce((a, p) => a + p.edge, 0) / l.length).toFixed(1) : "–"; };
+  out.push(`  Average edge over every scored side: overs ${avgEdge("over")}, unders ${avgEdge("under")} (near 0 for both = the sim agrees with the books overall)`);
+  return out.join("\n");
+}
+
 function countText(label, body) {
   const strong = body.props.filter((p) => p.score >= 65);
   const by = (list, side) => list.filter((p) => p.side === side).length;
@@ -208,10 +238,12 @@ function countText(label, body) {
   targets.forEach((t) => {
     const was = old.props.find((p) => sameProp(p, t) && p.side === t.side);
     const role = t.factors.find((f) => f.key === "role");
-    out.push(`  ${pad(t.player, 22)} ${pad(pickText(t), 18)} ${padL(was ? was.score : "–", 3)} -> ${padL(t.score, 3)}  proj ${was ? was.projection.mean : "–"} -> ${t.projection.mean}${t.score >= 65 ? "" : "  [below 65]"}${role ? `  [Role ${signed(role.points)}: ${role.out} out, ${role.from} -> ${role.minutes} min]` : ""}${t.teamPrior ? "  [traded]" : ""}${t.roleMiss ? `  [no Role: ${t.roleMiss.reason}]` : ""}`);
+    out.push(`  ${pad(t.player, 22)} ${pad(pickText(t), 18)} ${padL(was ? was.score : "–", 3)} -> ${padL(t.score, 3)}  proj ${was ? was.projection.mean : "–"} -> ${t.projection.mean}  ${priceText(t)}${t.score >= 65 ? "" : "  [below 65]"}${role ? `  [Role ${signed(role.points)}: ${role.out} out, ${role.from} -> ${role.minutes} min${role.samePos ? ", his position" : ""}]` : ""}${t.teamPrior ? "  [traded]" : ""}${t.roleMiss ? `  [no Role: ${t.roleMiss.reason}]` : ""}`);
   });
   out.push("");
-  out.push(`New top 5: ${now.topHunts.map((p) => `${p.player} ${pickText(p)} ${p.score}`).join(" | ") || "none"}`);
+  out.push(`New top 5 (by score): ${now.topHunts.map((p) => `${p.player} ${pickText(p)} ${p.score}`).join(" | ") || "none"}`);
+  out.push("");
+  out.push(edgeText(now));
   out.push("");
   out.push("OVERS vs UNDERS");
   out.push(countText("Old engine", old));
