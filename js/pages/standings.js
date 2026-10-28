@@ -7,10 +7,10 @@
 //              home_record: "31-9", road_record: "28-13" }  (a season nobody has played yet comes back as { data: [] })
 //   Games:     GET /v1/games?team_ids[]=ID&seasons[]=2025&per_page=100 -> L10 and the streak are worked out from each team's
 //              most recent finished regular-season games, not from the standings.
-// Season: the new season shows once its median team has played STANDINGS_MIN_GAMES games; until then last season's final table
-// is shown, labeled "2025–26 final". GB is worked out from the leader's wins and losses.
+// Season: the new season shows as soon as its median team has played a game (STANDINGS_MIN_GAMES); only before opening night is
+// last season's final table shown, labeled "2025–26 final". GB is worked out from the leader's wins and losses.
 
-const STANDINGS_MIN_GAMES = 10;
+const STANDINGS_MIN_GAMES = 1;
 const STANDINGS_CACHE_MINUTES = 10;
 
 // One color per division (CSS variables --lh-div-*, a set per theme). The over / under colors are not used for these.
