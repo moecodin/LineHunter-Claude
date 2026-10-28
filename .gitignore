@@ -11,3 +11,5 @@ dev/hunt-compare.txt
 dev/hunt-whatif.txt
 # dev/hunt-backtest-check.js output
 dev/hunt-backtest-check.txt
+# dev/hunt-snapshot.js saves (and its cron log)
+dev/snapshots/

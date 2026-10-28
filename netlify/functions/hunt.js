@@ -181,7 +181,18 @@ function ordinal(n) {
 
 // ---------- data loading ----------
 
+// dev/hunt-snapshot.js + dev/hunt-grade.js only (never set on the site): `record` collects what the engine downloaded that can't be
+// fetched again later (the slate as it stood, every book's props, the injury report), `replay` feeds a saved copy back in.
+const io = { record: null, replay: null };
+
 async function loadSlate(date) {
+  if (io.replay) return io.replay.games;
+  const slate = await loadSlateLive(date);
+  if (io.record) io.record.games = slate;
+  return slate;
+}
+
+async function loadSlateLive(date) {
   const games = await bdlAllPages(`/v1/games?start_date=${date}&end_date=${date}&per_page=100`);
   const now = Date.now();
   // Not started: nothing played yet, not final, and the tip-off is still ahead.
@@ -196,8 +207,10 @@ async function loadSlate(date) {
 // Each line gets `priced` = which sides some book prices at that exact line; a side no book prices is never scored.
 async function loadLines(games) {
   const lists = await pool(games.map((game) => async () => {
+    if (io.replay) return io.replay.props[game.id] || [];
     try { return (await bdl(`/nba/v2/odds/player_props?game_id=${game.id}`)).data; } catch (error) { return []; }
   }), CONFIG.concurrency);
+  if (io.record) io.record.props = Object.fromEntries(games.map((game, i) => [game.id, lists[i]]));
   const hasPrice = (value) => value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
   const markets = lists.flat()
     .filter((prop) => prop.market && prop.market.type === "over_under" && PROPS[prop.prop_type])
@@ -391,7 +404,8 @@ async function loadPace(season) {
 // { status: { playerId: "Out" }, rows: the injury report rows (player with team_id, status) } for the slate's teams
 async function loadInjuries(teamIds) {
   try {
-    const rows = await bdlAllPages(`/v1/player_injuries?${teamIds.map((id) => `team_ids[]=${id}`).join("&")}&per_page=100`);
+    const rows = io.replay ? io.replay.injuries : await bdlAllPages(`/v1/player_injuries?${teamIds.map((id) => `team_ids[]=${id}`).join("&")}&per_page=100`);
+    if (io.record) io.record.injuries = rows;
     const status = {};
     rows.forEach((row) => { if (row.player) status[row.player.id] = row.status || "Out"; });
     return { status, rows: rows.filter((row) => row.player) };
@@ -1008,4 +1022,16 @@ exports.handler = async (event) => {
 
 exports.CONFIG = CONFIG; // for dev/hunt-compare.js
 // For dev/hunt-whatif.js: extra multiplier steps for one prop, run inside the real simulation. Never set on the site.
+// For dev/hunt-snapshot.js and dev/hunt-grade.js: score a date while recording the inputs, or from saved inputs (no cache).
+exports.computeWith = async (date, { record = false, replay = null } = {}) => {
+  io.record = record ? {} : null;
+  io.replay = replay;
+  try {
+    const body = await computeHunts(date);
+    return { body, inputs: io.record };
+  } finally {
+    io.record = null;
+    io.replay = null;
+  }
+};
 exports.setWhatIf = (fn) => { whatIf = fn; Object.keys(warmCache).forEach((date) => delete warmCache[date]); };
