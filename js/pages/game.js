@@ -1,7 +1,7 @@
 // LineHunter - js/pages/game.js
 // The page for ONE game: the matchup at the top, then every player prop line for that game.
 // The game comes from the address bar: game.html?id=12345
-// A link can also open one player's drawer right away: game.html?id=12345&player=237&prop=pts
+// A link can also open one player's row on The Board right away: game.html?id=12345&player=237&prop=pts&side=under
 // The shared stats code (requests, game logs, hit rates) lives in js/core/stats.js.
 
 let allLines = [];       // every line for this game, cleaned up and with player names added
@@ -145,7 +145,7 @@ function showLinesMessage(text, colorClass) {
   message.textContent = text;
   message.classList.remove("d-none");
   document.getElementById("lines-table").classList.add("d-none");
-  document.getElementById("propList").classList.add("d-none");
+  document.dispatchEvent(new CustomEvent("lh-top-slate", { detail: { message: `<span class="${colorClass}">${huntAttr(text)}</span>` } })); // lines mode: The Board shows it
 }
 
 // ---------- Drawing on the page ----------
@@ -340,12 +340,14 @@ function renderResearchTable() {
       <td class="d-none d-md-table-cell">${statsLoading ? STAT_PLACEHOLDER : miniGraph(result.games)}</td>
       <td class="text-end">${statsLoading ? STAT_PLACEHOLDER : (milestone === null || result.totalGames === 0 ? `<span class="text-muted">–</span>` : `<strong>${milestone}+</strong> in ${result.hits}/${result.totalGames}`)}</td>
     `;
+    // The row opens the player page (on the table's stat).
+    const playerPage = `player.html?id=${player.playerId}&prop=${propCode(selectedProp) || "pts"}`;
     row.addEventListener("click", (event) => {
       if (event.target.closest("a")) return;
-      openPlayerDrawer(player.playerId);
+      window.location.href = playerPage;
     });
     row.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && event.target === row) openPlayerDrawer(player.playerId);
+      if (event.key === "Enter" && event.target === row) window.location.href = playerPage;
     });
     rowElements.push(row);
   });
@@ -355,227 +357,49 @@ function renderResearchTable() {
   document.getElementById("lines-table").classList.remove("d-none");
 }
 
-// ---------- Lines mode: the Player Props rows (same controls and behavior as Top Hit Rates, plain rows) ----------
-// The controls bar (L5 / L10 / L20, Filter, Sportsbook, search, chips), the stepper / Over-Under / odds / Add row controls and the math come
-// from js/components/prop-list.js, the same code Top Hit Rates uses. This file only decides which rows exist and how a plain row looks.
+// ---------- Lines mode: The Board for this game (js/components/board.js) ----------
+// The page hands The Board a "slate" made from the data it already downloaded: one row per posted line (the consensus line per
+// player + prop) with each window's games, the injuries and the tip-off. The Board draws the rows, the filter bar and the breakdown
+// that opens in place (no drawer). A link like game.html?id=1&player=237&prop=pts&side=under opens that player's row.
 
-const PROP_ROWS_SHOWN = 8;                        // rows before "Show all"
 const PROP_CODES_ALL = PL_STAT_TABS.filter((tab) => tab.code !== "all").map((tab) => tab.code);
-let propTab = "all";                              // "all" | "pts" | "reb" | ...
-
-// playerId -> status from the injury report (js/components/gameInjuries.js), for "Hide injured".
-const propBar = createPropListBar({
-  idPrefix: "gameProps",
-  anchor: document.getElementById("propTabs"),
-  windows: [5, 10, 20],
-  window: selectedWindow,
-  sorts: null,                                    // no Sort control on this page for now
-  withGame: false,                                // one game: no Game dropdown
-  isInjured: (playerId) => plIsInjuredOut((window.gameInjuryStatus || {})[playerId]),
-  onChange: () => renderPropRows(),
-  onBar: (state) => { if (!isResearchMode()) selectedWindow = state.window; }, // the drawer starts on the same window
-  modeClass: "lines-only",
-});
+let boardLinkDone = false;
 
 function onGameInjuriesLoaded() {
-  if (!isResearchMode() && Object.keys(playersById).length) renderPropRows();
+  if (!isResearchMode() && !statsLoading) sendBoardSlate();
 }
 
-function renderPropTabs() {
-  const tabs = document.getElementById("propTabs");
-  tabs.innerHTML = "";
-  propBar.render();
-  PL_STAT_TABS.forEach((tab) => {
-    const item = document.createElement("li");
-    item.className = "nav-item";
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = tab.code === propTab ? "nav-link active text-nowrap" : "nav-link text-nowrap";
-    button.textContent = tab.label;
-    button.addEventListener("click", () => {
-      propTab = tab.code;
-      if (tab.code !== "all") selectedProp = PROP_CODES[tab.code]; // the drawer starts on the table's prop
-      renderPropTabs();
-      renderPropRows();
-    });
-    item.appendChild(button);
-    tabs.appendChild(item);
-  });
-}
-
-// The rows that exist for the current tab, window, Filter, Sportsbook and search, in order. Each is
-//   { key, spec, line, side, stats }   a row at its line (the chosen sportsbook's own line, or the consensus line)
-//   { key, spec, noLine: true, games } a player the books haven't posted this prop for (specific stat tabs only)
-function buildPropEntries() {
-  const ui = propBar.state;
-  const vendor = lhOdds.getBook();
-  const codes = propTab === "all" ? PROP_CODES_ALL : [propTab];
+function sendBoardSlate() {
   const game = currentGame;
-  const entries = [];
-  Object.values(playersById).forEach((player) => {
-    if (!propBar.rowAllowed(player.fullName, player.playerId, gameId)) return;
-    const opp = game ? (player.team === game.home_team.abbreviation ? game.visitor_team.abbreviation : game.home_team.abbreviation) : "";
-    codes.forEach((code) => {
-      const propType = PROP_CODES[code];
-      const stat = propStatKey(propType);
-      const consensus = allLines.find((item) => item.playerId === player.playerId && item.propType === propType) || null;
-      const games = !statsLoading && gameLogsByPlayer[player.playerId] ? windowResult(player.playerId, stat, 0, ui.window).games : [];
-      const spec = {
-        playerId: player.playerId, name: player.fullName, team: player.team, opp,
-        gameId: game ? game.id : Number(gameId), tipoff: game ? game.datetime || null : null,
-        propType, code, games, line: consensus ? consensus.line : null,
+  if (!game) return;
+  const matchup = (team) => (team === game.home_team.abbreviation ? `vs ${game.visitor_team.abbreviation}` : `@ ${game.home_team.abbreviation}`);
+  const rows = allLines
+    .filter((item) => PROP_CODES_ALL.includes(propCode(item.propType)) && gameLogsByPlayer[item.playerId])
+    .map((item) => {
+      const stat = propStatKey(item.propType);
+      const w = {};
+      [5, 10, 20].forEach((size) => {
+        const result = windowResult(item.playerId, stat, item.line, size);
+        w[size] = { totalGames: result.totalGames, games: result.games };
+      });
+      return {
+        gameId: game.id, playerId: item.playerId, name: item.fullName, team: item.team,
+        matchup: matchup(item.team), tip: game.datetime || game.date, gameLabel: `${game.visitor_team.abbreviation} @ ${game.home_team.abbreviation}`,
+        opp: item.team === game.home_team.abbreviation ? game.visitor_team.abbreviation : game.home_team.abbreviation,
+        code: propCode(item.propType), line: item.line, w,
       };
-      const key = `${player.playerId}|${code}`;
-      const resolved = plResolve(spec, ui.side);
-      if (resolved) {
-        if (!statsLoading && resolved.stats.totalGames < ui.minGames) return;
-        entries.push({ key, spec, line: resolved.line, side: resolved.side, stats: resolved.stats });
-      } else if (propTab !== "all" && !vendor && ui.side === "both" && !consensus) {
-        if (!statsLoading && games.length < ui.minGames) return;
-        entries.push({ key, spec, noLine: true, games });
-      }
     });
-  });
-
-  const full = (entry) => (entry.stats.totalGames >= ui.window ? 1 : 0);
-  const average = (entry) => (entry.games.length ? entry.games.reduce((sum, item) => sum + item.value, 0) / entry.games.length : -1);
-  entries.sort((a, b) => {
-    if (a.noLine || b.noLine) return a.noLine === b.noLine ? average(b) - average(a) : (a.noLine ? 1 : -1); // no-line rows last, best average first
-    if (statsLoading) return b.line - a.line;                                                                // nothing to rank by yet: biggest line first
-    return (full(b) - full(a)) || (b.stats.hitRate - a.stats.hitRate) || (b.stats.totalGames - a.stats.totalGames) || (b.stats.streak - a.stats.streak);
-  });
-  return entries;
-}
-
-const PROP_PLACEHOLDER = `<span class="placeholder-glow"><span class="placeholder col-8 rounded"></span></span>`;
-
-// One plain row. Desktop (768px and up): player | prop + hit % | count | graph | controls. Phones: a compact two-line row, no stepper; tap opens the drawer.
-function propRowHtml(entry, edit = propBar.edits[entry.key]) {
-  const { spec } = entry;
-  const windowLabel = `L${propBar.state.window}`;
-  const open = (line, side) => huntAttr(JSON.stringify(plDrawerData(spec, line, side)));
-  const label = `Show ${spec.name}'s recent games`;
-  const player = `
-    <div class="lh-prow-player">
-      <a class="lh-player-link fw-semibold" href="player.html?id=${spec.playerId}">${spec.name}</a>
-      ${gameTeamBadge(spec.team)}
-      <span class="lh-prow-match">${spec.opp ? `${currentGame && spec.team === currentGame.home_team.abbreviation ? "vs" : "@"} ${spec.opp}` : ""}</span>
-    </div>`;
-
-  if (entry.noLine) {
-    const avg = entry.games.length ? entry.games.reduce((sum, game) => sum + game.value, 0) / entry.games.length : null;
-    const bars = entry.games.map((game) => ({ ...game, overUnder: "none" })); // one color: no line to score against
-    return `
-      <div class="lh-prow lh-prow--noline" data-pl-row="${entry.key}" data-lh-open="${open(null, null)}" tabindex="0" role="button" aria-label="${label}">
-        ${player}
-        <div class="lh-prow-prop"><span class="text-muted">No line yet</span> <span class="lh-prow-propname">${PL_PROP_WORDS[spec.code]}</span></div>
-        <div class="lh-prow-count">${statsLoading ? PROP_PLACEHOLDER : `<span class="lh-prow-avg">${avg === null ? "–" : `avg ${formatStatValue(avg)}`}</span>`}</div>
-        <div class="lh-prow-graph">${statsLoading ? PROP_PLACEHOLDER : miniGraph(bars)}</div>
-      </div>`;
+  const slate = { date: game.date, rows, injuries: window.gameInjuryStatus || {}, tips: { [game.id]: game.datetime || null } };
+  if (!boardLinkDone && linkedPlayerId && typeof boardOpenLinked === "function") {
+    boardLinkDone = true;
+    boardOpenLinked(game.id, linkedPlayerId, linkedPropType ? propCode(linkedPropType) : null, linkedSide);
   }
-
-  const baseLine = entry.line;
-  const line = edit ? edit.line : baseLine;
-  const side = edit ? edit.side : entry.side;
-  const stats = edit ? { ...entry.stats, ...plStatsAtLine(spec.games, line, side) } : entry.stats;
-  let hitClass = "";
-  if (stats.hitRate >= 60) hitClass = "lh-hit--good";
-  if (stats.hitRate <= 40) hitClass = "lh-hit--bad";
-  const shownSide = side || "over";
-  const best = side ? plBooks(spec, line, side)[0] || null : null;
-  const loading = statsLoading;
-  return `
-    <div class="lh-prow" data-pl-row="${entry.key}" data-lh-open="${open(line, side)}" tabindex="0" role="button" aria-label="${label}">
-      ${player}
-      <div class="lh-prow-prop"><strong class="lh-top-side lh-top-side--${shownSide}">${shownSide === "under" ? "Under" : "Over"}</strong> ${lineText(line)} <span class="lh-prow-propname">${PL_PROP_WORDS[spec.code]}</span></div>
-      <div class="lh-prow-rate ${hitClass}">${loading ? "" : `${Math.round(stats.hitRate)}%<span>${windowLabel}</span>`}</div>
-      <div class="lh-prow-count ${hitClass}">${loading ? PROP_PLACEHOLDER : `${stats.hits}/${stats.totalGames}<span class="lh-prow-avg">avg ${formatStatValue(stats.average)}</span>`}</div>
-      <div class="lh-prow-graph">${loading ? PROP_PLACEHOLDER : miniGraph(stats.games)}</div>
-      <div class="lh-prow-chip">${best ? `<span class="lh-odds-chip"><b>${plOddsText(best.odds)}</b> ${best.book}</span>` : `<span class="lh-odds-chip lh-odds-chip--none">–</span>`}</div>
-      <div class="lh-prow-controls">${plControlsHtml(spec, line, side, baseLine)}</div>
-    </div>`;
-}
-
-function setLinesMessage(html) {
-  const message = document.getElementById("lines-message");
-  message.className = "text-muted";
-  message.innerHTML = html;
-  message.classList.remove("d-none");
-  document.getElementById("propList").classList.add("d-none");
-}
-
-function renderPropRows() {
-  if (isResearchMode()) return;
-  const note = document.getElementById("lines-note");
-  if (allLines.length === 0) {
-    note.textContent = "No prop lines posted for this game yet. Books usually post them the day before or the day of the game.";
-    note.hidden = false;
-  } else if (propTab !== "all" && !allLines.some((item) => item.propType === PROP_CODES[propTab])) {
-    note.textContent = "No lines posted for this prop yet.";
-    note.hidden = false;
-  } else {
-    note.hidden = true;
-  }
-
-  const book = lhOdds.getBook();
-  if (book && lhOdds.vendors().length === 0) { setLinesMessage("Loading odds..."); return; }
-  const entries = buildPropEntries();
-  const toggle = document.getElementById("propsToggle");
-  if (entries.length === 0) {
-    const query = propBar.state.query.trim();
-    setLinesMessage(query ? `No players match “${huntAttr(query)}”.`
-      : book ? `${lhOdds.vendorName(book)} has no lines for these filters.` : "No players for these filters.");
-    toggle.hidden = true;
+  if (rows.length === 0) {
+    document.dispatchEvent(new CustomEvent("lh-top-slate", { detail: { message: `<span class="text-muted">No prop lines posted for this game yet. Books usually post them the day before or the day of the game.</span>` } }));
     return;
   }
-
-  document.getElementById("lines-message").classList.add("d-none");
-  const list = document.getElementById("propList");
-  list.classList.remove("d-none");
-  document.getElementById("propRows").setAttribute("aria-busy", String(statsLoading));
-  document.getElementById("propRows").innerHTML = entries.slice(0, PROP_ROWS_SHOWN).map((entry) => propRowHtml(entry)).join("");
-  document.getElementById("propRowsMore").innerHTML = entries.slice(PROP_ROWS_SHOWN).map((entry) => propRowHtml(entry)).join("");
-  const isOpen = document.getElementById("propRowsMore").classList.contains("show");
-  toggle.hidden = entries.length <= PROP_ROWS_SHOWN;
-  document.getElementById("propsToggleText").textContent = isOpen ? "Show fewer" : `Show all (${entries.length})`;
-
-  plBindControls(list, {
-    edits: propBar.edits,
-    find: (key) => buildPropEntries().find((entry) => entry.key === key) || null,
-    render: (entry) => propRowHtml(entry),
-  });
+  document.dispatchEvent(new CustomEvent("lh-top-slate", { detail: { slate } }));
 }
-
-["shown.bs.collapse", "hidden.bs.collapse"].forEach((eventName) => {
-  document.getElementById("propRowsMore").addEventListener(eventName, () => {
-    const total = document.querySelectorAll("#propRows .lh-prow, #propRowsMore .lh-prow").length;
-    document.getElementById("propsToggleText").textContent = document.getElementById("propRowsMore").classList.contains("show") ? "Show fewer" : `Show all (${total})`;
-  });
-});
-
-// A row (or its odds chip) was clicked: open the player drawer on this page, on that row's prop, line and side. Links, buttons and the
-// stepper do their own thing (the player name goes to player.html, + ADD adds to My Hunts).
-function openPropDrawer(info) {
-  openPlayerDrawer(info.playerId, info.side, PROP_CODES[info.code] || null, info.line);
-}
-(() => {
-  const list = document.getElementById("propList");
-  list.addEventListener("click", (event) => {
-    const chip = event.target.closest("[data-lh-drawer]");
-    if (chip) {
-      event.preventDefault();
-      openPropDrawer(JSON.parse(chip.dataset.lhDrawer));
-      return;
-    }
-    if (event.target.closest("a, button, input, select, output, .lh-top-linectl")) return;
-    const row = event.target.closest("[data-lh-open]");
-    if (row) openPropDrawer(JSON.parse(row.dataset.lhOpen));
-  });
-  list.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" || !event.target.matches("[data-lh-open]")) return;
-    openPropDrawer(JSON.parse(event.target.dataset.lhOpen));
-  });
-})();
 
 // Fill the table with the lines for the selected prop and window.
 function renderTable() {
@@ -585,7 +409,7 @@ function renderTable() {
     renderResearchTable();
     return;
   }
-  renderPropRows();
+  if (!statsLoading) sendBoardSlate();
 }
 
 // ---------- Loading everything ----------
@@ -599,20 +423,15 @@ async function loadPlayerStats(playerIds) {
   showingCurrentSeason = loaded.showingCurrentSeason;
 }
 
-// Opened from a link like game.html?id=1&player=237&prop=pts (the homepage's Top Hit Rates):
-// switch the table to that prop and open that player's drawer.
+// Opened from a link like game.html?id=1&player=237&prop=pts: research mode starts the table on that prop
+// (lines mode opens that player's row on The Board, see sendBoardSlate).
 function openLinkedPlayer(propTypes) {
   if (!linkedPlayerId || !playersById[linkedPlayerId]) return;
-
   if (linkedPropType && propTypes.includes(linkedPropType)) {
     selectedProp = linkedPropType;
-    const code = propCode(linkedPropType);
-    if (PROP_CODES_ALL.includes(code)) propTab = code;
     renderPills(propTypes);
-    renderPropTabs();
     renderTable();
   }
-  openPlayerDrawer(linkedPlayerId, linkedSide, linkedPropType); // the drawer starts on the linked prop
 }
 
 async function loadPage() {
@@ -627,6 +446,7 @@ async function loadPage() {
     const game = gameJson.data;
     renderGameHeader(game);
     setUpTeamComparison(game); // the Team Comparison panel (js/components/teamCompare.js): closed unless the visitor left it open
+    setUpGameBreakdown(game); // the Game Breakdown card (js/components/gameBreakdown.js): projected score vs the book total
     loadGameInjuries(game); // the Injury report card beside it (js/components/gameInjuries.js)
     loadMatchupInfo(game); // the Matchup Info card next to it (js/components/matchupInfo.js): loads on its own and never blocks the table
 
@@ -699,7 +519,6 @@ async function loadPage() {
 
     setUpSortHeaders();
     renderPills(propTypes);
-    renderPropTabs();
     renderTable();
     openLinkedPlayer(propTypes); // only does something for links like ?player=237&prop=pts
 
@@ -707,7 +526,6 @@ async function loadPage() {
     await loadPlayerStats(playerIds);
     statsLoading = false;
     renderTable();
-    refreshPlayerDrawer(); // if the drawer was opened while stats were loading, fill it in now
   } catch (error) {
     console.error(error);
     showLinesMessage(`Couldn't load this game: ${error.message}`, "text-danger");
@@ -720,6 +538,5 @@ loadPage();
 document.addEventListener("lh-mode-change", () => {
   if (isResearchMode() && sortKey === "hitRate") { sortKey = "average"; sortDescending = true; }
   if (!isResearchMode() && sortKey === "average") { sortKey = "hitRate"; sortDescending = true; }
-  if (!isResearchMode()) selectedWindow = propBar.state.window; // lines mode: the bar's window rules
   renderTable();
 });

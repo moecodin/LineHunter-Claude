@@ -87,7 +87,7 @@
 
   <!-- ORDER MATTERS: same order as schedule.html. js/components/top-hit-rates.js loads the slate itself here (<main data-lh-slate="page">:
        ?date=YYYY-MM-DD from the Today page's links, else the next day with games) and hands it to the cards on this page. -->
-  <!-- Chart.js draws the bar chart in the player drawer (js/components/schedule-drawer.js) -->
+  <!-- Chart.js: the shared chart code (js/components/propChart.js) still loads it -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
           integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
           crossorigin="anonymous"></script>
@@ -106,7 +106,6 @@
   <script src="js/components/share.js"></script>
   <script src="js/components/prop-list.js"></script>
   <script src="js/components/top-hit-rates.js"></script>
-  <script src="js/components/schedule-drawer.js"></script>
   <script src="js/components/hit-list.js"></script>
   <script src="js/components/bbq.js"></script>
   <script src="js/components/brickCity.js"></script>

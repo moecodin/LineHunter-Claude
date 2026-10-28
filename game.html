@@ -56,9 +56,26 @@
       </div>
     </div>
 
-    <!-- PLAYER PROPS CARD -->
-    <div class="card lh-tint-card mb-4" id="gamePropsCard">
-      <div class="card-header lh-label py-3"><span class="lines-only">Player Props</span><span class="research-only">Player Stats</span></div>
+    <!-- THE BOARD (lines mode): this game's props, each row opens in place to its breakdown (js/components/board.js; js/pages/game.js
+         hands it the rows). ?player=237&prop=pts&side=under opens that player's row. -->
+    <section id="theBoard" class="lh-board lines-only mb-5" data-rows="10" data-single-game aria-labelledby="boardTitle">
+      <div class="lh-board-head">
+        <span class="lh-bd-kicker">Props</span>
+        <h2 class="lh-board-title" id="boardTitle">The Board <span class="lh-board-date" id="boardDate"></span></h2>
+        <p class="lh-board-sub">Every prop in this game with its hit rate, Hunt line and Hunt Score. Open a row for the full breakdown.</p>
+      </div>
+      <ul id="boardTabs" class="nav nav-underline lh-tabs lh-board-tabs" hidden></ul>
+      <div id="boardHeads" class="lh-bd-heads" hidden aria-hidden="true">
+        <span>Player</span><span>Pick</span><span>Hit rate</span><span>Avg</span><span>Hunt line</span><span>Score</span><span>Best odds</span><span></span><span></span>
+      </div>
+      <div id="boardList" aria-busy="true"></div>
+      <button type="button" id="boardMore" class="btn btn-sm btn-outline-secondary lh-board-more w-100 mt-3" hidden>Show more</button>
+      <p class="lh-board-note">Based on past results and a simulation, not a guarantee. Gambling problem? Call 1-800-GAMBLER.</p>
+    </section>
+
+    <!-- PLAYER STATS CARD (research mode) -->
+    <div class="card lh-tint-card mb-4 research-only" id="gamePropsCard">
+      <div class="card-header lh-label py-3">Player Stats</div>
       <div class="card-body">
 
         <!-- RESEARCH MODE: the stat tabs and window toggle of the "Player Stats" table. js/pages/game.js adds the buttons. -->
@@ -68,25 +85,8 @@
           <span id="table-window-note" class="small text-muted" hidden>This season hasn't started, so Season shows last season.</span>
         </div>
 
-        <!-- LINES MODE: the same controls as Top Hit Rates (L5 / L10 / L20, Filter, Sportsbook, search, chips: js/components/prop-list.js inserts them
-             right above these tabs), then the stat tabs ALL / PTS / REB / AST / 3PM / PRA and the rows. -->
-        <ul id="propTabs" class="nav nav-underline lh-tabs mb-3 lines-only"></ul>
-
-        <!-- Shown when the books haven't posted lines for this game or this prop yet (players are still listed) -->
-        <div id="lines-note" class="small text-muted mb-3 lines-only" hidden></div>
-
         <!-- Messages like "Loading..." or "No lines yet" appear here -->
         <div id="lines-message" class="text-muted">Loading lines...</div>
-
-        <!-- Lines mode: plain rows (player, prop line, hit count, graph, stepper, Over / Under, odds, + Add). Rows past the first 8 sit in a collapse. -->
-        <div id="propList" class="lines-only d-none">
-          <div id="propRows" class="lh-prows"></div>
-          <div id="propRowsMore" class="collapse lh-prows"></div>
-          <button type="button" id="propsToggle" class="btn btn-sm btn-outline-secondary lh-mi-toggle w-100 mt-3 collapsed" hidden
-                  data-bs-toggle="collapse" data-bs-target="#propRowsMore" aria-expanded="false" aria-controls="propRowsMore">
-            <span id="propsToggleText">Show all</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
-          </button>
-        </div>
 
         <!-- Research mode: the "Player Stats" table (Player, Avg, graph, "25+ in 7/10") -->
         <div id="lines-table" class="table-responsive d-none research-only">
@@ -116,6 +116,21 @@
       </div>
     </div>
 
+    <!-- GAME BREAKDOWN (test): projected score from both teams' offensive / defensive efficiency and pace vs the book's total.
+         js/components/gameBreakdown.js loads its data when this card scrolls into view. Swiss look (.lh-swiss-card). -->
+    <section class="card lh-swiss-card mb-5" id="gameBreakdown">
+      <div class="card-header py-3"><h2 class="lh-label mb-0" data-lh-kicker="Totals">Game Breakdown</h2></div>
+      <div class="card-body">
+        <div id="gameBreakdownBody"></div>
+        <div class="lh-explain">
+          <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainBreakdown" aria-expanded="false" aria-controls="explainBreakdown">
+            How this works <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+          </button>
+          <div class="collapse" id="explainBreakdown"><p class="lh-explain-text">Offensive rating is points scored per 100 possessions and defensive rating is points allowed. Each team's offense is paired with the other team's defense, scaled by how many possessions both teams' pace points to, which gives a projected score. Season ratings don't know who is injured tonight, and books already price them in, so most games land close to the posted total; this is a test of where they don't.</p></div>
+        </div>
+      </div>
+    </section>
+
     <!-- MATCHUP DETAILS: the team comparison (butterfly bars), full width, always visible. js/components/teamCompare.js loads its data
          when this card scrolls into view. -->
     <div class="card lh-tint-card mb-5" id="matchupDetails">
@@ -124,53 +139,6 @@
     </div>
 
   </main>
-
-  <!-- PLAYER DRAWER: Bootstrap offcanvas that slides in from the right (offcanvas-end).
-       js/components/player-drawer.js fills it in when a row in the props table is clicked. -->
-  <div class="offcanvas offcanvas-end lh-player-drawer" tabindex="-1" id="playerDrawer" aria-labelledby="playerDrawerName">
-    <div class="offcanvas-header align-items-start">
-      <div>
-        <h2 class="lh-display h3 mb-1" id="playerDrawerName">Player</h2>
-        <div class="lh-label" id="playerDrawerMeta"></div>
-        <!-- js/components/player-drawer.js sets the link: player.html?id=PLAYER_ID&prop=pts -->
-        <div class="d-flex flex-wrap gap-2 mt-2">
-          <a id="playerDrawerPageLink" class="btn btn-sm lh-player-page-btn" href="player.html">Go to player page →</a>
-          <!-- Share the chart as a picture (js/components/share.js) -->
-          <button type="button" id="playerDrawerShare" class="btn btn-sm btn-ghost lines-only" aria-label="Share this chart as an image" title="Share as image">
-            <i class="bi bi-share" aria-hidden="true"></i> Share
-          </button>
-        </div>
-      </div>
-      <button type="button" class="lh-drawer-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Close">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-
-    <div class="offcanvas-body">
-      <!-- PROP TOOLBAR (lines mode): stat tabs, the line stepper, Over / Under, the best odds and "Add to My Hunts".
-           js/components/prop-toolbar.js builds it and moves the stat tabs in; in research mode the tabs stay below. -->
-      <div id="playerDrawerToolbar"></div>
-      <!-- Research mode: "25+ PTS in 7 of last 10 · avg 24.3" -->
-      <div id="playerDrawerMilestone" class="research-only mb-3"></div>
-
-      <!-- Stat tabs: Points, Rebounds, Assists, 3PM, P+R+A -->
-      <ul id="playerDrawerStats" class="nav nav-underline lh-tabs mb-3"></ul>
-
-      <!-- Window toggle: L5 / L10 / L20 / Season -->
-      <div class="d-flex flex-wrap gap-2 mb-3">
-          <div id="playerDrawerWindows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to show"></div>
-          <div id="playerDrawerSplits" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="All, home, away or head-to-head games"></div>
-        </div>
-
-      <!-- Hit rate and average -->
-      <div id="playerDrawerSummary" class="d-flex gap-4 mb-3"></div>
-
-      <!-- The chart, its hover tooltip, and the alt line − / + control: built by js/components/propChart.js -->
-      <div id="playerDrawerChart"></div>
-
-      <div id="playerDrawerMessage" class="text-muted small mt-2" hidden></div>
-    </div>
-  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Chart.js draws the bar chart in the player drawer -->
@@ -186,6 +154,7 @@
   <script src="js/core/stats.js"></script>
   <script src="js/core/h2h.js"></script>
   <script src="js/components/propChart.js"></script>
+  <script src="js/components/animatedBars.js"></script>
   <script src="js/components/prop-toolbar.js"></script>
   <script src="js/components/prop-list.js"></script>
   <script src="js/components/share.js"></script>
@@ -193,7 +162,9 @@
   <script src="js/components/matchupInfo.js"></script>
   <script src="js/components/gameInjuries.js"></script>
   <script src="js/components/teamCompare.js"></script>
+  <script src="js/components/gameBreakdown.js"></script>
+  <script src="js/components/hunt-score.js"></script>
+  <script src="js/components/board.js"></script>
   <script src="js/pages/game.js"></script>
-  <script src="js/components/player-drawer.js"></script>
 </body>
 </html>

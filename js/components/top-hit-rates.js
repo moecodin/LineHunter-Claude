@@ -501,6 +501,7 @@ function renderTopSkeleton() {
     list.innerHTML = row.repeat(5);
   }
   if (typeof showHitListLoading === "function") showHitListLoading();
+  document.dispatchEvent(new CustomEvent("lh-top-loading")); // The Board (js/components/board.js) shows its loading rows
   if (typeof showFanLoading === "function") showFanLoading();
 }
 
@@ -634,7 +635,7 @@ const topRowKey = (row) => `${row.gameId}|${row.playerId}|${row.code}`;
 // One row = one "bet ticket". Desktop: a stub (side, line, prop, hit rate) | perforation | player, hit count, graph; the controls
 // (stepper, Over / Under, best odds + "+ Add" as one group, js/components/prop-list.js) sit right after the graph. Phones (under 768px): a
 // compact ticket with a 3px teal / coral edge and the stub on the right (odds chip, hit rate, window); no stepper there. Clicking a row opens
-// the player drawer on this page (js/components/schedule-drawer.js); the href stays as the fallback (middle click, no script).
+// the game page with that player's row open on The Board.
 // edit = { line, side } from the stepper (side null = nothing picked yet: the numbers show the Over side).
 function topRowHtml({ row, side, stats, line: baseLine }, edit = topUi.edits[topRowKey(row)]) {
   const spec = topSpec(row);
@@ -655,12 +656,11 @@ function topRowHtml({ row, side, stats, line: baseLine }, edit = topUi.edits[top
   const oddsText = best ? plOddsText(best.odds) : "";
   const href = `game.html?id=${row.gameId}&player=${row.playerId}&prop=${row.code}${shownSide ? `&side=${shownSide}` : ""}`;
   const statWord = TOP_PROP_WORDS[row.code] || row.code.toUpperCase();
-  const drawer = `data-lh-drawer="${huntAttr(JSON.stringify(plDrawerData(spec, line, shownSide)))}"`;
   const windowLabel = `L${topUi.state.window}`;
 
   return `
     <div class="lh-top-addwrap" data-pl-row="${topRowKey(row)}">
-    <a class="lh-top-row lh-top-row--v2" href="${href}" ${drawer}>
+    <a class="lh-top-row lh-top-row--v2" href="${href}">
       <div class="lh-ticket">
         <div class="lh-ticket-stub">
           <div class="lh-top-prop"><strong class="lh-top-side lh-top-side--${mobileSide}">${sideWord}</strong> ${lineText(line)} ${statWord}</div>
@@ -676,7 +676,7 @@ function topRowHtml({ row, side, stats, line: baseLine }, edit = topUi.edits[top
         </div>
       </div>
     </a>
-    <a class="lh-mrow lh-mrow--${mobileSide}" href="${href}" ${drawer}>
+    <a class="lh-mrow lh-mrow--${mobileSide}" href="${href}">
       <div class="lh-mrow-main">
         <div class="lh-mrow-name"><span>${row.name}</span> <span class="lh-mrow-match">${row.team} ${row.matchup}</span></div>
         <div class="lh-mrow-prop"><b>${sideWord}</b> ${lineText(line)} ${statWord}</div>
@@ -768,6 +768,7 @@ async function ensureTopOdds(slate) {
   const gameIds = [...new Set(slate.rows.map((row) => row.gameId))];
   const lists = await Promise.all(gameIds.map((id) => bdlGet(`${PROPS_URL}?game_id=${id}`).then((json) => json.data).catch(() => [])));
   lhOdds.ingest(lists.flat());
+  if (topSlate === slate && lhOdds.vendors().length > 0) document.dispatchEvent(new CustomEvent("lh-odds-ready")); // The Board redraws its odds
   if (topSlate === slate && lhOdds.vendors().length > 0 && TOP_HAS_CARD) {
     if (topUi) topUi.render();
     renderTopRows();

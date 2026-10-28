@@ -1373,6 +1373,29 @@ html {
   color: rgba(var(--lh-text-rgb), 0.55);
   font: 500 10px "Inter Tight", sans-serif;
 }
+/* The divider (js/components/animatedBars.js): a thin rule between two bars, labeled at the top ("Last 5 avg 27.8" or "2026-27") */
+.lh-bars-divider {
+  position: absolute;
+  top: -18px;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  border-left: 1px solid var(--lh-muted);
+  z-index: 2;
+  pointer-events: none;
+  transition: transform 220ms var(--lh-bar-ease);
+}
+.lh-bars-divider span {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  padding-right: 4px;
+  background: var(--lh-bg);
+  color: var(--lh-muted);
+  font: 600 10px/1.2 "Inter Tight", sans-serif;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
 .lh-bar {
   position: absolute;
   top: 0;
@@ -5311,23 +5334,27 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
    Cards lose their box: no fill, no border, just a strong rule on top. Each section title has a small muted label above it
    (data-lh-kicker="Form" in player.html), the name is set big (first name smaller, last name + jersey), the season averages
    are plain numerals between hairlines, and the Hunt Score section (js/components/playerHunt.js) shows the build-up table. */
-.lh-swiss-page .card {
+.lh-swiss-page .card,
+.card.lh-swiss-card { /* .lh-swiss-card = one Swiss card on a page that isn't restyled yet (game.html's Game Breakdown) */
   --bs-card-bg: transparent;
   border: 0;
   border-top: 1px solid var(--lh-strong);
   box-shadow: none;
 }
-.lh-swiss-page .card > .card-header {
+.lh-swiss-page .card > .card-header,
+.lh-swiss-card > .card-header {
   padding: 0.75rem 0 0.5rem !important;
   border: 0;
   background: none;
 }
-.lh-swiss-page .card > .card-body { padding: 0.5rem 0 0; }
+.lh-swiss-page .card > .card-body,
+.lh-swiss-card > .card-body { padding: 0.5rem 0 0; }
 .lh-swiss-page .lh-players-card .card-body,
 .lh-swiss-page .lh-injury-card .card-body { padding-top: 0; }
 
 /* Section titles: a bold title with its one-word label above */
-.lh-swiss-page [data-lh-kicker] {
+.lh-swiss-page [data-lh-kicker],
+.lh-swiss-card [data-lh-kicker] {
   font-family: var(--lh-font-heading);
   font-size: 1.5rem;
   font-weight: 700;
@@ -5336,7 +5363,8 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   text-transform: none;
   color: var(--lh-strong);
 }
-.lh-swiss-page [data-lh-kicker]::before {
+.lh-swiss-page [data-lh-kicker]::before,
+.lh-swiss-card [data-lh-kicker]::before {
   content: attr(data-lh-kicker);
   display: block;
   margin-bottom: 0.3rem;
@@ -5528,3 +5556,343 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-pj-link[hidden] { display: none; }
 .lh-pj-link:hover, .lh-pj-link:focus-visible { color: var(--lh-strong); }
 .lh-pj-link.is-active { color: var(--lh-strong); font-weight: 600; border-bottom-color: var(--lh-strong); }
+
+
+/* ---------- Game Breakdown (game.html, js/components/gameBreakdown.js): projected score vs the book total ----------
+   Swiss look like the player page: big light numerals, hairlines, a model vs book number line and a total build-up table
+   (it reuses the player page's .lh-ph-step rows). Teal = toward the Over / more points, coral = toward the Under / fewer. */
+.lh-gb-top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.25rem 3rem; padding-bottom: 1rem; }
+.lh-gb-score { display: flex; align-items: flex-end; gap: 1rem; }
+.lh-gb-team { display: flex; align-items: flex-end; gap: 0.6rem; }
+.lh-gb-abbr { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; color: var(--lh-muted); padding-bottom: 0.45rem; }
+.lh-gb-pts {
+  font-size: clamp(3rem, 2rem + 3.5vw, 5.5rem);
+  font-weight: 300;
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+  color: var(--lh-strong);
+}
+.lh-gb-dash { font-size: 2rem; font-weight: 300; color: var(--lh-muted); padding-bottom: 0.4rem; }
+.lh-gb-facts { display: flex; flex-wrap: wrap; gap: 0.75rem 0; margin: 0; flex: 1 1 22rem; }
+.lh-gb-facts > div { padding: 0 1.25rem; border-left: 1px solid var(--lh-border); }
+.lh-gb-facts > div:first-child { border-left: 0; padding-left: 0; }
+.lh-gb-facts dt { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-gb-facts dd { margin: 0.2rem 0 0; font-size: 1.5rem; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: var(--lh-strong); }
+.lh-gb-facts dd small { display: block; margin-top: 0.15rem; font-size: 0.8rem; letter-spacing: 0; color: var(--lh-muted); }
+.lh-gb-lean { display: inline-block; padding-left: 0.5rem; border-left: 3px solid var(--lh-push); font-size: 1.1rem; font-weight: 600; }
+.lh-gb-lean.is-over { border-color: var(--lh-over); color: var(--lh-over-text); }
+.lh-gb-lean.is-under { border-color: var(--lh-under); color: var(--lh-under-text); }
+
+.lh-gb-section { border-top: 1px solid var(--lh-border); padding-top: 0.75rem; margin-top: 0.5rem; }
+.lh-gb-subhead {
+  display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem;
+  font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted);
+}
+.lh-gb-note { margin: 0.75rem 0 0; font-size: 0.85rem; color: var(--lh-muted); }
+
+/* Model vs book: a number line, the book in the middle, the gap colored toward the side the model leans */
+.lh-gb-strip { position: relative; height: 5.25rem; margin: 0 1.5rem; }
+.lh-gb-axis { position: absolute; left: 0; right: 0; top: 2.5rem; height: 1px; background: var(--lh-border); }
+.lh-gb-gap { position: absolute; top: calc(2.5rem - 4px); height: 9px; }
+.lh-gb-gap.is-over { background: var(--lh-over); }
+.lh-gb-gap.is-under { background: var(--lh-under); }
+.lh-gb-mark { position: absolute; top: 1.85rem; width: 0; height: 1.35rem; }
+.lh-gb-mark::before { content: ""; position: absolute; left: -1px; top: 0; bottom: 0; width: 2px; background: var(--lh-strong); }
+.lh-gb-mark b { position: absolute; transform: translateX(-50%); white-space: nowrap; font-size: 0.8rem; font-weight: 600; color: var(--lh-strong); }
+.lh-gb-mark.is-book b { top: -1.4rem; }
+.lh-gb-mark.is-model::before { left: -6px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--lh-push); }
+.lh-gb-mark.is-model.is-over::before { background: var(--lh-over); }
+.lh-gb-mark.is-model.is-under::before { background: var(--lh-under); }
+.lh-gb-mark.is-model b { top: 1.6rem; }
+.lh-gb-mark.is-model.is-over b { color: var(--lh-over-text); }
+.lh-gb-mark.is-model.is-under b { color: var(--lh-under-text); }
+.lh-gb-mark.is-final::before { width: 0; border-left: 2px dashed var(--lh-muted); background: none; }
+.lh-gb-mark.is-final b { top: -1.4rem; font-weight: 500; color: var(--lh-muted); transform: translateX(4px); }
+.lh-gb-mark.is-end b { transform: translateX(calc(-100% + 6px)); }
+.lh-gb-mark.is-start b { transform: translateX(-6px); }
+.lh-gb-mark.is-final.is-end b { transform: translateX(calc(-100% - 4px)); }
+.lh-gb-ticks { position: absolute; left: 0; right: 0; top: 4.15rem; }
+.lh-gb-tick { position: absolute; transform: translateX(-50%); font-size: 0.7rem; color: var(--lh-muted); }
+
+/* The build-up's bars: right = adds points (teal), left = takes them away (coral) */
+.lh-gb-steps { max-width: none; }
+.lh-gb-bar { position: relative; height: 10px; }
+.lh-gb-bar::before { content: ""; position: absolute; top: -4px; bottom: -4px; left: 50%; width: 1px; background: var(--lh-border); }
+.lh-gb-bar span { position: absolute; top: 0; bottom: 0; }
+.lh-gb-bar .is-over { left: 50%; background: var(--lh-over); }
+.lh-gb-bar .is-under { right: 50%; background: var(--lh-under); }
+.lh-gb-delta.is-over { color: var(--lh-over-text); }
+.lh-gb-delta.is-under { color: var(--lh-under-text); }
+.lh-gb-steps .lh-ph-step--total .lh-ph-run { color: var(--lh-strong); }
+@media (max-width: 575.98px) {
+  .lh-gb-score { gap: 0.6rem; }
+  .lh-gb-facts > div { padding: 0 0.9rem; }
+  .lh-gb-facts dd { font-size: 1.2rem; }
+  .lh-gb-strip { margin: 0 1rem; }
+}
+
+
+/* ---------- The Board (top-hit-rates.html and the Today page; js/components/board.js) ----------
+   Swiss look like the player page: no card box, hairlines, light big numerals, teal / coral for the Over / Under. Each row opens in
+   place (one at a time) to its breakdown. Desktop: one grid row of columns; tablets drop Avg and Add; phones (<768px) get a two-line
+   row (name over pick, hit count and odds; the score on the right) and the hunts tracker sits behind a "Show hunts tracker" switch. */
+.lh-board { border-top: 1px solid var(--lh-strong); padding-top: 0.75rem; }
+.lh-board-head { margin-bottom: 1rem; }
+.lh-bd-kicker {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-board-title { margin: 0.2rem 0 0; font-size: 2.25rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--lh-strong); }
+.lh-board-date { font-weight: 300; color: var(--lh-muted); }
+.lh-board-sub { margin: 0.5rem 0 0; max-width: 40rem; color: var(--lh-muted); }
+.lh-board-tabs { margin-bottom: 0.75rem; }
+.lh-board-note { margin: 1rem 0 0; font-size: 0.8rem; color: var(--lh-muted); }
+
+.lh-bd-heads,
+.lh-bd-head {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.15fr) minmax(0, 1.5fr) minmax(0, 0.55fr) minmax(0, 0.8fr) minmax(0, 0.6fr) minmax(0, 1.05fr) 5.5rem 2.5rem;
+  column-gap: 1rem;
+  align-items: center;
+}
+.lh-bd-heads {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lh-muted);
+}
+.lh-bd-heads span:nth-child(4),
+.lh-bd-heads span:nth-child(5),
+.lh-bd-heads span:nth-child(6) { text-align: right; }
+.lh-bd-row { border-top: 1px solid var(--lh-border); }
+.lh-bd-row.is-open { border-top-color: var(--lh-strong); }
+.lh-bd-head { padding: 0.85rem 0; cursor: pointer; }
+.lh-bd-head:hover .lh-bd-last { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+.lh-bd-player { display: flex; flex-direction: column; min-width: 0; }
+.lh-bd-first { font-size: 0.95rem; font-weight: 500; line-height: 1.1; color: var(--lh-strong); }
+.lh-bd-lastline { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
+.lh-bd-last {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--lh-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lh-bd-meta { margin-top: 0.15rem; font-size: 0.8rem; color: var(--lh-muted); }
+.lh-bd-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0 0.3rem;
+  border: 1px solid var(--lh-under);
+  color: var(--lh-under-text);
+}
+.lh-bd-pick { padding-left: 0.6rem; border-left: 3px solid var(--lh-over); display: flex; flex-direction: column; }
+.lh-bd-pick.is-under { border-left-color: var(--lh-under); }
+.lh-bd-pick b { font-size: 1rem; font-weight: 600; color: var(--lh-strong); white-space: nowrap; }
+.lh-bd-pick span { font-size: 0.75rem; letter-spacing: 0.03em; color: var(--lh-muted); }
+.lh-bd-hit { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+.lh-bd-hit b { font-size: 1rem; font-weight: 600; color: var(--lh-strong); min-width: 2.6rem; }
+.lh-bd-graph { flex: 1 1 auto; min-width: 0; max-width: 8rem; }
+.lh-bd-window { font-size: 0.7rem; color: var(--lh-muted); }
+.lh-bd-num { text-align: right; font-size: 1rem; color: var(--lh-text); }
+.lh-bd-num small { display: block; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-bd-cap { display: none; }
+.lh-bd-num small.is-over,
+.lh-bd-score.is-over,
+.lh-bd-big.is-over,
+.lh-bd-huntlabel.is-over { color: var(--lh-over-text); }
+.lh-bd-num small.is-under,
+.lh-bd-score.is-under,
+.lh-bd-big.is-under,
+.lh-bd-huntlabel.is-under { color: var(--lh-under-text); }
+.lh-bd-score { text-align: right; font-size: 1.75rem; font-weight: 300; letter-spacing: -0.04em; line-height: 1; }
+.lh-bd-odds { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.lh-bd-more { font-size: 0.75rem; color: var(--lh-muted); }
+.lh-bd-add .lh-top-add { position: static; transform: none; width: 100%; justify-content: center; }
+.lh-bd-graph .lh-mini-graph { width: 100%; height: 26px; }
+.lh-bd-chev {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  color: var(--lh-strong);
+}
+.lh-bd-chev i { transition: transform 200ms; }
+.lh-bd-row.is-open .lh-bd-chev i { transform: rotate(180deg); }
+.lh-bd-chev:focus-visible { outline: 2px solid var(--lh-strong); outline-offset: -2px; }
+
+/* The open row */
+.lh-bd-panel { padding: 0.25rem 0 2rem; }
+.lh-bd-sum {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr) 15rem;
+  grid-template-areas: "edge strip score";
+  column-gap: 2.5rem;
+  align-items: center;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--lh-border);
+}
+.lh-bd-edge { grid-area: edge; display: flex; flex-direction: column; }
+.lh-bd-scorebox { grid-area: score; display: flex; flex-direction: column; padding-left: 1.5rem; border-left: 1px solid var(--lh-border); }
+.lh-bd-big { font-size: 4rem; font-weight: 300; letter-spacing: -0.05em; line-height: 1; color: var(--lh-strong); }
+.lh-bd-big.is-push { color: var(--lh-muted); }
+.lh-bd-small { margin-top: 0.35rem; font-size: 0.8rem; color: var(--lh-muted); }
+.lh-bd-conf { margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px solid var(--lh-border); font-size: 0.8rem; line-height: 1.4; color: var(--lh-muted); }
+.lh-bd-conf b { display: block; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.02em; color: var(--lh-strong); }
+.lh-bd-note { margin: 0; padding-top: 1rem; border-top: 1px solid var(--lh-border); color: var(--lh-muted); }
+
+/* The number line: the likely range (band), the book line (dashed), the Hunt line (dot) and the gap between them */
+.lh-bd-strip { grid-area: strip; position: relative; height: 6.75rem; margin: 0 1rem; }
+.lh-bd-axis { position: absolute; left: 0; right: 0; top: 3.25rem; height: 1px; background: var(--lh-border); }
+.lh-bd-band { position: absolute; top: 2.5rem; height: 1.5rem; background: rgba(var(--lh-ink-rgb), 0.08); }
+.lh-bd-tick,
+.lh-bd-rangelabel,
+.lh-bd-dir { position: absolute; transform: translateX(-50%); font-size: 0.7rem; color: var(--lh-muted); white-space: nowrap; }
+.lh-bd-tick { top: 4.3rem; }
+.lh-bd-rangelabel { top: 1.25rem; transform: translateX(-100%); }
+.lh-bd-dir { top: 5.4rem; letter-spacing: 0.04em; }
+.lh-bd-gap { position: absolute; top: calc(3.25rem - 4px); height: 9px; background: var(--lh-push); }
+.lh-bd-gap.is-over { background: var(--lh-over); }
+.lh-bd-gap.is-under { background: var(--lh-under); }
+.lh-bd-bookmark { position: absolute; top: 2rem; height: 2.6rem; margin-left: -1px; border-left: 2px dashed var(--lh-strong); }
+.lh-bd-dot {
+  position: absolute;
+  top: calc(3.25rem - 7px);
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--lh-push);
+  box-shadow: 0 0 0 3px var(--lh-bg);
+}
+.lh-bd-dot.is-over { background: var(--lh-over); }
+.lh-bd-dot.is-under { background: var(--lh-under); }
+.lh-bd-booklabel,
+.lh-bd-huntlabel { position: absolute; top: 0; font-size: 0.8rem; white-space: nowrap; }
+.lh-bd-booklabel { transform: translateX(-100%); padding-right: 0.4rem; color: var(--lh-muted); }
+.lh-bd-booklabel b { color: var(--lh-strong); font-weight: 600; }
+.lh-bd-booklabel.is-right { transform: none; padding: 0 0 0 0.4rem; }
+.lh-bd-huntlabel { padding-left: 0.3rem; }
+.lh-bd-huntlabel.is-left { transform: translateX(-100%); padding: 0 0.3rem 0 0; }
+.lh-bd-huntlabel b { font-weight: 600; }
+
+.lh-bd-why { margin: 1rem 0 0; max-width: 52rem; font-size: 0.95rem; line-height: 1.5; color: var(--lh-text); }
+
+/* The hunts tracker (the prop toolbar) between hairlines; phones keep it behind the switch */
+.lh-bd-tracker { margin-top: 1rem; }
+.lh-bd-tracker.lh-ptb { padding: 0.75rem 0; background: none; border: 0; border-top: 1px solid var(--lh-border); border-bottom: 1px solid var(--lh-border); }
+.lh-bd-tracker .lh-ptb-add { flex: 0 1 18rem; }
+.lh-bd-tracker .lh-ptb-head,
+.lh-bd-tracker .lh-ptb-stat { display: none; }
+.lh-bd-trackswitch {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  padding: 0.6rem 0;
+  min-height: 2.75rem;
+  border-top: 1px solid var(--lh-border);
+  border-bottom: 1px solid var(--lh-border);
+  cursor: pointer;
+}
+.lh-bd-trackswitch b { display: block; font-size: 0.9rem; font-weight: 600; color: var(--lh-strong); }
+.lh-bd-trackswitch small { font-size: 0.75rem; color: var(--lh-muted); }
+
+.lh-bd-cols { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); column-gap: 3rem; margin-top: 1.75rem; }
+.lh-bd-sechead { display: flex; align-items: flex-end; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.lh-bd-title { margin: 0.2rem 0 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; color: var(--lh-strong); }
+.lh-bd-chart { position: relative; }
+.lh-bd-avgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1.25rem; padding-top: 0.9rem; border-top: 1px solid var(--lh-border); }
+.lh-bd-avgs > div { display: flex; flex-direction: column; padding: 0 1rem; border-left: 1px solid var(--lh-border); }
+.lh-bd-avgs > div:first-child { padding-left: 0; border-left: 0; }
+.lh-bd-avgs span,
+.lh-bd-avgs small { font-size: 0.75rem; color: var(--lh-muted); }
+.lh-bd-avgs b { font-size: 2rem; font-weight: 300; letter-spacing: -0.04em; line-height: 1.15; color: var(--lh-strong); }
+.lh-bd-facts { margin: 0; }
+.lh-bd-facts > div { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 0.6rem 0; border-top: 1px solid var(--lh-border); }
+.lh-bd-facts dt { font-size: 0.9rem; font-weight: 400; color: var(--lh-muted); }
+.lh-bd-facts dt small { display: block; font-size: 0.75rem; opacity: 0.85; }
+.lh-bd-facts dd { margin: 0; font-size: 1rem; font-weight: 500; text-align: right; color: var(--lh-strong); }
+.lh-bd-facts dd.is-over { color: var(--lh-over-text); }
+.lh-bd-facts dd.is-under { color: var(--lh-under-text); }
+.lh-bd-links { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--lh-border); font-weight: 600; }
+.lh-bd-links a { color: var(--lh-strong); text-decoration: none; }
+.lh-bd-links a:hover { text-decoration: underline; }
+
+/* Tablets: no Avg and no Add column (Add is in the tracker) */
+@media (max-width: 1199.98px) {
+  .lh-bd-heads,
+  .lh-bd-head { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.2fr) minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.6fr) minmax(0, 1.1fr) 2.5rem; }
+  .lh-bd-heads span:nth-child(4), .lh-bd-heads span:nth-child(8),
+  .lh-bd-avg, .lh-bd-add { display: none; }
+  .lh-bd-sum { grid-template-columns: 10rem minmax(0, 1fr) 13rem; column-gap: 1.5rem; }
+  .lh-bd-cols { grid-template-columns: minmax(0, 1fr); row-gap: 1.75rem; }
+}
+
+/* Phones: two-line rows, the score on the right; the breakdown stacks */
+@media (max-width: 767.98px) {
+  .lh-bd-heads { display: none !important; }
+  .lh-bd-head {
+    grid-template-columns: auto auto minmax(0, 1fr) auto 2rem;
+    grid-template-areas:
+      "player player player score chev"
+      "pick hit odds score chev";
+    column-gap: 0.6rem;
+    row-gap: 0.4rem;
+    padding: 0.75rem 0;
+  }
+  .lh-bd-player { grid-area: player; }
+  .lh-bd-pick { grid-area: pick; }
+  .lh-bd-pick span { display: none; }
+  .lh-bd-pick b { font-size: 0.9rem; }
+  .lh-bd-hit { grid-area: hit; }
+  .lh-bd-hit b { min-width: 0; font-size: 0.85rem; font-weight: 500; color: var(--lh-muted); }
+  .lh-bd-graph, .lh-bd-window, .lh-bd-proj { display: none; }
+  .lh-bd-odds { grid-area: odds; }
+  .lh-bd-more { display: none; }
+  .lh-bd-score { grid-area: score; font-size: 2rem; }
+  .lh-bd-chev { grid-area: chev; width: 2rem; }
+  .lh-bd-last { font-size: 1.2rem; }
+  .lh-bd-first { font-size: 0.8rem; }
+
+  .lh-bd-sum {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "edge score" "strip strip";
+    row-gap: 0.5rem;
+  }
+  .lh-bd-scorebox { padding-left: 1rem; }
+  .lh-bd-big { font-size: 2.9rem; }
+  .lh-bd-strip { margin: 0.5rem 0.75rem 0; }
+  .lh-bd-trackswitch { display: flex; }
+  .lh-bd-panel:not(.is-tracker) .lh-bd-tracker { display: none; }
+  .lh-bd-tracker { margin-top: 0; }
+  .lh-bd-tracker.lh-ptb { border-top: 0; }
+  .lh-bd-avgs b { font-size: 1.6rem; }
+  .lh-bd-avgs > div { padding: 0 0.6rem; }
+  .lh-bd-links a {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    border: 1px solid var(--lh-border);
+    font-size: 0.85rem;
+  }
+  .lh-board-title { font-size: 1.9rem; }
+}

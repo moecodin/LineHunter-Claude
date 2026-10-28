@@ -131,6 +131,23 @@ function tooltipStatLines(game) {
   return [`${breakdown} = ${game.value}`, minutes];
 }
 
+// The divider in the animated bars (The Board and the player page). games = oldest first (rows from calculateHitRate);
+// seasonGames = how many games the player has played this season. Past 10 games this season: the last 5 games are set apart,
+// labeled "Last 5 avg 27.8" (only when the chart shows more than 5). Before that: where last season ends and this one starts,
+// labeled "2026-27". Neither applies: null.
+function chartDivider(games, seasonGames, season = currentSeasonYear()) {
+  if (!games || games.length < 2) return null;
+  if (seasonGames > 10) {
+    if (games.length <= 5) return null;
+    const last = games.slice(-5);
+    const average = last.reduce((sum, game) => sum + game.value, 0) / last.length;
+    return { beforeIndex: games.length - 5, label: `Last 5 avg ${average.toFixed(1)}` };
+  }
+  const first = games.findIndex((game) => game.season === season);
+  if (first <= 0) return null;
+  return { beforeIndex: first, label: `${season}-${String(season + 1).slice(2)}` };
+}
+
 // The number a game's stat is compared with. A betting line is compared as "over" (value > line); a research-mode
 // milestone "25+" means value >= 25, and every stat is a whole number, so that is the same as value > 24.5.
 function lineForScoring(line) {
@@ -446,6 +463,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     onLineChange();
   });
 
+  let dividerSpec = null; // animatedBars: { beforeIndex, label } or null (chartDivider below picks it)
   let tonightLabel = null; // animatedBars: the label ("vs BOS") for the empty bar at the far right for the next game, or null for none
 
   let lastDraw = null; // the last draw() arguments, so switching modes or themes can redraw
@@ -482,6 +500,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
       bars.render({
         games, line, bookLine: book, bookLabel: markerOptions.bookLabel, scaleMax, ticks,
         tonight: tonightLabel ? { label: tonightLabel } : null,
+        divider: dividerSpec,
         barClass: (game) => {
           if (line === null) return "is-noline";
           // Research mode has no "under": a bar that misses the milestone is neutral gray, never red.
@@ -584,6 +603,10 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
     // animatedBars: the empty bar for tonight's game, labeled e.g. "vs BOS" (null = no upcoming game, no bar). Takes effect on the next draw().
     setTonight(label) {
       tonightLabel = label || null;
+    },
+    // animatedBars: the divider for the next draw() (null = none). See chartDivider().
+    setDivider(divider) {
+      dividerSpec = divider || null;
     },
 
     // A new player or prop: set the book line (null if none) and an optional fallback starting line.
