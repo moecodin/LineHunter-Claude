@@ -44,6 +44,12 @@ who LEFT the team (LeBron) are not in the rotation, so games with them still loo
 - Snapshots are taken from this cloud thread for now (scheduled check-ins); the local cron was skipped. LATER: move the nightly
   snapshot + grade to a Netlify scheduled function with Netlify Blobs (same data as the parked "results on The Board").
 
+## Replaying any engine version on a snapshot
+`dev/hunt-replay.js` (`loadSnapshot`, `runEngineOn(enginePath, snap)`) serves the saved games / props / injuries through a wrapped
+fetch and a frozen Date.now, so main's old engine (`git show origin/main:netlify/functions/hunt.js > some/file.js`) and this
+branch's engine score the same saved night. Check: main's engine replayed on the Oct 28 snapshot reproduced the live site's numbers
+(Fears under 53, McCain 80, Capela 78). The grader should use it for "old vs new".
+
 ## Snapshot backup
 The container's `dev/snapshots/` is lost if the cloud session is reclaimed. Each night's file is also pushed gzipped (about 0.5 MB)
 to the data-only branch `hunt-snapshots` (`snapshots/YYYY-MM-DD.json.gz`, never merged). Restore: `git fetch origin hunt-snapshots`,
