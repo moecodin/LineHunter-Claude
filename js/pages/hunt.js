@@ -5,7 +5,7 @@
 //   - Odds = the best current odds across every book (lhOdds.getOdds with vendor null: the visitor's sportsbook filter doesn't apply).
 //     Not posted any more: "No longer posted". Game started: a STARTED tag. ALT when the line isn't the book's main line.
 //   - The total (Single / Parlay) only uses legs that still have odds.
-//   - Tapping a leg opens the player drawer on this page (js/components/schedule-drawer.js).
+//   - Tapping a leg opens the game page with that player's row open on The Board.
 //   - "Add to My Hunts" adds the legs to the visitor's own slip (one leg per player + stat; the slip is never wiped).
 //   - Research mode: a message and a button to switch to line mode.
 // Needs js/core/hunts.js, js/data/odds.js, js/core/stats.js, js/components/hunt-button.js (huntStatName) and js/components/my-hunts.js (lhToast).
@@ -69,12 +69,12 @@
     const side = ticket.side === "under" ? "Under" : "Over";
     const time = ticket.tipoff && !ticket.started
       ? new Date(ticket.tipoff).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "";
-    const open = JSON.stringify({ playerId: ticket.playerId, player: ticket.player, team: ticket.team, opp: ticket.opp, gameId: ticket.gameId, tipoff: ticket.tipoff, code: ticket.code, line: ticket.line, side: ticket.side });
+    const open = `game.html?id=${ticket.gameId}&player=${ticket.playerId}&prop=${ticket.code}&side=${ticket.side}`;
     const stub = ticket.best
       ? `<span class="lh-hleg-odds">${formatAmerican(ticket.best.odds)}</span><span class="lh-hleg-book">${escapeText(lhHunts.bookLabel(ticket.best.vendor))}</span>`
       : `<span class="lh-hleg-gone">${ticket.oddsKnown ? "No longer posted" : "Odds unavailable"}</span>`;
     return `
-      <li class="lh-hleg lh-hleg--${ticket.side} lh-hleg--link" data-lh-drawer="${huntAttr(open)}" tabindex="0" role="button" aria-label="Open ${escapeText(ticket.player)}'s ${escapeText(huntStatName(ticket.stat))}">
+      <li class="lh-hleg lh-hleg--${ticket.side} lh-hleg--link" data-lh-href="${huntAttr(open)}" tabindex="0" role="button" aria-label="Open ${escapeText(ticket.player)}'s ${escapeText(huntStatName(ticket.stat))}">
         <div class="lh-hleg-main">
           <div class="lh-hleg-top">
             <span class="lh-hleg-name">${escapeText(ticket.player)}</span>
@@ -115,9 +115,10 @@
   const openLeg = (event) => {
     if (event.type === "keydown" && event.key !== "Enter") return;
     const leg = event.target.closest(".lh-hleg--link");
-    if (leg && event.type === "keydown") leg.click();
+    if (leg) window.location.href = leg.dataset.lhHref;
   };
   el("huntList").addEventListener("keydown", openLeg);
+  el("huntList").addEventListener("click", openLeg);
 
   el("huntAdd").addEventListener("click", () => {
     if (!tickets || !tickets.length) return;

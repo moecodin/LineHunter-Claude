@@ -200,15 +200,11 @@ function shortName(name) {
   return words.length > 1 ? `${words[0][0]}. ${words.slice(1).join(" ")}` : name;
 }
 
-// One compact line: "L. James  Over 16.5 PTS ........ 5/5". Click = that game (with the player's drawer open).
+// One compact line: "L. James  Over 16.5 PTS ........ 5/5". Click = that game, with the player's row open on The Board.
 // withAdd: the My Hunts "+" after the link (player legs only; never in the share picture).
 function legHtml(pick, withAdd = false) {
-  // Player legs open the player drawer on this page (js/components/schedule-drawer.js); team legs keep their game page link.
-  const drawer = pick.hunt
-    ? ` data-lh-drawer="${huntAttr(JSON.stringify({ playerId: pick.hunt.playerId, player: pick.hunt.player, team: pick.hunt.team, opp: pick.hunt.opp, gameId: pick.hunt.gameId, tipoff: pick.hunt.tipoff, code: propCode(pick.hunt.stat), line: pick.hunt.line, side: pick.side }))}"`
-    : "";
   const link = `
-    <a class="lh-hitlist-leg" href="${pick.href}"${drawer} title="${pick.hover}">
+    <a class="lh-hitlist-leg" href="${pick.href}" title="${pick.hover}">
       <span class="lh-hitlist-name">${pick.name}</span>
       <span class="lh-hitlist-pick">${pick.text}</span>
       <span class="lh-hitlist-proof ${pick.side === "under" ? "is-under" : ""}"${pick.proofTitle ? ` title="${pick.proofTitle}"` : ""}>${pick.proof}</span>

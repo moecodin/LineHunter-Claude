@@ -8,7 +8,7 @@
 //   plControlsHtml(spec, line, side, baseLine) / plBindControls(list, ctx)
 //                                         the row controls: [ - 17.5 + ] [ Over | Under ] [ best odds chip (+N) ] [ + ADD ]. The stepper keeps
 //                                         the chosen side, odds follow the line, Add is disabled when the book has no price (no note).
-//   plDrawerData(spec, line, side)        what a [data-lh-drawer] link carries (the page opens its player drawer, never navigates)
+//   plDrawerData(spec, line, side)        a row's player, game, prop, line and side in one object
 //   createPropListBar(cfg)                the controls bar: L5 / L10 / L20, Filter (Side, Game, Hide injured, Min games), optional Sort,
 //                                         Sportsbook, the search box and the removable chips; phones get Sportsbook inside the Filter sheet.
 //
@@ -103,7 +103,7 @@ function plControlsHtml(spec, line, side, baseLine) {
   if (!side) status = `<span class="lh-top-hint">Pick over or under</span>`;
   else if (best) {
     const others = books.slice(1).map((entry) => `${entry.book} ${plOddsText(entry.odds)}`).join(", ");
-    status = `<a class="lh-odds-chip" href="game.html?id=${spec.gameId}&player=${spec.playerId}&prop=${spec.code}&side=${side}" data-lh-drawer="${huntAttr(JSON.stringify(plDrawerData(spec, line, side)))}" title="Best odds: ${best.vendor}"><b>${plOddsText(best.odds)}</b> ${best.book}</a>`
+    status = `<a class="lh-odds-chip" href="game.html?id=${spec.gameId}&player=${spec.playerId}&prop=${spec.code}&side=${side}" title="Best odds: ${best.vendor}"><b>${plOddsText(best.odds)}</b> ${best.book}</a>`
       + (books.length > 1 && !lhOdds.getBook() ? `<span class="lh-odds-chip lh-odds-more" title="${others}">+${books.length - 1}</span>` : "");
   }
   const add = best ? huntButtonHtml({

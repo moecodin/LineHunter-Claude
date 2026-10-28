@@ -5,9 +5,11 @@
 // "why" sentence, the hunts tracker (line stepper, Over / Under, odds, Add to My Hunts; behind a switch on phones), the animated
 // bar chart with its divider, L5 / L10 / season averages and the matchup facts. One row is open at a time.
 //
-// Where: top-hit-rates.html (the tool page, all rows with "Show more") and the Today page (schedule.html, under the games).
-// The section is <section id="theBoard" data-rows="25">. Data:
-//   - the slate js/components/top-hit-rates.js builds and caches (event "lh-top-slate"; "lh-top-loading" while a new day loads):
+// Where: top-hit-rates.html (the tool page, all rows with "Show more"), the Today page (schedule.html, under the games) and the game
+// page (game.html, that game's props; data-single-game drops the Game filter). The section is <section id="theBoard" data-rows="25">.
+// boardOpenLinked(gameId, playerId, code, side) opens one player's row as soon as the slate arrives (links like
+// game.html?id=1&player=237&prop=pts&side=under: Hit List legs, shared hunts, the homepage). Data:
+//   - the slate js/components/top-hit-rates.js builds and caches (the game page sends its own, built from its data, the same way) (event "lh-top-slate"; "lh-top-loading" while a new day loads):
 //     rows with each window's games, the injuries and the tip-offs. No downloads of its own for the list.
 //   - the Hunt Score engine (/api/hunt through loadHunts in js/components/hunt-score.js): score, chance, projection, factors and
 //     "why" per prop + side. A row only shows a Hunt Score when the engine scored that exact line; the Hunt line / Edge / range
@@ -42,6 +44,7 @@ let boardTab = "all";
 let boardShown = BOARD_STEP_ROWS;
 let boardOpen = null;    // the key of the open row, or null
 let boardPanel = null;   // { key, chart, toolbar, window, el } for the open row
+let boardPending = null; // { gameId, playerId, code, side } from boardOpenLinked, applied when the slate arrives
 const boardExtras = {};  // playerId -> { season: {...} | null | "loading", h2h: { [gameId]: logs | "loading" | null } }
 
 // ---------- Small helpers ----------
@@ -536,7 +539,11 @@ function boardRenderTabs() {
 
 function boardSetHeader() {
   const date = document.getElementById("boardDate");
-  if (date) date.textContent = boardSlate && boardSlate.date ? slateDateLabel(boardSlate.date) : "";
+  if (!date) return;
+  const iso = boardSlate && boardSlate.date ? boardSlate.date : null;
+  // slateDateLabel lives in js/components/top-hit-rates.js (not loaded on the game page)
+  date.textContent = !iso ? "" : typeof slateDateLabel === "function" ? slateDateLabel(iso)
+    : new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
 function renderBoard() {
@@ -595,6 +602,29 @@ function renderBoard() {
   }
 }
 
+// Open one player's row (the prop given, else his first row) once the slate is here, with the side picked when given.
+function boardOpenLinked(gameId, playerId, code, side) {
+  boardPending = { gameId: String(gameId), playerId: Number(playerId), code: code || null, side: side === "over" || side === "under" ? side : null };
+}
+
+function boardApplyPending() {
+  if (!boardPending || !boardSlate) return null;
+  const want = boardPending;
+  const rows = boardSlate.rows.filter((row) => String(row.gameId) === want.gameId && row.playerId === want.playerId);
+  const row = rows.find((entry) => entry.code === want.code) || rows[0];
+  boardPending = null;
+  if (!row) return null;
+  const key = boardKey(row);
+  boardOpen = key;
+  // A link to a player on the injury report: show the injured too, or the row would be filtered away.
+  if (boardUi.state.injured && plIsInjuredOut(boardSlate.injuries ? boardSlate.injuries[row.playerId] : null)) boardUi.state.injured = false;
+  if (want.side) {
+    const item = boardItem(row);
+    if (item) boardUi.edits[key] = { line: item.line, side: want.side };
+  }
+  return key;
+}
+
 function boardToggle(key) {
   boardOpen = boardOpen === key ? null : key;
   boardPanel = null;
@@ -613,7 +643,7 @@ const boardUi = BOARD ? createPropListBar({
   window: 10,
   sorts: BOARD_SORTS,
   sort: "score",
-  withGame: true,
+  withGame: !BOARD.hasAttribute("data-single-game"),
   getGames: () => {
     const games = [];
     (boardSlate ? boardSlate.rows : []).forEach((row) => {
@@ -674,7 +704,12 @@ if (BOARD) {
       Object.keys(boardUi.edits).forEach((key) => delete boardUi.edits[key]);
       if (boardUi.state.game !== "all") boardUi.state.game = "all";
     }
+    const linked = boardApplyPending();
     renderBoard();
+    if (linked) {
+      const row = BOARD.querySelector(`[data-bd-row="${CSS.escape(linked)}"]`);
+      if (row) row.scrollIntoView({ block: "start" });
+    }
     if (slate.date && (!boardHunts || boardHunts.date !== slate.date)) {
       const request = ++boardHuntsRequest;
       boardHunts = null;

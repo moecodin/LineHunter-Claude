@@ -107,12 +107,9 @@ function huntLeg(prop, best = huntBestOdds(prop)) {
   };
 }
 
-// data-lh-drawer: the player drawer (js/components/schedule-drawer.js) opens on this prop and side.
-function huntDrawerAttr(prop) {
-  return huntAttr(JSON.stringify({
-    playerId: prop.playerId, player: prop.player, team: prop.team, opp: prop.opp, gameId: prop.gameId, tipoff: prop.tipoff || null,
-    code: prop.stat, line: prop.line, side: prop.side,
-  }));
+// The game page with this player's row open on The Board (js/components/board.js), on this prop and side.
+function huntRowHref(prop) {
+  return `game.html?id=${prop.gameId}&player=${prop.playerId}&prop=${prop.stat}&side=${prop.side}`;
 }
 
 function huntOddsHtml(best) {
@@ -177,7 +174,7 @@ function huntCompactRowHtml(prop, rank) {
   return `
     <div class="lh-hunt-row">
       <span class="lh-hunt-rank">${rank}</span>
-      <a class="lh-hunt-player" href="player.html?id=${prop.playerId}&prop=${prop.stat}&side=${prop.side}" data-lh-drawer="${huntDrawerAttr(prop)}">
+      <a class="lh-hunt-player" href="${huntRowHref(prop)}">
         <span class="lh-hunt-name">${prop.player}</span> ${teamBadgeForMatchup(prop.team, huntMatchup(prop))}
         <span class="lh-hunt-pick lh-hunt-pick--${prop.side}">${huntPickText(prop)}</span>
       </a>
@@ -205,7 +202,7 @@ function huntFullRowHtml(prop, rank, expanded) {
         <div class="lh-hs-rank">${rank}</div>
         <div class="lh-hs-body">
           <div class="lh-hs-who">
-            <a class="lh-hs-name" href="player.html?id=${prop.playerId}&prop=${prop.stat}&side=${prop.side}" data-lh-drawer="${huntDrawerAttr(prop)}">${prop.player}</a>
+            <a class="lh-hs-name" href="${huntRowHref(prop)}">${prop.player}</a>
             ${teamBadgeForMatchup(prop.team, huntMatchup(prop))}
             <span class="lh-hs-match">${huntMatchup(prop)}${tip ? ` · ${tip}` : ""}</span>
             ${b2b ? `<span class="lh-hs-tag">B2B</span>` : ""}
