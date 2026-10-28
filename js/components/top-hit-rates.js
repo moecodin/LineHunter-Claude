@@ -87,6 +87,7 @@ function readTopCache(key) {
     // saved before the per-window numbers (L5 / L10 / L20)?
     if (saved.slate && Array.isArray(saved.slate.rows) && saved.slate.rows.length && (!saved.slate.rows[0].w || !saved.slate.rows[0].w[5].over)) return null;
     if (saved.slate && Array.isArray(saved.slate.rows) && saved.slate.injuries === undefined) return null; // saved before the injury filter
+    if (saved.slate && Array.isArray(saved.slate.rows) && saved.slate.tips === undefined) return null;     // saved before the started-game filter
 
     return saved.slate;
   } catch (error) {
@@ -109,15 +110,17 @@ function writeTopCache(key, slate) {
 
 // ---------- Loading ----------
 
-// Today's games, or the first day in the next two weeks that has games.
+// Today's games, or the first day in the next two weeks that has games. A day whose games have all started is skipped
+// (gameHasStarted in js/core/stats.js), so late at night the homepage moves on to tomorrow.
 async function findNextSlate() {
   const games = await bdlGetAllPages(
     `${BDL_BASE}/games?start_date=${localDateString(new Date())}&end_date=${localDateString(daysFromNow(14))}&per_page=100`
   );
-  if (games.length === 0) return null;
+  const upcoming = games.filter((game) => !gameHasStarted(game));
+  if (upcoming.length === 0) return null;
 
   // "2026-10-20" style dates sort in date order, so the first one after sorting is the soonest.
-  const firstDate = games.map((game) => game.date).sort()[0];
+  const firstDate = upcoming.map((game) => game.date).sort()[0];
   return { date: firstDate, games: games.filter((game) => game.date === firstDate) };
 }
 
@@ -137,7 +140,14 @@ function compareTopRows(a, b) {
 
 // Download everything for one day's games and work out every row.
 // slate = { date: "2026-10-20", games: [...] }. Returns { date, rows } (rows is empty if no props yet).
-async function buildTopHitRates(slate) {
+async function buildTopHitRates(fullSlate) {
+  // 0. Only games that haven't started: a live or finished game's props are no use any more (same rule as the Hunt Score engine).
+  //    tips = each kept game's tip-off time, so showTopSlate can also drop games that start while the slate sits in the cache.
+  const slate = { ...fullSlate, games: fullSlate.games.filter((game) => !gameHasStarted(game)) };
+  const tips = {};
+  slate.games.forEach((game) => { tips[game.id] = gameTipoff(game); });
+  if (slate.games.length === 0) return { date: slate.date, rows: [], legs: [], teamLegs: [], fan: [], injuries: {}, tips, allStarted: fullSlate.games.length > 0 };
+
   // 1. Every prop for those games. The API takes one game per request, so all games at once.
   const propLists = await Promise.all(slate.games.map((game) =>
     bdlGet(`${PROPS_URL}?game_id=${game.id}`)
@@ -147,7 +157,7 @@ async function buildTopHitRates(slate) {
 
   // 2. One line per player per prop, only the five props this card covers (Points, Rebounds, Assists, 3PM, P+R+A).
   let lines = pickOneLinePerPlayer(propLists.flat()).filter((prop) => propCode(prop.prop_type));
-  if (lines.length === 0) return { date: slate.date, rows: [], legs: [], teamLegs: [], fan: [], injuries: {} };
+  if (lines.length === 0) return { date: slate.date, rows: [], legs: [], teamLegs: [], fan: [], injuries: {}, tips };
 
   // 3. Names and game logs for every player, both at the same time.
   //    loadPlayerGameLogs asks for many players per request, and adds last season for anyone
@@ -266,7 +276,7 @@ async function buildTopHitRates(slate) {
   }).filter(Boolean);
 
   return {
-    date: slate.date, rows, injuries, legs, incomplete: loaded.incomplete, teamLegs: buildTeamLegs(slate, loaded.logsByPlayer),
+    date: slate.date, rows, injuries, tips, legs, incomplete: loaded.incomplete, teamLegs: buildTeamLegs(slate, loaded.logsByPlayer),
     fan: buildFanPlayers(lines, players, loaded, gamesById, seasonAverages), // for research mode's Hot Players and Streaks cards
   };
 }
@@ -764,12 +774,42 @@ async function ensureTopOdds(slate) {
   }
 }
 
-function showTopSlate(slate) {
+// The slate without the games that have started since it was built (it can sit in the cache for 10 minutes, or the page can stay open
+// past tip-off). Every reader gets this copy: the cards, the Hit List, Streaks / Hot Players, BBQ / Brick City, Quick look, the Today tiles.
+// My Hunts keeps its legs (tagged Started there).
+function topWithoutStarted(slate) {
+  if (!slate.tips) return slate;
+  const live = (item) => {
+    if (!(item.gameId in slate.tips)) return true;
+    const tip = Date.parse(slate.tips[item.gameId] || "");
+    return Number.isNaN(tip) || tip > Date.now();
+  };
+  const keep = (list) => (Array.isArray(list) ? list.filter(live) : list);
+  const rows = keep(slate.rows);
+  const allStarted = slate.allStarted || (slate.rows.length > 0 && rows.length === 0);
+  return { ...slate, rows, legs: keep(slate.legs), teamLegs: keep(slate.teamLegs), fan: keep(slate.fan), allStarted };
+}
+
+// Re-check once a minute, so a game that tips off while the page is open drops off without a reload.
+setInterval(() => {
+  if (!topSlate || !topSlate.tips || topSlate.noGames) return;
+  const before = topSlate.rows.length + (topSlate.legs || []).length + (topSlate.fan || []).length;
+  const next = topWithoutStarted(topSlate);
+  if (next.rows.length + (next.legs || []).length + (next.fan || []).length !== before) showTopSlate(next);
+}, 60000);
+
+function showTopSlate(fullSlate) {
+  const slate = topWithoutStarted(fullSlate);
   topSlate = slate;
   setTopTitle(slate.date);
 
   if (slate.noGames) {
     renderTopMessage(`<span class="text-muted">No games scheduled for this day.</span>`);
+    return;
+  }
+
+  if (slate.rows.length === 0 && slate.allStarted) {
+    renderTopMessage(`<span class="text-muted">Every game on this day has started. Hit rates only cover games that haven't tipped off.</span>`);
     return;
   }
 
