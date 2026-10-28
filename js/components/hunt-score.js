@@ -19,8 +19,24 @@ function huntTodayET() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
 }
 
+// The engine skips started games, but its answer can be up to 10 minutes old in each cache (function, CDN, sessionStorage),
+// so props whose tip-off has passed since are dropped here too (Today's Top 5 Hunts, hunt-score.html, the player page).
+function huntWithoutStarted(data) {
+  if (!data) return data;
+  const live = (prop) => !prop.tipoff || Number.isNaN(Date.parse(prop.tipoff)) || Date.parse(prop.tipoff) > Date.now();
+  return {
+    ...data,
+    props: Array.isArray(data.props) ? data.props.filter(live) : data.props,
+    topHunts: Array.isArray(data.topHunts) ? data.topHunts.filter(live) : data.topHunts,
+  };
+}
+
 // { date, props, topHunts } for a date ("2026-10-26"). Future dates and started games come back as an empty list.
 function loadHunts(date) {
+  return loadHuntsRaw(date).then(huntWithoutStarted);
+}
+
+function loadHuntsRaw(date) {
   const key = `${HUNT_CACHE_PREFIX}${date}`;
   try {
     const saved = JSON.parse(sessionStorage.getItem(key) || "null");

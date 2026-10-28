@@ -142,6 +142,23 @@ function currentSeasonYear() {
   return today.getMonth() >= 8 ? today.getFullYear() : today.getFullYear() - 1;
 }
 
+// A game's tip-off time ("2026-10-27T23:30:00Z"), or null while the API only knows the day.
+// (Before tip-off the API's status is often the tip-off time itself.)
+function gameTipoff(game) {
+  if (!game) return null;
+  if (game.datetime) return game.datetime;
+  return /^\d{4}-\d{2}-\d{2}T/.test(game.status || "") ? game.status : null;
+}
+
+// Started = live or final, or the tip-off time has passed. Same rule as the Hunt Score engine (netlify/functions/hunt.js loadSlate).
+// No tip-off time yet = not started (a date alone would read as midnight and hide the whole day).
+function gameHasStarted(game) {
+  if (!game) return false;
+  if (game.status === "Final" || (game.period && game.period > 0)) return true;
+  const tip = Date.parse(gameTipoff(game) || "");
+  return Number.isNaN(tip) ? false : tip <= Date.now();
+}
+
 // Prop type words -> the stat names in a game log.
 const PROP_WORD_TO_STAT = {
   points: "pts",
