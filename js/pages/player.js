@@ -719,7 +719,10 @@ function renderProps() {
   const tonightOpponent = h2hOpponent();
   // The empty bar for the next game, labeled "vs BOS" (home) or "@BOS" (away); no upcoming game, no bar.
   playerChart.setTonight(tonightOpponent ? `${nextGame.home_team.id === player.team.id ? "vs " : "@"}${tonightOpponent.abbreviation}` : null);
-  playerChart.draw([...result.games].reverse(), `${pageState.propType}|${pageState.windowSize}|${pageState.split}|${JSON.stringify(pageState.teammates)}`);
+  // The divider: past 10 games this season it sets apart the last 5 ("Last 5 avg 27.8"), before that it marks where this season starts.
+  const oldestFirst = [...result.games].reverse();
+  playerChart.setDivider(chartDivider(oldestFirst, (playerLogs.current || []).filter(playedInGame).length));
+  playerChart.draw(oldestFirst, `${pageState.propType}|${pageState.windowSize}|${pageState.split}|${JSON.stringify(pageState.teammates)}`);
   renderGameLog(games, result, line);
   renderRole(games, result.games);
   renderOpportunity(games);

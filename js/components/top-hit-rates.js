@@ -501,6 +501,7 @@ function renderTopSkeleton() {
     list.innerHTML = row.repeat(5);
   }
   if (typeof showHitListLoading === "function") showHitListLoading();
+  document.dispatchEvent(new CustomEvent("lh-top-loading")); // The Board (js/components/board.js) shows its loading rows
   if (typeof showFanLoading === "function") showFanLoading();
 }
 
@@ -768,6 +769,7 @@ async function ensureTopOdds(slate) {
   const gameIds = [...new Set(slate.rows.map((row) => row.gameId))];
   const lists = await Promise.all(gameIds.map((id) => bdlGet(`${PROPS_URL}?game_id=${id}`).then((json) => json.data).catch(() => [])));
   lhOdds.ingest(lists.flat());
+  if (topSlate === slate && lhOdds.vendors().length > 0) document.dispatchEvent(new CustomEvent("lh-odds-ready")); // The Board redraws its odds
   if (topSlate === slate && lhOdds.vendors().length > 0 && TOP_HAS_CARD) {
     if (topUi) topUi.render();
     renderTopRows();

@@ -7,7 +7,7 @@
   <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
   <meta name="robots" content="noindex"><!-- private soft launch: delete for the public launch -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Top Hit Rates · LineHunter</title>
+  <title>The Board · LineHunter</title>
   <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
   <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
@@ -34,22 +34,24 @@
   <main class="container-fluid lh-container px-3 px-lg-4 lh-schedule-page lh-tool-page" data-lh-slate="page">
     <a class="lh-back-link" href="schedule.html"><i class="bi bi-chevron-left" aria-hidden="true"></i> Today</a>
 
-    <!-- TOP HIT RATES (lines mode) / HOT PLAYERS (research mode). js/components/top-hit-rates.js and js/components/fanCards.js fill them in. -->
-    <div id="top-hit-rates" class="card lh-top-compact lines-only mb-5">
-      <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
-        <div>
-          <h1 class="lh-top-title mb-1"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i><span id="topHitRatesTitle">Top Hit Rates</span></h1>
-          <div class="small text-muted">Players who went over their line most often in their last 10 games</div>
-        </div>
-        <span class="lh-label text-muted">L10 · Over</span>
+    <!-- THE BOARD (lines mode): every prop on the slate; a row opens in place to its breakdown. js/components/board.js draws it from the
+         slate js/components/top-hit-rates.js builds and the Hunt Score engine (/api/hunt). -->
+    <section id="theBoard" class="lh-board lines-only mb-5" data-rows="25" aria-labelledby="boardTitle">
+      <div class="lh-board-head">
+        <span class="lh-bd-kicker">Tools</span>
+        <h1 class="lh-board-title" id="boardTitle">The Board <span class="lh-board-date" id="boardDate"></span></h1>
+        <p class="lh-board-sub">Every prop on the slate with its hit rate, Hunt line and Hunt Score. Open a row for the full breakdown.</p>
       </div>
-      <div class="card-body">
-        <!-- Filter tabs: All / PTS / REB / AST / 3PM / PRA -->
-        <ul id="topHitRatesPills" class="nav nav-underline lh-tabs mb-3" hidden></ul>
-        <div id="topHitRatesList" class="text-muted">Loading hit rates...</div>
+      <ul id="boardTabs" class="nav nav-underline lh-tabs lh-board-tabs" hidden></ul>
+      <div id="boardHeads" class="lh-bd-heads" hidden aria-hidden="true">
+        <span>Player</span><span>Pick</span><span>Hit rate</span><span>Avg</span><span>Hunt line</span><span>Score</span><span>Best odds</span><span></span><span></span>
       </div>
-    </div>
+      <div id="boardList" aria-busy="true"></div>
+      <button type="button" id="boardMore" class="btn btn-sm btn-outline-secondary lh-board-more w-100 mt-3" hidden>Show more</button>
+      <p class="lh-board-note">Based on past results and a simulation, not a guarantee. Gambling problem? Call 1-800-GAMBLER.</p>
+    </section>
 
+    <!-- HOT PLAYERS (research mode): js/components/fanCards.js fills it in. -->
     <div id="hotPlayers" class="card lh-top-compact research-only mb-5">
       <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
         <div>
@@ -86,6 +88,7 @@
   <script src="js/core/stats.js"></script>
   <script src="js/core/h2h.js"></script>
   <script src="js/components/propChart.js"></script>
+  <script src="js/components/animatedBars.js"></script>
   <script src="js/components/prop-toolbar.js"></script>
   <script src="js/components/shelf.js"></script>
   <script src="js/components/share.js"></script>
@@ -96,5 +99,7 @@
   <script src="js/components/bbq.js"></script>
   <script src="js/components/brickCity.js"></script>
   <script src="js/components/fanCards.js"></script>
+  <script src="js/components/hunt-score.js"></script>
+  <script src="js/components/board.js"></script>
 </body>
 </html>

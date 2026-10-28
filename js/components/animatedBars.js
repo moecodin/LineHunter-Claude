@@ -17,6 +17,8 @@
 //   bars.render({ games, line, bookLine, bookLabel, scaleMax, barClass, tonight });  // games oldest first (rows from calculateHitRate)
 //     tonight = null (no upcoming game) or { label: "vs BOS" }: one more slot at the right, an empty outlined bar as tall as the line
 //     with a softly pulsing dot where it meets the line, labeled "vs BOS" over "TONIGHT"
+//     divider = null or { beforeIndex, label }: a thin vertical rule (with a little extra room) before games[beforeIndex], labeled at the
+//     top, e.g. "Last 5 avg 27.8" or "2026-27" (chartDivider in js/components/propChart.js picks it). It slides with the bars.
 //   bars.toImage()  -> PNG data URL of the chart as drawn now (the share picture)
 //   bars.clear()    -> remove everything
 // Needs js/components/propChart.js (chartColors, opponentLabel, shortDate) loaded first.
@@ -28,6 +30,7 @@ const BAR_LEAVE_MS = 260;    // how long a dropped bar takes to shrink away befo
 const AXIS_WIDTH = 30;       // left gutter for the y-axis numbers
 const PLOT_TOP = 18;         // room above the tallest bar for its number
 const PLOT_BOTTOM = 32;      // room under the bars for the labels
+const DIVIDER_ROOM = 14;     // extra px between the two bars a divider sits between
 
 function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeave = () => {}, onClick = null } = {}) {
   host.insertAdjacentHTML("afterbegin", `
@@ -35,12 +38,14 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       <div class="lh-bars-plot">
         <div class="lh-bars-line" hidden></div>
         <div class="lh-bars-book" hidden><span></span></div>
+        <div class="lh-bars-divider" hidden><span></span></div>
       </div>
     </div>`);
   const root = host.querySelector(".lh-bars");
   const plot = host.querySelector(".lh-bars-plot");
   const lineEl = plot.querySelector(".lh-bars-line");
   const bookEl = plot.querySelector(".lh-bars-book");
+  const dividerEl = plot.querySelector(".lh-bars-divider");
 
   const barEls = new Map();  // game id (or "tonight") -> { el, fill, valueEl, labelEl }
   const tickEls = new Map(); // tick number -> element
@@ -92,20 +97,22 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
   function render(args) {
     lastArgs = args;
     const { games, line, bookLine, bookLabel, scaleMax, ticks, barClass, tonight } = args;
+    const divider = args.divider && args.divider.beforeIndex > 0 && args.divider.beforeIndex < games.length ? args.divider : null;
+    const extra = divider ? DIVIDER_ROOM : 0;
     const width = plot.clientWidth;
     const plotHeight = plot.clientHeight;
     if (!width) return; // not laid out yet (hidden): the resize observer draws it when it has a size
 
     const first = barEls.size === 0;
     const slots = games.length + (tonight ? 1 : 0);
-    const barWidth = Math.max(1, Math.min(maxBarWidth, (width - BAR_GAP * (slots - 1)) / slots));
-    const groupWidth = slots * barWidth + (slots - 1) * BAR_GAP;
+    const barWidth = Math.max(1, Math.min(maxBarWidth, (width - BAR_GAP * (slots - 1) - extra) / slots));
+    const groupWidth = slots * barWidth + (slots - 1) * BAR_GAP + extra;
     const startX = (width - groupWidth) / 2;
     const slot = barWidth + BAR_GAP;
     const labelEvery = Math.max(1, Math.ceil(BAR_LABEL_MIN_SLOT / slot));
     const radius = `${Math.min(0, barWidth / 2)}px ${Math.min(0, barWidth / 2)}px 0 0`;
 
-    layout = { width, plotHeight, scaleMax, ticks, line, bookLine, bookLabel, bars: [] };
+    layout = { width, plotHeight, scaleMax, ticks, line, bookLine, bookLabel, bars: [], divider: null };
     const wanted = new Set();
 
     const place = (id, index, game, isTonight) => {
@@ -113,7 +120,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       let bar = barEls.get(id);
       const isNew = !bar;
       if (isNew) bar = makeBar(id);
-      const x = startX + index * slot;
+      const x = startX + index * slot + (divider && index >= divider.beforeIndex ? extra : 0);
       const value = isTonight ? (line ?? scaleMax * 0.45) : game.value;
       const fromNewest = slots - 1 - index;
       // ("Tonight" is wider than a narrow slot: it only shows when it fits.)
@@ -171,6 +178,15 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
         setTimeout(() => el.remove(), BAR_LEAVE_MS);
       });
 
+      // The divider: halfway between the last bar before it and the first one after it.
+      dividerEl.hidden = !divider;
+      if (divider) {
+        const dividerX = startX + divider.beforeIndex * slot + extra / 2 - BAR_GAP / 2;
+        dividerEl.style.transform = `translateX(${dividerX}px)`;
+        dividerEl.firstChild.textContent = divider.label || "";
+        layout.divider = { x: dividerX, label: divider.label || "" };
+      }
+
       // The dashed line (full plot width) and the faint second marker.
       lineEl.hidden = line === null;
       if (line !== null) lineEl.style.bottom = percent(line, scaleMax);
@@ -199,6 +215,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
     tickEls.clear();
     lineEl.hidden = true;
     bookEl.hidden = true;
+    dividerEl.hidden = true;
     root.classList.remove("has-hover");
   }
 
@@ -272,6 +289,20 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
         ctx.fillText(bar.isTonight ? "TONIGHT" : shortDate(bar.game.date), centerX, baseY + 18);
       }
     });
+
+    if (layout.divider) {
+      const x = AXIS_WIDTH + layout.divider.x;
+      ctx.strokeStyle = colors.muted;
+      ctx.beginPath();
+      ctx.moveTo(x, PLOT_TOP);
+      ctx.lineTo(x, baseY);
+      ctx.stroke();
+      ctx.fillStyle = colors.muted;
+      ctx.font = "600 10px 'Inter Tight', sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(layout.divider.label, x + 5, PLOT_TOP);
+    }
 
     if (layout.line !== null) {
       const y = yOf(layout.line);
