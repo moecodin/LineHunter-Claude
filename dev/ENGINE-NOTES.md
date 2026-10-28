@@ -44,6 +44,16 @@ who LEFT the team (LeBron) are not in the rotation, so games with them still loo
 - Snapshots are taken from this cloud thread for now (scheduled check-ins); the local cron was skipped. LATER: move the nightly
   snapshot + grade to a Netlify scheduled function with Netlify Blobs (same data as the parked "results on The Board").
 
+## Snapshot backup
+The container's `dev/snapshots/` is lost if the cloud session is reclaimed. Each night's file is also pushed gzipped (about 0.5 MB)
+to the data-only branch `hunt-snapshots` (`snapshots/YYYY-MM-DD.json.gz`, never merged). Restore: `git fetch origin hunt-snapshots`,
+`git show origin/hunt-snapshots:snapshots/2026-10-28.json.gz | gunzip > dev/snapshots/2026-10-28.json`. After every snapshot run, push the
+updated file there too (orphan branch in a temporary worktree).
+
+## Players being compared with Sam's model (Oct 28)
+Jokic pts (Sam: proj 28.3, line 27.5, over), Fears pts (Sam: proj 18.0, line 11.5, over), McCain pts, Capela pts (Sam's numbers
+to be added). Replay these with the current engine against the box scores in the grade report.
+
 ## Parked engine ideas
 Rank top hunts by edge (top 10); lineup then vs now in Role (Reaves' "without Luka" games still had LeBron); a position matchup
 step ("centers vs MIL") from the Same Position card's data; Role for players with no matching games yet (Richardson, Shead).
