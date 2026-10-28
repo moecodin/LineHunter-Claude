@@ -51,8 +51,18 @@ to the data-only branch `hunt-snapshots` (`snapshots/YYYY-MM-DD.json.gz`, never 
 updated file there too (orphan branch in a temporary worktree).
 
 ## Players being compared with Sam's model (Oct 28)
-Jokic pts (Sam: proj 28.3, line 27.5, over), Fears pts (Sam: proj 18.0, line 11.5, over), McCain pts, Capela pts (Sam's numbers
-to be added). Replay these with the current engine against the box scores in the grade report.
+Sam's card (davidsasser.com): projection vs line, side, his L10 avg minutes. His L10 mixes last season's games (playoffs
+included) with this season's, and he has no lineup information. Numbers typed from screenshots:
+
+| Player | Sam | Ours at 6:30 pm snapshot (old engine ea3e1fc) | Ours with the lineup fix (b62a476) |
+|---|---|---|---|
+| Jokic pts | proj 28.3, line 27.5, Over | Over 26.5: 51, edge 0, proj 27.5 | not re-run |
+| Fears pts | proj 18.0, line 11.5, Over (+6.5), L10 avg 21.9, 32 min | Over 11.5: 52, proj 13.5 | Under 55, proj 11.9, edge +4 |
+| McCain pts | proj 13.7, line 17.5, Under (-3.8), 25.1 min | Under 17.5: 68, proj 15.1 | Under 67, proj 15.3, Role 20.1 -> 25.6 min |
+| Capela pts | proj 2.1, line 7.5, Under (-5.4), L10 avg 4.0, 9.0 min | Under 6.5: 66, proj 5.8 | Under 65, proj 6.0, Role 10.5 -> 19.4 min |
+
+Capela is the big disagreement: Sam has him at 9 minutes (no lineup knowledge; Sengun and Smart are out), the engine at about 19.
+The line also moved from 7.5 (Sam's older snapshot) to 6.5 (DraftKings at 6:30 pm). Grade all four against the box scores.
 
 ## Parked engine ideas
 Rank top hunts by edge (top 10); lineup then vs now in Role (Reaves' "without Luka" games still had LeBron); a position matchup
