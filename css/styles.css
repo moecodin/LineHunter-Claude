@@ -5541,6 +5541,12 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   scrollbar-width: none;
 }
 .lh-pj-links::-webkit-scrollbar { display: none; }
+.lh-pj-links.is-cut-start { -webkit-mask-image: linear-gradient(to right, transparent, #000 2.5rem); mask-image: linear-gradient(to right, transparent, #000 2.5rem); }
+.lh-pj-links.is-cut-end { -webkit-mask-image: linear-gradient(to left, transparent, #000 2.5rem); mask-image: linear-gradient(to left, transparent, #000 2.5rem); }
+.lh-pj-links.is-cut-start.is-cut-end {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
+}
 .lh-pj-link {
   flex: none;
   display: flex;

@@ -34,12 +34,16 @@ function setPlayerJumpName(name, jersey) {
     const top = stickTop();
     bar.style.setProperty("--lh-pj-top", `${top}px`);
     bar.classList.toggle("is-stuck", bar.getBoundingClientRect().top <= top + 1);
-    const line = top + bar.offsetHeight + 24;
+    // A section counts as "in view" once its top passes a line about a third of the way down the screen (under the bar), so a
+    // title that is plainly readable just under the bar is the one underlined. At the very bottom of the page the last shown
+    // section wins (it may never reach the line).
+    const line = top + bar.offsetHeight + Math.min(220, window.innerHeight * 0.3);
+    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
     let current = "";
     targets.forEach((el, i) => {
       const visible = shown(el);
       links[i].hidden = !visible;
-      if (visible && el.getBoundingClientRect().top <= line) current = el.id;
+      if (visible && (atBottom || el.getBoundingClientRect().top <= line)) current = el.id;
     });
     if (!bar.classList.contains("is-stuck")) current = "";
     if (current === active) return;
@@ -48,8 +52,8 @@ function setPlayerJumpName(name, jersey) {
       const on = link.dataset.jumpTo === current;
       link.classList.toggle("is-active", on);
       if (on) link.setAttribute("aria-current", "location"); else link.removeAttribute("aria-current");
-      // Keep the underlined link in view inside the sideways track
-      if (on) track.scrollTo({ left: link.offsetLeft - track.offsetLeft - 16, behavior: "smooth" });
+      // Keep the underlined link in the middle of the sideways track (its neighbors fade out at the edges, see .lh-pj-links)
+      if (on) track.scrollTo({ left: link.offsetLeft - track.offsetLeft - (track.clientWidth - link.offsetWidth) / 2, behavior: "smooth" });
     });
   }
 
@@ -66,6 +70,15 @@ function setPlayerJumpName(name, jersey) {
     window.scrollTo({ top: Math.max(0, y), behavior: smooth ? "smooth" : "auto" });
   });
 
+  // Fade the track's edges only where links are cut off (start / end), so a half-hidden word reads as "swipe for more"
+  function updateEdges() {
+    const max = track.scrollWidth - track.clientWidth;
+    track.classList.toggle("is-cut-start", track.scrollLeft > 2);
+    track.classList.toggle("is-cut-end", track.scrollLeft < max - 2);
+  }
+  track.addEventListener("scroll", updateEdges, { passive: true });
+  window.addEventListener("resize", updateEdges);
+
   let queued = false;
   const schedule = () => {
     if (queued) return;
@@ -78,4 +91,5 @@ function setPlayerJumpName(name, jersey) {
   // Sections appear / hide / collapse after their data loads: recheck when the page changes size
   if ("ResizeObserver" in window) new ResizeObserver(schedule).observe(document.querySelector("main") || document.body);
   update();
+  updateEdges();
 })();
