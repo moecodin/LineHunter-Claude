@@ -6013,3 +6013,9 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   .lh-sec-toggle { min-height: 2.75rem; }
 }
 .lh-gb-steps .lh-ph-step { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 4rem 5.5rem; }
+
+/* Today page: when the date pager drops under the title (phones), it spans the row and sits centered */
+@media (max-width: 767.98px) {
+  .lh-date-nav { width: 100%; }
+  .lh-date-nav .lh-date-tabs { justify-content: center; }
+}
