@@ -62,14 +62,16 @@ const CONFIG = {
     priorSampleGames: 10,                      // a full last season adds this many games to the sample above
     lastSeasonLogsFrom: "02-01",               // last season's game logs only from this day of its spring (L10, spreads); its
                                                // full-season rate and minutes come from one season-averages request instead
-    market: { base: 0.2, thin: 0.3 },
-    teamPrior: { minGames: 10 },
-    // Role: tonight's lineup. Teammates listed Out / Doubtful who usually play 15+ minutes are "missing"; the player's past games
-    // on this team where at least half of those minutes were also missing are his role games (newest count most: weight halves
-    // every 10 role games; last season's count half). Their minutes replace the form minutes in proportion n / (n + 2), their
-    // per-minute output the form rate in proportion n / (n + 6), n = the role games' total weight.
-    role: { minMinutes: 15, minMatch: 0.5, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6 },               // traded during last season: the prior is last season's games with his current
-                                               // team once there are 10 (his old team's role and numbers left out)          // pull the projection toward the book's line: 20%, up to 50% with few games this season
+    market: { base: 0.2, thin: 0.3 },          // pull the projection toward the book's line: 20%, up to 50% with few games this season
+    teamPrior: { minGames: 10 },               // traded during last season: the prior is last season's games with his current
+                                               // team once there are 10 (his old team's role and numbers left out)
+    // Role: tonight's lineup. Teammates listed Out / Doubtful who usually play 15+ minutes AND have played for the team this
+    // season are "missing" (a player out all season is already in the numbers). The player's past regular-season games on this
+    // team where at least half of those minutes were also missing are his role games, except the last 10 days of last regular
+    // season (rest games) and his own short nights (under 60% of his usual minutes: injury, a limit, a blowout). Newest count
+    // most (weight halves every 10 role games), last season's count half. With 3+ role games, their minutes replace the form
+    // minutes in proportion n / (n + 2) and their per-minute output the form rate in proportion n / (n + 6), n = total weight.
+    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, restDays: 10, shortNight: 0.6 },
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
     kMax: 200,
@@ -402,6 +404,7 @@ async function loadMissing(injuryRows, teamIds, season, before) {
     const mine = (list) => (list[row.player.id] || []).filter((log) => log.team && log.team.id === teamId && playedInGame(log));
     const thisSeason = mine(now);
     const lastSeason = mine(last);
+    if (!thisSeason.length) return; // out all season: his absence is already in everyone's numbers
     const usual = average((thisSeason.length >= 3 ? thisSeason : [...thisSeason, ...lastSeason]).map(minutesOf));
     if (!(usual >= CONFIG.sim.role.minMinutes)) return;
     (byTeam[teamId] = byTeam[teamId] || []).push({
@@ -417,19 +420,26 @@ async function loadMissing(injuryRows, teamIds, season, before) {
 function roleInfo(prop, logs, teamId, missing, season) {
   if (!missing || !missing.length) return null;
   const R = CONFIG.sim.role;
-  const own = [...logs.current, ...logs.previous].filter((log) => log.team && log.team.id === teamId && playedInGame(log))
+  const own = [...logs.current, ...logs.previous].filter((log) => log.team && log.team.id === teamId && playedInGame(log) && !log.game.postseason)
     .sort((a, b) => b.game.date.localeCompare(a.game.date));
+  if (!own.length) return null;
+  const usual = average(own.map(minutesOf));
+  // the end of last regular season (rest and tank games): the last 10 days before his last regular-season game then
+  const lastPrev = own.filter((log) => log.game.season !== season).map((log) => log.game.date.slice(0, 10)).sort().pop();
+  const restFrom = lastPrev ? new Date(Date.parse(lastPrev) - R.restDays * 864e5).toISOString().slice(0, 10) : null;
   const games = [];
   own.forEach((log) => {
+    if (restFrom && log.game.season !== season && log.game.date.slice(0, 10) > restFrom) return;
+    if (minutesOf(log) < R.shortNight * usual) return;
     const counted = missing.filter((m) => m.seasons.has(log.game.season));
     const total = sum(counted.map((m) => m.minutes));
     if (!total) return;
     const match = sum(counted.filter((m) => !m.played.has(log.game.id)).map((m) => m.minutes)) / total;
     if (match < R.minMatch) return;
     const weight = match * Math.pow(0.5, games.length / R.halfLife) * (log.game.season === season ? 1 : R.lastSeason);
-    games.push({ weight, v: statOf(log, prop.keys), m: minutesOf(log) });
+    games.push({ weight, v: statOf(log, prop.keys), m: minutesOf(log), log, without: counted.filter((m) => !m.played.has(log.game.id)).map((m) => m.last) });
   });
-  if (!games.length) return null;
+  if (games.length < R.minGames) return null;
   const n = sum(games.map((g) => g.weight));
   const minutesTotal = sum(games.map((g) => g.weight * g.m));
   return {
@@ -437,6 +447,11 @@ function roleInfo(prop, logs, teamId, missing, season) {
     rate: minutesTotal > 0 ? sum(games.map((g) => g.weight * g.v)) / minutesTotal : 0,
     n, games: games.length, out: missing.map((m) => m.last).join(", "),
     minutesWeight: n / (n + R.minutesPrior), rateWeight: n / (n + R.ratePrior),
+    // the role games themselves, for dev/hunt-whatif.js only (CONFIG.sim.role.list)
+    list: R.list ? games.map((g) => ({
+      date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(g.m), v: g.v, without: g.without,
+      oppId: g.log.game.home_team_id === teamId ? g.log.game.visitor_team_id : g.log.game.home_team_id,
+    })) : undefined,
   };
 }
 
@@ -648,7 +663,7 @@ function runSteps(prop, line, info, ctx) {
     const r = ctx.role;
     const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * input.minutes;
     const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * input.rate;
-    step("role", "Role", { minutes, rate }, { out: r.out, games: r.games, from: round1(input.minutes), minutes: round1(minutes) });
+    step("role", "Role", { minutes, rate }, { out: r.out, games: r.games, from: round1(input.minutes), minutes: round1(minutes), ...(r.list ? { list: r.list, roleMinutes: round1(r.minutes), roleRate36: round1(r.rate * 36), from36: round1(input.rate * 36), rate36: round1(rate * 36) } : {}) });
   }
   if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
   if (ctx.zone) step("zone", "Zone matchup", { mult: input.mult * ctx.zone.mult }, { extra: ctx.zone.points, zone: ctx.zone.zone, gap: ctx.zone.gap });
