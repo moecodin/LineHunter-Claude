@@ -144,6 +144,7 @@ function huntFactorDetail(factor, prop) {
     case "b2b": return "second night";
     case "market": return Number.isFinite(factor.sim) ? `line ${lineText(factor.line)} vs sim ${factor.sim}` : "";
     case "spread":
+      if (factor.bookGap) return "far from the book line";
       if (factor.gtd) return "game-time decision";
       if (factor.games < 8) return `${factor.games} ${factor.games === 1 ? "game" : "games"} this season`;
       return factor.disagree ? "recent games swing" : "normal range";

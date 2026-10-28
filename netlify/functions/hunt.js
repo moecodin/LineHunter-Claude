@@ -62,16 +62,21 @@ const CONFIG = {
     priorSampleGames: 10,                      // a full last season adds this many games to the sample above
     lastSeasonLogsFrom: "02-01",               // last season's game logs only from this day of its spring (L10, spreads); its
                                                // full-season rate and minutes come from one season-averages request instead
-    market: { base: 0.2, thin: 0.3 },          // pull the projection toward the book's line: 20%, up to 50% with few games this season
+    market: { base: 0.2, thin: 0.3,            // pull the projection toward the book's line: 20%, up to 50% with few games this season
+      // A big disagreement with the book usually means the book knows something the logs don't (a new starter, a role change):
+      // past a 25% gap (the gap over the line, or over the stat's floor for tiny lines) the pull grows to 70% at a 50% gap,
+      // and the rate uncertainty widens by up to 0.1.
+      gapFree: 0.25, gapFull: 0.5, maxWeight: 0.7, gapCv: 0.1 },
     teamPrior: { minGames: 10 },               // traded during last season: the prior is last season's games with his current
                                                // team once there are 10 (his old team's role and numbers left out)
     // Role: tonight's lineup. Teammates listed Out / Doubtful who usually play 15+ minutes AND have played for the team this
     // season are "missing" (a player out all season is already in the numbers). The player's past regular-season games on this
     // team where at least half of those minutes were also missing are his role games, except the last 10 days of last regular
-    // season (rest games) and his own short nights (under 60% of his usual minutes: injury, a limit, a blowout). Newest count
+    // season (rest games) and his own short nights (under 80% of his usual minutes: injury, a limit, a blowout; teammates out
+    // should RAISE his minutes, so a game well under his usual is not a lineup game). Newest count
     // most (weight halves every 10 role games), last season's count half. With 3+ role games, their minutes replace the form
     // minutes in proportion n / (n + 2) and their per-minute output the form rate in proportion n / (n + 6), n = total weight.
-    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, restDays: 10, shortNight: 0.6 },
+    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, restDays: 10, shortNight: 0.8 },
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
     kMax: 200,
@@ -81,6 +86,7 @@ const CONFIG = {
   minGamesTotal: 5,                            // fewer games than this (this + last season) = prop skipped
   topHunts: { max: 5, minScore: 65 },
   why: { paceTop: 5, b2bMinGames: 3, b2bMinDiff: 0.5, minutesMention: 2, smallSample: 8 },
+  debug: false,                                // dev/hunt-whatif.js only: role games and past results at the line in the answer
   cacheMinutes: 10,                            // a warm function reuses its answer for a date this long (the CDN does the same)
 
   injuredStatuses: /out|doubt|question|day/i,  // Out, Doubtful, Questionable (the API calls Questionable "Day-To-Day")
@@ -92,11 +98,11 @@ const CONFIG = {
 
 // The props we score. propType -> { code, stat key in a game log, opponent "allowed" fields }
 const PROPS = {
-  points: { code: "pts", keys: ["pts"], allowed: ["opp_pts"], word: "points" },
-  rebounds: { code: "reb", keys: ["reb"], allowed: ["opp_reb"], word: "rebounds" },
-  assists: { code: "ast", keys: ["ast"], allowed: ["opp_ast"], word: "assists" },
-  threes: { code: "3pm", keys: ["fg3m"], allowed: ["opp_fg3m"], word: "threes" },
-  points_rebounds_assists: { code: "pra", keys: ["pts", "reb", "ast"], allowed: ["opp_pts", "opp_reb", "opp_ast"], word: "points, rebounds and assists" },
+  points: { code: "pts", keys: ["pts"], allowed: ["opp_pts"], word: "points", gapFloor: 8 },
+  rebounds: { code: "reb", keys: ["reb"], allowed: ["opp_reb"], word: "rebounds", gapFloor: 4 },
+  assists: { code: "ast", keys: ["ast"], allowed: ["opp_ast"], word: "assists", gapFloor: 3 },
+  threes: { code: "3pm", keys: ["fg3m"], allowed: ["opp_fg3m"], word: "threes", gapFloor: 2 },
+  points_rebounds_assists: { code: "pra", keys: ["pts", "reb", "ast"], allowed: ["opp_pts", "opp_reb", "opp_ast"], word: "points, rebounds and assists", gapFloor: 12 },
 };
 
 // ---------- small helpers ----------
@@ -447,8 +453,8 @@ function roleInfo(prop, logs, teamId, missing, season) {
     rate: minutesTotal > 0 ? sum(games.map((g) => g.weight * g.v)) / minutesTotal : 0,
     n, games: games.length, out: missing.map((m) => m.last).join(", "),
     minutesWeight: n / (n + R.minutesPrior), rateWeight: n / (n + R.ratePrior),
-    // the role games themselves, for dev/hunt-whatif.js only (CONFIG.sim.role.list)
-    list: R.list ? games.map((g) => ({
+    // the role games themselves, for dev/hunt-whatif.js only (CONFIG.debug)
+    list: CONFIG.debug ? games.map((g) => ({
       date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(g.m), v: g.v, without: g.without,
       oppId: g.log.game.home_team_id === teamId ? g.log.game.visitor_team_id : g.log.game.home_team_id,
     })) : undefined,
@@ -673,12 +679,19 @@ function runSteps(prop, line, info, ctx) {
   (ctx.extra || []).forEach((e) => step(e.key, e.label, e.set || { mult: input.mult * e.mult }, e.detail || {}));
   // The book's line carries information the logs don't (a new role, a rotation change): pull the projection part of the way there.
   const simMean = expectedMean(runs, input);
+  let gapCv = 0;
   if (simMean > 0) {
-    const target = (1 - info.marketWeight) * simMean + info.marketWeight * line;
-    step("market", "Book line", { mult: (input.mult * target) / simMean }, { line, sim: round1(simMean), weight: Math.round(info.marketWeight * 100) });
+    // how far apart we are (relative to the line, or the stat's floor for tiny lines) decides how much the line is trusted
+    const M = S.market;
+    const gap = Math.abs(simMean - line) / Math.max(line, prop.gapFloor || 0);
+    const big = clamp((gap - M.gapFree) / (M.gapFull - M.gapFree), 0, 1);
+    const weight = info.marketWeight + (Math.max(M.maxWeight, info.marketWeight) - info.marketWeight) * big;
+    gapCv = M.gapCv * big;
+    const target = (1 - weight) * simMean + weight * line;
+    step("market", "Book line", { mult: (input.mult * target) / simMean }, { line, sim: round1(simMean), weight: Math.round(weight * 100), gap: Math.round(gap * 100) });
   }
-  step("spread", "Uncertainty", { minutesSd: info.minutesSd, rateCv: info.rateCv }, {
-    games: info.cur.length, lastSeason: info.usePrev, disagree: info.disagreeCv > 0, gtd: Boolean(ctx.gtd),
+  step("spread", "Uncertainty", { minutesSd: info.minutesSd, rateCv: info.rateCv + gapCv }, {
+    games: info.cur.length, lastSeason: info.usePrev, disagree: info.disagreeCv > 0, gtd: Boolean(ctx.gtd), bookGap: gapCv > 0,
   });
 
   const projection = simulate(runs, input, line, true);
@@ -780,7 +793,8 @@ function writeWhy(side, prop, line, info, scored, sim, ctx) {
   } else if (worst && worst.key === "market") {
     risk = `The biggest risk is that the book sees it differently: its line of ${line} sits ${worst.line > worst.sim ? "above" : "below"} the sim's ${worst.sim} before the line is factored in`;
   } else if (worst && worst.key === "spread") {
-    if (worst.gtd) risk = `The biggest risk is availability: ${last} is a game-time decision (${ctx.injuryStatus}), so the minutes could swing`;
+    if (worst.bookGap) risk = `The biggest risk is the gap to the book: a line this far from the sim usually means news the logs don't show yet (a new role, a lineup change)`;
+    else if (worst.gtd) risk = `The biggest risk is availability: ${last} is a game-time decision (${ctx.injuryStatus}), so the minutes could swing`;
     else if (worst.games < CONFIG.why.smallSample) risk = `The biggest risk is a small sample: only ${worst.games} ${worst.games === 1 ? "game" : "games"} this season, so the range is wide`;
     else if (worst.disagree) risk = `The biggest risk is how much ${last}'s recent games swing (last 3 averaged ${round1(info.lastAvg)}), so the range is wide`;
     else risk = `The biggest risk is how much ${last}'s ${prop.word} swing from game to game`;
@@ -899,7 +913,9 @@ async function computeHunts(date) {
         base: scored.base,       // the season baseline's score; base + every factor's points = the score before rounding
         chance: scored.chance,   // simulated % chance of this side hitting (pushes left out)
         projection: { mean: sim.projection.mean, p10: sim.projection.p10, p90: sim.projection.p90 },
-        teamPrior: info.teamPrior,  // traded during last season: { team, games, other } = the prior used only his games with team
+        teamPrior: info.teamPrior,
+        // dev/hunt-whatif.js only: how his past games (this season + last season's logs) finished against this line
+        ...(CONFIG.debug ? { history: { over: [...info.cur, ...info.prev].filter((g) => g.v > line).length, under: [...info.cur, ...info.prev].filter((g) => g.v < line).length } } : {}),  // traded during last season: { team, games, other } = the prior used only his games with team
         factors: scored.factors, // key, label, points + the numbers behind each one, for the Hunt Score page
         why: writeWhy(side, prop, line, info, scored, sim, ctx),
         injured,                 // Out / Doubtful / Questionable / Day-To-Day

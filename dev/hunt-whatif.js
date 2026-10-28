@@ -3,6 +3,7 @@
 //   1. old engine (no Role step, CONFIG.sim.role.off) vs the engine now, for the top hunts of both
 //   2. every Role step's games: date, opponent, his minutes, the stat and who was out, so a Role number can be checked
 //   3. the under-bias check: how far the projections sit from the book lines, per stat and by games played this season
+//   4. the calibration check: the sim's under chance vs how often each player actually went under that same line before
 // Writes the same text to dev/hunt-whatif.txt (gitignored).
 //
 //   node dev/hunt-whatif.js                          today
@@ -47,7 +48,7 @@ const sameProp = (a, b) => a.playerId === b.playerId && a.stat === b.stat;
 
 async function runEngine({ roleOff }) {
   engine.CONFIG.sim.role.off = roleOff;
-  engine.CONFIG.sim.role.list = true; // the role games come back in the factor, for section 2
+  engine.CONFIG.debug = true;         // role games and past results at the line come back in the answer
   engine.setWhatIf(null);             // clears the warm cache
   const answer = await engine.handler({ httpMethod: "GET", queryStringParameters: { date } });
   const body = JSON.parse(answer.body);
@@ -69,7 +70,7 @@ function detailText(target, old, abbr) {
   if (was) out.push(`  old engine: ${was.score} · projects ${was.projection.mean} (${was.projection.p10}-${was.projection.p90})`);
   out.push("");
   out.push(`  ${pad("Season baseline", 26)} ${padL(target.base.toFixed(1), 6)}${target.teamPrior ? `   last season = his ${target.teamPrior.games} games with ${target.teamPrior.team} only${target.teamPrior.other ? ` (not ${target.teamPrior.other})` : ""}` : ""}`);
-  target.factors.forEach((f) => out.push(`  ${pad(f.label, 26)} ${padL(signed(f.points), 6)}${f.key === "role" ? `   ${f.out} out` : f.key === "market" ? `   line ${f.line} vs projection ${f.sim} before the pull (${f.weight}%)` : ""}`));
+  target.factors.forEach((f) => out.push(`  ${pad(f.label, 26)} ${padL(signed(f.points), 6)}${f.key === "role" ? `   ${f.out} out` : f.key === "market" ? `   line ${f.line} vs projection ${f.sim} before the pull (gap ${f.gap}%, pulled ${f.weight}%)` : f.key === "spread" && f.bookGap ? "   wider: far from the book" : ""}`));
   out.push(`  ${pad("= Hunt Score", 26)} ${padL(target.score, 6)}   ${target.chance}% chance · projects ${target.projection.mean} (${target.projection.p10}-${target.projection.p90})`);
   const role = target.factors.find((f) => f.key === "role");
   if (role && role.list) {
@@ -123,6 +124,46 @@ function biasText(body) {
   return out.filter((l) => l !== null).join("\n");
 }
 
+// The calibration check: for each player + prop + line, the sim's chance of the under (final score and season baseline) next to
+// how often he actually finished under that line in his past games (this season + last season's logs, 10+ games). In-sample and
+// blind to tonight's matchup, so it only catches a shape problem: if the sim says 62% and his history says 52%, the simulated
+// games have too many low nights.
+function calibrationText(body) {
+  const rows = [];
+  body.props.forEach((p) => {
+    if (rows.some((r) => sameProp(r.p, p)) || !p.history) return;
+    const under = body.props.find((q) => sameProp(q, p) && q.side === "under");
+    const over = body.props.find((q) => sameProp(q, p) && q.side === "over");
+    const n = p.history.over + p.history.under;
+    if (n < 10) return;
+    rows.push({
+      p, n, lowLine: p.line <= ({ pts: 10, reb: 4, ast: 3, "3pm": 1.5, pra: 15 })[p.stat],
+      sim: under ? under.chance / 100 : 1 - over.chance / 100,
+      base: under ? under.base / 100 : 1 - over.base / 100,
+      hist: p.history.under / n,
+    });
+  });
+  const pct = (v) => `${Math.round(v * 100)}%`;
+  const line = (label, list) => (list.length
+    ? `  ${pad(label, 22)} ${padL(list.length, 5)}   ${padL(pct(avg(list.map((r) => r.sim))), 6)}   ${padL(pct(avg(list.map((r) => r.base))), 8)}   ${padL(pct(avg(list.map((r) => r.hist))), 8)}   ${padL(signed((avg(list.map((r) => r.sim)) - avg(list.map((r) => r.hist))) * 100), 6)}`
+    : null);
+  const out = [];
+  out.push("CALIBRATION CHECK (the sim's under chance vs how often he went under that line before)");
+  out.push(`  ${pad("", 22)} ${padL("props", 5)}   ${padL("sim", 6)}   ${padL("baseline", 8)}   ${padL("history", 8)}   ${padL("gap", 6)}`);
+  out.push(line("All", rows));
+  ["pts", "reb", "ast", "3pm", "pra"].forEach((code) => out.push(line(statWord(code), rows.filter((r) => r.p.stat === code))));
+  out.push(line("Low lines", rows.filter((r) => r.lowLine)));
+  out.push(line("Other lines", rows.filter((r) => !r.lowLine)));
+  out.push("  by the sim's under chance:");
+  [[0, 0.4, "under 40%"], [0.4, 0.5, "40-50%"], [0.5, 0.6, "50-60%"], [0.6, 0.7, "60-70%"], [0.7, 1.01, "70%+"]]
+    .forEach(([lo, hi, label]) => out.push(line(`  sim ${label}`, rows.filter((r) => r.sim >= lo && r.sim < hi))));
+  out.push("");
+  out.push("  sim = the final under chance · baseline = the season-baseline under chance (before any factor) · history = his past");
+  out.push("  games under that line (pushes left out) · gap = sim − history in points. A gap of +5 or more across the board = too");
+  out.push("  many low nights in the sim. In the buckets, history should rise with the sim; a flat history = the sim's confidence is noise.");
+  return out.filter((l) => l !== null).join("\n");
+}
+
 function countText(label, body) {
   const strong = body.props.filter((p) => p.score >= 65);
   const by = (list, side) => list.filter((p) => p.side === side).length;
@@ -172,6 +213,8 @@ function countText(label, body) {
   out.push(`  ${roleSides.length} of ${now.props.length} scored sides had a Role step.`);
   out.push("");
   out.push(biasText(now));
+  out.push("");
+  out.push(calibrationText(now));
   targets.forEach((t) => out.push("", "-".repeat(110), "", detailText(t, old, abbr)));
   out.push("");
   out.push("LS = a last-season game (counts half). Role games skip the last 10 days of last regular season and his own short nights.");
