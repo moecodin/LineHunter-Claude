@@ -5989,7 +5989,9 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-mi-list dt { font-weight: 400; color: var(--lh-muted); }
 .lh-mi-list dd { margin: 0; text-align: right; font-weight: 500; color: var(--lh-strong); }
 /* A section header with its one-line summary and a Show / Hide button (Bootstrap collapse) */
-.lh-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.lh-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.lh-sec-head > div { min-width: 0; }
+.lh-sec-toggle { flex: none; }
 .lh-sec-sub { margin-top: 0.3rem; font-size: 0.9rem; color: var(--lh-muted); }
 .lh-sec-toggle {
   display: inline-flex;

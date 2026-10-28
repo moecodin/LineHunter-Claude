@@ -183,8 +183,8 @@ function renderGameHeader(game) {
       ${team(home, colors.home, "home")}
     </h1>`;
   if (typeof setPlayerJumpName === "function") setPlayerJumpName(`${away.abbreviation} @ ${home.abbreviation}`);
-  const ratings = document.getElementById("ratingsTeams");
-  if (ratings) ratings.textContent = `${away.abbreviation} @ ${home.abbreviation}`;
+  const ratings = document.getElementById("ratingsTitle"); // "Team ratings" with "MIA @ ATL" as its small label
+  if (ratings) ratings.dataset.lhKicker = `${away.abbreviation} @ ${home.abbreviation}`;
 }
 
 // One pill button per prop type. Clicking one shows that prop's lines.
