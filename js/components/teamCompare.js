@@ -139,6 +139,23 @@ function renderTeamComparison(game, data, usedLastSeason) {
   }
 
   const rows = COMPARE_STATS.map((stat) => compareRowHtml(stat, awayTeam, homeTeam, compareLeague(stat, data.teams)));
+  // The header line while the ratings are hidden: "NYK better in 8 of 11" (Pace has no better or worse)
+  const summary = document.getElementById("ratingsSummary");
+  if (summary) {
+    let awayBetter = 0;
+    let homeBetter = 0;
+    COMPARE_STATS.filter((stat) => stat.better !== "none").forEach((stat) => {
+      const a = awayTeam[stat.key];
+      const h = homeTeam[stat.key];
+      if (a === null || a === undefined || h === null || h === undefined || a === h) return;
+      const awayWins = stat.better === "low" ? a < h : a > h;
+      if (awayWins) awayBetter += 1; else homeBetter += 1;
+    });
+    const total = COMPARE_STATS.filter((stat) => stat.better !== "none").length;
+    const lead = awayBetter === homeBetter ? null : awayBetter > homeBetter
+      ? `${game.visitor_team.abbreviation} better in ${awayBetter} of ${total}` : `${game.home_team.abbreviation} better in ${homeBetter} of ${total}`;
+    summary.textContent = `${lead || `Even: ${awayBetter} each`}${usedLastSeason ? " · last season" : ""}`;
+  }
   body.innerHTML = `
     <div class="d-flex justify-content-end align-items-baseline gap-2 mb-3">
       <span class="lh-label text-muted">${usedLastSeason ? "Last season" : `${data.season}-${String(data.season + 1).slice(2)} season`} · season averages</span>

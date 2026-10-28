@@ -95,6 +95,12 @@ async function loadGameInjuries(game) {
     window.gameInjuryStatus = {};
     injuries.forEach((item) => { if (item.player) window.gameInjuryStatus[item.player.id] = item.status || "Out"; });
     if (typeof onGameInjuriesLoaded === "function") onGameInjuriesLoaded();
+    // The header line while the list is hidden: "DET 2 listed · NYK 1 listed"
+    const summary = document.getElementById("gameInjurySummary");
+    if (summary) {
+      const counts = teams.map((team) => ({ abbr: team.abbr, n: injuries.filter((item) => item.player && item.player.team_id === team.id).length }));
+      summary.textContent = counts.every((team) => team.n === 0) ? "Nobody listed" : counts.map((team) => `${team.abbr} ${team.n} listed`).join(" · ");
+    }
     teams.forEach((team) => {
       const heading = document.createElement("div");
       heading.className = "lh-injury-team lh-label";
@@ -116,5 +122,7 @@ async function loadGameInjuries(game) {
   } catch (error) {
     console.warn("Injury report unavailable:", error);
     box.innerHTML = `<div class="text-muted small p-3">Injury report is unavailable right now.</div>`;
+    const summary = document.getElementById("gameInjurySummary");
+    if (summary) summary.textContent = "Unavailable right now";
   }
 }

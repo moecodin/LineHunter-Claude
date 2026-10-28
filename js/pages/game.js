@@ -159,33 +159,32 @@ function gameTeamBadge(team) {
     : teamBadgeHtml(team);
 }
 
+// The Swiss header: the date / tip time, both abbreviations big and underlined in the team colors (matchup clash rule),
+// city + season record, and the last-5 dots (#formAway / #formHome and the records come from js/components/matchupInfo.js).
 function renderGameHeader(game) {
   currentGame = game;
-  document.title = `${game.visitor_team.abbreviation} @ ${game.home_team.abbreviation} · LineHunter`;
-
-  // lh-label / lh-display / display-3 = our label font and big condensed font (css/styles.css)
-  const visitorShade = getNeutralTeamIndex(game.visitor_team.abbreviation); // which gray (.lh-abbr-N, one set per theme)
-  const homeShade = getNeutralTeamIndex(game.home_team.abbreviation);
-
+  const away = game.visitor_team;
+  const home = game.home_team;
+  document.title = `${away.abbreviation} @ ${home.abbreviation} · LineHunter`;
+  const colors = matchupColors(away.abbreviation, home.abbreviation);
+  const day = new Date(`${game.date.slice(0, 10)}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const when = game.status === "Final" || game.period > 0 ? describeTime(game) : `${day} · ${describeTime(game).split(", ").pop()}`;
+  const team = (t, color, side) => `
+      <div class="lh-gh-team${side === "home" ? " is-home" : ""}">
+        <span class="lh-gh-abbr" style="border-bottom-color: ${color}">${t.abbreviation}</span>
+        <span class="lh-gh-city">${t.city} <span class="lh-gh-rec" id="record${side === "home" ? "Home" : "Away"}"></span></span>
+        <div class="lh-hdr-form" id="form${side === "home" ? "Home" : "Away"}"></div>
+      </div>`;
   document.getElementById("game-header").innerHTML = `
-    <div class="card-body p-3 d-flex flex-column justify-content-center">
-      <div class="lh-label text-center mb-2">${describeTime(game)}</div>
-      <div class="d-flex justify-content-between align-items-center text-center gap-2">
-        <div class="flex-fill">
-          <div class="lh-display display-6 lh-abbr lh-abbr-${visitorShade}">${game.visitor_team.abbreviation}</div>
-          <div class="small text-muted mt-1">${game.visitor_team.full_name}</div>
-          <div class="lh-hdr-form" id="formAway"></div>
-        </div>
-        <div class="lh-label px-2">@</div>
-        <div class="flex-fill">
-          <div class="lh-display display-6 lh-abbr lh-abbr-${homeShade}">${game.home_team.abbreviation}</div>
-          <div class="small text-muted mt-1">${game.home_team.full_name}</div>
-          <div class="lh-hdr-form" id="formHome"></div>
-        </div>
-      </div>
-    </div>
-  `;
-  applyMatchupColors(document.getElementById("game-header"), game.visitor_team.abbreviation, game.home_team.abbreviation);
+    <div class="lh-gh-when">${when}</div>
+    <h1 class="lh-gh-teams"><span class="visually-hidden">${away.full_name} at ${home.full_name}</span>
+      ${team(away, colors.away, "away")}
+      <span class="lh-gh-at" aria-hidden="true">@</span>
+      ${team(home, colors.home, "home")}
+    </h1>`;
+  if (typeof setPlayerJumpName === "function") setPlayerJumpName(`${away.abbreviation} @ ${home.abbreviation}`);
+  const ratings = document.getElementById("ratingsTeams");
+  if (ratings) ratings.textContent = `${away.abbreviation} @ ${home.abbreviation}`;
 }
 
 // One pill button per prop type. Clicking one shows that prop's lines.

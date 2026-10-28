@@ -10,6 +10,8 @@
 //                    (last season while this season has under 20 games, else this season's flat average) that counts as 5 games
 //   minutes          the same blend on minutes played
 //   opponent / pace  multipliers using half the gap between tonight's opponent and the league average
+//   zone matchup     PTS / 3PM / PRA only: the player's shots per game in each zone x (the FG% tonight's opponent allows there - the
+//                    league's), worth 2 or 3 points a make, as a share of his usual output; half of it, capped at 6% (CONFIG.sim.zone)
 //   back-to-back     a small multiplier when the team played yesterday
 //   spread           minutes noise (the player's own, wider for a game-time decision), uncertainty in the true rate (wider with
 //                    few games or when the last 3 games disagree with the projection) and game-to-game noise (from the logs)
@@ -27,6 +29,8 @@
 //   /v1/stats?player_ids[]=&seasons[]=              game logs (this season, plus last season while a player has < 20 games)
 //   /nba/v1/team_season_averages/general?type=opponent   points / rebounds / assists / threes each team ALLOWS per game
 //   /nba/v1/team_season_averages/general?type=advanced   each team's pace
+//   /nba/v1/season_averages/shooting?type=by_zone&player_ids[]=          each player's FGA per game by zone (this + last season)
+//   /nba/v1/team_season_averages/shooting?type=by_zone_opponent          the FG% each team allows by zone (the league = all teams)
 //   /v1/player_injuries                             Out / Doubtful / Questionable
 
 const API_ORIGIN = "https://api.balldontlie.io";
@@ -45,6 +49,8 @@ const CONFIG = {
     opponentShrink: 0.5,                       // use half of the opponent's "allowed vs league" gap
     paceShrink: 0.5,                           // and half of the pace gap
     backToBack: 0.97,                          // second night of a back-to-back: 3% less of everything
+    zone: { shrink: 0.5, cap: 0.06, minFga: 4, ownSeasonGames: 10 }, // zone matchup: half the gap, at most +/-6%, players with 4+ FGA
+                                               // a game; this season's shot profile once a player has 10 games, else last season's
     minutesSd: { base: 4, min: 3, max: 8, gtd: 1.5, games: 15 }, // minutes noise: the player's own spread over 15 games, x1.5 if GTD
     rateCv: { base: 0.05, sample: 0.3, ref: 0.1, minGames: 1 },  // rate uncertainty = 0.05 + 0.3 / sqrt(games); baseline uses 0.1
     priorSampleGames: 10,                      // a full last season adds this many games to the sample above
@@ -237,6 +243,82 @@ async function loadAllowed(season) {
   } catch (error) {
     return null;
   }
+}
+
+// ---------- zones (the zone matchup step) ----------
+// Five zones; the player's left and right corner 3s are added together because the opponent numbers combine them.
+const ZONES = [
+  { key: "ra", label: "at the rim", points: 2, player: ["restricted_area"], opp: "restricted_area" },
+  { key: "paint", label: "in the paint", points: 2, player: ["in_the_paint_(non-ra)"], opp: "in_the_paint_(non-ra)" },
+  { key: "mid", label: "from mid-range", points: 2, player: ["mid-range"], opp: "mid-range" },
+  { key: "c3", label: "from the corners", points: 3, player: ["left_corner_3", "right_corner_3"], opp: "corner_3" },
+  { key: "atb", label: "above the break", points: 3, player: ["above_the_break_3"], opp: "above_the_break_3" },
+];
+
+// { playerId: { ra: fga per game, paint, mid, c3, atb } } for one season, from one request per 100 players.
+async function loadPlayerZones(ids, season) {
+  const result = {};
+  const answers = await pool(chunk(ids, 100).map((group) => async () => {
+    try {
+      return await bdlAllPages(`/nba/v1/season_averages/shooting?season=${season}&season_type=regular&type=by_zone&per_page=100&${group.map((id) => `player_ids[]=${id}`).join("&")}`);
+    } catch (error) { return []; }
+  }), CONFIG.concurrency);
+  answers.flat().forEach((row) => {
+    if (!row.player || !row.stats) return;
+    const zones = {};
+    ZONES.forEach((zone) => { zones[zone.key] = sum(zone.player.map((field) => Number(row.stats[`${field}_fga`]) || 0)); });
+    if (sum(Object.values(zones)) > 0) result[row.player.id] = zones;
+  });
+  return result;
+}
+
+// { teams: { teamId: { ra: fg% allowed, ... } }, league: { ra: fg%, ... }, ranks: { teamId: { ra: 1..30 (1 = allows the highest) } } }
+// or null when the season has no data. The league = every team's makes allowed / attempts allowed (attempt-weighted).
+async function loadZoneDefense(season) {
+  try {
+    const rows = await bdlAllPages(`/nba/v1/team_season_averages/shooting?season=${season}&season_type=regular&type=by_zone_opponent&per_page=100`);
+    if (!rows.length) return null;
+    const teams = {};
+    const league = {};
+    ZONES.forEach((zone) => {
+      let made = 0;
+      let tried = 0;
+      rows.forEach((row) => {
+        const fga = Number(row.stats[`${zone.opp}_opp_fga`]) || 0;
+        const fgm = Number(row.stats[`${zone.opp}_opp_fgm`]) || 0;
+        made += fgm;
+        tried += fga;
+        teams[row.team.id] = teams[row.team.id] || {};
+        teams[row.team.id][zone.key] = fga > 0 ? fgm / fga : null;
+      });
+      league[zone.key] = tried > 0 ? made / tried : null;
+    });
+    return { teams, league };
+  } catch (error) {
+    return null;
+  }
+}
+
+// The zone matchup for one player + prop tonight, or null (rebounds / assists, no shot data, too few shots, no opponent data).
+// points = the extra points a game his shot diet would score against this defense vs a league-average one (threes: extra makes);
+// mult is applied to the projection (half of points / his usual output, capped).
+function zoneInfo(prop, zones, defense, oppTeamId, perGame) {
+  if (!["pts", "3pm", "pra"].includes(prop.code) || !zones || !defense || !defense.teams[oppTeamId] || !(perGame > 0)) return null;
+  const Z = CONFIG.sim.zone;
+  const threesOnly = prop.code === "3pm";
+  const used = ZONES.filter((zone) => !threesOnly || zone.points === 3);
+  if (sum(ZONES.map((zone) => zones[zone.key] || 0)) < Z.minFga) return null;
+  const pieces = used.map((zone) => {
+    const opp = defense.teams[oppTeamId][zone.key];
+    const lg = defense.league[zone.key];
+    if (opp === null || lg === null || opp === undefined || lg === undefined) return { zone, value: 0 };
+    const madeMore = (zones[zone.key] || 0) * (opp - lg);
+    return { zone, value: threesOnly ? madeMore : madeMore * zone.points, gapPct: (opp - lg) * 100 };
+  });
+  const points = sum(pieces.map((piece) => piece.value));
+  const mult = 1 + clamp((Z.shrink * points) / perGame, -Z.cap, Z.cap);
+  const biggest = [...pieces].sort((a, b) => Math.abs(b.value) - Math.abs(a.value))[0];
+  return { mult, points: round1(points), zone: biggest && biggest.value ? biggest.zone.label : null, gap: biggest && biggest.gapPct !== undefined ? round1(biggest.gapPct) : null };
 }
 
 // { teams: { teamId: { pace, rank, of } } (rank 1 = fastest), league } or null.
@@ -468,6 +550,7 @@ function runSteps(prop, line, info, ctx) {
   step("minutes", "Minutes", { minutes: info.formMinutes }, { now: round1(info.formMinutes), base: round1(info.baseMinutes) });
   step("form", "Recent form", { rate: info.formRate }, { last: info.lastAvg === null ? null : round1(info.lastAvg), games: info.cur.length });
   if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
+  if (ctx.zone) step("zone", "Zone matchup", { mult: input.mult * ctx.zone.mult }, { extra: ctx.zone.points, zone: ctx.zone.zone, gap: ctx.zone.gap });
   if (ctx.pace) step("pace", "Pace", { mult: input.mult * ctx.pace.mult }, { rank: ctx.pace.rank, of: ctx.pace.of, pace: ctx.pace.pace });
   if (ctx.backToBack) step("b2b", "Back-to-back", { mult: input.mult * S.backToBack });
   // The book's line carries information the logs don't (a new role, a rotation change): pull the projection part of the way there.
@@ -501,7 +584,7 @@ function scoreSide(side, sim) {
 
 function pick(options, playerId) { return options[playerId % options.length]; }
 
-const FACTOR_WORD = { market: "the book line", base: "the season numbers", minutes: "the minutes", form: "the recent form", opponent: "the matchup", pace: "the pace", spread: "the steady numbers" };
+const FACTOR_WORD = { zone: "the zone matchup", market: "the book line", base: "the season numbers", minutes: "the minutes", form: "the recent form", opponent: "the matchup", pace: "the pace", spread: "the steady numbers" };
 
 function writeWhy(side, prop, line, info, scored, sim, ctx) {
   const id = ctx.playerId;
@@ -558,6 +641,12 @@ function writeWhy(side, prop, line, info, scored, sim, ctx) {
       : "The biggest risk is the second night of a back-to-back";
   } else if (worst && worst.key === "opponent") {
     risk = `The biggest risk is the matchup: ${opp} ranks ${ordinal(worst.rank)} of ${worst.of} in ${prop.word} allowed`;
+  } else if (worst && worst.key === "zone") {
+    // extra > 0 = the defense leaks where he shoots (a risk for the under), < 0 = it is stingy there (a risk for the over)
+    const where = worst.zone ? `${last}'s shots ${worst.zone}` : `where ${last} shoots`;
+    risk = worst.extra > 0
+      ? `The biggest risk is the zone matchup: ${opp} gives up more than most teams on ${where}`
+      : `The biggest risk is the zone matchup: ${opp} defends ${where} better than most teams`;
   } else if (worst && worst.key === "pace") {
     risk = worst.rank > worst.of / 2
       ? `The biggest risk is the pace: ${opp} plays one of the slower games in the league (${ordinal(worst.rank)} of ${worst.of})`
@@ -617,14 +706,22 @@ async function computeHunts(date) {
     loadInjuries(teamIds),
   ]);
   const needLastSeason = playerIds.filter((id) => currentLogs[id].filter(playedInGame).length < CONFIG.sim.priorUntilGames);
-  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow] = await Promise.all([
+  // Shooting players' shot profiles: this season for players with enough games, last season for the rest.
+  const ownZoneIds = playerIds.filter((id) => !needLastSeason.includes(id) || currentLogs[id].filter(playedInGame).length >= CONFIG.sim.zone.ownSeasonGames);
+  const lastZoneIds = playerIds.filter((id) => !ownZoneIds.includes(id));
+  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow, zonesNow, zonesLast, zoneDefNow] = await Promise.all([
     needLastSeason.length ? loadLogs(needLastSeason, season - 1, date, `${season}-${CONFIG.sim.lastSeasonLogsFrom}`) : {},
     needLastSeason.length ? loadSeasonAverages(needLastSeason, season - 1) : {},
     loadAllowed(season),
     loadPace(season),
+    ownZoneIds.length ? loadPlayerZones(ownZoneIds, season) : {},
+    lastZoneIds.length ? loadPlayerZones(lastZoneIds, season - 1) : {},
+    loadZoneDefense(season),
   ]);
   const allowed = allowedNow || (await loadAllowed(season - 1)); // same fallback rule as the rest of the site
   const pace = paceNow || (await loadPace(season - 1));
+  const zoneDefense = zoneDefNow || (await loadZoneDefense(season - 1));
+  const playerZones = { ...zonesLast, ...zonesNow };
 
   const playedYesterday = new Set(yesterday.flatMap((game) => [game.home_team.id, game.visitor_team.id]));
 
@@ -658,6 +755,7 @@ async function computeHunts(date) {
     };
     const info = describe(prop, ctx);
     if (!info) return; // fewer than 5 games in total
+    ctx.zone = zoneInfo(prop, playerZones[entry.player_id], zoneDefense, oppTeam.id, info.baseRate * info.baseMinutes);
 
     const sim = runSteps(prop, line, info, ctx);
     ["over", "under"].filter((side) => entry.priced[side]).forEach((side) => {

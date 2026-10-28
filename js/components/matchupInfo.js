@@ -59,16 +59,16 @@ async function fetchTeamGames(teamId, season) {
   return slim;
 }
 
-// The standings for a season as { teamId: { home: "31-9", road: "28-13" } }, or null if the season has no games yet.
+// The standings for a season as { teamId: { home: "31-9", road: "28-13", overall: "59–22" } }, or null if the season has no games yet.
 async function fetchStandings(season) {
-  const key = `lh-standings:${season}`;
+  const key = `lh-standings-v2:${season}`;
   const cached = matchupCacheRead(key, STANDINGS_CACHE_MS);
   if (cached) return cached.empty ? null : cached.records;
 
   const json = await bdlGet(`${BDL_BASE}/standings?season=${season}`);
   const records = {};
   (json.data || []).forEach((row) => {
-    records[row.team.id] = { home: row.home_record, road: row.road_record };
+    records[row.team.id] = { home: row.home_record, road: row.road_record, overall: Number.isFinite(row.wins) && Number.isFinite(row.losses) ? `${row.wins}–${row.losses}` : null };
   });
   const empty = Object.keys(records).length === 0;
   matchupCacheWrite(key, empty ? { empty: true } : { records });
@@ -169,15 +169,26 @@ function renderMatchupInfo(game, data) {
   if (formAway) formAway.innerHTML = lastFiveHtml(data.awayResults === undefined ? null : data.awayResults);
   if (formHome) formHome.innerHTML = lastFiveHtml(data.homeResults === undefined ? null : data.homeResults);
 
+  // The season records next to the city names in the header
+  const overall = (id) => (data.records && data.records[id] && data.records[id].overall) || "";
+  const recordAway = document.getElementById("recordAway");
+  const recordHome = document.getElementById("recordHome");
+  if (recordAway) recordAway.textContent = overall(game.visitor_team.id);
+  if (recordHome) recordHome.textContent = overall(game.home_team.id);
+
+  // Swiss list: the arena is the card's title, then one row per fact between hairlines.
+  const title = document.getElementById("matchupArena");
+  if (title) title.textContent = homeInfo.arena || game.home_team.city;
+  const rest = (results) => restHtml(results === undefined ? null : results, game.date.slice(0, 10));
+  const row = (label, value) => `<div><dt>${label}</dt><dd>${value}</dd></div>`;
   document.getElementById("matchup-info-body").innerHTML = `
-    <div class="card-body p-3 d-flex flex-column justify-content-center">
-      <div class="lh-mi-top"><i class="bi bi-geo-alt" aria-hidden="true"></i> ${arena}</div>
-      <div class="lh-mi-teams"><span>${away}</span><span></span><span>${home}</span></div>
-      ${infoRow("Coach", awayInfo.coach || "–", homeInfo.coach || "–")}
-      ${infoRow(recordLabel, awayRecord, homeRecord)}
-      ${infoRow("Rest", restHtml(data.awayResults === undefined ? null : data.awayResults, game.date.slice(0, 10)), restHtml(data.homeResults === undefined ? null : data.homeResults, game.date.slice(0, 10)))}
-      <div class="lh-mi-bottom"><span class="lh-label">Last meeting</span> ${meeting}</div>
-    </div>`;
+    <div class="lh-mi-city">${homeInfo.city || game.home_team.city}</div>
+    <dl class="lh-mi-list">
+      ${row("Coaches", `${awayInfo.coach || "–"} · ${homeInfo.coach || "–"}`)}
+      ${row(`${away} on the road · ${home} at home${data.recordSeasonLabel ? ` <span class="lh-mi-note">${data.recordSeasonLabel}</span>` : ""}`, `${awayRecord} · ${homeRecord}`)}
+      ${row("Rest", `${away} ${rest(data.awayResults)} · ${home} ${rest(data.homeResults)}`)}
+      ${row("Last meeting", meeting)}
+    </dl>`;
 }
 
 // ---------- Loading ----------
