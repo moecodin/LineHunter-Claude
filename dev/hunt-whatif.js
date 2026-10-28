@@ -22,6 +22,7 @@ const path = require("path");
 const WHATIF = {
   // role games: 50%+ of tonight's missing minutes also missing, newest count most (halves every 10 role games), last season's
   // games count half; minutes trust them like `n` games against 2 for the engine's form, the per-minute rate against 6
+  team: { minGames: 10 },     // last season's games with his current team needed to use them alone
   role: { minMinutes: 15, minMatch: 0.5, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, showGames: 8 },
   playtypes: { minShare: 0.05, shrink: 0.5, cap: 0.05 },
   h2h: { minGames: 3, priorGames: 20, cap: 0.06, seasons: 5 },
@@ -102,6 +103,27 @@ async function seasonRow(category, type, playerId, season) {
 }
 
 // ---------- the five test steps ----------
+
+// Team: the engine's prior (while a player has under 20 games this season) is last season's FULL averages, every team he
+// played for. A player traded during last season gets last season's games with his current team only, when there are enough.
+async function teamStep(ctx) {
+  const W = WHATIF.team;
+  const logs = (await all(`/v1/stats?player_ids[]=${ctx.playerId}&seasons[]=${ctx.season - 1}&per_page=100`)).filter(played)
+    .sort((a, b) => String(b.game.date).localeCompare(String(a.game.date)));
+  const here = logs.filter((log) => log.team.id === ctx.teamId);
+  const elsewhere = logs.filter((log) => log.team.id !== ctx.teamId);
+  const sumUp = (list) => {
+    const m = list.reduce((a, l) => a + minutesOf(l.min), 0);
+    return `${list.length} games, ${(m / (list.length || 1)).toFixed(1)} min, ${m > 0 ? ((list.reduce((a, l) => a + statOf(l, ctx.stat), 0) / m) * 36).toFixed(1) : "–"} per 36`;
+  };
+  if (!elsewhere.length) return { note: `every game last season was with ${ctx.teamAbbr}: no change` };
+  const other = [...new Set(elsewhere.map((log) => ctx.abbrOf(log.team.id)))].join(" / ");
+  if (here.length < W.minGames) return { note: `last season: ${other} ${sumUp(elsewhere)}; ${ctx.teamAbbr} only ${here.length} games, not enough, kept as is` };
+  return {
+    team: { prev: here.map((log) => ({ v: statOf(log, ctx.stat), m: minutesOf(log.min) })) },
+    note: `last season: ${other} ${sumUp(elsewhere)} · ${ctx.teamAbbr} ${sumUp(here)} -> the prior uses the ${ctx.teamAbbr} games only`,
+  };
+}
 
 // Role: tonight's lineup. Teammates listed Out / Doubtful who play 15+ minutes are "missing". Each of his past games on this team
 // (this season + last) is scored by how much of that missing minutes total was also missing then (a teammate counts only in
@@ -328,6 +350,7 @@ async function runEngine() {
 
   console.log(`Loading the Matchup Analyzer numbers for ${target.player}...`);
   const STEPS = [
+    ["team", "Team (current team only)", teamStep],
     ["role", "Role (lineup tonight)", roleStep],
     ["playtypes", "Play types vs defense", playTypesStep],
     ["h2h", "Head-to-head", h2hStep],
@@ -340,15 +363,38 @@ async function runEngine() {
   const multSteps = results.filter((r) => r.mult && Math.abs(r.mult - 1) > 1e-9).map((r) => ({ key: r.key, label: r.label, mult: r.mult }));
   const roleResult = results.find((r) => r.role);
   let roleUsed = null; // the engine's form numbers and the blended role numbers, filled in when the engine calls back
-  const extra = (info) => {
-    if (!roleResult) return multSteps;
-    const r = roleResult.role;
-    const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * info.formMinutes;
-    const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * info.formRate;
-    roleUsed = { fromMinutes: info.formMinutes, fromRate: info.formRate, minutes, rate };
-    return [{ key: "role", label: "Role (lineup tonight)", set: { minutes, rate } }, ...multSteps];
+  const teamResult = results.find((r) => r.team);
+  let teamUsed = null;
+  // The engine's own form blend (describe in hunt.js), with last season's games for the current team as the prior.
+  const flatRM = (games) => { const m = games.reduce((a, g) => a + g.m, 0); return { rate: m > 0 ? games.reduce((a, g) => a + g.v, 0) / m : 0, minutes: m / games.length }; };
+  const recentRM = (games) => {
+    const w = games.map((_, i) => Math.pow(0.5, i / engine.CONFIG.sim.halfLife));
+    const m = games.reduce((a, g, i) => a + w[i] * g.m, 0);
+    return { rate: m > 0 ? games.reduce((a, g, i) => a + w[i] * g.v, 0) / m : 0, minutes: m / w.reduce((a, b) => a + b, 0) };
   };
-  const keys = new Set([...(roleResult ? ["role"] : []), ...multSteps.map((m) => m.key)]);
+  const extra = (info) => {
+    const steps = [];
+    let formMinutes = info.formMinutes;
+    let formRate = info.formRate;
+    if (teamResult && info.usePrev) {
+      const prior = flatRM(teamResult.team.prev);
+      const recent = info.cur.length ? recentRM(info.cur) : null;
+      const share = info.cur.length / (info.cur.length + engine.CONFIG.sim.priorGames);
+      formMinutes = recent ? share * recent.minutes + (1 - share) * prior.minutes : prior.minutes;
+      formRate = recent ? share * recent.rate + (1 - share) * prior.rate : prior.rate;
+      teamUsed = { fromMinutes: info.formMinutes, fromRate: info.formRate, minutes: formMinutes, rate: formRate };
+      steps.push({ key: "team", label: "Team (current team only)", set: { minutes: formMinutes, rate: formRate } });
+    }
+    if (roleResult) {
+      const r = roleResult.role;
+      const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * formMinutes;
+      const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * formRate;
+      roleUsed = { fromMinutes: formMinutes, fromRate: formRate, minutes, rate };
+      steps.push({ key: "role", label: "Role (lineup tonight)", set: { minutes, rate } });
+    }
+    return [...steps, ...multSteps];
+  };
+  const keys = new Set(["team", "role", ...multSteps.map((m) => m.key)]);
   engine.setWhatIf(({ playerId, stat, info }) => (playerId === target.playerId && stat === target.stat ? extra(info) : null));
   const after = await runEngine();
   engine.setWhatIf(null);
@@ -367,6 +413,16 @@ async function runEngine() {
   out.push("");
   out.push("MATCHUP ANALYZER PIECES (test weights)");
   results.forEach((r) => {
+    if (r.team && teamUsed) {
+      const w = (code) => (code === "3pm" ? "3PM" : code.toUpperCase());
+      out.push(`  ${pad(r.label, 26)} ${padL("", 8)}   minutes ${teamUsed.fromMinutes.toFixed(1)} -> ${teamUsed.minutes.toFixed(1)} · ${w(target.stat)} per 36 ${(teamUsed.fromRate * 36).toFixed(1)} -> ${(teamUsed.rate * 36).toFixed(1)}`);
+      out.push(`      ${r.note}`);
+      return;
+    }
+    if (r.team) {
+      out.push(`  ${pad(r.label, 26)} ${padL("not used", 8)}   ${r.note} (but 20+ games this season, so the engine no longer leans on last season)`);
+      return;
+    }
     if (r.role && roleUsed) {
       const w = (code) => (code === "3pm" ? "3PM" : code.toUpperCase());
       out.push(`  ${pad(r.label, 26)} ${padL("", 8)}   minutes ${roleUsed.fromMinutes.toFixed(1)} -> ${roleUsed.minutes.toFixed(1)} (role games ${r.role.minutes.toFixed(1)}, trusted ${Math.round(r.role.minutesWeight * 100)}%)`);
