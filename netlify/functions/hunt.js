@@ -76,7 +76,11 @@ const CONFIG = {
     // under his usual is not a lineup game; a late-season game where he played big minutes still counts). Newest count
     // most (weight halves every 10 role games), last season's count half. With 3+ role games, their minutes replace the form
     // minutes in proportion n / (n + 2) and their per-minute output the form rate in proportion n / (n + 6), n = total weight.
-    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, shortNight: 0.8,
+    role: { minMinutes: 15, minMatch: 0.5, minGames: 3, minGamesSamePos: 2, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, shortNight: 0.8,
+      // the lineup then vs tonight: other rotation teammates (usually 15+ minutes, from the slate's own game logs) who sat in a
+      // role game besides tonight's missing ones. A game where 1 more was out counts half, 2 or more not at all (late-season
+      // tank games with everyone resting are not tonight's lineup: Fears' 36 / 36 / 40-point April games)
+      extraKeep: [1, 0.5, 0],
       // a missing teammate plays HIS position (Sengun out, Capela the next center): his minutes going up is close to certain,
       // so the role games' minutes are trusted like n / (n + 0.5) instead of n / (n + 2)
       samePosMinutesPrior: 0.5 },
@@ -445,11 +449,36 @@ async function loadMissing(injuryRows, teamIds, season, before) {
   return byTeam;
 }
 
-// Position group by the first listed position: G, F or C ("G-F" = guard), like the site's Same Position card
-const posGroup = (position) => { const first = String(position || "").trim().charAt(0).toUpperCase(); return "GFC".includes(first) && first ? first : null; };
+// The positions a player is listed at, as letters: "F-C" -> "FC", "G" -> "G" (two players share a position when any letter matches:
+// Sengun "F-C" out, Capela "C" next in line)
+const posGroup = (position) => String(position || "").toUpperCase().replace(/[^GFC]/g, "");
+const sharesPosition = (a, b) => Boolean(a) && Boolean(b) && [...a].some((letter) => b.includes(letter));
 
 // The player's role games for tonight's lineup -> { minutes, rate, n, games, out } or null (nobody missing, or no such games).
-function roleInfo(prop, logs, teamId, missing, season, group) {
+// { teamId: [{ id, last, minutes, seasons, played }] }: each team's rotation (players of the slate with 15+ usual minutes for the
+// team), from the logs the engine already downloaded; a player counts in a season when he played 5+ games for the team then
+// (this season: any game), so a player who joined or left is not "absent" in games from before.
+function buildRotation(playerIds, players, currentLogs, previousLogs, season) {
+  const byTeam = {};
+  playerIds.forEach((id) => {
+    const player = players[id];
+    const teamId = player && player.team && player.team.id;
+    if (!teamId) return;
+    const mine = (logs) => (logs || []).filter((log) => log.team && log.team.id === teamId && playedInGame(log) && !log.game.postseason);
+    const now = mine(currentLogs[id]);
+    const last = mine(previousLogs[id]);
+    const usual = average([...now, ...last].map(minutesOf));
+    if (!(usual >= CONFIG.sim.role.minMinutes)) return;
+    (byTeam[teamId] = byTeam[teamId] || []).push({
+      id, last: player.last_name, minutes: usual,
+      seasons: new Set([...(now.length ? [season] : []), ...(last.length >= 5 ? [season - 1] : [])]),
+      played: new Set([...now, ...last].map((log) => log.game.id)),
+    });
+  });
+  return byTeam;
+}
+
+function roleInfo(prop, logs, teamId, missing, season, group, rotation = [], ownId = null) {
   if (!missing || !missing.length) return null;
   const R = CONFIG.sim.role;
   const own = [...logs.current, ...logs.previous].filter((log) => log.team && log.team.id === teamId && playedInGame(log) && !log.game.postseason)
@@ -472,22 +501,33 @@ function roleInfo(prop, logs, teamId, missing, season, group) {
     if (!total) return;
     const match = sum(counted.filter((m) => !m.played.has(log.game.id)).map((m) => m.minutes)) / total;
     if (match < R.minMatch) return;
-    const weight = match * Math.pow(0.5, games.length / R.halfLife) * (log.game.season === season ? 1 : R.lastSeason);
-    games.push({ weight, v: statOf(log, prop.keys), m: minutesOf(log), log, without: counted.filter((m) => !m.played.has(log.game.id)).map((m) => m.last) });
+    // other rotation teammates absent that night (the player himself and tonight's missing players do not count)
+    const missingIds = new Set(missing.map((m) => m.id));
+    const extras = rotation.filter((r) => r.id !== ownId && !missingIds.has(r.id) && r.seasons.has(log.game.season) && !r.played.has(log.game.id));
+    const keep = R.extraKeep[Math.min(extras.length, R.extraKeep.length - 1)];
+    const without = counted.filter((m) => !m.played.has(log.game.id)).map((m) => m.last);
+    if (!keep) {
+      if (CONFIG.debug) skipped.push({ log, without, why: `lineup differs (${extras.length} others out: ${extras.map((r) => r.last).join(", ")})` });
+      return;
+    }
+    const weight = match * keep * Math.pow(0.5, games.length / R.halfLife) * (log.game.season === season ? 1 : R.lastSeason);
+    games.push({ weight, v: statOf(log, prop.keys), m: minutesOf(log), log, without, extras: extras.map((r) => r.last) });
   });
-  if (games.length < R.minGames) {
+  const samePosMissing = missing.some((m) => sharesPosition(m.group, group));
+  const minGames = samePosMissing ? R.minGamesSamePos : R.minGames; // a missing teammate at his position: 2 matching games are enough
+  if (games.length < minGames) {
     if (!CONFIG.debug) return null;
     const row = (g, why) => ({ date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(minutesOf(g.log)), v: statOf(g.log, prop.keys), without: g.without, why });
     return { miss: {
       out: missing.map((m) => m.last).join(", "),
-      reason: `${games.length} role ${games.length === 1 ? "game" : "games"}, ${R.minGames} needed`,
+      reason: `${games.length} role ${games.length === 1 ? "game" : "games"}, ${minGames} needed`,
       games: [...games.map((g) => row(g, "counted")), ...skipped.map((g) => row(g, g.why))].sort((a, b) => b.date.localeCompare(a.date)),
       loadedFrom: `last season's logs from ${season}-${CONFIG.sim.lastSeasonLogsFrom} on`,
     } };
   }
   const n = sum(games.map((g) => g.weight));
   const minutesTotal = sum(games.map((g) => g.weight * g.m));
-  const samePos = Boolean(group) && missing.some((m) => m.group === group);
+  const samePos = samePosMissing;
   const minutesPrior = samePos ? R.samePosMinutesPrior : R.minutesPrior;
   return {
     minutes: minutesTotal / n,
@@ -496,7 +536,7 @@ function roleInfo(prop, logs, teamId, missing, season, group) {
     minutesWeight: n / (n + minutesPrior), rateWeight: n / (n + R.ratePrior), samePos,
     // the role games themselves, for dev/hunt-whatif.js only (CONFIG.debug)
     list: CONFIG.debug ? games.map((g) => ({
-      date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(g.m), v: g.v, without: g.without,
+      date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(g.m), v: g.v, without: g.without, extras: g.extras,
       oppId: g.log.game.home_team_id === teamId ? g.log.game.visitor_team_id : g.log.game.home_team_id,
     })) : undefined,
   };
@@ -913,6 +953,7 @@ async function computeHunts(date) {
   const playerZones = { ...zonesLast, ...zonesNow };
 
   const playedYesterday = new Set(yesterday.flatMap((game) => [game.home_team.id, game.visitor_team.id]));
+  const rotationByTeam = buildRotation(playerIds, players, currentLogs, previousLogs, season);
 
   const out = [];
   lines.forEach((entry) => {
@@ -946,7 +987,7 @@ async function computeHunts(date) {
     const info = describe(prop, ctx);
     if (!info) return; // fewer than 5 games in total
     ctx.zone = zoneInfo(prop, playerZones[entry.player_id], zoneDefense, oppTeam.id, info.baseRate * info.baseMinutes);
-    const role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season, posGroup(player.position));
+    const role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season, posGroup(player.position), rotationByTeam[teamId] || [], entry.player_id);
     ctx.role = role && !role.miss ? role : null;
     ctx.roleMiss = role && role.miss ? role.miss : null; // CONFIG.debug only
     ctx.extra = whatIf ? whatIf({ playerId: entry.player_id, stat: prop.code, line, info }) : null;

@@ -79,7 +79,7 @@ function detailText(target, old, abbr) {
   if (role && role.list) {
     out.push("");
     out.push(`  ROLE GAMES (${role.games}${role.samePos ? ", the missing minutes are at his position: minutes trusted more" : ""}): minutes ${role.from} -> ${role.minutes} (role games ${role.roleMinutes}) · ${statWord(target.stat)} per 36 ${role.from36} -> ${role.rate36} (role games ${role.roleRate36})`);
-    role.list.forEach((g) => out.push(`    ${g.date} ${g.lastSeason ? "LS" : "  "} vs ${pad(abbr[g.oppId] || "?", 4)} ${padL(g.min.toFixed(0), 3)} min ${padL(g.v, 3)} ${statWord(target.stat)}   without ${g.without.join(", ")}`));
+    role.list.forEach((g) => out.push(`    ${g.date} ${g.lastSeason ? "LS" : "  "} vs ${pad(abbr[g.oppId] || "?", 4)} ${padL(g.min.toFixed(0), 3)} min ${padL(g.v, 3)} ${statWord(target.stat)}   without ${g.without.join(", ")}${g.extras && g.extras.length ? `  (+ ${g.extras.join(", ")} also out: counts half)` : ""}`));
   }
   if (target.roleMiss) {
     const m = target.roleMiss;

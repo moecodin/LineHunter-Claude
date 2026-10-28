@@ -16,6 +16,14 @@ proxy:
 - `dev/hunt-backtest-check.js`: showed BALLDONTLIE does NOT keep pregame prop lines for finished games (only a few live
   milestone leftovers). Its verdict line is too generous: it should require pregame over/under lines. Fix it.
 
+## Role step lineup check (added Oct 28, after Fears)
+Fears' Role step counted three April 2026 games (36 / 36 / 40 pts in 38-44 min, "without Missi") that were tank games with 4 other
+rotation players out; that put his Oct 28 projection at 13.5 vs a 11.5 line. Role games now carry `extras` = other rotation teammates
+(slate players, 15+ usual min) absent that night; 1 extra = half weight, 2+ = dropped (`CONFIG.sim.role.extraKeep`,
+`buildRotation`). Same-position uses ANY shared listed letter (Sengun "F-C" vs Capela "C"), and 2 role games are enough then.
+Results Oct 28: Fears over 52 / proj 13.5 -> under 55 / proj 11.9; Capela 71 -> 65 (proj 6.0 vs 6.5). Not yet handled: players
+who LEFT the team (LeBron) are not in the rotation, so games with them still look like tonight's lineup.
+
 ## What we learned (Oct 28 slate)
 - The sim matches history (calibration: 55% sim vs 55% history), so the shape is fine.
 - 94-99% of 65+ scores are unders, and the top 10 by edge was 10/10 unders (average edge: unders +4.4, overs −4.3).
