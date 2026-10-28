@@ -9,7 +9,8 @@
 //   node dev/hunt-whatif.js 2026-10-28 "Brunson" pts one player + stat (the side the engine likes better)
 //
 // The five test steps (weights in WHATIF below, all guesses to tune, none of them live):
-//   teammates  teammates listed Out / Doubtful (GTD at half): this player's stat in games they missed vs games they played
+//   role       tonight's lineup: minutes and per-minute output from his past games without tonight's missing teammates
+//              (Out / Doubtful, 15+ min), replacing the engine's form numbers in proportion to how many such games there are
 //   playtypes  his play types (share of possessions) vs what tonight's defense allows on each (Matchup Analyzer mapping)
 //   h2h        his per-minute output vs this opponent over 5 seasons vs his normal per-minute output those seasons
 //   defender   the opponent's top-minutes player at his position: FG% (3P% for threes) shooters make against him vs normally
@@ -19,7 +20,9 @@ const fs = require("fs");
 const path = require("path");
 
 const WHATIF = {
-  teammates: { minMinutes: 15, minMissed: 3, priorGames: 8, gtdWeight: 0.5, cap: 0.15 },
+  // role games: 50%+ of tonight's missing minutes also missing, newest count most (halves every 10 role games), last season's
+  // games count half; minutes trust them like `n` games against 2 for the engine's form, the per-minute rate against 6
+  role: { minMinutes: 15, minMatch: 0.5, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, showGames: 8 },
   playtypes: { minShare: 0.05, shrink: 0.5, cap: 0.05 },
   h2h: { minGames: 3, priorGames: 20, cap: 0.06, seasons: 5 },
   defender: { minMinutes: 10, share: 0.3, cap: 0.04 },
@@ -79,6 +82,8 @@ const avg = (list) => (list.length ? list.reduce((a, b) => a + b, 0) / list.leng
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 const pct = (v) => (v === null ? "–" : `${(v > 1 ? v : v * 100).toFixed(1)}%`);
 const signedPct = (mult) => `${mult >= 1 ? "+" : "−"}${Math.abs((mult - 1) * 100).toFixed(1)}%`;
+const pad = (text, n) => String(text).padEnd(n);
+const padL = (text, n) => String(text).padStart(n);
 const seasonOf = (iso) => { const [y, m] = iso.split("-").map(Number); return m >= 9 ? y : y - 1; };
 const addDays = (iso, days) => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); };
 
@@ -98,39 +103,70 @@ async function seasonRow(category, type, playerId, season) {
 
 // ---------- the five test steps ----------
 
-async function teammatesStep(ctx) {
-  const W = WHATIF.teammates;
+// Role: tonight's lineup. Teammates listed Out / Doubtful who play 15+ minutes are "missing". Each of his past games on this team
+// (this season + last) is scored by how much of that missing minutes total was also missing then (a teammate counts only in
+// seasons he was on the team), and games at least `minMatch` alike are the role games: newest count most, last season's count
+// less. Their minutes and per-minute output replace the engine's form numbers in proportion to how many there are.
+async function roleStep(ctx) {
+  const W = WHATIF.role;
   const injuries = await all(`/v1/player_injuries?team_ids[]=${ctx.teamId}&per_page=100`);
-  const listed = injuries.filter((row) => row.player && row.player.id !== ctx.playerId && /out|doubt|question|day/i.test(row.status || "Out"));
-  if (!listed.length) return { note: "no teammates on the injury report" };
+  const listed = injuries.filter((row) => row.player && row.player.id !== ctx.playerId && /out|doubt/i.test(row.status || "Out"));
+  const gtd = injuries.filter((row) => row.player && row.player.id !== ctx.playerId && /question|day/i.test(row.status || ""));
+  if (!listed.length) return { note: "no teammates listed Out / Doubtful: no role change" };
   const ids = [ctx.playerId, ...listed.map((row) => row.player.id)];
   const logs = await all(`/v1/stats?${ids.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${ctx.season}&seasons[]=${ctx.season - 1}&per_page=100`);
   const onTeam = logs.filter((log) => log.team.id === ctx.teamId && String(log.game.date).slice(0, 10) < date);
-  const mine = onTeam.filter((log) => log.player.id === ctx.playerId && played(log));
-  let mult = 1;
-  const parts = [];
+  const mine = onTeam.filter((log) => log.player.id === ctx.playerId && played(log))
+    .sort((a, b) => String(b.game.date).localeCompare(String(a.game.date)));
+
+  // who is missing tonight, and how many minutes each usually plays (this season once he has 3 games, else last season)
+  const missing = [];
   listed.forEach((row) => {
-    const theirs = onTeam.filter((log) => log.player.id === row.player.id);
-    const theirPlayed = theirs.filter(played);
-    if (!theirPlayed.length || avg(theirPlayed.map((log) => minutesOf(log.min))) < W.minMinutes) return;
-    // only seasons he was on this team (5+ games), so a game he "missed" isn't one before he arrived
-    const seasons = [ctx.season, ctx.season - 1].filter((s) => theirPlayed.filter((log) => log.game.season === s).length >= 5);
-    const playedIds = new Set(theirPlayed.map((log) => log.game.id));
-    const pool = mine.filter((log) => seasons.includes(log.game.season));
-    const without = pool.filter((log) => !playedIds.has(log.game.id)).map((log) => statOf(log, ctx.stat));
-    const withHim = pool.filter((log) => playedIds.has(log.game.id)).map((log) => statOf(log, ctx.stat));
-    const name = `${row.player.first_name} ${row.player.last_name}`;
-    if (without.length < W.minMissed || !withHim.length || !(avg(withHim) > 0)) {
-      parts.push(`${name} (${row.status}): only ${without.length} games without him, not used`);
-      return;
-    }
-    const weight = (without.length / (without.length + W.priorGames)) * (/question|day/i.test(row.status) ? W.gtdWeight : 1);
-    const ratio = avg(without) / avg(withHim);
-    mult *= 1 + (ratio - 1) * weight;
-    parts.push(`${name} (${row.status}): ${avg(without).toFixed(1)} in ${without.length} games without him vs ${avg(withHim).toFixed(1)} with, counted at ${Math.round(weight * 100)}%`);
+    const theirs = onTeam.filter((log) => log.player.id === row.player.id && played(log));
+    const now = theirs.filter((log) => log.game.season === ctx.season);
+    const usual = avg((now.length >= 3 ? now : theirs).map((log) => minutesOf(log.min)));
+    if (!(usual >= W.minMinutes)) return;
+    missing.push({
+      name: `${row.player.first_name} ${row.player.last_name}`, last: row.player.last_name, status: row.status, minutes: usual,
+      seasons: new Set([ctx.season, ctx.season - 1].filter((s) => theirs.filter((log) => log.game.season === s).length >= 5 || (s === ctx.season && theirs.some((log) => log.game.season === s)))),
+      played: new Set(theirs.map((log) => log.game.id)),
+    });
   });
-  mult = clamp(mult, 1 - W.cap, 1 + W.cap);
-  return { mult, note: parts.join("; ") || "nobody listed plays 15+ minutes" };
+  if (!missing.length) return { note: `listed: ${listed.map((row) => row.player.last_name).join(", ")}, none plays ${W.minMinutes}+ minutes` };
+
+  const games = [];
+  mine.forEach((log, index) => {
+    const counted = missing.filter((m) => m.seasons.has(log.game.season));
+    const total = counted.reduce((a, m) => a + m.minutes, 0);
+    if (!total) return;
+    const out = counted.filter((m) => !m.played.has(log.game.id));
+    const match = out.reduce((a, m) => a + m.minutes, 0) / total;
+    if (match < W.minMatch) return;
+    const weight = match * Math.pow(0.5, games.length / W.halfLife) * (log.game.season === ctx.season ? 1 : W.lastSeason);
+    games.push({ log, out, match, weight, v: statOf(log, ctx.stat), m: minutesOf(log.min) });
+  });
+  if (!games.length) return { note: `no past games without ${missing.map((m) => m.last).join(" / ")}` };
+
+  const n = games.reduce((a, g) => a + g.weight, 0); // effective games
+  const minutes = games.reduce((a, g) => a + g.weight * g.m, 0) / n;
+  const allMin = games.reduce((a, g) => a + g.weight * g.m, 0);
+  const rate = allMin > 0 ? games.reduce((a, g) => a + g.weight * g.v, 0) / allMin : 0;
+  const role = {
+    minutes, rate, n,
+    minutesWeight: n / (n + W.minutesPrior), rateWeight: n / (n + W.ratePrior),
+    games: games.length, thisSeason: games.filter((g) => g.log.game.season === ctx.season).length,
+  };
+  const word = (code) => (code === "3pm" ? "3PM" : code.toUpperCase());
+  const list = games.slice(0, W.showGames).map((g) => {
+    const opp = ctx.abbrOf(oppIdOf(g.log));
+    return `      ${String(g.log.game.date).slice(0, 10)} ${g.log.game.season === ctx.season ? "  " : "LS"} vs ${pad(opp, 4)} ${padL(g.m.toFixed(0), 3)} min ${padL(g.v, 3)} ${word(ctx.stat)}   without ${g.out.map((m) => m.last).join(", ")}`;
+  });
+  return {
+    role,
+    note: `missing ${missing.map((m) => `${m.last} ${m.minutes.toFixed(0)} min`).join(", ")}${gtd.length ? ` (GTD not counted: ${gtd.map((row) => row.player.last_name).join(", ")})` : ""}`
+      + `\n      ${games.length} role games (${role.thisSeason} this season), ${n.toFixed(1)} effective: ${minutes.toFixed(1)} min, ${(rate * 36).toFixed(1)} ${word(ctx.stat)} per 36`
+      + `\n${list.join("\n")}${games.length > W.showGames ? `\n      ... ${games.length - W.showGames} more` : ""}`,
+  };
 }
 
 const PLAY_TYPES = [
@@ -287,11 +323,12 @@ async function runEngine() {
   const ctx = {
     playerId: target.playerId, stat: target.stat, season, teamId, oppId, teamAbbr: target.team, oppAbbr: target.opp,
     position: player.position, ptsShare: ptsAvg / praAvg,
+    abbrOf: ((teams) => (id) => (teams[id] || "?"))(Object.fromEntries((await all("/v1/teams?per_page=100")).map((t) => [t.id, t.abbreviation]))),
   };
 
   console.log(`Loading the Matchup Analyzer numbers for ${target.player}...`);
   const STEPS = [
-    ["teammates", "Teammates out", teammatesStep],
+    ["role", "Role (lineup tonight)", roleStep],
     ["playtypes", "Play types vs defense", playTypesStep],
     ["h2h", "Head-to-head", h2hStep],
     ["defender", "Defender check", defenderStep],
@@ -300,16 +337,25 @@ async function runEngine() {
   const results = [];
   for (const [key, label, fn] of STEPS) results.push({ key, label, ...(await soft(fn(ctx), { note: "data unavailable" })) });
 
-  const extra = results.filter((r) => r.mult && Math.abs(r.mult - 1) > 1e-9).map((r) => ({ key: r.key, label: r.label, mult: r.mult }));
-  engine.setWhatIf(({ playerId, stat }) => (playerId === target.playerId && stat === target.stat ? extra : null));
+  const multSteps = results.filter((r) => r.mult && Math.abs(r.mult - 1) > 1e-9).map((r) => ({ key: r.key, label: r.label, mult: r.mult }));
+  const roleResult = results.find((r) => r.role);
+  let roleUsed = null; // the engine's form numbers and the blended role numbers, filled in when the engine calls back
+  const extra = (info) => {
+    if (!roleResult) return multSteps;
+    const r = roleResult.role;
+    const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * info.formMinutes;
+    const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * info.formRate;
+    roleUsed = { fromMinutes: info.formMinutes, fromRate: info.formRate, minutes, rate };
+    return [{ key: "role", label: "Role (lineup tonight)", set: { minutes, rate } }, ...multSteps];
+  };
+  const keys = new Set([...(roleResult ? ["role"] : []), ...multSteps.map((m) => m.key)]);
+  engine.setWhatIf(({ playerId, stat, info }) => (playerId === target.playerId && stat === target.stat ? extra(info) : null));
   const after = await runEngine();
   engine.setWhatIf(null);
   const sameProp = (p) => p.playerId === target.playerId && p.stat === target.stat && p.side === target.side;
   const now = after.props.find(sameProp);
   const otherSide = (body) => body.props.find((p) => p.playerId === target.playerId && p.stat === target.stat && p.side !== target.side);
 
-  const pad = (text, n) => String(text).padEnd(n);
-  const padL = (text, n) => String(text).padStart(n);
   const signed = (v) => `${v > 0 ? "+" : v < 0 ? "−" : "±"}${Math.abs(v).toFixed(1)}`;
   const out = [];
   out.push(`${target.player} (${target.team} ${target.home ? "vs" : "@"} ${target.opp}) · ${target.side === "over" ? "Over" : "Under"} ${target.line} ${target.stat.toUpperCase()} · ${date}`);
@@ -320,12 +366,21 @@ async function runEngine() {
   out.push(`  ${pad("= Hunt Score", 26)} ${padL(target.score, 6)}   ${target.chance}% chance · projects ${target.projection.mean} (${target.projection.p10}-${target.projection.p90})`);
   out.push("");
   out.push("MATCHUP ANALYZER PIECES (test weights)");
-  results.forEach((r) => out.push(`  ${pad(r.label, 26)} ${padL(r.mult ? signedPct(r.mult) : "not used", 8)}   ${r.note || ""}`));
+  results.forEach((r) => {
+    if (r.role && roleUsed) {
+      const w = (code) => (code === "3pm" ? "3PM" : code.toUpperCase());
+      out.push(`  ${pad(r.label, 26)} ${padL("", 8)}   minutes ${roleUsed.fromMinutes.toFixed(1)} -> ${roleUsed.minutes.toFixed(1)} (role games ${r.role.minutes.toFixed(1)}, trusted ${Math.round(r.role.minutesWeight * 100)}%)`);
+      out.push(`  ${pad("", 26)} ${padL("", 8)}   ${w(target.stat)} per 36 ${(roleUsed.fromRate * 36).toFixed(1)} -> ${(roleUsed.rate * 36).toFixed(1)} (role games ${(r.role.rate * 36).toFixed(1)}, trusted ${Math.round(r.role.rateWeight * 100)}%)`);
+      out.push(`      ${r.note}`);
+      return;
+    }
+    out.push(`  ${pad(r.label, 26)} ${padL(r.mult ? signedPct(r.mult) : "not used", 8)}   ${r.note || ""}`);
+  });
   out.push("");
   out.push("WITH EVERYTHING");
   out.push(`  ${pad("Season baseline", 26)} ${padL(now.base.toFixed(1), 6)}`);
   now.factors.forEach((f) => {
-    const isNew = extra.some((e) => e.key === f.key);
+    const isNew = keys.has(f.key);
     out.push(`  ${pad(f.label, 26)} ${padL(signed(f.points), 6)}${isNew ? "   NEW" : ""}`);
   });
   out.push(`  ${pad("= Hunt Score", 26)} ${padL(now.score, 6)}   ${now.chance}% chance · projects ${now.projection.mean} (${now.projection.p10}-${now.projection.p90})`);
@@ -338,6 +393,7 @@ async function runEngine() {
   out.push("");
   out.push("New steps run inside the same 2,000 simulated games, after back-to-back and before the book line (the book-line pull");
   out.push("and the uncertainty step then act on the new projection, as they do on the engine's own factors).");
+  out.push("The Role step swaps in the role games' minutes and per-minute output. LS = a last-season game (counts half).");
 
   const text = out.join("\n");
   console.log(`\n${text}`);

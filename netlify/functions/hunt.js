@@ -553,7 +553,8 @@ function runSteps(prop, line, info, ctx) {
   if (ctx.zone) step("zone", "Zone matchup", { mult: input.mult * ctx.zone.mult }, { extra: ctx.zone.points, zone: ctx.zone.zone, gap: ctx.zone.gap });
   if (ctx.pace) step("pace", "Pace", { mult: input.mult * ctx.pace.mult }, { rank: ctx.pace.rank, of: ctx.pace.of, pace: ctx.pace.pace });
   if (ctx.backToBack) step("b2b", "Back-to-back", { mult: input.mult * S.backToBack });
-  (ctx.extra || []).forEach((e) => step(e.key, e.label, { mult: input.mult * e.mult }, e.detail || {})); // dev what-if steps only
+  // dev what-if steps only: a multiplier, or `set` = new input values (minutes, rate)
+  (ctx.extra || []).forEach((e) => step(e.key, e.label, e.set || { mult: input.mult * e.mult }, e.detail || {}));
   // The book's line carries information the logs don't (a new role, a rotation change): pull the projection part of the way there.
   const simMean = expectedMean(runs, input);
   if (simMean > 0) {
@@ -685,7 +686,7 @@ function reply(statusCode, body, headers = {}) {
   return { statusCode, headers: { "Content-Type": "application/json; charset=utf-8", ...headers }, body: JSON.stringify(body) };
 }
 
-let whatIf = null; // dev/hunt-whatif.js only: ({ playerId, stat, line }) -> extra steps [{ key, label, mult, detail }] or null
+let whatIf = null; // dev/hunt-whatif.js only: ({ playerId, stat, line, info }) -> extra steps [{ key, label, mult | set, detail }] or null
 const warmCache = {}; // date -> { savedAt, body }: a warm function answers repeat calls (Hunt Score page + Top 5) without recomputing
 
 async function computeHunts(date) {
@@ -758,7 +759,7 @@ async function computeHunts(date) {
     const info = describe(prop, ctx);
     if (!info) return; // fewer than 5 games in total
     ctx.zone = zoneInfo(prop, playerZones[entry.player_id], zoneDefense, oppTeam.id, info.baseRate * info.baseMinutes);
-    ctx.extra = whatIf ? whatIf({ playerId: entry.player_id, stat: prop.code, line }) : null;
+    ctx.extra = whatIf ? whatIf({ playerId: entry.player_id, stat: prop.code, line, info }) : null;
 
     const sim = runSteps(prop, line, info, ctx);
     ["over", "under"].filter((side) => entry.priced[side]).forEach((side) => {
