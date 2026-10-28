@@ -286,8 +286,7 @@ function gbScoreHtml(game, model, odds, picks) {
   const a = game.visitor_team.abbreviation;
   const h = game.home_team.abbreviation;
   const margin = model.homePts - model.awayPts;
-  const marginText = Math.abs(margin) < 0.05 ? "Even" : `${margin > 0 ? h : a} by ${gbNum(Math.abs(margin))}`;
-  const bookSpread = odds && odds.spreadHome !== null ? (odds.spreadHome === 0 ? "pick'em" : odds.spreadHome < 0 ? `${h} −${Math.abs(odds.spreadHome)}` : `${a} −${odds.spreadHome}`) : null;
+  const marginText = Math.abs(margin) < 0.05 ? "Even" : `${margin > 0 ? h : a} −${gbNum(Math.abs(margin))}`;
   const final = game.status === "Final" && Number.isFinite(game.home_team_score) && game.home_team_score + game.visitor_team_score > 0;
   const side = (abbr, pts, lead, home) => `
         <div class="lh-gb-side${home ? " is-home" : ""}${lead ? " is-lead" : ""}">
@@ -309,18 +308,29 @@ function gbScoreHtml(game, model, odds, picks) {
     totalResult = `<span class="lh-gb-result is-${hit}">${hit === "push" ? "Push" : hit === "hit" ? "Hit" : "Missed"}</span>`;
   }
 
-  const pickHtml = (label, pick, line, result, tone) => `
+  // Under each pick: BOOK | MODEL | GAP side by side. The spread is written for the picked team in both columns, + / − like a
+  // betting line (the model's "NYK by 7" is "NYK −7.0"), so the two numbers read the same way.
+  const bookLabel = odds ? (typeof lhHunts !== "undefined" ? lhHunts.bookLabel(odds.vendor) : gbBookName(odds.vendor)) : "";
+  const numbers = (cells) => `<dl class="lh-gb-nums">${cells.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join("")}</dl>`;
+  const pickHtml = (label, pick, cells, result, tone) => `
         <div class="lh-gb-pick${tone ? ` is-${tone}` : ""}">
           <div class="lh-gb-pickhead"><span>${label}</span><span class="lh-gb-strength">${pick ? pick.strength : ""}</span></div>
           <div class="lh-gb-picktext">${pick ? pick.text : "No line yet"} ${result}</div>
-          <div class="lh-gb-pickline">${line}</div>
+          ${numbers(cells)}
         </div>`;
-  const spreadLine = picks.spread
-    ? `Model <b>${marginText}</b> vs book <b>${bookSpread}</b>${picks.spread.even ? "" : ` · gap ${gbNum(picks.spread.gap)}`}`
-    : `Model <b>${marginText}</b>`;
-  const totalLine = picks.total
-    ? `Model <b>${gbNum(model.total)}</b> vs <b>${odds.total}</b> ${gbBookName(odds.vendor)}${picks.total.even ? "" : ` · gap ${gbNum(picks.total.gap)}`}`
-    : `Model <b>${gbNum(model.total)}</b>`;
+  let spreadCells = [["Model", marginText]];
+  if (picks.spread) {
+    // the team to write both lines for: the pick, or the home team when the model and the book agree exactly
+    const forHome = picks.spread.even ? true : picks.spread.side === "home";
+    const team = forHome ? h : a;
+    const bookLine = forHome ? odds.spreadHome : -odds.spreadHome;
+    const modelLine = forHome ? -margin : margin; // a team the model has winning by 7 = −7.0
+    const fmt = (value) => (Math.abs(value) < 0.05 ? "PK" : `${value > 0 ? "+" : "−"}${gbNum(Math.abs(value))}`);
+    spreadCells = [[`Book · ${bookLabel}`, `${team} ${gbLine(bookLine)}`], ["Model", `${team} ${fmt(modelLine)}`], ["Gap", picks.spread.even ? "0" : gbNum(picks.spread.gap)]];
+  }
+  const totalCells = picks.total
+    ? [[`Book · ${bookLabel}`, `${odds.total}`], ["Model", gbNum(model.total)], ["Gap", picks.total.even ? "0" : gbNum(picks.total.gap)]]
+    : [["Model", gbNum(model.total)]];
   const injuries = model.missing.length
     ? [a, h].map((abbr) => {
       const list = model.missing.filter((player) => player.abbr === abbr);
@@ -337,8 +347,8 @@ function gbScoreHtml(game, model, odds, picks) {
       ${side(h, model.homePts, margin > 0, true)}
     </div>
     <div class="lh-gb-picks lines-only">
-      ${pickHtml("Spread pick", picks.spread, spreadLine, spreadResult, "")}
-      ${pickHtml("Total pick", picks.total, totalLine, totalResult, picks.total && !picks.total.even ? picks.total.side : "")}
+      ${pickHtml("Spread pick", picks.spread, spreadCells, spreadResult, "")}
+      ${pickHtml("Total pick", picks.total, totalCells, totalResult, picks.total && !picks.total.even ? picks.total.side : "")}
     </div>
     <dl class="lh-gb-list research-only">
       <div><dt>Margin</dt><dd><b>${marginText}</b></dd></div>
