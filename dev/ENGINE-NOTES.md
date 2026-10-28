@@ -1,8 +1,11 @@
 # Hunt Score engine: work in progress (handoff)
 
 Branch: `claude/relaxed-noether-3n6x6c` (nothing here is on main yet). Engine: `netlify/functions/hunt.js`. Full description: the
-"Hunt Score engine" section of `CLAUDE.md`. Everything runs on localhost with the key in `.env` (the cloud sessions can't reach
-api.balldontlie.io and have no key).
+"Hunt Score engine" section of `CLAUDE.md`. Runs on localhost with the key in `.env`, or in a cloud
+session: the environment's network secret adds the key as the Authorization header, so set a placeholder and let Node use the
+proxy:
+
+    BALLDONTLIE_API_KEY=placeholder NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt NODE_NO_WARNINGS=1 node dev/hunt-whatif.js
 
 ## Done on the branch
 - Traded-player rule (last season's games with his current team only), Role step (tonight's lineup; position rule; 80%
@@ -22,7 +25,8 @@ api.balldontlie.io and have no key).
 ## In progress: save tonight, grade tomorrow, replay with a tuned engine
 - Engine: `io.record` / `io.replay` + `exports.computeWith(date, { record, replay })` (inert on the site).
 - `dev/hunt-lib.js` (shared helpers, pick lists) and `dev/hunt-snapshot.js` (saves per game: game, raw props, injury rows,
-  scored sides, takenAt, engine version; keeps each game's last snapshot before tip-off) are written but NOT run yet.
+  scored sides, takenAt, engine version; keeps each game's last snapshot before tip-off). First snapshot: Oct 28, 12 games,
+  1,254 sides, taken 30 min before the first tip (17 s per engine run in the cloud).
 - TODO `dev/hunt-grade.js`: for each `dev/snapshots/*.json` day, box scores (`/v1/stats?game_ids[]=`), grade each side
   (win / loss / push, profit per $100 at the saved odds), report: overall, by edge bucket (<0, 0-5, 5-10, 10-15, 15+), by
   side, by score bucket, nightly top 10 by edge, nightly top 5 by score, "always under", Brier ours vs the book's fair chance.
