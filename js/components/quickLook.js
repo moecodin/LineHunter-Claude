@@ -107,15 +107,19 @@ function renderQuickLook(game, body, data) {
     ${injuryLines(away, data.injuryAway)}
     ${injuryLines(home, data.injuryHome)}
     <div data-top-prop class="lines-only">${line("Top prop", topPropText(game))}</div>
-    <div data-model class="lines-only">${line("Model total", `<span class="text-muted">loading…</span>`)}</div>`;
-  // The Game Breakdown's projected total and lean (js/components/gameBreakdown.js), from shared team-rating requests.
+    <div data-model class="lines-only">${line("Model picks", `<span class="text-muted">loading…</span>`)}</div>`;
+  // The Game Breakdown's spread and total picks (js/components/gameBreakdown.js), from shared team-rating requests.
   if (typeof gameModelFor === "function") {
     gameModelFor(game).then((result) => {
       const slot = body.querySelector("[data-model]");
       if (!slot) return;
-      if (result.error) { slot.innerHTML = line("Model total", `<span class="text-muted">not available</span>`); return; }
-      const lean = result.lean && result.lean.side !== "none" ? ` · <span class="lh-ql-lean is-${result.lean.side}">${result.lean.text}</span>` : result.lean ? " · no lean" : "";
-      slot.innerHTML = line("Model total", `${result.model.total.toFixed(1)}${lean}`);
+      if (result.error) { slot.innerHTML = line("Model picks", `<span class="text-muted">not available</span>`); return; }
+      // "ATL −3.5 Strong · Under 240.5 Moderate" (the Game Breakdown's two picks), or the model's numbers when no line is posted
+      const { spread, total } = result.picks || {};
+      const parts = [];
+      if (spread && !spread.even) parts.push(`${spread.text} <span class="text-muted">${spread.strength}</span>`);
+      if (total && !total.even) parts.push(`<span class="lh-ql-lean is-${total.side}">${total.text}</span> <span class="text-muted">${total.strength}</span>`);
+      slot.innerHTML = line("Model picks", parts.length ? parts.join(" · ") : `total ${result.model.total.toFixed(1)} <span class="text-muted">· no line yet</span>`);
     }).catch(() => {});
   }
 }

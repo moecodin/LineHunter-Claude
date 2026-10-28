@@ -91,14 +91,14 @@
     <!-- 5. GAME BREAKDOWN: the projected score from both teams' efficiency and pace vs the book's total. A teaser (score, model total, book,
          lean) shows; "Show breakdown details" opens the number line and the build-up. js/components/gameBreakdown.js, loads when near view. -->
     <section class="card mb-5" id="gameBreakdown" data-lh-jump="Breakdown">
-      <div class="card-header py-3"><h2 class="lh-label mb-0" data-lh-kicker="Totals">Game Breakdown</h2></div>
+      <div class="card-header py-3"><h2 class="lh-label mb-0" data-lh-kicker="Spread &amp; total">Game Breakdown</h2></div>
       <div class="card-body">
         <div id="gameBreakdownBody"></div>
         <div class="lh-explain">
           <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainBreakdown" aria-expanded="false" aria-controls="explainBreakdown">
             How this works <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
           </button>
-          <div class="collapse" id="explainBreakdown"><p class="lh-explain-text">Offensive rating is points scored per 100 possessions and defensive rating is points allowed. Each team's offense is paired with the other team's defense, scaled by how many possessions both teams' pace points to, which gives a projected score. Season ratings don't know who is injured tonight, and books already price them in, so most games land close to the posted total; this is a test of where they don't.</p></div>
+          <div class="collapse" id="explainBreakdown"><p class="lh-explain-text">Offensive rating is points scored per 100 possessions and defensive rating is points allowed. Each team's offense is paired with the other team's defense and scaled by both teams' pace, then home court, back-to-backs and injuries adjust each team's score. The spread pick and the total pick are the sides where the model's numbers beat the book's, and the strength is how far apart they are. Books watch the same things, so a big gap means take a closer look, not guaranteed.</p></div>
         </div>
       </div>
     </section>

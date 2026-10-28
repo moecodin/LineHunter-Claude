@@ -1,30 +1,41 @@
 // LineHunter - js/components/gameBreakdown.js
-// The "Game Breakdown" card on game.html (a test): a projected score built from each team's offensive and defensive
-// efficiency and pace, compared with the book's total for an Over / Under lean.
+// The "Game Breakdown" card on game.html (and the model line in the Today page's Quick look): a projected score built from each
+// team's offensive and defensive efficiency and pace, then home court, back-to-backs and injuries, compared with the book's
+// spread and total. It always names a spread pick and a total pick, each with a strength (Slight / Moderate / Strong = the gap).
 //
 // The model, per 100 possessions (a rating = points scored or allowed per 100 possessions):
 //   possessions  = away pace × home pace ÷ league pace            (two fast teams make a faster game)
-//   away points  = possessions × (away Off Rtg × home Def Rtg ÷ league rating) ÷ 100 − home edge
-//   home points  = possessions × (home Off Rtg × away Def Rtg ÷ league rating) ÷ 100 + home edge
-//   model total  = away points + home points; gap = model total − book total; |gap| >= GB_CONFIG.leanGap = a lean.
+//   team points  = possessions × (its Off Rtg × the other's Def Rtg ÷ league rating) ÷ 100
+//   home court   = GB_CONFIG.homeEdge added to the home team and taken from the away team (1.8 points of margin)
+//   back-to-back = a team that played yesterday loses GB_CONFIG.b2bPct of its points
+//   injuries     = each player listed Out / Doubtful (full) or Questionable / Day-To-Day (half) takes away his points a game times
+//                  (1 − GB_CONFIG.injury.keep): his backups make up the rest. A player who has sat out this season's games is
+//                  already missing from this season's ratings, so he only counts for the last-season part of the blend.
 // Early in a season each team's numbers are this season's gap to the league blended with last season's
 // (this season's weight = games ÷ (games + GB_CONFIG.priorGames)), the same idea the Hunt Score engine uses.
 //
-// The total build-up table starts from a league-average game and swaps in one real number at a time (pace, then each
-// offense and the defense it faces); each row = how many points that swap moved the total. The home edge moves points
-// from one team to the other, so it changes the score but not the total.
+// The score build-up table starts from a league-average game and adds one piece at a time, for each team and the total.
 //
 // Data: GET /nba/v1/team_season_averages/general?season=YEAR&season_type=regular&type=advanced&per_page=100
 //   (the same request js/components/teamCompare.js makes, so bdlGet's memory cache shares it) -> data[i].team.id,
-//   data[i].stats.{ pace, off_rating, def_rating, gp }, and GET /nba/v2/odds?game_ids[]=ID -> total_value / spread_home_value
-//   per sportsbook (strings). Window debug object for testing: window.lhGameBreakdown.
+//   data[i].stats.{ pace, off_rating, def_rating, gp }; GET /nba/v2/odds?game_ids[]=ID -> total_value / spread_home_value per
+//   sportsbook (strings); /v1/games for yesterday (back-to-backs); /v1/player_injuries?team_ids[]= (the same request the
+//   injury card makes) and /nba/v1/season_averages/general?type=base&player_ids[]= for the listed players (this + last season).
+//   Window debug object for testing: window.lhGameBreakdown.
 //
-// Needs js/core/stats.js (bdlGet, bdlGetAllPages), js/data/odds.js (lhOdds, optional) and js/core/hunts.js (bookLabel).
+// Needs js/core/stats.js (bdlGet, bdlGetAllPages, BDL_BASE), js/data/odds.js (lhOdds, optional) and js/core/hunts.js (bookLabel).
 
 const GB_CONFIG = {
   priorGames: 10,   // last season counts as this many games of this season
-  homeEdge: 1.2,    // points added to the home team and taken from the away team
-  leanGap: 3,       // model total this many points from the book = a lean
+  homeEdge: 0.9,    // points added to the home team and taken from the away team (1.8 points of margin)
+  b2bPct: 0.014,    // second night of a back-to-back: 1.4% fewer points
+  injury: {
+    keep: 0.88,       // the backups make up 88% of a missing player's points a game; the team loses the other 12%
+    gtdWeight: 0.5,   // Questionable / Day-To-Day count at half
+    minMinutes: 10,   // players under 10 minutes a game don't move the score
+    ownGames: 5,      // this season's scoring once a player has 5 games, else last season's
+  },
+  strength: { slight: 1.5, strong: 3 }, // gap to the book: under 1.5 Slight, 1.5-3 Moderate, over 3 Strong
   barPoints: 6,     // a build-up step of ± this many points fills half the bar
   stripPoints: 12,  // the model vs book strip shows the book total ± this many points
 };
@@ -102,53 +113,153 @@ async function loadBreakdownOdds(gameId) {
   return { total: Number(row.total_value), spreadHome: Number.isFinite(spread) && row.spread_home_value !== null ? spread : null, vendor: row.vendor };
 }
 
+const GB_AVG_URL = "/api/bdl/nba/v1/season_averages/general";
+
+// Minutes from "34:12" or 34.2
+const gbMinutes = (value) => (typeof value === "string" && value.includes(":") ? Number(value.split(":")[0]) + Number(value.split(":")[1]) / 60 : Number(value) || 0);
+
+// { teamId: true } for the teams that played the day before the game
+async function loadBreakdownRest(game) {
+  const day = new Date(`${game.date.slice(0, 10)}T12:00:00`);
+  day.setDate(day.getDate() - 1);
+  const yesterday = day.toLocaleDateString("en-CA");
+  const games = await bdlGetAllPages(`${BDL_BASE}/games?start_date=${yesterday}&end_date=${yesterday}&per_page=100`);
+  const played = {};
+  games.forEach((item) => { played[item.home_team.id] = true; played[item.visitor_team.id] = true; });
+  return played;
+}
+
+// The listed players of both teams who move the score: [{ id, name, teamId, status, weight, min, pts, gpThis }]
+async function loadBreakdownInjuries(game) {
+  const ids = [game.visitor_team.id, game.home_team.id];
+  const list = await bdlGetAllPages(`${BDL_BASE}/player_injuries?${ids.map((id) => `team_ids[]=${id}`).join("&")}&per_page=100`);
+  const weightOf = (status) => (/out|doubt/i.test(status || "") ? 1 : /question|day/i.test(status || "") ? GB_CONFIG.injury.gtdWeight : 0);
+  const hurt = list.filter((item) => item.player && ids.includes(item.player.team_id) && weightOf(item.status) > 0);
+  if (!hurt.length) return [];
+  const playerIds = hurt.map((item) => `player_ids[]=${item.player.id}`).join("&");
+  const averages = (season) => bdlGetAllPages(`${GB_AVG_URL}?season=${season}&season_type=regular&type=base&per_page=100&${playerIds}`).catch(() => []);
+  const [now, before] = await Promise.all([averages(game.season), averages(game.season - 1)]);
+  const byId = (rows) => Object.fromEntries(rows.filter((row) => row.player && row.stats).map((row) => [row.player.id, row.stats]));
+  const thisSeason = byId(now);
+  const lastSeason = byId(before);
+  return hurt.map((item) => {
+    const mine = thisSeason[item.player.id];
+    const old = lastSeason[item.player.id];
+    const gpThis = mine ? Number(mine.gp) || 0 : 0;
+    const use = mine && gpThis >= GB_CONFIG.injury.ownGames ? mine : old || mine;
+    if (!use) return null;
+    return {
+      id: item.player.id, name: `${item.player.first_name} ${item.player.last_name}`, last: item.player.last_name,
+      teamId: item.player.team_id, status: item.status, weight: weightOf(item.status),
+      min: gbMinutes(use.min), pts: Number(use.pts) || 0, gpThis,
+    };
+  }).filter((player) => player && player.min >= GB_CONFIG.injury.minMinutes);
+}
+
 // ---------- The model ----------
 
-function breakdownModel(game, ratings) {
+function breakdownModel(game, ratings, extras = {}) {
   const away = ratings.teams[game.visitor_team.id];
   const home = ratings.teams[game.home_team.id];
   if (!away || !home) return null;
   const lg = ratings.league;
+  const a = game.visitor_team.abbreviation;
+  const h = game.home_team.abbreviation;
 
   // Points for one game with the given numbers (anything not given = league average)
   const scores = (v) => {
     const poss = (v.awayPace ?? lg.pace) * (v.homePace ?? lg.pace) / lg.pace;
     const awayPts = poss * ((v.awayOff ?? lg.rtg) * (v.homeDef ?? lg.rtg) / lg.rtg) / 100;
     const homePts = poss * ((v.homeOff ?? lg.rtg) * (v.awayDef ?? lg.rtg) / lg.rtg) / 100;
-    return { poss, awayPts, homePts, total: awayPts + homePts };
+    return { poss, awayPts, homePts };
   };
 
-  // The build-up: one real number swapped in at a time
+  // The build-up: one piece at a time, each team's running score
+  const steps = [];
+  const add = (label, note, awayPts, homePts, isNew) => {
+    const before = steps[steps.length - 1];
+    steps.push({ label, note, away: awayPts, home: homePts, awayDelta: before ? awayPts - before.away : null, homeDelta: before ? homePts - before.home : null, isNew: Boolean(isNew) });
+  };
+  const base = scores({});
+  add("League-average game", "average pace, offense and defense", base.awayPts, base.homePts);
+  let v = { awayPace: away.pace, homePace: home.pace };
+  let now = scores(v);
+  add("Pace", `${a} ${away.pace.toFixed(1)} (#${ratings.rankPace(away.pace)}) · ${h} ${home.pace.toFixed(1)} (#${ratings.rankPace(home.pace)}) → ${now.poss.toFixed(1)} possessions`, now.awayPts, now.homePts);
+  v = { ...v, awayOff: away.off, homeDef: home.def };
+  now = scores(v);
+  add(`${a} offense vs ${h} defense`, `${away.off.toFixed(1)} Off Rtg (#${ratings.rankOff(away.off)}) vs ${home.def.toFixed(1)} Def Rtg (#${ratings.rankDef(home.def)})`, now.awayPts, now.homePts);
+  v = { ...v, homeOff: home.off, awayDef: away.def };
+  now = scores(v);
+  add(`${h} offense vs ${a} defense`, `${home.off.toFixed(1)} Off Rtg (#${ratings.rankOff(home.off)}) vs ${away.def.toFixed(1)} Def Rtg (#${ratings.rankDef(away.def)})`, now.awayPts, now.homePts);
+  const possessions = now.poss;
+  let awayPts = now.awayPts - GB_CONFIG.homeEdge;
+  let homePts = now.homePts + GB_CONFIG.homeEdge;
+  add("Home court", `${h} at home, worth ${(GB_CONFIG.homeEdge * 2).toFixed(1)} points of margin`, awayPts, homePts);
+
+  const rest = extras.rest || {};
+  const tiredAway = Boolean(rest[game.visitor_team.id]);
+  const tiredHome = Boolean(rest[game.home_team.id]);
+  if (tiredAway || tiredHome) {
+    if (tiredAway) awayPts -= awayPts * GB_CONFIG.b2bPct;
+    if (tiredHome) homePts -= homePts * GB_CONFIG.b2bPct;
+    add("Back-to-back", `${[tiredAway ? a : null, tiredHome ? h : null].filter(Boolean).join(" and ")} played last night`, awayPts, homePts);
+  }
+
+  // Injuries: what each listed player usually scores, less what his backups make up, at his status weight. A player who has
+  // sat out this season's games is already missing from this season's ratings, so only the last-season part of the blend counts him.
+  const missing = (extras.injuries || []).map((player) => {
+    const team = player.teamId === game.visitor_team.id ? away : home;
+    const teamGames = Number.isFinite(team.gp) && team.gp > 0 ? team.gp : 0;
+    const playedShare = teamGames ? Math.min(1, player.gpThis / teamGames) : 1;
+    const inRatings = team.weight * playedShare + (1 - team.weight);
+    const loss = player.pts * (1 - GB_CONFIG.injury.keep) * player.weight * inRatings;
+    return { ...player, abbr: team === away ? a : h, loss };
+  }).filter((player) => player.loss >= 0.05).sort((x, y) => y.loss - x.loss);
+  if (missing.length) {
+    const lossOf = (abbr) => missing.filter((player) => player.abbr === abbr).reduce((sum, player) => sum + player.loss, 0);
+    awayPts -= lossOf(a);
+    homePts -= lossOf(h);
+    const names = (abbr) => missing.filter((player) => player.abbr === abbr).map((player) => `${player.last}${player.weight < 1 ? " (GTD, half)" : ""}`);
+    const parts = [a, h].filter((abbr) => names(abbr).length).map((abbr) => `${abbr} without ${names(abbr).join(", ")}`);
+    add("Injuries", parts.join(" · "), awayPts, homePts);
+  }
+
+  add("Model", "", awayPts, homePts);
+  return {
+    away, home, possessions, awayPts, homePts, total: awayPts + homePts, steps, missing,
+    tired: { away: tiredAway, home: tiredHome },
+  };
+}
+
+// The strength of a pick from its gap to the book
+function gbStrength(gap) {
+  const size = Math.abs(gap);
+  return size > GB_CONFIG.strength.strong ? "Strong" : size >= GB_CONFIG.strength.slight ? "Moderate" : "Slight";
+}
+
+const gbLine = (value) => (value === 0 ? "PK" : `${value > 0 ? "+" : "−"}${Math.abs(value)}`);
+
+// { spread, total } picks against the book (null without a line). spread = { team, text, side: "away"|"home", gap, strength },
+// total = { side: "over"|"under", text, gap, strength }. A gap under 0.05 is "even" (no side).
+function gbPicks(game, model, odds) {
   const a = game.visitor_team.abbreviation;
   const h = game.home_team.abbreviation;
-  const swaps = [
-    { label: "Pace", detail: `${a} ${away.pace.toFixed(1)} (#${ratings.rankPace(away.pace)}) · ${h} ${home.pace.toFixed(1)} (#${ratings.rankPace(home.pace)}) · league ${lg.pace.toFixed(1)}`, set: { awayPace: away.pace, homePace: home.pace } },
-    { label: `${a} offense`, detail: `${away.off.toFixed(1)} Off Rtg (#${ratings.rankOff(away.off)}) vs league ${lg.rtg.toFixed(1)}`, set: { awayOff: away.off } },
-    { label: `${h} defense`, detail: `${home.def.toFixed(1)} Def Rtg (#${ratings.rankDef(home.def)}) facing ${a}`, set: { homeDef: home.def } },
-    { label: `${h} offense`, detail: `${home.off.toFixed(1)} Off Rtg (#${ratings.rankOff(home.off)}) vs league ${lg.rtg.toFixed(1)}`, set: { homeOff: home.off } },
-    { label: `${a} defense`, detail: `${away.def.toFixed(1)} Def Rtg (#${ratings.rankDef(away.def)}) facing ${h}`, set: { awayDef: away.def } },
-  ];
-  const base = scores({});
-  let values = {};
-  let previous = base.total;
-  const steps = swaps.map((swap) => {
-    values = { ...values, ...swap.set };
-    const total = scores(values).total;
-    const step = { label: swap.label, detail: swap.detail, points: total - previous, running: total };
-    previous = total;
-    return step;
-  });
-
-  const final = scores(values);
-  return {
-    away, home,
-    possessions: final.poss,
-    awayPts: final.awayPts - GB_CONFIG.homeEdge,
-    homePts: final.homePts + GB_CONFIG.homeEdge,
-    total: final.total,
-    base: base.total,
-    steps,
-  };
+  let spread = null;
+  if (odds && odds.spreadHome !== null) {
+    const diff = (model.homePts - model.awayPts) + odds.spreadHome; // > 0: the home team covers its line in the model
+    const home = diff > 0;
+    spread = Math.abs(diff) < 0.05
+      ? { even: true, gap: 0, text: "Even", strength: "Even" }
+      : { side: home ? "home" : "away", team: home ? h : a, text: `${home ? h : a} ${gbLine(home ? odds.spreadHome : -odds.spreadHome)}`, gap: Math.abs(diff), strength: gbStrength(diff) };
+  }
+  let total = null;
+  if (odds && Number.isFinite(odds.total)) {
+    const diff = model.total - odds.total;
+    total = Math.abs(diff) < 0.05
+      ? { even: true, gap: 0, text: "Even", strength: "Even", side: "none" }
+      : { side: diff > 0 ? "over" : "under", text: `${diff > 0 ? "Over" : "Under"} ${odds.total}`, gap: Math.abs(diff), strength: gbStrength(diff), diff };
+  }
+  return { spread, total };
 }
 
 // ---------- Drawing ----------
@@ -159,8 +270,8 @@ const gbSigned = (value) => `${value > 0 ? "+" : value < 0 ? "−" : "±"}${Math
 function gbLean(model, odds) {
   if (!odds) return null;
   const gap = model.total - odds.total;
-  const side = Math.abs(gap) < GB_CONFIG.leanGap ? "none" : gap > 0 ? "over" : "under";
-  return { gap, side, text: side === "none" ? "No lean" : side === "over" ? "Over lean" : "Under lean" };
+  const side = Math.abs(gap) < 0.05 ? "none" : gap > 0 ? "over" : "under";
+  return { gap, side, text: side === "none" ? "Even" : side === "over" ? "Over" : "Under" };
 }
 
 function gbBookName(vendor) {
@@ -168,40 +279,74 @@ function gbBookName(vendor) {
   return vendor;
 }
 
-// The teaser: a two-team scoreboard (the team the model has ahead in full ink, the other muted), then a short labeled list:
-// Total (model vs book), Spread (model margin vs the book's), Lean, and the final score once the game is over.
-// Research mode hides the book parts (lines-only).
-function gbScoreHtml(game, model, odds, lean) {
+// The teaser: the two-team scoreboard (the team the model has ahead in full ink), the spread pick and the total pick (each with
+// its strength and the model vs book numbers), the injuries line and the note. Research mode hides the book parts and shows the
+// model's own margin and total instead. A finished game also says whether each pick hit.
+function gbScoreHtml(game, model, odds, picks) {
   const a = game.visitor_team.abbreviation;
   const h = game.home_team.abbreviation;
   const margin = model.homePts - model.awayPts;
   const marginText = Math.abs(margin) < 0.05 ? "Even" : `${margin > 0 ? h : a} by ${gbNum(Math.abs(margin))}`;
-  const bookSpread = odds && odds.spreadHome !== null
-    ? (odds.spreadHome < 0 ? `${h} −${Math.abs(odds.spreadHome)}` : odds.spreadHome > 0 ? `${a} −${odds.spreadHome}` : "pick'em")
-    : null;
+  const bookSpread = odds && odds.spreadHome !== null ? (odds.spreadHome === 0 ? "pick'em" : odds.spreadHome < 0 ? `${h} −${Math.abs(odds.spreadHome)}` : `${a} −${odds.spreadHome}`) : null;
   const final = game.status === "Final" && Number.isFinite(game.home_team_score) && game.home_team_score + game.visitor_team_score > 0;
   const side = (abbr, pts, lead, home) => `
         <div class="lh-gb-side${home ? " is-home" : ""}${lead ? " is-lead" : ""}">
           <span class="lh-gb-abbr">${abbr}</span>
           <span class="lh-gb-pts">${gbNum(pts)}</span>
         </div>`;
-  const row = (label, value, cls = "") => `<div class="${cls}"><dt>${label}</dt><dd>${value}</dd></div>`;
-  const book = odds ? `<span class="lines-only"> <span class="lh-gb-vs">vs</span> <b>${odds.total}</b> <span class="lh-gb-src">${gbBookName(odds.vendor)}</span></span>` : "";
+
+  // Did each pick hit? (only once the game is final)
+  let spreadResult = "";
+  let totalResult = "";
+  if (final && picks.spread && !picks.spread.even) {
+    const realMargin = game.home_team_score - game.visitor_team_score + odds.spreadHome; // > 0 home covered
+    const hit = realMargin === 0 ? "push" : (realMargin > 0) === (picks.spread.side === "home") ? "hit" : "missed";
+    spreadResult = `<span class="lh-gb-result is-${hit}">${hit === "push" ? "Push" : hit === "hit" ? "Hit" : "Missed"}</span>`;
+  }
+  if (final && picks.total && !picks.total.even) {
+    const real = game.home_team_score + game.visitor_team_score;
+    const hit = real === odds.total ? "push" : (real > odds.total) === (picks.total.side === "over") ? "hit" : "missed";
+    totalResult = `<span class="lh-gb-result is-${hit}">${hit === "push" ? "Push" : hit === "hit" ? "Hit" : "Missed"}</span>`;
+  }
+
+  const pickHtml = (label, pick, line, result, tone) => `
+        <div class="lh-gb-pick${tone ? ` is-${tone}` : ""}">
+          <div class="lh-gb-pickhead"><span>${label}</span><span class="lh-gb-strength">${pick ? pick.strength : ""}</span></div>
+          <div class="lh-gb-picktext">${pick ? pick.text : "No line yet"} ${result}</div>
+          <div class="lh-gb-pickline">${line}</div>
+        </div>`;
+  const spreadLine = picks.spread
+    ? `Model <b>${marginText}</b> vs book <b>${bookSpread}</b>${picks.spread.even ? "" : ` · gap ${gbNum(picks.spread.gap)}`}`
+    : `Model <b>${marginText}</b>`;
+  const totalLine = picks.total
+    ? `Model <b>${gbNum(model.total)}</b> vs <b>${odds.total}</b> ${gbBookName(odds.vendor)}${picks.total.even ? "" : ` · gap ${gbNum(picks.total.gap)}`}`
+    : `Model <b>${gbNum(model.total)}</b>`;
+  const injuries = model.missing.length
+    ? [a, h].map((abbr) => {
+      const list = model.missing.filter((player) => player.abbr === abbr);
+      if (!list.length) return "";
+      const loss = list.reduce((sum, player) => sum + player.loss, 0);
+      return `<span><b>${abbr} −${gbNum(loss)}</b> <span class="lh-gb-src">${list.map((player) => `${player.last} ${player.weight < 1 ? "GTD" : "out"}`).join(", ")}</span></span>`;
+    }).join("")
+    : `<span class="lh-gb-src">No one who plays 10+ minutes is listed</span>`;
 
   return `
-    <div class="lh-gb-top">
-      <div class="lh-gb-board" role="img" aria-label="Projected score ${a} ${gbNum(model.awayPts)}, ${h} ${gbNum(model.homePts)}">
-        <span class="lh-gb-boardlabel">Projected score</span>
-        ${side(a, model.awayPts, margin < 0, false)}
-        ${side(h, model.homePts, margin > 0, true)}
-      </div>
-      <dl class="lh-gb-list">
-        ${row("Total", `<b>${gbNum(model.total)}</b> <span class="lh-gb-src">model</span>${book}`)}
-        ${row("Spread", `<b>${marginText}</b>${bookSpread ? `<span class="lines-only"> <span class="lh-gb-vs">vs</span> <b>${bookSpread}</b> <span class="lh-gb-src">book</span></span>` : ""}`)}
-        ${lean ? row("Lean", `<span class="lh-gb-lean is-${lean.side}">${lean.text}</span> <span class="lh-gb-src">${gbSigned(lean.gap)} vs book</span>`, "lines-only") : ""}
-        ${final ? row("Final", `<b>${game.visitor_team_score + game.home_team_score}</b> <span class="lh-gb-src">${a} ${game.visitor_team_score} – ${game.home_team_score} ${h}</span>`) : ""}
-      </dl>
-    </div>`;
+    <div class="lh-gb-board" role="img" aria-label="Projected score ${a} ${gbNum(model.awayPts)}, ${h} ${gbNum(model.homePts)}">
+      <span class="lh-gb-boardlabel">Projected score</span>
+      ${side(a, model.awayPts, margin < 0, false)}
+      ${side(h, model.homePts, margin > 0, true)}
+    </div>
+    <div class="lh-gb-picks lines-only">
+      ${pickHtml("Spread pick", picks.spread, spreadLine, spreadResult, "")}
+      ${pickHtml("Total pick", picks.total, totalLine, totalResult, picks.total && !picks.total.even ? picks.total.side : "")}
+    </div>
+    <dl class="lh-gb-list research-only">
+      <div><dt>Margin</dt><dd><b>${marginText}</b></dd></div>
+      <div><dt>Total</dt><dd><b>${gbNum(model.total)}</b></dd></div>
+    </dl>
+    <div class="lh-gb-injuries"><span class="lh-gb-label">Injuries</span>${injuries}</div>
+    ${final ? `<p class="lh-gb-note">Final: ${a} ${game.visitor_team_score} – ${game.home_team_score} ${h}. The season ratings include this game, so treat the check as rough.</p>` : ""}
+    <p class="lh-gb-note lines-only">Strength is the gap to the book: Slight under ${GB_CONFIG.strength.slight}, Moderate ${GB_CONFIG.strength.slight}–${GB_CONFIG.strength.strong}, Strong over ${GB_CONFIG.strength.strong}. The books watch the same ratings, rest and injuries, so a big gap means take a closer look, not guaranteed.</p>`;
 }
 
 // Model vs book on one number line: the book's total in the middle, the model's dot, the gap between them colored
@@ -224,7 +369,7 @@ function gbStripHtml(game, model, odds, lean) {
   let result = "";
   if (final !== null) {
     const hit = final > odds.total ? "over" : final < odds.total ? "under" : "push";
-    const right = lean.side === "none" || hit === "push" ? "" : lean.side === hit ? " · the lean was right" : " · the lean missed";
+    const right = lean.side === "none" || hit === "push" ? "" : lean.side === hit ? " · the total pick hit" : " · the total pick missed";
     result = `<p class="lh-gb-note">Final total ${final}: ${hit === "push" ? "push" : `the ${hit} hit`}${right}. The season ratings include this game, so treat it as a rough check.</p>`;
   }
 
@@ -243,44 +388,43 @@ function gbStripHtml(game, model, odds, lean) {
     </div>`;
 }
 
-// The build-up: league-average game, one row per swap (bar from the center: right = adds points, left = takes them away)
-function gbStepsHtml(model, odds) {
-  const rows = model.steps.map((step) => {
-    const width = Math.min(Math.abs(step.points) / GB_CONFIG.barPoints, 1) * 50;
-    const tone = step.points >= 0.05 ? "is-over" : step.points <= -0.05 ? "is-under" : "";
-    return `
-      <div class="lh-ph-step">
-        <span class="lh-ph-name">${step.label}<small>${step.detail}</small></span>
-        <span class="lh-gb-bar" aria-hidden="true"><span class="${tone}" style="width: ${width}%"></span></span>
-        <span class="lh-ph-delta lh-gb-delta ${tone}">${gbSigned(step.points)}</span>
-        <span class="lh-ph-run">${gbNum(step.running)}</span>
-      </div>`;
-  }).join("");
-  const gap = odds ? model.total - odds.total : null;
-
+// The score build-up: one row per piece with each team's running score (and how much that piece moved it) and the total.
+function gbStepsHtml(game, model) {
+  const a = game.visitor_team.abbreviation;
+  const h = game.home_team.abbreviation;
+  const delta = (value) => (value === null || Math.abs(value) < 0.05 ? "" : `<small class="${value > 0 ? "is-over" : "is-under"}">${gbSigned(value)}</small>`);
+  const rows = model.steps.map((step, index) => `
+        <div class="lh-gb-trow${index === model.steps.length - 1 ? " is-total" : ""}">
+          <span class="lh-gb-tname">${step.label}${step.note ? `<small>${step.note}</small>` : ""}</span>
+          <span class="lh-gb-tnum">${gbNum(step.away)}${delta(step.awayDelta)}</span>
+          <span class="lh-gb-tnum">${gbNum(step.home)}${delta(step.homeDelta)}</span>
+          <span class="lh-gb-tnum lh-gb-ttotal">${gbNum(step.away + step.home)}</span>
+        </div>`).join("");
   return `
     <div class="lh-gb-section">
-      <div class="lh-gb-subhead"><span>Total build-up</span></div>
-      <div class="lh-ph-steps lh-gb-steps">
-        <div class="lh-ph-step lh-ph-step--head"><span>Step</span><span><span class="d-none d-sm-inline">◂ fewer · more points ▸</span><span class="d-sm-none">◂ − · + ▸</span></span><span>Δ</span><span>Total</span></div>
-        <div class="lh-ph-step">
-          <span class="lh-ph-name">League-average game<small>average pace, average offense vs average defense</small></span>
-          <span class="lh-gb-bar" aria-hidden="true"></span>
-          <span class="lh-ph-delta">—</span>
-          <span class="lh-ph-run">${gbNum(model.base)}</span>
-        </div>
+      <div class="lh-gb-subhead"><span>Score build-up</span></div>
+      <div class="lh-gb-table">
+        <div class="lh-gb-trow is-head"><span>Step</span><span>${a}</span><span>${h}</span><span>Total</span></div>
         ${rows}
-        <div class="lh-ph-step lh-ph-step--total">
-          <span class="lh-ph-name">Model total<small>home edge ±${GB_CONFIG.homeEdge} moves the score, not the total</small></span><span></span><span></span>
-          <span class="lh-ph-run">${gbNum(model.total)}</span>
-        </div>
-        ${odds ? `
-        <div class="lh-ph-step lines-only">
-          <span class="lh-ph-name">Book total<small>${gbBookName(odds.vendor)}</small></span><span></span>
-          <span class="lh-ph-delta lh-gb-delta ${gap >= GB_CONFIG.leanGap ? "is-over" : gap <= -GB_CONFIG.leanGap ? "is-under" : ""}">${gbSigned(gap)}</span>
-          <span class="lh-ph-run">${odds.total}</span>
-        </div>` : ""}
       </div>
+    </div>`;
+}
+
+// Who is missing: each listed player who moved the score, his status, minutes and scoring, and what he takes off his team.
+function gbMissingHtml(model) {
+  if (!model.missing.length) return "";
+  const rows = model.missing.map((player) => `
+        <div class="lh-gb-mrow">
+          <span><b>${player.name}</b> <span class="lh-gb-src">${player.abbr}</span></span>
+          <span class="lh-gb-status${player.weight < 1 ? "" : " is-out"}">${player.weight < 1 ? "GTD" : /doubt/i.test(player.status) ? "DOUBTFUL" : "OUT"}</span>
+          <span class="lh-gb-src">${player.min.toFixed(1)} min · ${player.pts.toFixed(1)} pts a game${player.weight < 1 ? " · counted at half" : ""}</span>
+          <b class="lh-gb-mloss">${player.abbr} −${gbNum(player.loss)}</b>
+        </div>`).join("");
+  return `
+    <div class="lh-gb-section">
+      <div class="lh-gb-subhead"><span>Who is missing</span></div>
+      ${rows}
+      <p class="lh-gb-note">Out and Doubtful count fully, game-time decisions count half. The backups make up most of a missing player's points, so the team loses about ${Math.round((1 - GB_CONFIG.injury.keep) * 100)}% of what he scores.</p>
     </div>`;
 }
 
@@ -304,20 +448,22 @@ function renderBreakdownSkeleton() {
 // Everything the card and the Today page's Quick look need for one game: { current, last, ratings, model, odds, lean },
 // or { error: "..." } when the ratings are missing. The team ratings are shared requests (bdlGet keeps them in memory).
 async function gameModelFor(game) {
-  const [current, last, odds] = await Promise.all([
+  const [current, last, odds, rest, injuries] = await Promise.all([
     loadBreakdownSeason(game.season).catch(() => null),
     loadBreakdownSeason(game.season - 1).catch(() => null),
     loadBreakdownOdds(game.id).catch(() => null),
+    loadBreakdownRest(game).catch(() => ({})),
+    loadBreakdownInjuries(game).catch(() => []),
   ]);
   if (!current && !last) return { error: "Team ratings aren't available yet." };
   const ratings = blendRatings(current, last);
-  const model = breakdownModel(game, ratings);
+  const model = breakdownModel(game, ratings, { rest, injuries });
   if (!model) return { error: "Ratings aren't available for these teams." };
-  return { current, last, ratings, model, odds, lean: gbLean(model, odds) };
+  return { current, last, ratings, model, odds, lean: gbLean(model, odds), picks: gbPicks(game, model, odds) };
 }
 
-// The card: the teaser (projected score, model total, book O/U, lean) always shows; the number line, the build-up and the
-// ratings note sit behind "Show breakdown details" (a Bootstrap collapse).
+// The card: the teaser (projected score, both picks, injuries) always shows; the number line, the build-up, who is missing and
+// the ratings note sit behind "Show breakdown details" (a Bootstrap collapse).
 async function loadGameBreakdown(game) {
   const body = document.getElementById("gameBreakdownBody");
   renderBreakdownSkeleton();
@@ -327,18 +473,19 @@ async function loadGameBreakdown(game) {
       body.innerHTML = `<p class="lh-gb-note">${result.error}</p>`;
       return;
     }
-    const { current, last, ratings, model, odds, lean } = result;
-    window.lhGameBreakdown = { game, current, last, ratings, model, odds, lean }; // for testing in the console
+    const { current, last, ratings, model, odds, lean, picks } = result;
+    window.lhGameBreakdown = { game, current, last, ratings, model, odds, lean, picks }; // for testing in the console
 
     body.innerHTML = `
-      ${gbScoreHtml(game, model, odds, lean)}
+      ${gbScoreHtml(game, model, odds, picks)}
       <button type="button" class="lh-sec-toggle lh-gb-more collapsed" data-bs-toggle="collapse" data-bs-target="#gameBreakdownMore" aria-expanded="false" aria-controls="gameBreakdownMore">
         <span class="lh-when-closed">Show breakdown details</span><span class="lh-when-open">Hide breakdown details</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
       </button>
       <div class="collapse" id="gameBreakdownMore">
         <p class="lh-gb-note">Expected possessions: ${gbNum(model.possessions)} (both teams' pace).</p>
         ${gbStripHtml(game, model, odds, lean)}
-        ${gbStepsHtml(model, odds)}
+        ${gbStepsHtml(game, model)}
+        ${gbMissingHtml(model)}
         <p class="lh-gb-note">${gbSourceText(ratings, current, last, game)}</p>
       </div>`;
   } catch (error) {

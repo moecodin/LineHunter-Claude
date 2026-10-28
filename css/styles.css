@@ -6048,3 +6048,51 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 @media (max-width: 767.98px) {
   .lh-gb-top { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Game Breakdown: the two picks, the injuries line, the team-by-team build-up and "Who is missing" (js/components/gameBreakdown.js) */
+.lh-gb-board { max-width: 34rem; }
+.lh-gb-picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 2rem; margin-top: 1.25rem; }
+.lh-gb-pick { border-top: 1px solid var(--lh-border); padding-top: 0.6rem; }
+.lh-gb-pickhead { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-gb-strength { font-weight: 700; color: var(--lh-strong); }
+.lh-gb-picktext { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.4rem; padding-left: 0.6rem; border-left: 3px solid var(--lh-strong); font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; color: var(--lh-strong); }
+.lh-gb-pick.is-over .lh-gb-picktext { border-left-color: var(--lh-over); color: var(--lh-over-text); }
+.lh-gb-pick.is-under .lh-gb-picktext { border-left-color: var(--lh-under); color: var(--lh-under-text); }
+.lh-gb-pick.is-over .lh-gb-strength { color: var(--lh-over-text); }
+.lh-gb-pick.is-under .lh-gb-strength { color: var(--lh-under-text); }
+.lh-gb-pickline { margin-top: 0.5rem; font-size: 0.85rem; color: var(--lh-muted); }
+.lh-gb-pickline b { font-weight: 600; color: var(--lh-strong); }
+.lh-gb-result { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.1rem 0.4rem; border: 1px solid var(--lh-border); color: var(--lh-muted); }
+.lh-gb-result.is-hit { border-color: var(--lh-over); color: var(--lh-over-text); }
+.lh-gb-result.is-missed { border-color: var(--lh-under); color: var(--lh-under-text); }
+.lh-gb-injuries { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 1rem; margin-top: 1.25rem; padding: 0.7rem 0; border-top: 1px solid var(--lh-border); border-bottom: 1px solid var(--lh-border); font-size: 0.9rem; }
+.lh-gb-injuries b { font-weight: 600; color: var(--lh-strong); }
+.lh-gb-label { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-gb-list.research-only { margin-top: 1rem; max-width: 34rem; }
+.lh-gb-table { font-variant-numeric: tabular-nums; }
+.lh-gb-trow { display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem 5.5rem 5.5rem; column-gap: 1rem; align-items: baseline; padding: 0.6rem 0; border-top: 1px solid var(--lh-border); }
+.lh-gb-trow.is-head { border-top: 0; padding-top: 0; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); }
+.lh-gb-trow.is-head span:not(:first-child) { text-align: right; }
+.lh-gb-trow.is-total { border-top-color: var(--lh-strong); font-weight: 700; }
+.lh-gb-tname { font-weight: 600; color: var(--lh-strong); }
+.lh-gb-tname small { display: block; margin-top: 0.1rem; font-size: 0.8rem; font-weight: 400; color: var(--lh-muted); }
+.lh-gb-tnum { text-align: right; color: var(--lh-strong); }
+.lh-gb-tnum small { display: block; font-size: 0.75rem; }
+.lh-gb-tnum small.is-over { color: var(--lh-over-text); }
+.lh-gb-tnum small.is-under { color: var(--lh-under-text); }
+.lh-gb-ttotal { font-weight: 500; }
+.lh-gb-mrow { display: grid; grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 1.5fr) auto; column-gap: 1rem; align-items: baseline; padding: 0.6rem 0; border-top: 1px solid var(--lh-border); }
+.lh-gb-mrow b { font-weight: 600; color: var(--lh-strong); }
+.lh-gb-status { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; padding: 0.05rem 0.35rem; border: 1px solid var(--lh-muted); color: var(--lh-strong); }
+.lh-gb-status.is-out { border-color: var(--lh-under); color: var(--lh-under-text); }
+.lh-gb-mloss { text-align: right; }
+@media (max-width: 767.98px) {
+  .lh-gb-picks { grid-template-columns: minmax(0, 1fr); }
+  .lh-gb-picktext { font-size: 1.5rem; }
+  .lh-gb-trow { grid-template-columns: minmax(0, 1fr) 3.4rem 3.4rem 3.6rem; column-gap: 0.5rem; font-size: 0.85rem; }
+  .lh-gb-tname small { display: none; }
+  .lh-gb-mrow { grid-template-columns: minmax(0, 1fr) auto; row-gap: 0.2rem; }
+  .lh-gb-mrow > :nth-child(3) { grid-column: 1; }
+  .lh-gb-mrow > :nth-child(4) { grid-column: 2; grid-row: 1; }
+  .lh-gb-mrow > :nth-child(2) { grid-column: 2; grid-row: 2; justify-self: end; }
+}
