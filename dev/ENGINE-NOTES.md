@@ -59,6 +59,15 @@ Top 5 by score: 1 of 5 each engine; top 10 by edge: 5 of 10. Sam on the four pla
 One night only: do not tune on it. Capela played 22 min (the Role step said 19.4, Sam 9) but scored 10, so the minutes call was right
 and the per-minute rate was low.
 
+## Final grade, Oct 28 (12 of 12 games, replayed on the saved lines)
+Below score 65 both engines are fair. 65-69: said 67, won 57-60%. 70+: old 53% (30 picks), new 50% (12 picks), said 72. Edge buckets show no
+signal (5-9: 50%, 10-14: 48%, 15+: 50%); overs at edge 5+ won 44% (57), unders 51% (308); every under won 54% (-0.2 per $100). By stat at
+65+: PTS 47% (19), REB 60%, AST 5/6, 3PM 65% (23), PRA 53%. Top 5 by score: 2 of 5 for each engine; top 10 by edge: 7 of 10; top score per
+game: old 6 of 12, new 6 of 11 (1 void). Late games (SAS @ UTA, OKC @ DAL, LAL @ LAC): new engine top picks 1 of 3 (Reaves won), old 1 of 3
+(McCain won). Sam on the four players: Jokic, Fears, Capela wrong, McCain right; both of our engines had Jokic Under (replay on today's
+numbers) and Fears / McCain right, Capela wrong. Replays use today's team numbers (pace, allowed), so scores drift 1-3 points from last night's.
+One night only: nothing here justifies a tuning change by itself. `dev/hunt-grade.js --after ISO` grades only games tipping from that time.
+
 ## Snapshot backup
 The container's `dev/snapshots/` is lost if the cloud session is reclaimed. Each night's file is also pushed gzipped (about 0.5 MB)
 to the data-only branch `hunt-snapshots` (`snapshots/YYYY-MM-DD.json.gz`, never merged). Restore: `git fetch origin hunt-snapshots`,

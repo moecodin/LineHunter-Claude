@@ -20,6 +20,8 @@ const { loadSnapshot, runEngineOn } = require("./hunt-replay");
 const args = process.argv.slice(2);
 const oldFlag = args.indexOf("--old");
 const oldPath = oldFlag >= 0 ? path.resolve(args[oldFlag + 1]) : null;
+const afterFlag = args.indexOf("--after"); // only games that tip off at or after this ISO time, e.g. --after 2026-10-29T00:45:00Z (the late games)
+const after = afterFlag >= 0 ? Date.parse(args[afterFlag + 1]) : null;
 const dates = args.filter((a, i) => /^\d{4}-\d{2}-\d{2}$/.test(a) && args[i - 1] !== "--old");
 const branchEngine = path.resolve(__dirname, "../netlify/functions/hunt.js");
 
@@ -37,7 +39,7 @@ const profitOf = (odds, win) => (win ? (odds > 0 ? odds : 10000 / -odds) : -100)
 // { gameId: { playerId: log } } for the FINAL games of a snapshot
 async function boxScores(snap) {
   const finals = [];
-  for (const game of snap.games) {
+  for (const game of snap.games.filter((g) => after === null || Date.parse(g.datetime) >= after)) {
     const fresh = (await bdl(`/v1/games/${game.id}`)).data;
     if (fresh.status === "Final") finals.push(fresh);
   }
@@ -76,7 +78,7 @@ async function gradeNight(date, files) {
   const snap = loadSnapshot(date);
   const out = [];
   const { finals, boxes } = await boxScores(snap);
-  out.push(`NIGHT ${date}: ${finals.length} of ${snap.games.length} games final · snapshot taken ${new Date(snap.takenAt).toISOString().slice(11, 16)}Z · engines replayed on the saved lines`);
+  out.push(`NIGHT ${date}${after !== null ? ` (games from ${new Date(after).toISOString().slice(11, 16)}Z on)` : ""}: ${finals.length} of ${snap.games.length} games final · snapshot taken ${new Date(snap.takenAt).toISOString().slice(11, 16)}Z · engines replayed on the saved lines`);
   if (!finals.length) return out.join("\n");
 
   // prices from the snapshot (the old engine's sides carry no odds): playerId-stat-side-line
