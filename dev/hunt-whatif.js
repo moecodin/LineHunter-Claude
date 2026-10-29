@@ -51,11 +51,16 @@ const priceText = (p) => `${oddsText(p.odds)} · fair ${p.fair}% · edge ${p.edg
 async function runEngine({ roleOff }) {
   engine.CONFIG.sim.role.off = roleOff;
   engine.CONFIG.debug = true;         // role games and past results at the line come back in the answer
-  engine.setWhatIf(null);             // clears the warm cache
-  const answer = await engine.handler({ httpMethod: "GET", queryStringParameters: { date } });
-  const body = JSON.parse(answer.body);
-  if (answer.statusCode !== 200) throw new Error(body.error);
-  return body;
+  engine.CONFIG.retries = 6;          // the API rate-limits a burst of runs: wait longer before giving up on a request
+  for (let attempt = 0; ; attempt++) {
+    engine.setWhatIf(null);           // clears the warm cache
+    const answer = await engine.handler({ httpMethod: "GET", queryStringParameters: { date } });
+    const body = JSON.parse(answer.body);
+    if (answer.statusCode !== 200) throw new Error(body.error);
+    // `partial` = some data requests failed for good and were skipped: wait and run again
+    if (!body.partial || attempt >= 2) { if (body.partial) console.warn(`  (partial answer: ${body.partial} request(s) skipped: ${body.skipped.join(" | ")})`); return body; }
+    await new Promise((resolve) => setTimeout(resolve, 20000));
+  }
 }
 
 async function teamAbbreviations() {

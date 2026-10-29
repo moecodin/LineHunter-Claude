@@ -20,7 +20,15 @@ const { engine, snapshotDir, etDate, engineVersion, readJson, snapshotFile } = r
   const date = etDate();
   const takenAt = new Date().toISOString();
   const version = engineVersion();
-  const { body, inputs } = await engine.computeWith(date, { record: true });
+  engine.CONFIG.retries = 6; // wait longer on rate limits before giving up on a request
+  let result;
+  for (let attempt = 0; ; attempt++) { // `partial` = some data requests failed for good and were skipped: wait and run again
+    result = await engine.computeWith(date, { record: true });
+    if (!result.body.partial || attempt >= 2) break;
+    await new Promise((resolve) => setTimeout(resolve, 20000));
+  }
+  const { body, inputs } = result;
+  if (body.partial) console.warn(`${takenAt} · ${date}: PARTIAL snapshot, ${body.partial} request(s) skipped: ${body.skipped.join(" | ")}`);
   const games = (inputs && inputs.games) || [];
   if (!games.length) {
     console.log(`${takenAt} · ${date}: no games left to tip off, nothing saved.`);

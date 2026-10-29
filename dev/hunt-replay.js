@@ -40,11 +40,17 @@ async function runEngineOn(enginePath, snap, { frozenAt = snap.takenAt } = {}) {
   };
   Date.now = () => frozenAt;
   try {
-    delete require.cache[require.resolve(enginePath)]; // a fresh engine: no warm cache from an earlier run
-    const answer = await require(enginePath).handler({ httpMethod: "GET", queryStringParameters: { date: snap.date } });
-    const body = JSON.parse(answer.body);
-    if (answer.statusCode !== 200) throw new Error(`${path.basename(enginePath)}: ${body.error}`);
-    return body;
+    for (let attempt = 0; ; attempt++) {
+      delete require.cache[require.resolve(enginePath)]; // a fresh engine: no warm cache from an earlier run
+      const engine = require(enginePath);
+      if (engine.CONFIG) engine.CONFIG.retries = 6; // the API rate-limits a burst of runs: wait longer before giving up on a request
+      const answer = await engine.handler({ httpMethod: "GET", queryStringParameters: { date: snap.date } });
+      const body = JSON.parse(answer.body);
+      if (answer.statusCode !== 200) throw new Error(`${path.basename(enginePath)}: ${body.error}`);
+      // `partial` = some data requests failed for good and were skipped (newer engines only): wait and run again
+      if (!body.partial || attempt >= 2) { if (body.partial) console.warn(`  (partial answer: ${body.partial} request(s) skipped: ${body.skipped.join(" | ")})`); return body; }
+      await new Promise((resolve) => setTimeout(resolve, 20000));
+    }
   } finally {
     global.fetch = realFetch;
     Date.now = realNow;

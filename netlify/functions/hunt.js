@@ -93,6 +93,7 @@ const CONFIG = {
   minGamesTotal: 5,                            // fewer games than this (this + last season) = prop skipped
   topHunts: { max: 5, minScore: 65 },
   why: { paceTop: 5, b2bMinGames: 3, b2bMinDiff: 0.5, minutesMention: 2, smallSample: 8 },
+  retries: 3,                                  // tries after a 429 / 5xx / dropped connection (dev scripts raise it)
   debug: false,                                // dev/hunt-whatif.js only: role games and past results at the line in the answer
   cacheMinutes: 10,                            // a warm function reuses its answer for a date this long (the CDN does the same)
 
@@ -132,9 +133,20 @@ function seasonOf(isoDate) {
   return month >= 9 ? year : year - 1;
 }
 
+// A data request that failed for good (after its retries) is skipped so one bad request doesn't take the whole slate down, but it
+// is counted: the answer says `partial` (and is not cached) when any were skipped, instead of quietly scoring without that data.
+let skipped = [];
+const noteSkipped = (error) => { skipped.push(String((error && error.message) || error).slice(0, 120)); };
+
 async function bdl(pathAndQuery, attempt = 0) {
-  const response = await fetch(`${API_ORIGIN}${pathAndQuery}`, { headers: { Authorization: process.env.BALLDONTLIE_API_KEY } });
-  if (response.status === 429 && attempt < 3) { // too many requests: wait a moment and retry
+  let response;
+  try {
+    response = await fetch(`${API_ORIGIN}${pathAndQuery}`, { headers: { Authorization: process.env.BALLDONTLIE_API_KEY } });
+  } catch (error) { // a dropped connection: retry (a failed logs request would otherwise quietly score a player without his data)
+    if (attempt < CONFIG.retries) { await sleep(500 * (attempt + 1)); return bdl(pathAndQuery, attempt + 1); }
+    throw error;
+  }
+  if ((response.status === 429 || response.status >= 500) && attempt < CONFIG.retries) { // too many requests / a server hiccup: wait a moment and retry
     await sleep(700 * (attempt + 1));
     return bdl(pathAndQuery, attempt + 1);
   }
@@ -212,7 +224,7 @@ async function loadSlateLive(date) {
 async function loadLines(games) {
   const lists = await pool(games.map((game) => async () => {
     if (io.replay) return io.replay.props[game.id] || [];
-    try { return (await bdl(`/nba/v2/odds/player_props?game_id=${game.id}`)).data; } catch (error) { return []; }
+    try { return (await bdl(`/nba/v2/odds/player_props?game_id=${game.id}`)).data; } catch (error) { noteSkipped(error); return []; }
   }), CONFIG.concurrency);
   if (io.record) io.record.props = Object.fromEntries(games.map((game, i) => [game.id, lists[i]]));
   const hasPrice = (value) => value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
@@ -249,7 +261,7 @@ async function loadLogs(ids, season, before, from = null) {
   const logs = Object.fromEntries(ids.map((id) => [id, []]));
   const groups = chunk(ids, CONFIG.playersPerLogRequest);
   const answers = await pool(groups.map((group) => async () => {
-    try { return await bdlAllPages(`/v1/stats?${group.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${season}${from ? `&start_date=${from}` : ""}&per_page=100`); } catch (error) { return []; }
+    try { return await bdlAllPages(`/v1/stats?${group.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${season}${from ? `&start_date=${from}` : ""}&per_page=100`); } catch (error) { noteSkipped(error); return []; }
   }), CONFIG.concurrency);
   answers.flat().forEach((log) => {
     if (logs[log.player.id] && String(log.game.date).slice(0, 10) < before) logs[log.player.id].push(log);
@@ -264,7 +276,7 @@ async function loadSeasonAverages(ids, season) {
   const answers = await pool(chunk(ids, 100).map((group) => async () => {
     try {
       return await bdlAllPages(`/nba/v1/season_averages/general?season=${season}&season_type=regular&type=base&per_page=100&${group.map((id) => `player_ids[]=${id}`).join("&")}`);
-    } catch (error) { return []; }
+    } catch (error) { noteSkipped(error); return []; }
   }), CONFIG.concurrency);
   answers.flat().forEach((row) => {
     const stats = row.stats || {};
@@ -282,7 +294,7 @@ async function loadSeasonAverages(ids, season) {
 async function loadTeamChanges(ids, season, before, players) {
   const current = (id) => players[id] && players[id].team && players[id].team.id;
   const pages = await pool(chunk(ids, CONFIG.playersPerLogRequest).map((group) => async () => {
-    try { return (await bdl(`/v1/stats?${group.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${season}&per_page=100`)).data; } catch (error) { return []; }
+    try { return (await bdl(`/v1/stats?${group.map((id) => `player_ids[]=${id}`).join("&")}&seasons[]=${season}&per_page=100`)).data; } catch (error) { noteSkipped(error); return []; }
   }), CONFIG.concurrency);
   const traded = [...new Set(pages.flat().filter((log) => log.team && current(log.player.id) && log.team.id !== current(log.player.id)).map((log) => log.player.id))];
   if (!traded.length) return {};
@@ -309,6 +321,7 @@ async function loadAllowed(season) {
     });
     return data;
   } catch (error) {
+    noteSkipped(error);
     return null;
   }
 }
@@ -329,7 +342,7 @@ async function loadPlayerZones(ids, season) {
   const answers = await pool(chunk(ids, 100).map((group) => async () => {
     try {
       return await bdlAllPages(`/nba/v1/season_averages/shooting?season=${season}&season_type=regular&type=by_zone&per_page=100&${group.map((id) => `player_ids[]=${id}`).join("&")}`);
-    } catch (error) { return []; }
+    } catch (error) { noteSkipped(error); return []; }
   }), CONFIG.concurrency);
   answers.flat().forEach((row) => {
     if (!row.player || !row.stats) return;
@@ -363,6 +376,7 @@ async function loadZoneDefense(season) {
     });
     return { teams, league };
   } catch (error) {
+    noteSkipped(error);
     return null;
   }
 }
@@ -401,6 +415,7 @@ async function loadPace(season) {
       league: average(list.map((row) => row.pace)),
     };
   } catch (error) {
+    noteSkipped(error);
     return null;
   }
 }
@@ -414,6 +429,7 @@ async function loadInjuries(teamIds) {
     rows.forEach((row) => { if (row.player) status[row.player.id] = row.status || "Out"; });
     return { status, rows: rows.filter((row) => row.player) };
   } catch (error) {
+    noteSkipped(error);
     return { status: {}, rows: [] };
   }
 }
@@ -914,6 +930,7 @@ let whatIf = null; // dev/hunt-whatif.js only: ({ playerId, stat, line, info }) 
 const warmCache = {}; // date -> { savedAt, body }: a warm function answers repeat calls (Hunt Score page + Top 5) without recomputing
 
 async function computeHunts(date) {
+  skipped = [];
   const empty = { date, updatedAt: new Date().toISOString(), props: [], topHunts: [] };
   const games = await loadSlate(date);
   if (!games.length) return empty;
@@ -1036,7 +1053,7 @@ async function computeHunts(date) {
     seen.add(prop.playerId);
     topHunts.push(prop);
   }
-  return { date, updatedAt: new Date().toISOString(), props: out, topHunts };
+  return { date, updatedAt: new Date().toISOString(), props: out, topHunts, ...(skipped.length ? { partial: skipped.length, skipped: skipped.slice(0, 5) } : {}) };
 }
 
 exports.handler = async (event) => {
@@ -1054,6 +1071,7 @@ exports.handler = async (event) => {
   if (warm && Date.now() - warm.savedAt < CONFIG.cacheMinutes * 60 * 1000) return reply(200, warm.body, cacheHeaders);
   try {
     const body = await computeHunts(date);
+    if (body.partial) return reply(200, body, { "Cache-Control": "no-store" }); // some data was skipped: never cached, the next request tries again
     warmCache[date] = { savedAt: Date.now(), body };
     return reply(200, body, cacheHeaders);
   } catch (error) {
