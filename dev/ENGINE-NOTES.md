@@ -68,6 +68,14 @@ game: old 6 of 12, new 6 of 11 (1 void). Late games (SAS @ UTA, OKC @ DAL, LAL @
 numbers) and Fears / McCain right, Capela wrong. Replays use today's team numbers (pace, allowed), so scores drift 1-3 points from last night's.
 One night only: nothing here justifies a tuning change by itself. `dev/hunt-grade.js --after ISO` grades only games tipping from that time.
 
+## Game lines (spread + total): saved pregame from Oct 29 on
+The API only keeps IN-GAME lines for a finished game (rows updated 1-3 h after tip, sitting on the final score), so last night's pregame spread / totals
+were lost. `dev/hunt-snapshot.js` now also saves per game `gameOdds` (every book's `/nba/v2/odds` rows) and `model` (the Game Breakdown model's
+projected score, the book line it used, our spread / total pick and strength, who is missing), run by `dev/hunt-games.js` (loads
+`js/components/gameBreakdown.js` unchanged in a vm). `node dev/hunt-games.js DATE` grades them next day: book line vs ours vs final, spread / total
+hit or miss, average miss. Oct 28 (no saved book lines): our model's winners 9-3, average miss 12.9 margin / 12.9 total (ratings and injuries are
+today's, so a small leak). `dev/hunt-backup.sh` pushes all snapshots (gzipped) to `hunt-snapshots`.
+
 ## Snapshot backup
 The container's `dev/snapshots/` is lost if the cloud session is reclaimed. Each night's file is also pushed gzipped (about 0.5 MB)
 to the data-only branch `hunt-snapshots` (`snapshots/YYYY-MM-DD.json.gz`, never merged). Restore: `git fetch origin hunt-snapshots`,

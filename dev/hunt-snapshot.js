@@ -14,7 +14,8 @@
 // lines and injury news are as fresh as they were when the game started. Files: dev/snapshots/YYYY-MM-DD.json (gitignored).
 
 const fs = require("fs");
-const { engine, snapshotDir, etDate, engineVersion, readJson, snapshotFile } = require("./hunt-lib");
+const { engine, snapshotDir, etDate, engineVersion, readJson, snapshotFile, bdl, bdlAll } = require("./hunt-lib");
+const { modelFor, summarize } = require("./hunt-games");
 
 (async () => {
   const date = etDate();
@@ -40,16 +41,25 @@ const { engine, snapshotDir, etDate, engineVersion, readJson, snapshotFile } = r
   const saved = fs.existsSync(file) ? readJson(file) : { date, games: {} };
   const injuries = inputs.injuries || [];
   let updated = 0;
-  games.forEach((game) => {
+  // the book's game lines (every book) and our Game Breakdown model's call: the API only keeps IN-GAME lines for a finished game
+  let gameOdds = [];
+  try { gameOdds = await bdlAll(`/nba/v2/odds?${games.map((g) => `game_ids[]=${g.id}`).join("&")}&per_page=100`); } catch (error) { console.warn(`game odds unavailable: ${error.message}`); }
+  for (const game of games) {
     const teamIds = [game.home_team.id, game.visitor_team.id];
+    const gameInjuries = injuries.filter((row) => row.player && teamIds.includes(row.player.team_id));
+    const oddsRows = gameOdds.filter((o) => o.game_id === game.id);
+    let model;
+    try { model = summarize(await modelFor(game, { injuryRows: gameInjuries, odds: oddsRows, bdl, bdlAll })); } catch (error) { model = { error: String(error.message || error) }; }
     saved.games[game.id] = {
       takenAt, version, game,
       props: (inputs.props && inputs.props[game.id]) || [],
-      injuries: injuries.filter((row) => row.player && teamIds.includes(row.player.team_id)),
+      injuries: gameInjuries,
       sides: body.props.filter((p) => p.gameId === game.id),
+      gameOdds: oddsRows,
+      model,
     };
     updated++;
-  });
+  }
   saved.updatedAt = takenAt;
   fs.writeFileSync(file, JSON.stringify(saved));
 

@@ -15,3 +15,5 @@ dev/hunt-backtest-check.txt
 dev/snapshots/
 # dev/hunt-grade.js output
 dev/hunt-grade.txt
+# dev/hunt-games.js output
+dev/hunt-games.txt
