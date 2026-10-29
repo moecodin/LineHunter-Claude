@@ -35,7 +35,8 @@ who LEFT the team (LeBron) are not in the rotation, so games with them still loo
 - `dev/hunt-lib.js` (shared helpers, pick lists) and `dev/hunt-snapshot.js` (saves per game: game, raw props, injury rows,
   scored sides, takenAt, engine version; keeps each game's last snapshot before tip-off). First snapshot: Oct 28, 12 games,
   1,254 sides, taken 30 min before the first tip (17 s per engine run in the cloud).
-- TODO `dev/hunt-grade.js`: for each `dev/snapshots/*.json` day, box scores (`/v1/stats?game_ids[]=`), grade each side
+- DONE (first version, Oct 29): `dev/hunt-grade.js` (see CLAUDE.md). It was the TODO below:
+- (old TODO text) `dev/hunt-grade.js`: for each `dev/snapshots/*.json` day, box scores (`/v1/stats?game_ids[]=`), grade each side
   (win / loss / push, profit per $100 at the saved odds), report: overall, by edge bucket (<0, 0-5, 5-10, 10-15, 15+), by
   side, by score bucket, nightly top 10 by edge, nightly top 5 by score, "always under", Brier ours vs the book's fair chance.
   `--replay`: rebuild `{ games, props, injuries }` per day from the snapshot, run `engine.computeWith(date, { replay })` with
@@ -49,6 +50,14 @@ who LEFT the team (LeBron) are not in the rotation, so games with them still loo
 fetch and a frozen Date.now, so main's old engine (`git show origin/main:netlify/functions/hunt.js > some/file.js`) and this
 branch's engine score the same saved night. Check: main's engine replayed on the Oct 28 snapshot reproduced the live site's numbers
 (Fears under 53, McCain 80, Capela 78). The grader should use it for "old vs new".
+
+## First grade (Oct 28, 9 of 12 games final, replayed on the 6:30 pm lines)
+About 1,000 sides graded. Below score 65 both engines were fair (we said 46-59%, won 49-52%). From 65 up we overstate by 8-10 points
+(65-69: said 67, won 57-59%; 70+: 31-33%, only 6-16 picks). Edge 10-14 won 55%, edge 15+ won 40% (35 picks), overs at edge 5+ won 39%
+(49 picks), every under won 55% (the baseline). Score 65+ by stat (new engine): PTS 5/15 (33%), 3PM 10/15, PRA 6/11, REB 3/5, AST 3/4.
+Top 5 by score: 1 of 5 each engine; top 10 by edge: 5 of 10. Sam on the four players: Jokic, Fears, Capela all wrong (McCain pending).
+One night only: do not tune on it. Capela played 22 min (the Role step said 19.4, Sam 9) but scored 10, so the minutes call was right
+and the per-minute rate was low.
 
 ## Snapshot backup
 The container's `dev/snapshots/` is lost if the cloud session is reclaimed. Each night's file is also pushed gzipped (about 0.5 MB)

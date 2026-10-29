@@ -13,3 +13,5 @@ dev/hunt-whatif.txt
 dev/hunt-backtest-check.txt
 # dev/hunt-snapshot.js saves (and its cron log)
 dev/snapshots/
+# dev/hunt-grade.js output
+dev/hunt-grade.txt

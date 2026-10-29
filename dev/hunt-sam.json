@@ -1,0 +1,6 @@
+[
+  { "name": "Jokic",  "stat": "pts", "side": "over",  "line": 27.5, "proj": 28.3 },
+  { "name": "Fears",  "stat": "pts", "side": "over",  "line": 11.5, "proj": 18.0 },
+  { "name": "McCain", "stat": "pts", "side": "under", "line": 17.5, "proj": 13.7 },
+  { "name": "Capela", "stat": "pts", "side": "under", "line": 7.5,  "proj": 2.1 }
+]
