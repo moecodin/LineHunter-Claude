@@ -72,7 +72,7 @@ const summary = (graded) => {
 };
 const fmtSummary = (s) => (s.n ? `${padL(s.n, 4)} picks  won ${padL(s.wins, 3)} (${padL(Math.round(s.rate * 100), 3)}%)  we said ${padL(Math.round(s.ourChance), 3)}%  profit/pick ${s.profitPer100 === null ? "  –" : padL((s.profitPer100 >= 0 ? "+" : "") + s.profitPer100.toFixed(1), 6)}` : "   0 picks");
 
-const SAM = fs.existsSync(path.join(__dirname, "hunt-sam.json")) ? JSON.parse(fs.readFileSync(path.join(__dirname, "hunt-sam.json"), "utf8")) : [];
+const SAM_ALL = fs.existsSync(path.join(__dirname, "hunt-sam.json")) ? JSON.parse(fs.readFileSync(path.join(__dirname, "hunt-sam.json"), "utf8")) : []; // each entry has the date of the game it was typed for
 
 async function gradeNight(date, files) {
   const snap = loadSnapshot(date);
@@ -148,6 +148,7 @@ async function gradeNight(date, files) {
     out.push(`    new: ${show(n, newAll)}${o && n && o.playerId === n.playerId && o.stat === n.stat ? "   (same pick)" : ""}`);
   });
 
+  const SAM = SAM_ALL.filter((x) => x.date === date);
   if (SAM.length) {
     out.push("");
     out.push("THE COMPARED PLAYERS vs SAM (points)");
