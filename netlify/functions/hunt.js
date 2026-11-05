@@ -83,7 +83,18 @@ const CONFIG = {
       extraKeep: [1, 0.5, 0],
       // a missing teammate plays HIS position (Sengun out, Capela the next center): his minutes going up is close to certain,
       // so the role games' minutes are trusted like n / (n + 0.5) instead of n / (n + 2)
-      samePosMinutesPrior: 0.5 },
+      samePosMinutesPrior: 0.5,
+      // How much the missing teammates matter: their production of THIS stat per game (points for a points prop, rebounds for a
+      // rebounds prop, ...) against a reference. A role player (Santos, 7.2 points) barely moves a star's numbers; a starter does.
+      // importance = (production - floor x ref) / (ref - floor x ref), 0 to 1; both Role weights are multiplied by it, and under
+      // minWeight there is no Role step at all.
+      importance: { floor: 0.35, minWeight: 0.1, ref: { pts: 14, reb: 6, ast: 4, "3pm": 2, pra: 22 } },
+      // The player's rate in his role games is compared with his rate in his OTHER games on the team (lift = role rate / other
+      // rate), not with the form that already contains the role games, and the lift is applied to the form, scaled by the weights.
+      minOther: 3, liftCap: [0.5, 2],
+      // "old" = the first Role step (every missing player counts the same); "importance" = the same blend with both weights
+      // multiplied by how much the missing players matter; "lift" = importance plus the lift over his other games
+      mode: "importance" },
     disagree: { games: 3, free: 0.15, weight: 0.4, cap: 0.12 },  // last 3 games' rate off the projection by more than 15% widens it
     kMin: 3,                                   // game-to-game noise (negative binomial k), estimated from the logs
     kMax: 200,
@@ -456,8 +467,11 @@ async function loadMissing(injuryRows, teamIds, season, before) {
     if (!thisSeason.length) return; // out all season: his absence is already in everyone's numbers
     const usual = average((thisSeason.length >= 3 ? thisSeason : [...thisSeason, ...lastSeason]).map(minutesOf));
     if (!(usual >= CONFIG.sim.role.minMinutes)) return;
+    const basis = thisSeason.length >= 3 ? thisSeason : [...thisSeason, ...lastSeason]; // his per-game production, for how much he matters
+    const perGame = (key) => average(basis.map((log) => log[key] || 0)) || 0;
     (byTeam[teamId] = byTeam[teamId] || []).push({
       id: row.player.id, last: row.player.last_name, minutes: usual, group: posGroup(row.player.position),
+      prod: { pts: perGame("pts"), reb: perGame("reb"), ast: perGame("ast"), fg3m: perGame("fg3m") },
       seasons: new Set([season, ...(lastSeason.length >= 5 ? [season - 1] : [])]),
       played: new Set([...thisSeason, ...lastSeason].map((log) => log.game.id)),
     });
@@ -529,6 +543,11 @@ function roleInfo(prop, logs, teamId, missing, season, group, rotation = [], own
     const weight = match * keep * Math.pow(0.5, games.length / R.halfLife) * (log.game.season === season ? 1 : R.lastSeason);
     games.push({ weight, v: statOf(log, prop.keys), m: minutesOf(log), log, without, extras: extras.map((r) => r.last) });
   });
+  // how much the missing teammates matter for this stat (production per game, against a reference for the stat)
+  const imp = R.importance;
+  const production = sum(missing.map((m) => sum(prop.keys.map((key) => m.prod[key] || 0))));
+  const ref = imp.ref[prop.code];
+  const importance = clamp((production - imp.floor * ref) / (ref - imp.floor * ref), 0, 1);
   const samePosMissing = missing.some((m) => sharesPosition(m.group, group));
   const minGames = samePosMissing ? R.minGamesSamePos : R.minGames; // a missing teammate at his position: 2 matching games are enough
   if (games.length < minGames) {
@@ -541,15 +560,25 @@ function roleInfo(prop, logs, teamId, missing, season, group, rotation = [], own
       loadedFrom: `last season's logs from ${season}-${CONFIG.sim.lastSeasonLogsFrom} on`,
     } };
   }
+  if (R.mode !== "old" && importance < imp.minWeight) {
+    if (!CONFIG.debug) return null;
+    return { miss: { out: missing.map((m) => m.last).join(", "), reason: `the missing players produce little ${prop.word} (${round1(production)} a game, weight ${Math.round(importance * 100)}%)`, games: [], loadedFrom: "" } };
+  }
   const n = sum(games.map((g) => g.weight));
   const minutesTotal = sum(games.map((g) => g.weight * g.m));
+  // his rate in the games that are NOT role games (recency weighted, last season half)
+  const roleLogs = new Set(games.map((g) => g.log));
+  const others = own.filter((log) => !roleLogs.has(log) && minutesOf(log) >= R.shortNight * usual)
+    .map((log, i) => ({ w: Math.pow(0.5, i / CONFIG.sim.halfLife) * (log.game.season === season ? 1 : R.lastSeason), v: statOf(log, prop.keys), m: minutesOf(log) }));
+  const otherMinutes = sum(others.map((o) => o.w * o.m));
+  const otherRate = others.length >= R.minOther && otherMinutes > 0 ? sum(others.map((o) => o.w * o.v)) / otherMinutes : null;
   const samePos = samePosMissing;
   const minutesPrior = samePos ? R.samePosMinutesPrior : R.minutesPrior;
   return {
     minutes: minutesTotal / n,
     rate: minutesTotal > 0 ? sum(games.map((g) => g.weight * g.v)) / minutesTotal : 0,
     n, games: games.length, out: missing.map((m) => m.last).join(", "),
-    minutesWeight: n / (n + minutesPrior), rateWeight: n / (n + R.ratePrior), samePos,
+    minutesWeight: n / (n + minutesPrior), rateWeight: n / (n + R.ratePrior), samePos, importance, otherRate, production,
     // the role games themselves, for dev/hunt-whatif.js only (CONFIG.debug)
     list: CONFIG.debug ? games.map((g) => ({
       date: g.log.game.date.slice(0, 10), lastSeason: g.log.game.season !== season, min: round1(g.m), v: g.v, without: g.without, extras: g.extras,
@@ -775,9 +804,17 @@ function runSteps(prop, line, info, ctx) {
   step("form", "Recent form", { rate: info.formRate }, { last: info.lastAvg === null ? null : round1(info.lastAvg), games: info.cur.length });
   if (ctx.role) {
     const r = ctx.role;
-    const minutes = r.minutesWeight * r.minutes + (1 - r.minutesWeight) * input.minutes;
-    const rate = r.rateWeight * r.rate + (1 - r.rateWeight) * input.rate;
-    step("role", "Role", { minutes, rate }, { out: r.out, games: r.games, from: round1(input.minutes), minutes: round1(minutes), samePos: r.samePos, ...(r.list ? { list: r.list, roleMinutes: round1(r.minutes), roleRate36: round1(r.rate * 36), from36: round1(input.rate * 36), rate36: round1(rate * 36) } : {}) });
+    const R = CONFIG.sim.role;
+    // minutes: lean on the role games in proportion to how many there are AND how much the missing players matter
+    const imp = R.mode === "old" ? 1 : r.importance;
+    const minutesW = r.minutesWeight * imp;
+    const minutes = minutesW * r.minutes + (1 - minutesW) * input.minutes;
+    // rate: blend toward his role-game rate with the same two weights; mode "lift": the lift of his role games over his other
+    // games applied to the form instead
+    const base = r.otherRate > 0 ? r.otherRate : input.rate;
+    const lift = base > 0 ? clamp(r.rate / base, R.liftCap[0], R.liftCap[1]) : 1;
+    const rate = R.mode === "lift" ? input.rate * (1 + (lift - 1) * r.rateWeight * imp) : input.rate + (r.rate - input.rate) * r.rateWeight * imp;
+    step("role", "Role", { minutes, rate }, { out: r.out, games: r.games, from: round1(input.minutes), minutes: round1(minutes), samePos: r.samePos, weight: Math.round(r.importance * 100), lift: round1(lift * 100) / 100, ...(r.list ? { list: r.list, roleMinutes: round1(r.minutes), roleRate36: round1(r.rate * 36), otherRate36: r.otherRate === null ? null : round1(r.otherRate * 36), from36: round1(input.rate * 36), rate36: round1(rate * 36) } : {}) });
   }
   if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
   if (ctx.zone) step("zone", "Zone matchup", { mult: input.mult * ctx.zone.mult }, { extra: ctx.zone.points, zone: ctx.zone.zone, gap: ctx.zone.gap });
