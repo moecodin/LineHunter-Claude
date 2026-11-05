@@ -54,6 +54,7 @@ const VARIANTS = {
   old: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = true; engine.CONFIG.sim.role.mode = "old"; },
   importance: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = true; engine.CONFIG.sim.role.mode = "importance"; },
   lift: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = true; engine.CONFIG.sim.role.mode = "lift"; },
+  pos: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = true; engine.CONFIG.sim.position.off = false; },
   back: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = false; },
 };
 if (process.env.EXTRA_VARIANTS) Object.assign(VARIANTS, require(path.resolve(process.env.EXTRA_VARIANTS)));

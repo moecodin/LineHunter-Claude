@@ -76,6 +76,8 @@ const CONFIG = {
     // under his usual is not a lineup game; a late-season game where he played big minutes still counts). Newest count
     // most (weight halves every 10 role games), last season's count half. With 3+ role games, their minutes replace the form
     // minutes in proportion n / (n + 2) and their per-minute output the form rate in proportion n / (n + 6), n = total weight.
+    // opponent defense against the player's POSITION (from box scores): what players at his position score against that team vs their own averages, relative to the team's overall number
+    position: { off: true, shrink: 0.5, prior: 40, cap: 0.05, minMinutes: 10, minGames: 3 },
     // teammates who are BACK tonight: healthy rotation players who missed 2+ of this player's recent games; his full-lineup games lead the form
     back: { off: true, minAbsent: 2, minFull: 3, minutesPrior: 2, ratePrior: 6, halfLife: 10, shortNight: 0.8, floor: 0.35, minWeight: 0.1, ref: { pts: 14, reb: 6, ast: 4, "3pm": 2, pra: 22 } },
     role: { minMinutes: 15, minMatch: 0.5, minGames: 3, minGamesSamePos: 2, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, shortNight: 0.8,
@@ -337,6 +339,62 @@ async function loadAllowed(season) {
     noteSkipped(error);
     return null;
   }
+}
+
+// ---------- position defense (box scores) ----------
+// { teamId: { all: {pts:{a,e,n}...}, G|F|C: {...} } }: for every player-game against a team (10+ min, player with 3+ earlier games), his stat
+// and his own average before that game. a / e = actual / expected sums, so a / e = how much more (or less) than usual players score against them.
+async function loadPositionDefense(season, before) {
+  const P = CONFIG.sim.position;
+  if (P.off) return null;
+  try {
+    const rows = (await bdlAllPages(`/v1/stats?seasons[]=${season}&start_date=${season}-10-01&end_date=${before}&per_page=100`))
+      .filter((r) => r.player && r.team && r.game && !r.game.postseason && String(r.game.date).slice(0, 10) < before && minutesOf(r) > 0);
+    const byPlayer = {};
+    rows.forEach((r) => { (byPlayer[r.player.id] = byPlayer[r.player.id] || []).push(r); });
+    const out = {};
+    const keys = ["pts", "reb", "ast", "fg3m"];
+    Object.values(byPlayer).forEach((list) => {
+      list.sort((a, b) => a.game.date.localeCompare(b.game.date));
+      const group = posGroup(list[0].player.position)[0] || null;
+      list.forEach((r, i) => {
+        if (i < P.minGames || minutesOf(r) < P.minMinutes) return;
+        const earlier = list.slice(0, i);
+        const oppId = r.game.home_team_id === r.team.id ? r.game.visitor_team_id : r.game.home_team_id;
+        const team = (out[oppId] = out[oppId] || {});
+        [(team.all = team.all || {}), group ? (team[group] = team[group] || {}) : null].filter(Boolean).forEach((bucket) => {
+          keys.forEach((key) => {
+            const cell = (bucket[key] = bucket[key] || { a: 0, e: 0, n: 0 });
+            cell.a += r[key] || 0; cell.e += average(earlier.map((x) => x[key] || 0)); cell.n++;
+          });
+        });
+      });
+    });
+    return out;
+  } catch (error) {
+    noteSkipped(error);
+    return null;
+  }
+}
+
+// multiplier for one prop: the position's ratio against the team's overall ratio, shrunk by the sample and capped
+function positionInfo(defense, oppTeamId, group, prop) {
+  const P = CONFIG.sim.position;
+  const team = defense && defense[oppTeamId];
+  const letter = (group || "")[0];
+  if (!team || !letter || !team[letter]) return null;
+  const ratio = (bucket) => {
+    const a = sum(prop.keys.map((k) => (bucket[k] || {}).a || 0));
+    const e = sum(prop.keys.map((k) => (bucket[k] || {}).e || 0));
+    return e > 0 ? a / e : null;
+  };
+  const pos = ratio(team[letter]);
+  const all = ratio(team.all);
+  if (!pos || !all) return null;
+  const n = (team[letter][prop.keys[0]] || {}).n || 0;
+  const rel = pos / all;
+  const mult = clamp(1 + P.shrink * (n / (n + P.prior)) * (rel - 1), 1 - P.cap, 1 + P.cap);
+  return { mult, rel, n, group: letter };
 }
 
 // ---------- zones (the zone matchup step) ----------
@@ -864,6 +922,7 @@ function runSteps(prop, line, info, ctx) {
       { back: b.back, games: b.games, absent: b.absentGames, from: round1(from), weight: Math.round(b.importance * 100) });
   }
   if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
+  if (ctx.position) step("position", "Position matchup", { mult: input.mult * ctx.position.mult }, { group: ctx.position.group, rel: Math.round(ctx.position.rel * 1000) / 1000, games: ctx.position.n });
   if (ctx.zone) step("zone", "Zone matchup", { mult: input.mult * ctx.zone.mult }, { extra: ctx.zone.points, zone: ctx.zone.zone, gap: ctx.zone.gap });
   if (ctx.pace) step("pace", "Pace", { mult: input.mult * ctx.pace.mult }, { rank: ctx.pace.rank, of: ctx.pace.of, pace: ctx.pace.pace });
   if (ctx.backToBack) step("b2b", "Back-to-back", { mult: input.mult * S.backToBack });
@@ -1037,7 +1096,7 @@ async function computeHunts(date) {
   // Shooting players' shot profiles: this season for players with enough games, last season for the rest.
   const ownZoneIds = playerIds.filter((id) => !needLastSeason.includes(id) || currentLogs[id].filter(playedInGame).length >= CONFIG.sim.zone.ownSeasonGames);
   const lastZoneIds = playerIds.filter((id) => !ownZoneIds.includes(id));
-  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow, zonesNow, zonesLast, zoneDefNow, teamChanges, missingByTeam] = await Promise.all([
+  const [previousLogs, lastSeasonAvgs, allowedNow, paceNow, zonesNow, zonesLast, zoneDefNow, teamChanges, missingByTeam, positionDefense] = await Promise.all([
     needLastSeason.length ? loadLogs(needLastSeason, season - 1, date, `${season}-${CONFIG.sim.lastSeasonLogsFrom}`) : {},
     needLastSeason.length ? loadSeasonAverages(needLastSeason, season - 1) : {},
     loadAllowed(season),
@@ -1047,6 +1106,7 @@ async function computeHunts(date) {
     loadZoneDefense(season),
     needLastSeason.length ? loadTeamChanges(needLastSeason, season - 1, date, players) : {},
     CONFIG.sim.role.off ? {} : loadMissing(injuries.rows, teamIds, season, date),
+    loadPositionDefense(season, date),
   ]);
   const allowed = allowedNow || (await loadAllowed(season - 1)); // same fallback rule as the rest of the site
   const pace = paceNow || (await loadPace(season - 1));
@@ -1091,6 +1151,7 @@ async function computeHunts(date) {
     const role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season, posGroup(player.position), rotationByTeam[teamId] || [], entry.player_id);
     ctx.role = role && !role.miss ? role : null;
     ctx.roleMiss = role && role.miss ? role.miss : null; // CONFIG.debug only
+    ctx.position = positionInfo(positionDefense, oppTeam.id, posGroup(player.position), prop);
     ctx.back = ctx.role ? null : backInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season, rotationByTeam[teamId] || [], entry.player_id);
     ctx.extra = whatIf ? whatIf({ playerId: entry.player_id, stat: prop.code, line, info }) : null;
 
