@@ -50,11 +50,11 @@ const BASE = (engine) => {
   M.base = 0; M.thin = 0; M.maxWeight = 0; M.gapCv = 0;
 };
 const VARIANTS = {
-  norole: (engine) => { BASE(engine); engine.CONFIG.sim.role.off = true; },
-  old: (engine) => { BASE(engine); engine.CONFIG.sim.role.mode = "old"; },
-  importance: (engine) => { BASE(engine); engine.CONFIG.sim.role.mode = "importance"; },
-  lift: (engine) => { BASE(engine); engine.CONFIG.sim.role.mode = "lift"; },
-  // "return" and others are added here as they are built
+  norole: (engine) => { BASE(engine); engine.CONFIG.sim.role.off = true; engine.CONFIG.sim.back.off = true; },
+  old: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = true; engine.CONFIG.sim.role.mode = "old"; },
+  importance: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = true; engine.CONFIG.sim.role.mode = "importance"; },
+  lift: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = true; engine.CONFIG.sim.role.mode = "lift"; },
+  back: (engine) => { BASE(engine); engine.CONFIG.sim.back.off = false; },
 };
 if (process.env.EXTRA_VARIANTS) Object.assign(VARIANTS, require(path.resolve(process.env.EXTRA_VARIANTS)));
 
@@ -121,7 +121,7 @@ const dateOf = (row) => String(row.game.date).slice(0, 10);
       targets.forEach((t) => {
         const p = bySide.get(`${t.playerId}-${t.stat}`);
         if (!p) return;
-        results[v].push({ date: D, stat: t.stat, mean: p.projection.mean, overChance: p.chance / 100, line: t.line, actual: t.actual, naive: t.naive, role: p.factors.some((f) => f.key === "role"), key: `${D}-${t.playerId}-${t.stat}` });
+        results[v].push({ date: D, stat: t.stat, mean: p.projection.mean, overChance: p.chance / 100, line: t.line, actual: t.actual, naive: t.naive, role: p.factors.some((f) => f.key === "role" || f.key === "back"), key: `${D}-${t.playerId}-${t.stat}` });
       });
     }
     console.log(`  ${D}: ${games.length} games, ${targets.length} player-stats, ${injuries.length} out rows`);

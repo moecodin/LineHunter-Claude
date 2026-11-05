@@ -76,6 +76,8 @@ const CONFIG = {
     // under his usual is not a lineup game; a late-season game where he played big minutes still counts). Newest count
     // most (weight halves every 10 role games), last season's count half. With 3+ role games, their minutes replace the form
     // minutes in proportion n / (n + 2) and their per-minute output the form rate in proportion n / (n + 6), n = total weight.
+    // teammates who are BACK tonight: healthy rotation players who missed 2+ of this player's recent games; his full-lineup games lead the form
+    back: { off: true, minAbsent: 2, minFull: 3, minutesPrior: 2, ratePrior: 6, halfLife: 10, shortNight: 0.8, floor: 0.35, minWeight: 0.1, ref: { pts: 14, reb: 6, ast: 4, "3pm": 2, pra: 22 } },
     role: { minMinutes: 15, minMatch: 0.5, minGames: 3, minGamesSamePos: 2, halfLife: 10, lastSeason: 0.5, minutesPrior: 2, ratePrior: 6, shortNight: 0.8,
       // the lineup then vs tonight: other rotation teammates (usually 15+ minutes, from the slate's own game logs) who sat in a
       // role game besides tonight's missing ones. A game where 1 more was out counts half, 2 or more not at all (late-season
@@ -501,11 +503,48 @@ function buildRotation(playerIds, players, currentLogs, previousLogs, season) {
     if (!(usual >= CONFIG.sim.role.minMinutes)) return;
     (byTeam[teamId] = byTeam[teamId] || []).push({
       id, last: player.last_name, minutes: usual,
+      prod: { pts: average((now.length ? now : last).map((log) => log.pts || 0)) || 0, reb: average((now.length ? now : last).map((log) => log.reb || 0)) || 0, ast: average((now.length ? now : last).map((log) => log.ast || 0)) || 0, fg3m: average((now.length ? now : last).map((log) => log.fg3m || 0)) || 0 },
       seasons: new Set([...(now.length ? [season] : []), ...(last.length >= 5 ? [season - 1] : [])]),
       played: new Set([...now, ...last].map((log) => log.game.id)),
     });
   });
   return byTeam;
+}
+
+// Teammates who are BACK tonight -> { minutes, rate, n, importance, ... } or null. A "returner" is a healthy rotation teammate who missed
+// 2+ of this player's own games this season; the player's games WITH every returner are his full-lineup numbers, which lead the form
+// when recent games were played without them (Maxey with Embiid and Edgecombe out vs back).
+function backInfo(prop, logs, teamId, missing, season, rotation, ownId, usualFormGames) {
+  const B = CONFIG.sim.back;
+  if (B.off) return null;
+  const own = logs.current.filter((log) => log.team && log.team.id === teamId && playedInGame(log) && !log.game.postseason)
+    .sort((a, b) => b.game.date.localeCompare(a.game.date));
+  if (own.length < B.minFull + B.minAbsent) return null;
+  const usual = average(own.map(minutesOf));
+  const missingIds = new Set((missing || []).map((m) => m.id));
+  const returners = rotation.filter((r) => r.id !== ownId && !missingIds.has(r.id) && r.seasons.has(season)
+    && own.filter((log) => !r.played.has(log.game.id)).length >= B.minAbsent);
+  if (!returners.length) return null;
+  const full = [];
+  let absentGames = 0;
+  own.forEach((log, i) => {
+    if (minutesOf(log) < B.shortNight * usual) return;
+    const away = returners.filter((r) => !r.played.has(log.game.id));
+    if (away.length) { if (i < 10) absentGames++; return; }
+    full.push({ w: Math.pow(0.5, i / B.halfLife), v: statOf(log, prop.keys), m: minutesOf(log) });
+  });
+  if (full.length < B.minFull || !absentGames) return null;
+  const production = sum(returners.map((r) => sum(prop.keys.map((key) => r.prod[key] || 0))));
+  const ref = B.ref[prop.code];
+  const importance = clamp((production - B.floor * ref) / (ref - B.floor * ref), 0, 1);
+  if (importance < B.minWeight) return null;
+  const n = sum(full.map((g) => g.w));
+  const minutesTotal = sum(full.map((g) => g.w * g.m));
+  return {
+    minutes: minutesTotal / n, rate: minutesTotal > 0 ? sum(full.map((g) => g.w * g.v)) / minutesTotal : 0,
+    n, games: full.length, absentGames, importance, back: returners.map((r) => r.last).join(", "),
+    minutesWeight: n / (n + B.minutesPrior), rateWeight: n / (n + B.ratePrior),
+  };
 }
 
 function roleInfo(prop, logs, teamId, missing, season, group, rotation = [], ownId = null) {
@@ -816,6 +855,14 @@ function runSteps(prop, line, info, ctx) {
     const rate = R.mode === "lift" ? input.rate * (1 + (lift - 1) * r.rateWeight * imp) : input.rate + (r.rate - input.rate) * r.rateWeight * imp;
     step("role", "Role", { minutes, rate }, { out: r.out, games: r.games, from: round1(input.minutes), minutes: round1(minutes), samePos: r.samePos, weight: Math.round(r.importance * 100), lift: round1(lift * 100) / 100, ...(r.list ? { list: r.list, roleMinutes: round1(r.minutes), roleRate36: round1(r.rate * 36), otherRate36: r.otherRate === null ? null : round1(r.otherRate * 36), from36: round1(input.rate * 36), rate36: round1(rate * 36) } : {}) });
   }
+  if (ctx.back) {
+    const b = ctx.back;
+    const minutesW = b.minutesWeight * b.importance;
+    const rateW = b.rateWeight * b.importance;
+    const from = input.minutes;
+    step("back", "Teammates back", { minutes: minutesW * b.minutes + (1 - minutesW) * input.minutes, rate: input.rate + (b.rate - input.rate) * rateW },
+      { back: b.back, games: b.games, absent: b.absentGames, from: round1(from), weight: Math.round(b.importance * 100) });
+  }
   if (ctx.opponent) step("opponent", "Matchup", { mult: input.mult * ctx.opponent.mult }, { rank: ctx.opponent.rank, of: ctx.opponent.of, perGame: round1(ctx.opponent.perGame) });
   if (ctx.zone) step("zone", "Zone matchup", { mult: input.mult * ctx.zone.mult }, { extra: ctx.zone.points, zone: ctx.zone.zone, gap: ctx.zone.gap });
   if (ctx.pace) step("pace", "Pace", { mult: input.mult * ctx.pace.mult }, { rank: ctx.pace.rank, of: ctx.pace.of, pace: ctx.pace.pace });
@@ -1044,6 +1091,7 @@ async function computeHunts(date) {
     const role = roleInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season, posGroup(player.position), rotationByTeam[teamId] || [], entry.player_id);
     ctx.role = role && !role.miss ? role : null;
     ctx.roleMiss = role && role.miss ? role.miss : null; // CONFIG.debug only
+    ctx.back = ctx.role ? null : backInfo(prop, ctx.logs, teamId, (missingByTeam[teamId] || []).filter((m) => m.id !== entry.player_id), season, rotationByTeam[teamId] || [], entry.player_id);
     ctx.extra = whatIf ? whatIf({ playerId: entry.player_id, stat: prop.code, line, info }) : null;
 
     const sim = runSteps(prop, line, info, ctx);
