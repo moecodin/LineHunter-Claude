@@ -27,7 +27,7 @@ function loadSnapshot(date) {
   };
 }
 
-async function runEngineOn(enginePath, snap, { frozenAt = snap.takenAt } = {}) {
+async function runEngineOn(enginePath, snap, { frozenAt = snap.takenAt, configure = null } = {}) {
   const realFetch = global.fetch;
   const realNow = Date.now;
   const json = (body) => ({ ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) });
@@ -44,6 +44,7 @@ async function runEngineOn(enginePath, snap, { frozenAt = snap.takenAt } = {}) {
       delete require.cache[require.resolve(enginePath)]; // a fresh engine: no warm cache from an earlier run
       const engine = require(enginePath);
       if (engine.CONFIG) engine.CONFIG.retries = 6; // the API rate-limits a burst of runs: wait longer before giving up on a request
+      if (configure) configure(engine); // e.g. dev/hunt-proj-backtest.js switches a Role variant on before the run
       const answer = await engine.handler({ httpMethod: "GET", queryStringParameters: { date: snap.date } });
       const body = JSON.parse(answer.body);
       if (answer.statusCode !== 200) throw new Error(`${path.basename(enginePath)}: ${body.error}`);
