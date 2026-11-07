@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="auth.js"></script>
+  <title>Line Hunter | Featured Players</title>
+  <meta name="description" content="Superstars and players to watch on tonight's NBA slate.">
+  <link rel="icon" href="assets/logo-mark.png">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="transition.css">
+  <link rel="stylesheet" href="discord.css">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="hunt-list.css">
+  <link rel="expect" href="#page-ready" blocking="render">
+  <script src="transition.js"></script>
+</head>
+<body>
+  <p class="sample-strip">Design preview. All players, games, lines, odds and results on this page are made up.</p>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a href="index.html" aria-label="Line Hunter home"><img class="logo" src="assets/logo-lockup.png" alt="Line Hunter" width="396" height="72"></a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="streak-board.html" data-wipe>Streak Board</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="featured wrap" style="padding-top:clamp(2rem,4vw,3rem)" aria-labelledby="featured-title">
+      <p class="eyebrow">On tonight's slate</p>
+      <h1 id="featured-title">Featured players</h1>
+      <p class="board-note">Superstars and players to watch.</p>
+      <ul class="fp-grid" id="featured"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Line Hunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+      <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+  <script src="discord.js"></script>
+  <script src="auth-ui.js"></script>
+  <script src="hunt-list.js"></script>
+  <!-- Holds the first paint until the scripts above have built the page -->
+  <div id="page-ready" hidden></div>
+</body>
+</html>

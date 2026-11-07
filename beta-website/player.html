@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="auth.js"></script>
+  <title>Line Hunter | Player</title>
+  <link rel="icon" href="assets/logo-mark.png">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="streak-board.css">
+  <link rel="stylesheet" href="player.css">
+  <link rel="stylesheet" href="transition.css">
+  <link rel="stylesheet" href="discord.css">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="hunt-list.css">
+  <script src="transition.js"></script>
+</head>
+<body>
+  <a class="rs-skip" href="#research">Skip to the line ladder</a>
+  <p class="sr-only" id="status" role="status"></p>
+  <p class="sample-strip">Design preview. Everything on this page is made up.</p>
+
+  <header class="site-header">
+    <a href="index.html" data-wipe="back" aria-label="Line Hunter home"><img class="logo" src="assets/logo-lockup.png" alt="Line Hunter" width="396" height="72"></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" data-wipe="back">Home</a>
+      <a href="streak-board.html">Streak Board</a>
+    </nav>
+  </header>
+
+  <main class="rs-page">
+    <!-- Player and the bet being researched -->
+    <section class="rs-bar" aria-label="Prop being researched">
+      <a class="rs-back" href="streak-board.html" aria-label="Back to the Streak Board"><span class="rs-chevron" aria-hidden="true"></span></a>
+      <span class="rs-avatar" aria-hidden="true"></span>
+      <div class="rs-who">
+        <h1></h1>
+        <p></p>
+      </div>
+
+      <div class="rs-controls">
+        <label class="rs-select">
+          <span class="sr-only">Stat</span>
+          <select id="stat"></select>
+        </label>
+
+        <label class="rs-select rs-game-menu">
+          <span class="sr-only">Game</span>
+          <select id="game-select"></select>
+        </label>
+
+        <div class="rs-stepper" role="group" aria-label="Line">
+          <button type="button" id="line-down" aria-label="Lower the line">&minus;</button>
+          <output id="line" aria-live="off"></output>
+          <button type="button" id="line-up" aria-label="Raise the line">+</button>
+        </div>
+
+        <div class="rs-seg" id="side" role="radiogroup" aria-label="Over or under">
+          <button type="button" role="radio" data-side="Over">Over</button>
+          <button type="button" role="radio" data-side="Under">Under</button>
+        </div>
+
+        <ul class="rs-books" id="books" aria-label="Odds by book"></ul>
+      </div>
+    </section>
+
+    <div class="rs-layout">
+      <div class="rs-main">
+        <!-- The line ladder: every nearby line, its past hit rate, and what its price needs -->
+        <section class="rs-panel rs-ladder" id="research" tabindex="-1" aria-labelledby="bet">
+          <div class="rs-ladder-head">
+            <div>
+              <h2 id="bet"></h2>
+              <p class="rs-bet-out" id="bet-out"></p>
+              <p class="rs-bet-matchup" id="bet-matchup"></p>
+              <p class="rs-past">Past results, not a prediction.</p>
+            </div>
+            <div class="rs-price" id="price"></div>
+          </div>
+          <div class="rs-sample">
+            <button type="button" class="rs-match" id="match-tonight"></button>
+            <p id="sample-words"></p>
+          </div>
+          <section class="rs-panel rs-chart-panel" aria-labelledby="hit-label">
+            <div class="rs-chart-head">
+              <div class="rs-hit">
+                <h2 class="rs-hit-label" id="hit-label">Game by game</h2>
+                <p class="rs-hit-rate"><strong id="hit-rate"></strong><span id="hit-record"></span></p>
+                <p class="rs-hit-sentence" id="hit-sentence"></p>
+                <p class="rs-hit-sub" id="hit-sub"></p>
+              </div>
+            </div>
+
+            <div class="rs-key">
+              <div class="rs-legend" id="legend"></div>
+              <div class="rs-overlays" role="group" aria-label="Show under the chart">
+                <label><input type="checkbox" id="overlay-min"> Minutes</label>
+                <label><input type="checkbox" id="overlay-usg"> Usage</label>
+              </div>
+            </div>
+
+            <div class="rs-chart-scroll" tabindex="0" role="region" aria-label="Chart of games. Scrolls sideways on small screens.">
+              <div class="rs-chart" id="chart"></div>
+            </div>
+            <p class="rs-scroll-hint" id="scroll-hint" hidden></p>
+            <p class="rs-scroll-hint" id="chart-tip">Select a bar to find that game in the log.</p>
+            <p class="rs-empty" id="chart-empty" hidden></p>
+          </section>
+          <div class="rs-sample-controls">
+            <label class="rs-select rs-range-menu">
+              <span>Games shown</span>
+              <select id="range-select"></select>
+            </label>
+            <div class="rs-ranges" id="ranges" role="radiogroup" aria-label="Games shown"></div>
+            <details class="rs-filter-panel" id="filter-panel">
+              <summary><span id="filter-summary">Filter games</span><span class="rs-chevron rs-chevron-down" aria-hidden="true"></span></summary>
+              <div class="rs-filters" role="group" aria-label="Filter games">
+                <div class="rs-chips" id="filters" role="toolbar" aria-label="Filters"></div>
+                <button type="button" class="rs-clear" id="clear-filters" hidden>Clear</button>
+              </div>
+            </details>
+          </div>
+          <div class="rs-ladder-key" id="ladder-key"><p id="tick-note"></p></div>
+          <div class="rs-rungs" id="rungs" role="radiogroup" aria-label="Choose a line"></div>
+          <div class="rs-pin-row"><button type="button" class="rs-reset" id="pin-line"></button><p class="rs-line-note" id="line-note"></p></div>
+          <section class="rs-compare" id="compare" aria-label="Compare two lines" hidden></section>
+          <div class="rs-ladder-foot">
+            <div>
+              <p class="rs-rung-key" id="rung-key"></p>
+            </div>
+            <details class="rs-define">
+              <summary>What's break-even?</summary>
+              <p>Break-even is how often a bet has to win to pay for itself at its odds. At &minus;110 that's 52.4%. Win more often over many bets and you come out ahead; win less and you lose money. Past hit rates can be compared to it, but they don't predict the next game.</p>
+            </details>
+            <details class="rs-define rs-shortcuts" id="shortcuts">
+              <summary>Keyboard shortcuts</summary>
+              <dl class="rs-keys">
+                <div><dt><kbd>O</kbd> <kbd>U</kbd></dt><dd>Over or Under</dd></div>
+                <div><dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>Lower or raise the line</dd></div>
+                <div><dt><kbd>R</kbd></dt><dd>Next range of games</dd></div>
+                <div><dt><kbd>M</kbd></dt><dd>Match, or undo it</dd></div>
+                <div><dt><kbd>P</kbd></dt><dd>Pin a line to compare, or unpin it</dd></div>
+                <div><dt><kbd>?</kbd></dt><dd>Open or close this list</dd></div>
+              </dl>
+              <p class="rs-keys-note">Keys pause while a menu is open. Turn them off to jump through a closed menu by typing.</p>
+              <label class="rs-keys-off"><input type="checkbox" id="keys-off"> Turn shortcuts off</label>
+            </details>
+            <button type="button" class="rs-reset" id="copy-link">Copy link to this view</button>
+            <button type="button" class="rs-reset" id="reset-line" hidden></button>
+          </div>
+        </section>
+
+        <details class="rs-panel rs-log" id="log-panel" open>
+          <summary>
+            <h2 class="rs-summary-title">Game log</h2>
+            <span class="rs-summary-hint" id="log-hint"></span>
+            <span class="rs-chevron rs-chevron-down" aria-hidden="true"></span>
+          </summary>
+          <div class="rs-table-scroll" tabindex="0" role="region" aria-label="Game log table">
+            <table id="log"></table>
+          </div>
+        </details>
+      </div>
+
+      <aside class="rs-side" aria-label="Game context">
+        <details class="rs-panel" open>
+          <summary><h2 class="rs-summary-title" id="defense-title"></h2><span class="rs-summary-hint" id="defense-hint"></span><span class="rs-chevron rs-chevron-down" aria-hidden="true"></span></summary>
+          <dl class="rs-defense" id="defense"></dl>
+        </details>
+        <details class="rs-panel" open>
+          <summary><h2 class="rs-summary-title">Injury report</h2><span class="rs-summary-hint" id="injury-hint"></span><span class="rs-chevron rs-chevron-down" aria-hidden="true"></span></summary>
+          <div class="rs-injuries" id="injuries"></div>
+        </details>
+        <details class="rs-panel">
+          <summary><h2 class="rs-summary-title">Latest news</h2><span class="rs-chevron rs-chevron-down" aria-hidden="true"></span></summary>
+          <ul class="rs-news" id="news"></ul>
+        </details>
+        <details class="rs-panel">
+          <summary><h2 class="rs-summary-title">Expected lineup</h2><span class="rs-chevron rs-chevron-down" aria-hidden="true"></span></summary>
+          <ul class="rs-list" id="lineup"></ul>
+        </details>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Keeps the bet and the line in reach once the ladder scrolls away: in the top bar on wide screens, along the bottom on smaller ones -->
+  <div class="rs-dock" id="dock">
+    <p><b id="dock-bet"></b><span id="dock-detail"></span></p>
+    <div class="rs-seg" id="dock-side" role="radiogroup" aria-label="Over or under">
+      <button type="button" role="radio" data-side="Over" aria-label="Over">O<span class="rs-wide-only">ver</span></button>
+      <button type="button" role="radio" data-side="Under" aria-label="Under">U<span class="rs-wide-only">nder</span></button>
+    </div>
+    <div class="rs-stepper" role="group" aria-label="Line">
+      <button type="button" id="dock-down" aria-label="Lower the line">&minus;</button>
+      <button type="button" id="dock-up" aria-label="Raise the line">+</button>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p>Line Hunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+    <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="league.js"></script>
+  <script src="player.js"></script>
+  <script src="player-hunt.js"></script>
+  <script src="discord.js"></script>
+  <script src="auth-ui.js"></script>
+  <script src="hunt-list.js"></script>
+</body>
+</html>

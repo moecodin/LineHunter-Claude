@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="auth.js"></script>
+  <title>Line Hunter | Streak Board</title>
+  <meta name="description" content="NBA player prop streaks from the past week, grouped by streak length.">
+  <link rel="icon" href="assets/logo-mark.png">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="streak-board.css">
+  <link rel="stylesheet" href="transition.css">
+  <link rel="stylesheet" href="discord.css">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="hunt-list.css">
+  <script src="transition.js"></script>
+</head>
+<body>
+  <p class="sample-strip">Design preview. All players, lines, odds and results on this page are made up.</p>
+
+  <header class="site-header">
+    <a href="index.html" data-wipe="back" aria-label="Line Hunter home"><img class="logo" src="assets/logo-lockup.png" alt="Line Hunter" width="396" height="72"></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" data-wipe="back">Home</a>
+      <a href="streak-board.html" aria-current="page">Streak Board</a>
+    </nav>
+  </header>
+
+  <main class="app">
+    <aside class="rail">
+      <p class="eyebrow">Past week &middot; Oct 28 &ndash; Nov 3</p>
+      <h1>Streak Board</h1>
+      <p class="rail-note">Every active NBA prop streak, grouped by how long it's lasted.</p>
+
+      <label class="search"><span class="sr-only">Search player or team</span>
+        <input id="search" type="search" placeholder="Search player or team" autocomplete="off">
+      </label>
+
+      <div class="filter-group">
+        <p class="filter-label" id="stat-label">Stat</p>
+        <div class="stat-list" id="market-filters" role="group" aria-labelledby="stat-label"></div>
+      </div>
+      <div class="filter-group">
+        <p class="filter-label" id="dir-label">Direction</p>
+        <div class="segmented" id="dir-filters" role="group" aria-labelledby="dir-label"></div>
+      </div>
+
+      <p class="legend" aria-label="Chart legend">
+        <span><i class="key key-streak"></i>Current streak</span>
+        <span><i class="key key-hit"></i>Earlier hit</span>
+        <span><i class="key key-miss"></i>Miss</span>
+        <span><i class="key key-line"></i>The line</span>
+      </p>
+    </aside>
+
+    <section class="ladder" aria-label="Streaks by length">
+      <div id="ladder"></div>
+      <p class="empty" id="empty" hidden>No streaks match those filters. <button type="button" id="reset">Clear filters</button></p>
+    </section>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+    <aside class="panel" id="panel" aria-label="Selected player" tabindex="-1"></aside>
+  </main>
+
+  <footer class="site-footer">
+    <p>Line Hunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+    <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="streaks.js"></script>
+  <script src="streak-board.js"></script>
+  <script src="discord.js"></script>
+  <script src="auth-ui.js"></script>
+  <script src="hunt-list.js"></script>
+</body>
+</html>

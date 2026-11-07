@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Big apple with a layered, made-up skyline inside it. Concept art for New York. -->
+  <defs>
+    <path id="apple" d="M100 64C82 51 44 53 33 91c-9 32 13 82 39 93 12 4 20-6 28-6s16 10 28 6c26-11 48-61 39-93C156 53 118 51 100 64Z"/>
+    <clipPath id="inside-apple"><use href="#apple"/></clipPath>
+  </defs>
+  <path fill="#fff" d="M97 64c-1-14 3-27 12-37l7 6c-7 9-10 19-10 31Z"/>
+  <path fill="#fff" d="M111 46c9-20 35-25 49-15-6 19-32 28-49 15Z"/>
+  <use href="#apple" fill="#fff"/>
+  <g clip-path="url(#inside-apple)">
+    <!-- Far buildings, lightest -->
+    <path fill="#b4b4b4" d="M20 195V114H40V102H58V114H70V94L80 86 90 94V118H100V88H105V80H108V70H110V80H113V88H118V112H128V98H146V110H154V94L162 102V112H180V195Z"/>
+    <!-- Middle row, with slanted roofs -->
+    <path fill="#777" d="M20 195V130H44V142H56V110L70 96V134H84V106L94 98 104 106V136H118V118H130V138H142V108L158 124V146H180V195Z"/>
+    <!-- Near row, darkest -->
+    <path fill="#2e2e2e" d="M20 195V152H36V144H50V156H60V126L80 114V150H90V138H100V150H112V124L132 110V152H144V142H156V156H180V195Z"/>
+  </g>
+</svg>

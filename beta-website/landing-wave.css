@@ -1,0 +1,131 @@
+/* Landing example 2: Agent Wave layout in Line Hunter's logo, fonts and colors. */
+.wv {
+  --h1: 54px;
+  --lede: 16px;
+  --stat: 13.5px;
+  --gap: 72px;
+  --pad-x: 48px;
+  --stats-x: 80px;
+  --btn-h: 42px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: calc(100vh - 2rem);
+  overflow: hidden;
+  background: var(--ink);
+}
+@supports (height: 100svh) { .wv { min-height: calc(100svh - 2rem); } }
+.wv a { text-decoration: none; }
+
+/* The black-and-white video is tinted with the logo's indigo, then laid over the page color */
+.wv-photo { position: absolute; inset: 0; z-index: -1; mix-blend-mode: screen; isolation: isolate; background: #000; }
+.wv-photo video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.wv-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #7f78ff, #aab2ff 55%, #5a55e8); mix-blend-mode: multiply; }
+.wv::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: -1; height: 20%; background: linear-gradient(transparent, var(--ink)); }
+
+.wv-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 18px var(--pad-x) 10px; }
+.wv-logo { height: 38px; margin-left: -.5rem; }
+.wv-nav { display: flex; gap: 8px; }
+.wv-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 18px;
+  overflow: hidden;
+  background: linear-gradient(105deg, #060a16 0%, #14234c 52%, #2b3a6c 100%);
+  border: 1px solid rgb(147 161 203 / .55);
+  border-radius: 7px;
+  color: var(--ice);
+  font-size: 14px;
+  white-space: nowrap;
+  transition: border-color .35s, box-shadow .35s;
+}
+.wv-pill::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgb(216 223 245 / .16) 50%, transparent 70%); transform: translateX(-120%); transition: transform .6s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .wv-pill:hover { border-color: var(--ice); box-shadow: 0 0 18px rgb(154 147 255 / .25); }
+  .wv-pill:hover::before { transform: translateX(120%); }
+}
+
+.wv-btn {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-h);
+  padding: 0 18px;
+  overflow: hidden;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: box-shadow .35s, border-color .35s;
+}
+.wv-btn::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(115deg, transparent 20%, rgb(255 255 255 / .45) 48%, transparent 76%); transform: translateX(-130%); transition: transform .65s ease; }
+.wv-solid { background: linear-gradient(180deg, #fff 0%, var(--ice) 52%, #bcc6e6 100%); border: 1px solid #fff; color: var(--ink); box-shadow: inset 0 1px 0 rgb(255 255 255 / .95); }
+.wv-ghost {
+  background: linear-gradient(135deg, rgb(216 223 245 / .12), rgb(6 10 22 / .55) 46%, rgb(147 161 203 / .1));
+  border: 1px solid rgb(147 161 203 / .55);
+  color: var(--ice);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .12);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+@media (hover: hover) and (pointer: fine) {
+  .wv-btn:hover::after { transform: translateX(130%); }
+  .wv-solid:hover { box-shadow: inset 0 1px 0 #fff, 0 0 26px rgb(154 147 255 / .45); }
+  .wv-ghost:hover { border-color: var(--ice); box-shadow: inset 0 1px 0 rgb(255 255 255 / .22), 0 0 24px rgb(154 147 255 / .3); }
+}
+.wv-head .wv-btn { justify-self: end; height: 40px; padding: 0 16px; }
+
+.wv-hero { display: flex; align-items: flex-end; justify-content: center; padding: 8px 24px var(--gap); }
+.wv-copy { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 900px; text-align: center; }
+.wv-badge { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; padding: 8px 14px; background: linear-gradient(90deg, #2b3a6c 0%, #14234c 52%, #0b1229 100%); border-radius: 5px; color: var(--ice); font-size: 12.5px; }
+.wv-badge svg { width: 16px; height: 16px; fill: var(--lift); }
+.wv h1 { margin: 0; font: 600 var(--h1)/1.08 var(--display); color: #fff; }
+.wv-line { display: block; overflow: hidden; padding: .04em .15em .14em; margin-bottom: -.1em; }
+.wv-line span { display: block; }
+.wv h1 em { font-style: normal; color: var(--lift); }
+.wv-lede { max-width: 540px; margin-top: 16px; font-size: var(--lede); line-height: 1.5; color: var(--haze, #c3cce9); text-wrap: pretty; }
+.wv-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
+
+.wv-stats { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 var(--stats-x) 30px; color: var(--ice); }
+.wv-stat { display: inline-flex; align-items: center; gap: 12px; font-size: var(--stat); white-space: nowrap; }
+.wv-stat svg { width: 20px; height: 20px; flex: none; }
+
+@media (min-width: 1600px) { .wv { --h1: 68px; --lede: 18px; --stat: 15px; --pad-x: 64px; --stats-x: 96px; --btn-h: 48px; } .wv-lede { max-width: 560px; } .wv-copy { max-width: 1040px; } }
+@media (min-width: 901px) and (max-width: 1279.98px) { .wv { --h1: 44px; --lede: 15px; --stat: 12.5px; --pad-x: 28px; --stats-x: 36px; --gap: 56px; } .wv-pill { padding: 0 14px; font-size: 13px; } }
+@media (min-width: 901px) and (max-height: 760px) { .wv { --h1: 42px; --gap: 36px; } .wv-badge { margin-bottom: 10px; } .wv-actions { margin-top: 16px; } .wv-stats { padding-bottom: 20px; } }
+
+@media (max-width: 900px) {
+  .wv { --h1: 40px; --lede: 16px; --stat: 15px; --pad-x: 16px; --stats-x: 20px; --gap: 36px; --btn-h: 48px; }
+  .wv-head { grid-template-columns: 1fr auto; gap: 8px; }
+  .wv-nav { display: none; }
+  .wv-logo { height: 30px; }
+  .wv-head .wv-btn { height: 44px; }
+  .wv-hero { min-height: 26rem; padding: 20px 20px var(--gap); }
+  .wv-stats { flex-direction: column; gap: 14px; }
+  .wv::after { height: 72%; background: linear-gradient(transparent, rgb(6 10 22 / .82) 34%, var(--ink)); }
+}
+@media (max-width: 560px) {
+  .wv { --h1: min(34px, (100vw - 40px) / 11.4); }
+  .wv-line { padding-inline: 0; white-space: nowrap; }
+  .wv-actions { flex-direction: column; width: 100%; }
+  .wv-btn { width: 100%; }
+  .wv-head .wv-btn { width: auto; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wv-in { animation: wv-soft 1.05s cubic-bezier(.16, 1, .3, 1) var(--d, .08s) both; }
+  .wv-in-pop { animation-name: wv-pop; }
+  .wv-in-mask { animation-name: wv-mask; }
+  .wv-in-btn { animation-name: wv-btn; }
+  .wv-in-side { animation-name: wv-side; }
+}
+@keyframes wv-soft { from { opacity: 0; transform: translateY(14px); } }
+@keyframes wv-pop { 0% { opacity: 0; transform: scale(.9); } 70% { transform: scale(1.03); } }
+@keyframes wv-mask { from { opacity: 0; transform: translateY(40%); } }
+@keyframes wv-btn { from { opacity: 0; transform: translateY(18px) scale(.94); } }
+@keyframes wv-side { from { opacity: 0; transform: translateX(22px); } }

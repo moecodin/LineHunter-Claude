@@ -1,0 +1,83 @@
+/* Discord, bottom right: a card that shrinks down into a round button when closed, and grows back from it. */
+.dc {
+  --dc-size: 3.5rem;
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  width: var(--dc-size);
+  height: var(--dc-size);
+  filter: drop-shadow(0 .75rem 1.5rem rgb(3 7 20 / .7));
+  view-transition-name: lh-discord;
+}
+.dc-fab {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--indigo);
+  border: 1px solid rgb(255 255 255 / .2);
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity .16s, background-color .15s, transform .15s cubic-bezier(.23, 1, .32, 1);
+}
+.dc-fab svg { width: 1.625rem; height: 1.625rem; fill: currentColor; }
+.dc-fab:active { transform: scale(.94); }
+@media (hover: hover) and (pointer: fine) { .dc-fab:hover { background: #3a1fc4; transform: scale(1.06); } }
+.dc.is-open .dc-fab { opacity: 0; visibility: hidden; transition: opacity .16s, visibility 0s .16s; }
+
+/* Closed, the card is clipped down to exactly the round button underneath it */
+.dc-card {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: min(100vw - 2.5rem, 23rem);
+  padding: 1.25rem;
+  background: var(--indigo);
+  border-radius: .875rem;
+  opacity: 0;
+  visibility: hidden;
+  clip-path: inset(calc(100% - var(--dc-size)) 0 0 calc(100% - var(--dc-size)) round calc(var(--dc-size) / 2));
+  transition: clip-path .3s cubic-bezier(.32, .72, 0, 1), background-color .22s, opacity .1s linear .2s, visibility 0s linear .3s;
+}
+.dc.is-open .dc-card {
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--miss);
+  opacity: 1;
+  visibility: visible;
+  clip-path: inset(0 0 0 0 round .875rem);
+  transition: clip-path .38s cubic-bezier(.16, 1, .3, 1), background-color .2s, opacity .06s linear, visibility 0s;
+}
+.dc-body { opacity: 0; transition: opacity .1s; }
+.dc.is-open .dc-body { opacity: 1; transition: opacity .22s ease-out .1s; }
+
+.dc h2 { margin: 0; padding-right: 2.25rem; font: 600 1.375rem/1.15 var(--display); color: var(--ice); }
+.dc p { margin: .5rem 0 0; font-size: .9375rem; color: var(--haze, #c3cce9); text-wrap: pretty; }
+.dc-close { position: absolute; top: .375rem; right: .375rem; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; background: none; border: 0; border-radius: .5rem; color: var(--mist); cursor: pointer; transition: color .15s, background-color .15s; }
+@media (hover: hover) and (pointer: fine) { .dc-close:hover { background: var(--navy); color: var(--ice); } }
+.dc-join { display: flex; align-items: center; justify-content: center; gap: .625rem; min-height: 2.75rem; margin-top: 1rem; padding: 0 1rem; background: var(--indigo); border-radius: .5rem; color: #fff; font-weight: 700; text-decoration: none; transition: background-color .15s; }
+.dc-join svg { width: 1.25rem; height: 1.25rem; flex: none; fill: currentColor; }
+@media (hover: hover) and (pointer: fine) { .dc-join:hover { background: #3a1fc4; } }
+.dc .dc-note { margin-top: .625rem; font-size: .8125rem; color: var(--mist); }
+
+@media (max-width: 720px) {
+  .dc { --dc-size: 3.25rem; right: 1rem; bottom: 1rem; }
+  .dc-card { width: calc(100vw - 2rem); padding: 1rem; }
+  .dc h2 { font-size: 1.125rem; }
+  .dc-body > p:not(.dc-note) { display: none; }
+  .dc-join { margin-top: .75rem; }
+}
+/* Stays clear of the bet dock on the player page */
+@media (max-width: 1000px) { body:has(.rs-dock.is-shown) .dc { bottom: 5.5rem; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .dc-fab, .dc-card, .dc-body, .dc.is-open .dc-card, .dc.is-open .dc-body { transition: none !important; }
+}
+
+/* The player sheet on the Streak Board covers the whole phone screen, so the button steps aside */
+body:has(#backdrop:not([hidden])) .dc { visibility: hidden; }
+
+/* Room at the end of the page, so the round button never sits on the footer text on phones */
+@media (max-width: 720px) { .site-footer { padding-bottom: 5.5rem; } }

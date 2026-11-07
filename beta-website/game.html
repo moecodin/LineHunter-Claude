@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="auth.js"></script>
+  <title>Line Hunter | Game</title>
+  <meta name="description" content="Props, injuries and the team matchup for one of tonight's NBA games.">
+  <link rel="icon" href="assets/logo-mark.png">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="streak-board.css">
+  <link rel="stylesheet" href="player.css">
+  <link rel="stylesheet" href="game.css">
+  <link rel="stylesheet" href="transition.css">
+  <link rel="stylesheet" href="discord.css">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="hunt-list.css">
+  <link rel="stylesheet" href="game-transition.css">
+  <link rel="expect" href="#page-ready" blocking="render">
+  <script src="transition.js"></script>
+</head>
+<body>
+  <p class="sample-strip">Design preview. All players, games, lines, odds and results on this page are made up.</p>
+
+  <header class="site-header">
+    <a href="index.html" id="logo-home" aria-label="Line Hunter home"><img class="logo" src="assets/logo-lockup.png" alt="Line Hunter" width="396" height="72"></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" id="nav-home">Home</a>
+      <a href="streak-board.html" data-wipe>Streak Board</a>
+    </nav>
+  </header>
+
+  <main class="rs-page gm-page" id="game"></main>
+
+  <footer class="site-footer">
+    <p>Line Hunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+    <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="league.js"></script>
+  <script src="game.js"></script>
+  <script src="discord.js"></script>
+  <script src="auth-ui.js"></script>
+  <script src="hunt-list.js"></script>
+  <!-- Holds the first paint until the scripts above have built the page, so the card has something to grow into -->
+  <div id="page-ready" hidden></div>
+</body>
+</html>

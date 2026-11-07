@@ -1,0 +1,127 @@
+/* The front page: wave background, the hook on the left, and on the right a slanted stat sheet
+   beside two columns of 9:16 player blocks. The sheet and the columns share one plane and one height. */
+.wl {
+  --h: min(100vh - 9rem, 37vw, 60rem);
+  --gap: .75rem;
+  --bw: calc((var(--h) - var(--gap)) / 2 * 9 / 16);
+  --col-h: var(--h);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 2rem);
+  padding: 1rem clamp(1.25rem, 3vw, 3rem) 1.5rem;
+  overflow: hidden;
+  background: var(--ink);
+}
+@supports (height: 100svh) {
+  .wl { --h: min(100svh - 9rem, 37vw, 60rem); min-height: calc(100svh - 2rem); }
+}
+
+/* The black-and-white video is tinted with the logo's indigo, then laid over the page color */
+.wl-photo { position: absolute; inset: 0; z-index: -1; mix-blend-mode: screen; isolation: isolate; background: #000; }
+.wl-photo video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.wl-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #6d66f0, #8f93f5 55%, #4a46d0); mix-blend-mode: multiply; }
+/* Keeps the words readable over the wave, and fades into the page at the bottom */
+.wl::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgb(6 10 22 / .86), rgb(6 10 22 / .55) 34%, transparent 58%), linear-gradient(transparent 86%, var(--ink)); }
+
+.wl-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1.5rem; }
+.wl-brand { position: relative; display: block; margin-right: 2.5rem; }
+.wl-logo { display: block; width: auto; height: 2.75rem; margin-left: -.5rem; mix-blend-mode: lighten; }
+
+.wl-nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+.wl-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1.125rem;
+  overflow: hidden;
+  background: linear-gradient(105deg, #060a16 0%, #14234c 52%, #2b3a6c 100%);
+  border: 1px solid rgb(147 161 203 / .55);
+  border-radius: .5rem;
+  color: var(--ice);
+  font-size: .9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color .3s, box-shadow .3s, transform .12s cubic-bezier(.23, 1, .32, 1);
+}
+.wl-btn::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgb(216 223 245 / .16) 50%, transparent 70%); transform: translateX(-120%); transition: transform .6s ease; }
+.wl-btn:active { transform: scale(.97); }
+@media (hover: hover) and (pointer: fine) {
+  .wl-btn:hover { border-color: var(--ice); }
+  .wl-btn:hover::before { transform: translateX(120%); }
+}
+
+.wl-hero { flex: 1; display: grid; grid-template-columns: clamp(19rem, 24vw, 38rem) auto; justify-content: center; align-items: center; gap: clamp(1.5rem, 3vw, 3rem); padding-top: 1rem; }
+
+/* The hook */
+.wl-discord { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; padding: 0 .875rem; background: rgb(11 18 41 / .8); border: 1px solid var(--miss); border-radius: 999px; color: var(--ice); font: inherit; font-size: .875rem; font-weight: 500; cursor: pointer; transition: border-color .15s; }
+.wl-discord svg { width: 1.125rem; height: 1.125rem; fill: currentColor; }
+@media (hover: hover) and (pointer: fine) { .wl-discord:hover { border-color: var(--lift); } }
+.wl-copy h1 { margin: 1rem 0 0; font: 600 clamp(2.5rem, 3.3vw, 5.5rem)/1.06 var(--display); color: #fff; text-wrap: balance; }
+.wl-sub { margin-top: 1rem; font-size: clamp(1rem, 1.2vw, 1.5rem); line-height: 1.45; color: var(--haze, #c3cce9); text-wrap: pretty; }
+.wl-start { min-height: 3.25rem; margin-top: 1.5rem; padding: 0 2rem; font-size: 1.0625rem; box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .45); }
+
+/* One slanted plane, so every top and bottom edge stays lined up */
+.wl-stage { perspective: 1800px; min-width: 0; padding-right: clamp(1.5rem, 4vw, 7rem); }
+.wl-plane { display: flex; justify-content: flex-start; gap: var(--gap); height: var(--h); transform: rotateY(-13deg) rotateX(5deg) rotateZ(1.5deg); transform-origin: left center; pointer-events: none; user-select: none; -webkit-user-select: none; }
+
+/* View only: the picture takes no clicks. A soft shadow lifts it off the wave. */
+.wl-shot { position: relative; flex: none; width: calc(var(--h) * 1560 / 1670); height: var(--h); margin: 0; }
+.wl-frame { position: relative; height: 100%; overflow: hidden; background: var(--ink); border: 1px solid var(--miss); border-radius: .875rem; box-shadow: 0 1.5rem 3rem rgb(0 0 0 / .6), 0 .375rem 1rem rgb(0 0 0 / .4); }
+.wl-frame img { display: block; width: 100%; max-width: none; height: auto; }
+
+/* Two columns running opposite ways. Each list is doubled, so moving by half its length loops without a jump.
+   Blocks fade out into the top edge and back in from the bottom. */
+.rl-col { --bleed: 1.5rem; flex: none; width: calc(var(--bw) + var(--bleed) * 2); height: var(--col-h); margin-inline: calc(var(--bleed) * -1); overflow: hidden; -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent); }
+.rl-track { display: flex; flex-direction: column; gap: var(--gap); padding: 0 var(--bleed) var(--gap); }
+/* Owner's rule: these two columns scroll forever and never stop, on every device and browser.
+   signin-reel.js moves them, because some browser setups froze a CSS animation here. */
+
+/* A featured player block, 9:16. Type scales with the block's width. */
+.rl-card { position: relative; flex: none; display: flex; flex-direction: column; width: var(--bw); aspect-ratio: 9 / 16; padding: .9em; overflow: hidden; background: var(--panel); border: 1px solid var(--miss); border-radius: 1em; box-shadow: 0 .75rem 1.5rem rgb(0 0 0 / .55); color: var(--ice); font-size: calc(var(--bw) * .082); line-height: 1.25; }
+.rl-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 29%; background: var(--team); clip-path: polygon(0 0, 100% 0, 100% 62%, 0 100%); }
+.rl-who { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+.rl-avatar { display: grid; place-items: center; width: 3em; height: 3em; background: var(--ink); border-radius: 50%; font: 600 1em/1 var(--display); }
+.rl-tag { padding: .15em .5em; background: var(--ink); border-radius: .3em; font-size: .78em; font-weight: 500; color: var(--ice); }
+.rl-name { position: relative; margin-top: 2.5em; font: 600 1.25em/1.1 var(--display); }
+.rl-meta { font-size: .86em; color: var(--mist); }
+.rl-avg { margin-top: .6em; font: 600 2.7em/1 var(--display); }
+.rl-label { font-size: .86em; color: var(--haze, #c3cce9); }
+.rl-prop { margin-top: .5em; font-size: .92em; font-weight: 500; }
+.rl-card .chart { flex: 1; height: auto; min-height: 0; margin-top: .7em; gap: 2px; }
+.rl-card .bar { animation: none; }
+
+/* Stacked: sheet first, then the two columns side by side */
+@media (max-width: 1000px) {
+  .wl { --gap: .625rem; --bw: min((100vw - 2.5rem - var(--gap)) / 2, 14rem); --col-h: calc(var(--bw) * 32 / 9 + var(--gap)); }
+  /* Stacked, the copy sits across the full width, so the whole top gets the darker layer */
+  .wl::after { background: linear-gradient(rgb(6 10 22 / .84) 34rem, transparent 52rem), linear-gradient(transparent 86%, var(--ink)); }
+  .wl-hero { grid-template-columns: minmax(0, 1fr); padding-top: 1.5rem; }
+  .wl-copy { max-width: 34rem; }
+  .wl-copy h1 { font-size: clamp(2.5rem, 10.5vw, 4rem); }
+  .wl-start { width: 100%; max-width: 24rem; }
+  .wl-stage { perspective: 1400px; padding-right: 0; }
+  .wl-plane { height: auto; flex-wrap: wrap; justify-content: center; transform: none; }
+  .wl-shot { width: min(100%, 40rem); height: auto; margin-bottom: 1.25rem; transform: rotateY(-8deg) rotateX(4deg); }
+  .wl-frame { height: auto; }
+}
+@media (max-width: 720px) {
+  .wl-logo { height: 2.25rem; }
+  .wl-nav { width: 100%; }
+  .wl-btn { flex: 1; justify-content: center; padding: 0 .375rem; font-size: .8125rem; }
+  /* The phone capture, trimmed of its header and right edge */
+  .wl-frame { aspect-ratio: 970 / 800; }
+  .wl-frame img { width: 103.09%; margin-top: -23.51%; }
+}
+
+/* Short entrance, once per load. The columns keep running underneath it. */
+@media (prefers-reduced-motion: no-preference) {
+  .wl-copy > * { animation: wl-in .8s cubic-bezier(.23, 1, .32, 1) var(--d, 0s) both; }
+  .wl-stage { animation: wl-in 1s cubic-bezier(.23, 1, .32, 1) .25s both; }
+}
+@keyframes wl-in { from { transform: translateY(1rem); } } /* movement only: the words stay visible even if a browser freezes it */
+
+.wl-sub b { font-weight: 700; color: #fff; }
