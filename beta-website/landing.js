@@ -1,7 +1,7 @@
 // Shared by the three landing page examples. Uses ALL and GAMES_TODAY from data.js and script.js.
 (function () {
   // Paste the real invite here (for example https://discord.gg/abc123) and every Discord button uses it.
-  const DISCORD_URL = "https://discord.gg/NdPXKyUxV";
+  const DISCORD_URL = "https://discord.gg/Ab6xvcak3N";
   const CLOSED_KEY = "lh-discord-closed";
   const OPEN_DELAY = 1600;
 
