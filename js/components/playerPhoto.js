@@ -53,3 +53,14 @@ function fillPlayerAvatar(el, { id, first, last, team } = {}) {
   }
   loadPlayerPhoto(el);
 }
+
+// The same circle as markup for list rows built as HTML strings (The Board): initials in the team color with the photo on top.
+// A missing match or a photo that fails to load removes the <img> and leaves the initials.
+function playerAvatarHtml({ first, last, team, className = "" } = {}) {
+  const nbaId = typeof NBA_PLAYER_IDS === "object" ? NBA_PLAYER_IDS[nbaNameKey(first, last)] : null;
+  const style = team && typeof teamAvatarStyle === "function" ? ` data-avatar-team="${team}" style="${teamAvatarStyle(team)}"` : "";
+  const img = nbaId && PLAYER_PHOTO_URL
+    ? `<img src="${PLAYER_PHOTO_URL.replace("{id}", nbaId)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`
+    : "";
+  return `<span class="lh-avatar ${className}" aria-hidden="true"${style}>${playerInitials(first, last)}${img}</span>`;
+}

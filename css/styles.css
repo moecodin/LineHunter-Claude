@@ -7098,3 +7098,10 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 /* Segmented wells: no outer outline; the darker tint stays and the selected option keeps its inner box */
 .lh-window-toggle, .lh-pp-ctl #playerPropTabs, .lh-board-tabs.lh-tabs.nav-underline,
 .lh-pp .lh-window-toggle, .lh-gp .lh-window-toggle { border-color: transparent; }
+
+/* The Board: a player circle at the left of each row (40px; 36px from 768px), the pick / hit line indented under the name on phones */
+.lh-bd-player { flex-direction: row; align-items: center; gap: 0.65rem; }
+.lh-bd-who { display: flex; flex-direction: column; min-width: 0; }
+.lh-bd-avatar { width: 40px; height: 40px; font-size: 0.8rem; }
+@media (min-width: 768px) { .lh-bd-avatar { width: 36px; height: 36px; font-size: 0.75rem; } }
+@media (max-width: 767.98px) { .lh-bd-pick { margin-left: calc(40px + 0.65rem); } }

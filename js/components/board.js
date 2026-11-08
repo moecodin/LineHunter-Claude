@@ -243,9 +243,12 @@ function boardHeadHtml(item, isOpen) {
 
   return `
       <div class="lh-bd-player">
+        ${typeof playerAvatarHtml === "function" ? playerAvatarHtml({ first: name.first, last: name.last, team: row.team, className: "lh-bd-avatar" }) : ""}
+        <span class="lh-bd-who">
         <span class="lh-bd-first">${boardEsc(name.first)}</span>
         <span class="lh-bd-lastline"><span class="lh-bd-last">${boardEsc(name.last)}</span> ${teamBadgeForMatchup(row.team, row.matchup)}${gtd}</span>
         <span class="lh-bd-meta">${boardEsc(row.matchup)}${time ? ` · ${time}` : ""}</span>
+        </span>
       </div>
       <div class="lh-bd-pick is-${side}"><b>${sideWord} ${lineText(item.line)} <em class="lh-bd-statshort">${BOARD_STAT_SHORT[row.code] || row.code.toUpperCase()}</em></b><span>${statWord}</span></div>
       <div class="lh-bd-hit"><b>${stats.hits}/${stats.totalGames}</b><span class="lh-bd-graph">${miniGraph(stats.games)}</span><span class="lh-bd-window">L${window}</span></div>
