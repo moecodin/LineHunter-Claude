@@ -157,7 +157,9 @@
     .pk b { display: block; font-weight: 600; color: var(--strong); }
     .pk span { font-size: 0.75rem; color: var(--mist); }
     .hit { display: flex; align-items: center; gap: 0.5rem; }
-    .hit b { font-weight: 700; min-width: 2.6rem; }
+    .hit b { font: 600 1.15rem "Clash Display"; min-width: 3rem; }
+    .hit .rec { font-size: 0.75rem; color: var(--mist); min-width: 2.2rem; }
+    a.row { color: inherit; text-decoration: none; }
     .mini { display: flex; align-items: flex-end; gap: 2px; height: 22px; }
     .mini i { width: 5px; background: var(--over); }
     .mini i.m { background: var(--under); }
@@ -216,7 +218,7 @@
       .crumbs .pn a:first-child { display: none; }
       .v-right { grid-template-columns: 1fr; }
       .rowhead { display: none; }
-      .row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who sc" "pk odds" "hit hit"; gap: 0.4rem 0.75rem; }
+      .row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who who" "pk odds" "hit hit"; gap: 0.4rem 0.75rem; }
       .row > .who { grid-area: who; } .row > .sc { grid-area: sc; } .row > .pk { grid-area: pk; } .row > .odds { grid-area: odds; align-items: flex-end; }
       .row > .hit { grid-area: hit; }
       .row > .hl, .row > .add, .row > .chev { display: none; }
@@ -276,7 +278,7 @@
         <div><span class="label">Last meeting</span><b>Nov 2 · PHI 126–107</b></div>
       </div>
 
-      <nav class="jump" aria-label="Sections"><a href="#picks">Model picks</a><a href="#board">The Board</a><a href="#injuries">Injuries</a><a href="#ratings">Ratings</a><a href="#meetings">Meetings</a></nav>
+      <nav class="jump" aria-label="Sections"><a href="#picks">Model picks</a><a href="#board">Top hit rates</a><a href="#injuries">Injuries</a><a href="#ratings">Ratings</a><a href="#meetings">Meetings</a></nav>
 
       <div class="layout">
         <div class="main">
@@ -309,23 +311,22 @@
             </div>
           </section>
 
-          <!-- THE BOARD for this game -->
-          <section class="panel" id="board" aria-label="The Board">
+          <!-- TOP HIT RATES: this game's props with the highest hit rates (The Board itself stays on the Today page) -->
+          <section class="panel" id="board" aria-label="Top hit rates">
             <div class="phead">
-              <h2 class="ptitle">The Board <span class="sub">58 props in this game · open a row for the breakdown</span></h2>
-              <div class="tabs" role="group" aria-label="Team"><button aria-pressed="true">All <small>58</small></button><button aria-pressed="false">PHI <small>31</small></button><button aria-pressed="false">CHI <small>27</small></button></div>
+              <h2 class="ptitle">Top hit rates <span class="sub">this game's props, highest first</span></h2>
+              <div class="tabs" role="group" aria-label="Team"><button aria-pressed="true">All</button><button aria-pressed="false">PHI</button><button aria-pressed="false">CHI</button></div>
             </div>
             <div class="controls">
               <div class="tabs" role="group" aria-label="Stat"><button aria-pressed="true">All</button><button aria-pressed="false">PTS</button><button aria-pressed="false">REB</button><button aria-pressed="false">AST</button><button aria-pressed="false">3PM</button><button aria-pressed="false">PRA</button></div>
               <div class="tabs" role="group" aria-label="Games"><button aria-pressed="false">L5</button><button aria-pressed="true">L10</button><button aria-pressed="false">L20</button></div>
-              <span class="chip"><i class="bi bi-funnel"></i> Filter</span><span class="chip"><i class="bi bi-arrow-down-up"></i> Hunt Score</span><span class="chip"><i class="bi bi-bank"></i> Best odds</span>
             </div>
             <div class="rows">
-              <div class="rowhead"><span>Player</span><span>Pick</span><span>L10 hit rate</span><span style="text-align:right">Hunt line</span><span style="text-align:right">Score</span><span>Best odds</span><span></span><span></span></div>
+              <div class="rowhead"><span>Player</span><span>Pick</span><span>Hit rate · L10</span><span style="text-align:right">Avg</span><span></span><span>Best odds</span><span></span><span></span></div>
               <div id="rows"></div>
             </div>
-            <div class="more"><button class="btn" type="button">Show more (48)</button></div>
-            <p class="note">Based on past results and a simulation, not a guarantee. Gambling problem? Call 1-800-GAMBLER.</p>
+            <div class="more"><button class="btn" type="button">Show 8 more</button></div>
+            <p class="note">Every prop for every game, with Hunt Scores, is on The Board: <a href="#">Today ›</a> or <a href="#">Tools › The Board ›</a> · Past results, not a prediction. Gambling problem? Call 1-800-GAMBLER.</p>
           </section>
         </div>
 
@@ -388,17 +389,19 @@
       const h = 30 + ((i * 37 + seed * 11) % 70);
       return `<i class="${hit ? "" : "m"}" style="height:${h}%"></i>`;
     }).join("");
-    document.getElementById("rows").innerHTML = ROWS.map(([first, last, team, side, pick, stat, hits, avg, hl, edge, score, odds, book, more], i) => `
-      <div class="row" tabindex="0">
+    // Highest hit rate first (ties: the higher average over the line for Overs / under it for Unders), top 8.
+    const sorted = ROWS.map((row, i) => ({ row, i })).sort((a, b) => b.row[6] - a.row[6] || a.i - b.i).slice(0, 8);
+    document.getElementById("rows").innerHTML = sorted.map(({ row: [first, last, team, side, pick, stat, hits, avg, hl, edge, score, odds, book, more], i }) => `
+      <a class="row" href="#" title="Open ${first} ${last}'s page on this prop">
         <div class="who"><span class="av ${team}" data-player-id="">${first[0]}${last[0]}</span><div class="nm"><b>${first} ${last}</b><span>${team.toUpperCase()} · ${team === "phi" ? "@ CHI" : "vs PHI"}</span></div></div>
         <div class="pk ${side}"><b>${pick}</b><span>${stat}</span></div>
-        <div class="hit"><b class="${hrClass(hits * 10)}">${hits}/10</b><span class="mini">${mini(hits, i)}</span></div>
-        <div class="hl"><b>${hl.toFixed(1)}</b><span class="${edge.startsWith("+") ? "up" : "dn"}">${edge}</span></div>
-        <div class="sc" style="color:var(${side === "o" ? "--over-text" : "--under-text"})">${score}</div>
+        <div class="hit"><b class="${hrClass(hits * 10)}">${hits * 10}%</b><span class="rec">${hits}/10</span><span class="mini">${mini(hits, i)}</span></div>
+        <div class="hl"><b>${avg.toFixed(1)}</b><span class="muted">avg</span></div>
+        <div></div>
         <div class="odds"><b>${odds}</b><span>${book} · ${more} more</span></div>
-        <button class="add" type="button">+ Add</button>
-        <i class="bi bi-chevron-down chev"></i>
-      </div>`).join("");
+        <button class="add" type="button" onclick="event.preventDefault()">+ Add</button>
+        <i class="bi bi-chevron-right chev"></i>
+      </a>`).join("");
 
     // Team ratings (real, 2026-27): [stat, PHI value, PHI rank, CHI value, CHI rank, higher is better?]
     const RATINGS = [
