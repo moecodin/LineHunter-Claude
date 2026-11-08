@@ -55,6 +55,7 @@ function describeTime(game) {
 function showMessage(text, colorClass) {
   const gamesList = document.getElementById("games-list");
   gamesList.innerHTML = `<div class="lh-games-message ${colorClass}">${text}</div>`;
+  if (typeof renderGameWheel === "function") renderGameWheel([]); // the wheel hides; the message shows in its place
   updateGamesCarousel(); // no cards = no arrows
 }
 
@@ -123,6 +124,7 @@ async function fillGameCardExtras(games, day) {
   if (season && typeof fetchStandings === "function") {
     fetchStandings(season).then((records) => {
       if (day !== toApiDate(selectedDate) || !records) return;
+      if (typeof setGameWheelRecords === "function") setGameWheelRecords(records);
       track.querySelectorAll("[data-record]").forEach((el) => {
         const record = records[el.dataset.record];
         el.textContent = record && record.overall ? record.overall : "";
@@ -132,14 +134,17 @@ async function fillGameCardExtras(games, day) {
   try {
     const json = await bdlGet(`${ODDS_URL}?${games.map((game) => `game_ids[]=${game.id}`).join("&")}`);
     if (day !== toApiDate(selectedDate)) return;
+    const wheelOdds = {};
     games.forEach((game) => {
       const row = pickOddsRow((json.data || []).filter((item) => item.game_id === game.id));
+      if (row) wheelOdds[game.id] = row;
       const el = track.querySelector(`[data-game-id="${game.id}"] [data-odds-line]`);
       if (!el) return;
       el.textContent = row
         ? `${game.home_team.abbreviation} ${spreadText(Number(row.spread_home_value))} · O/U ${Number(row.total_value)}`
         : "Lines not posted yet";
     });
+    if (typeof setGameWheelOdds === "function") setGameWheelOdds(wheelOdds);
   } catch (error) {
     track.querySelectorAll("[data-odds-line]").forEach((el) => { el.textContent = ""; });
   }
@@ -207,7 +212,12 @@ function renderPager() {
 // "async" lets this function wait for the internet with "await".
 async function loadGames() {
   // Update the heading and the pager for the chosen day.
-  document.getElementById("games-date-label").textContent = dayLabel(selectedDate);
+  const label = dayLabel(selectedDate);
+  document.getElementById("games-date-label").textContent =
+    label === "Today" ? "Tonight's games" : label === "Tomorrow" ? "Tomorrow's games" : `Games on ${label}`;
+  const eyebrow = document.getElementById("gamesEyebrow");
+  const longDate = selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  if (eyebrow) eyebrow.textContent = longDate;
   renderPager();
 
   const day = toApiDate(selectedDate);
@@ -287,6 +297,8 @@ async function loadGames() {
       setUpQuickLook(col, game);
       gamesList.appendChild(col);
     });
+    if (eyebrow) eyebrow.textContent = `${longDate} · ${games.length} game${games.length === 1 ? "" : "s"}`;
+    if (typeof renderGameWheel === "function") renderGameWheel(games, describeTime);
     fillGameCardExtras(games, day);
     updateGamesCarousel();
     markPeekingCards();

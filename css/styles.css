@@ -6135,3 +6135,138 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 
 /* Focus rings and text links in periwinkle */
 :focus-visible { outline-color: var(--lh-accent); }
+
+/* Sentence case for headings (the beta: size and the two fonts make the hierarchy, never heavy capitals).
+   Team abbreviations are capitals in the text itself, so .lh-display keeps them. */
+.lh-display { text-transform: none; font-weight: 600; letter-spacing: 0; }
+.lh-top-title, .lh-board-title { text-transform: none; font-family: var(--lh-font-heading); font-weight: 600; letter-spacing: 0; }
+
+/* The beta's hero head on the Today page: periwinkle caps eyebrow over a big Clash Display title */
+.lh-eyebrow {
+  font: 600 0.95rem/1.2 var(--lh-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lh-accent);
+}
+.lh-hero-title {
+  font: 600 calc(clamp(2.75rem, 6vw, 4.75rem) * 0.82)/1.1 var(--lh-font-display);
+  color: var(--lh-strong);
+  margin-top: 0.5rem;
+}
+
+/* ---------- The game wheel (js/components/gameWheel.js; the beta's tonight.html) ---------- */
+#wheelWrap:not([hidden]) + .lh-games-carousel { display: none; }  /* the wheel replaces the card row once games load */
+.lh-wheel-wrap { overflow: hidden; padding-block: 0.5rem 0; }
+.lh-wheel {
+  --card-w: clamp(13.5rem, 40vw, 27rem);
+  --card-h: clamp(9rem, 26vw, 15.5rem);
+  position: relative;
+  height: calc(var(--card-h) + 1.5rem);
+  margin: 1rem auto 0;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.lh-wheel.is-dragging { cursor: grabbing; }
+.lh-wheel:focus-visible { outline: 2px solid var(--lh-accent); outline-offset: -2px; border-radius: var(--lh-r-panel); }
+.lh-wcard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--card-w);
+  height: var(--card-h);
+  margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--lh-surface-2);
+  border-radius: 0.9rem;
+  color: inherit;
+  text-decoration: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+  cursor: inherit;
+}
+.lh-wcard[aria-current] { cursor: pointer; box-shadow: 0 0 0 2px var(--lh-strong); }
+.lh-wcard:focus-visible { outline: 2px solid var(--lh-accent); outline-offset: 3px; }
+.lh-wcard-time {
+  padding: clamp(0.45rem, 1vw, 0.7rem) 0.8rem;
+  background: var(--lh-surface);
+  font: 600 clamp(0.85rem, 1.5vw, 1.2rem)/1.2 var(--lh-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--lh-muted);
+}
+.lh-wcard-body {
+  position: relative;
+  isolation: isolate;
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--away);
+  padding-inline: clamp(0.75rem, 2vw, 1.75rem);
+}
+/* The slant from the logo: away color, the home color as a wedge, a thin ice seam between */
+.lh-wcard-body::before,
+.lh-wcard-body::after { content: ""; position: absolute; inset: 0; z-index: -1; }
+.lh-wcard-body::before { background: var(--home); clip-path: polygon(58% 0, 100% 0, 100% 100%, 42% 100%); }
+.lh-wcard-body::after { background: #d8dff5; clip-path: polygon(57.5% 0, 58.5% 0, 42.5% 100%, 41.5% 100%); }
+.lh-wteam { display: flex; flex-direction: column; gap: 0.15rem; color: var(--away-text); }
+.lh-wteam.is-home { align-items: flex-end; color: var(--home-text); }
+.lh-wteam b { font: 600 calc(clamp(2rem, 5.6vw, 4.5rem) * 0.88)/1 var(--lh-font-display); }
+.lh-wml { font-size: clamp(0.875rem, 1.5vw, 1.25rem); font-weight: 500; min-height: 1.2em; }
+.lh-wat {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: clamp(1.5rem, 3vw, 2.25rem);
+  height: clamp(1.5rem, 3vw, 2.25rem);
+  transform: translate(-50%, -50%);
+  background: #060a16;
+  color: #d8dff5;
+  border-radius: 50%;
+  font-size: clamp(0.8125rem, 1.4vw, 1.0625rem);
+  font-weight: 600;
+}
+.lh-wcard-dim { position: absolute; inset: 0; background: var(--lh-bg); pointer-events: none; }
+
+.lh-wheel-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 2rem; margin-top: 1.25rem; }
+.lh-wheel-detail { min-height: 3rem; font-size: 1rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem; }
+.lh-wlabel { flex-basis: 100%; font-size: 0.8125rem; color: var(--lh-muted); }
+.lh-wrec { color: var(--lh-faint); }
+.lh-wline { color: var(--lh-strong); font-weight: 500; }
+.lh-wgo { color: var(--lh-accent); font-weight: 600; text-decoration: underline; text-underline-offset: 0.2em; }
+.lh-wheel-controls { display: flex; align-items: center; gap: 0.5rem; }
+.lh-wheel-hint { margin-right: 0.5rem; font-size: 0.8125rem; color: var(--lh-muted); }
+.lh-wheel-count { min-width: 4.25rem; text-align: center; font-size: 0.9375rem; }
+.lh-wheel-btn {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  background: var(--lh-surface);
+  border: 1px solid var(--lh-border);
+  border-radius: var(--lh-r-control);
+  color: var(--lh-strong);
+  transition: border-color 0.15s, transform 0.12s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.lh-wheel-btn:active { transform: scale(0.96); }
+@media (hover: hover) and (pointer: fine) { .lh-wheel-btn:hover { border-color: var(--lh-muted); } }
+@media (max-width: 767.98px) {
+  .lh-wheel-hint { display: none; }
+  .lh-wheel-foot { flex-direction: column; align-items: stretch; }
+  .lh-wheel-controls { justify-content: center; }
+}
+
+/* Navbar links as the beta's quiet pills: mist text, the selected one in navy */
+.lh-nav-links { gap: 0.25rem; }
+.lh-nav-link { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.75rem; border-radius: var(--lh-r-control); }
+.lh-nav-link.active { background: var(--lh-fill); color: var(--lh-on-fill); }
+.lh-nav-link.active:not(.dropdown-toggle)::after { display: none; }
+.lh-nav-link.dropdown-toggle.active { text-decoration: none; }
