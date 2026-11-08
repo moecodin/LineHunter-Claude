@@ -22,23 +22,46 @@ function playerHuntPick(data, playerId, code) {
   return props.sort((a, b) => b.score - a.score)[0] || null;
 }
 
-// Beside the name: score, pick, chance + odds, Add, then the three reasons.
+// The verdict (the beta's wedge): the pick and its context on the navy side; on the indigo wedge the Hunt Score, the chance,
+// the book's fair chance and the edge, then the Hunt line; under both the engine's three reasons, then Add.
+// fair / edge / projection are only shown when the engine sent them.
 function playerHuntHeadHtml(prop) {
   const best = huntBestOdds(prop);
+  const num = (n) => Number.isFinite(n);
+  const role = (prop.factors || []).find((factor) => factor.key === "role" && factor.out);
+  const b2b = (prop.factors || []).some((factor) => factor.key === "b2b");
+  const proj = prop.projection || {};
+  const readout = [
+    `<div><span class="lh-vd-k">Hunt Score</span><span class="lh-vd-n is-score">${prop.score}</span><span class="lh-vd-s">of 100</span></div>`,
+    num(prop.chance) ? `<div><span class="lh-vd-k">Chance</span><span class="lh-vd-n">${prop.chance}%</span><span class="lh-vd-s">the sim's ${prop.side}</span></div>` : "",
+    num(prop.fair) ? `<div><span class="lh-vd-k">Book's fair</span><span class="lh-vd-n">${prop.fair}%</span><span class="lh-vd-s">${best ? `${best.odds > 0 ? `+${best.odds}` : best.odds} at ${best.book}` : "cut taken out"}</span></div>` : "",
+    num(prop.edge) ? `<div><span class="lh-vd-k">Edge</span><span class="lh-vd-n">${prop.edge >= 0 ? "▲" : "▼"}${Math.abs(prop.edge)}</span><span class="lh-vd-s">points</span></div>` : "",
+  ].join("");
+  const huntLine = num(proj.mean)
+    ? `Hunt line ${proj.mean.toFixed(1)}${num(proj.p10) && num(proj.p90) ? ` (most games ${Math.round(proj.p10)} to ${Math.round(proj.p90)})` : ""}.`
+    : "";
+  const context = [
+    role ? `Out: <b>${role.out}</b>` : "",
+    b2b ? "Back-to-back" : "",
+    prop.gtd ? `<span class="lh-hs-tag lh-hs-tag--gtd">GTD</span>` : "",
+  ].filter(Boolean).join(" · ");
   return `
-    <div class="lh-ph lh-ph--${prop.side}">
-      <div class="lh-ph-top">
-        <div class="lh-ph-scorebox">
-          <span class="lh-ph-of">Hunt Score · tonight</span>
-          <span class="lh-ph-score">${prop.score}</span>
-        </div>
-        <div class="lh-ph-head">
-          <span class="lh-ph-pickrow"><span class="lh-ph-pick">${huntPickText(prop)}</span><span class="lh-ph-of">Hunt model pick</span></span>
-          <span class="lh-ph-facts">${Number.isFinite(prop.chance) ? `${prop.chance}% chance` : ""}${huntOddsHtml(best)}${prop.gtd ? `<span class="lh-hs-tag lh-hs-tag--gtd">GTD</span>` : ""}</span>
-          ${huntButtonHtml(huntLeg(prop, best), { labelOut: "ADD TO MY HUNTS", labelIn: "IN MY HUNTS", iconFirst: true, className: "lh-hs-add lh-ph-add" })}
-        </div>
+    <div class="lh-vd lh-ph--${prop.side}">
+      <div class="lh-vd-left">
+        <span class="lh-vd-label">Hunt Score · tonight ${huntMatchup(prop)}</span>
+        <h2 class="lh-vd-pick"><span class="lh-vd-side">${prop.side === "under" ? "Under" : "Over"}</span> ${huntPickText(prop).replace(/^(Over|Under) /, "")}</h2>
+        ${context ? `<p class="lh-vd-ctx">${context}</p>` : ""}
+        <p class="lh-vd-small">Past results and a simulation, not a prediction.</p>
       </div>
-      <ol class="lh-ph-why">${(prop.why || []).map((sentence) => `<li>${sentence}</li>`).join("")}</ol>
+      <div class="lh-vd-wedge">
+        <div class="lh-vd-readout">${readout}</div>
+        ${huntLine ? `<p class="lh-vd-line">${huntLine}</p>` : ""}
+      </div>
+      <ol class="lh-vd-why">${(prop.why || []).map((sentence) => `<li>${sentence}</li>`).join("")}</ol>
+      <div class="lh-vd-foot">
+        <a href="#playerHunt" class="lh-vd-link">See the score build-up</a>
+        ${huntButtonHtml(huntLeg(prop, best), { labelOut: "ADD THIS PICK", labelIn: "IN MY HUNTS", iconFirst: true, className: "lh-hs-add lh-ph-add" })}
+      </div>
     </div>`;
 }
 

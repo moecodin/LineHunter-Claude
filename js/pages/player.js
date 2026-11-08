@@ -198,24 +198,20 @@ function renderHeader(injury) {
   }
 
   const badge = injury ? injuryBadge(injury) : null;
-  // First name smaller on its own line, the last name big with the jersey number beside it (Swiss layout).
+  // The beta's player bar: the full name in Clash Display with "#7 · PG · Denver" beside it, then team, injury and the next game.
+  const city = player.team ? player.team.full_name || player.team.city || "" : "";
+  const sub = [player.jersey_number ? `#${player.jersey_number}` : "", meta, city].filter(Boolean).join(" · ");
   document.getElementById("playerHeader").innerHTML = `
-    <div>
-      <h1 class="lh-player-name mb-0">
-        <span class="lh-player-first">${player.first_name}</span>
-        <span class="lh-player-last">${player.last_name}${player.jersey_number ? `<span class="lh-player-jersey">#${player.jersey_number}</span>` : ""}</span>
-      </h1>
-      <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
-        ${teamBadge}
-        <span class="lh-label">${meta}</span>
-        ${badge ? `<button type="button" class="lh-injury-badge ${badge.className}" id="injuryBadge"
-                     aria-label="Injury: ${injury.status}. Show details">${badge.label}</button>` : ""}
-      </div>
-      <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
-        <span class="lh-label">Next game</span>
-        ${nextGameHtml}
-      </div>
+    <h1 class="lh-pp-name mb-0">${name}${sub ? ` <small>${sub}</small>` : ""}</h1>
+    <div class="lh-pp-meta">
+      ${teamBadge}
+      ${badge ? `<button type="button" class="lh-injury-badge ${badge.className}" id="injuryBadge"
+                   aria-label="Injury: ${injury.status}. Show details">${badge.label}</button>` : ""}
+      <span class="lh-pp-next"><i class="bi bi-calendar3" aria-hidden="true"></i> ${nextGameHtml}</span>
     </div>`;
+  if (typeof fillPlayerAvatar === "function") {
+    fillPlayerAvatar(document.getElementById("playerAvatar"), { id: player.id, first: player.first_name, last: player.last_name, team });
+  }
 
   if (badge) setUpInjuryPopover(document.getElementById("injuryBadge"), injury);
   if (typeof setPlayerJumpName === "function") {
