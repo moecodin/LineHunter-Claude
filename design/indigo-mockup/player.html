@@ -77,6 +77,9 @@
     .pwho { display: flex; align-items: center; gap: 0.9rem; }
     .back { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 8px; color: var(--mist); text-decoration: none; }
     .back:hover { background: var(--navy); }
+    /* Player photo slot: the initials show until a photo loads (and come back if it fails). See PHOTO_URL in the script. */
+    .avatar, .mini-av { position: relative; overflow: hidden; }
+    .avatar > img, .mini-av > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; border-radius: 50%; background: inherit; }
     .avatar { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 50%; background: #0e2240; color: #fec524; font: 600 1.05rem "Clash Display"; box-shadow: inset 0 0 0 2px #fec524; }
     .pname { font: 600 1.9rem/1.05 "Clash Display", sans-serif; color: var(--strong); }
     .pname small { font: 500 1rem "Satoshi"; color: var(--mist); margin-left: 0.4rem; }
@@ -333,7 +336,7 @@
     <section class="pbar" aria-label="Player">
       <div class="pwho">
         <a class="back" href="#" aria-label="Back"><i class="bi bi-chevron-left"></i></a>
-        <span class="avatar" aria-hidden="true">MV</span>
+        <span class="avatar" data-player-id="vale" aria-hidden="true">MV</span>
       </div>
       <div>
         <h1 class="pname">Marcus Vale <small>#7 · PG · Denver</small></h1>
@@ -446,9 +449,9 @@
           <section class="panel" aria-label="Matchup analysis">
             <div class="phead"><h2 class="ptitle">Matchup analysis <span class="sub">vs PHX</span></h2><span class="label">Compare with: J. Okafor ▾</span></div>
             <div class="tape-head">
-              <span class="who"><span class="mini-av" style="background:#0e2240;color:#fec524">MV</span>Vale</span>
+              <span class="who"><span class="mini-av" data-player-id="vale" style="background:#0e2240;color:#fec524">MV</span>Vale</span>
               <span class="label">Tale of the tape</span>
-              <span class="who r">Okafor<span class="mini-av" style="background:#1d1160;color:#e56020">JO</span></span>
+              <span class="who r">Okafor<span class="mini-av" data-player-id="okafor" style="background:#1d1160;color:#e56020">JO</span></span>
             </div>
             <div id="tape"></div>
             <p class="label" style="margin-top:.75rem">Playmaking</p>
@@ -473,8 +476,8 @@
           <section class="panel" aria-label="With and without">
             <div class="phead"><h2 class="ptitle">With / without</h2><i class="bi bi-chevron-up chev"></i></div>
             <div class="ww-chips">
-              <button class="ww-chip" aria-pressed="true"><span class="mini-av" style="background:#0e2240;color:#fec524">RH</span>Holt <span class="ww-out">OUT</span></button>
-              <button class="ww-chip" aria-pressed="false"><span class="mini-av" style="background:#0e2240;color:#fec524">JO</span>Oster</button>
+              <button class="ww-chip" aria-pressed="true"><span class="mini-av" data-player-id="holt" style="background:#0e2240;color:#fec524">RH</span>Holt <span class="ww-out">OUT</span></button>
+              <button class="ww-chip" aria-pressed="false"><span class="mini-av" data-player-id="oster" style="background:#0e2240;color:#fec524">JO</span>Oster</button>
             </div>
             <div class="split">
               <div class="box"><div class="label">With Holt · 14</div><div class="n">37.9</div><div class="label">7 of 14 over</div></div>
@@ -551,9 +554,9 @@
         <section class="panel">
           <div class="phead"><h2 class="ptitle">Players <span class="sub">DEN</span></h2></div>
           <div class="plist">
-            <a href="#"><span class="mini-av" style="background:#0e2240;color:#fec524">JO</span>Jalen Oster<span class="r">19.8 PTS</span></a>
-            <a href="#"><span class="mini-av" style="background:#0e2240;color:#fec524">DK</span>Dario Kemp<span class="r">8.9 REB</span></a>
-            <a href="#"><span class="mini-av" style="background:#0e2240;color:#fec524">LS</span>Luca Serna<span class="r">2.4 3PM</span></a>
+            <a href="#"><span class="mini-av" data-player-id="oster" style="background:#0e2240;color:#fec524">JO</span>Jalen Oster<span class="r">19.8 PTS</span></a>
+            <a href="#"><span class="mini-av" data-player-id="kemp" style="background:#0e2240;color:#fec524">DK</span>Dario Kemp<span class="r">8.9 REB</span></a>
+            <a href="#"><span class="mini-av" data-player-id="serna" style="background:#0e2240;color:#fec524">LS</span>Luca Serna<span class="r">2.4 3PM</span></a>
           </div>
         </section>
         <section class="panel collapsed-panel"><h2 class="ptitle">Latest news</h2><i class="bi bi-chevron-down chev"></i></section>
@@ -680,6 +683,21 @@
       ["Restricted area", 31, "68.2% vs 64.1%", "#28", "bad"], ["Paint", 17, "43.0% vs 42.4%", "#17", ""],
       ["Mid-range", 14, "40.1% vs 41.3%", "#11", "good"], ["Corner 3", 9, "38.6% vs 38.9%", "#14", ""], ["Above the break 3", 29, "36.9% vs 35.8%", "#22", "bad"]
     ].map(([n, s, t, r, c]) => `<div class="zm-row ${s < 10 ? "dim" : ""}"><span>${n}<br><span class="label">${t}</span></span><span class="share"><i style="width:${s * 2.5}%"></i></span><span class="label">${s}% of shots</span><span class="rank ${c}">${r}</span></div>`).join("");
+
+    // Player photos. Every initials circle with data-player-id gets a photo slot. Set PHOTO_URL to the photo address pattern
+    // ("{id}" = the player id), e.g. "https://cdn.example.com/nba/players/{id}.png", once photos exist. Until then, or when a
+    // photo is missing, the circle keeps its initials (the <img> is only added after the photo has loaded).
+    const PHOTO_URL = "";
+    function loadPlayerPhoto(el) {
+      const id = el.dataset.playerId;
+      if (!PHOTO_URL || !id || el.querySelector("img")) return;
+      const img = new Image();
+      img.alt = "";
+      img.decoding = "async";
+      img.onload = () => el.appendChild(img);
+      img.src = PHOTO_URL.replace("{id}", encodeURIComponent(id));
+    }
+    document.querySelectorAll("[data-player-id]").forEach(loadPlayerPhoto);
 
     // Pick-one controls toggle within their group (mockup only)
     document.addEventListener("click", (e) => {
