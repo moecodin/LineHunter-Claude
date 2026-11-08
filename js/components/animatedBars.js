@@ -8,7 +8,11 @@
 //
 // Animation: every bar is keyed by its game (game id), so when the range, split or stat changes, bars that stay move and resize
 // (CSS transitions on transform / width / height), new older games grow up from the baseline, and dropped games shrink down to
-// it and disappear. 220 ms ease-out; none with prefers-reduced-motion (css/styles.css).
+// it and disappear. 280 ms on the beta's curve (cubic-bezier(.16, 1, .3, 1)); none with prefers-reduced-motion (css/styles.css).
+//
+// Stacked bars: a combined stat (P+R+A) splits each bar into its parts (game.parts from calculateHitRate: points at the bottom,
+// then rebounds, then assists), each a shade of the bar's hit / miss color. The parts resize with the bar (flex-grow transitions),
+// and a small key under the chart names them.
 //
 // Labels: the number above a bar only shows while the bar is wide enough to read; the opponent / date under the bars show all
 // when they fit, otherwise every Nth one counting back from the newest.
@@ -26,7 +30,7 @@
 const BAR_GAP = 3;           // px between bars
 const BAR_VALUE_MIN_WIDTH = 18; // narrower bars hide the number above them
 const BAR_LABEL_MIN_SLOT = 36;  // px one date / opponent label needs
-const BAR_LEAVE_MS = 260;    // how long a dropped bar takes to shrink away before it is removed
+const BAR_LEAVE_MS = 320;    // how long a dropped bar takes to shrink away before it is removed
 const AXIS_WIDTH = 30;       // left gutter for the y-axis numbers
 const PLOT_TOP = 18;         // room above the tallest bar for its number
 const PLOT_BOTTOM = 32;      // room under the bars for the labels
@@ -46,6 +50,21 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
   const lineEl = plot.querySelector(".lh-bars-line");
   const bookEl = plot.querySelector(".lh-bars-book");
   const dividerEl = plot.querySelector(".lh-bars-divider");
+  // The stacked chart's key sits just under the chart box (the box itself has a fixed height).
+  const keysEl = document.createElement("div");
+  keysEl.className = "lh-bars-keys";
+  keysEl.hidden = true;
+  host.insertAdjacentElement("afterend", keysEl);
+  const PART_NAMES = { pts: "Pts", reb: "Reb", ast: "Ast", fg3m: "3PM" };
+
+  // A stacked bar's parts: one <i> per part inside .lh-bar-segs (first = bottom), sized by flex-grow so they resize with the bar.
+  function setParts(bar, parts) {
+    const segs = bar.segs;
+    const list = parts || [];
+    while (segs.children.length > list.length) segs.lastChild.remove();
+    while (segs.children.length < list.length) segs.appendChild(document.createElement("i"));
+    list.forEach((part, index) => { segs.children[index].style.flexGrow = String(Math.max(part.value, 0.0001)); });
+  }
 
   const barEls = new Map();  // game id (or "tonight") -> { el, fill, valueEl, labelEl }
   const tickEls = new Map(); // tick number -> element
@@ -65,8 +84,8 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
   function makeBar(id) {
     const el = document.createElement("div");
     el.className = "lh-bar";
-    el.innerHTML = `<div class="lh-bar-fill"><span class="lh-bar-value"></span><i class="lh-bar-dot"></i></div><div class="lh-bar-label"><span></span><span></span></div>`;
-    const bar = { el, fill: el.firstChild, valueEl: el.querySelector(".lh-bar-value"), labelEl: el.querySelector(".lh-bar-label"), game: null };
+    el.innerHTML = `<div class="lh-bar-fill"><span class="lh-bar-segs"></span><span class="lh-bar-value"></span><i class="lh-bar-dot"></i></div><div class="lh-bar-label"><span></span><span></span></div>`;
+    const bar = { el, fill: el.firstChild, segs: el.querySelector(".lh-bar-segs"), valueEl: el.querySelector(".lh-bar-value"), labelEl: el.querySelector(".lh-bar-label"), game: null };
     el.addEventListener("pointerenter", () => {
       if (!bar.game) return;
       root.classList.add("has-hover");
@@ -144,19 +163,27 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       bar.labelEl.children[1].textContent = bottom;
       bar.labelEl.style.opacity = showLabel ? "" : "0";
       bar.el.classList.toggle("is-post", !isTonight && Boolean(game.postseason));
+      const parts = !isTonight && Array.isArray(game.parts) && game.parts.length > 1 ? game.parts : null;
+      setParts(bar, parts);
+      if (parts) stackedKeys = parts.map((part) => part.key);
       if (isNew) {
         // Appear: at the final place and width, growing up from the baseline.
         bar.fill.style.height = "0%";
         void bar.el.offsetWidth;
       }
       bar.fill.style.height = percent(value, scaleMax);
-      layout.bars.push({ game: isTonight ? null : game, x, width: barWidth, height: bar.heightPx, showValue, showLabel, isTonight, tonightLabel: isTonight ? tonight.label : "", cls: isTonight ? "" : barClass(game) });
+      layout.bars.push({ game: isTonight ? null : game, parts, x, width: barWidth, height: bar.heightPx, showValue, showLabel, isTonight, tonightLabel: isTonight ? tonight.label : "", cls: isTonight ? "" : barClass(game) });
     };
 
+    let stackedKeys = null;
     const draw = () => {
       games.forEach((game, index) => place(game.gameId, index, game, false));
       if (tonight) place("tonight", games.length, null, true);
       [...barEls.keys()].filter((id) => !wanted.has(id)).forEach(dropBar);
+
+      // The key under a stacked chart: "Pts · Reb · Ast", bottom part first.
+      keysEl.hidden = !stackedKeys;
+      if (stackedKeys) keysEl.innerHTML = stackedKeys.map((key, index) => `<span><i class="lh-bars-key lh-bars-key--${index + 1}"></i>${PART_NAMES[key] || key}</span>`).join("");
 
       // Y-axis grid lines and numbers.
       const tickSet = new Set(ticks);
@@ -216,6 +243,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
     lineEl.hidden = true;
     bookEl.hidden = true;
     dividerEl.hidden = true;
+    keysEl.hidden = true;
     root.classList.remove("has-hover");
   }
 
@@ -271,6 +299,20 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       } else {
         ctx.fillStyle = bar.cls.includes("is-noline") ? colors.noLine : colors[bar.cls.replace("is-", "")] || colors.push;
         ctx.fill();
+        if (bar.parts) { // the stacked parts: the same color, each part above the first a shade darker, with a thin gap
+          const total = bar.parts.reduce((sum, part) => sum + Math.max(part.value, 0), 0) || 1;
+          let y = baseY;
+          bar.parts.forEach((part, index) => {
+            const h = (Math.max(part.value, 0) / total) * bar.height;
+            if (index > 0) {
+              ctx.fillStyle = `rgba(0, 0, 0, ${index === 1 ? 0.16 : 0.3})`;
+              ctx.fillRect(x, y - h, bar.width, h);
+              ctx.fillStyle = colors.bg || "rgba(0, 0, 0, 0.5)";
+              ctx.fillRect(x, y - 1, bar.width, 1);
+            }
+            y -= h;
+          });
+        }
       }
       const centerX = x + bar.width / 2;
       if (bar.showValue) {

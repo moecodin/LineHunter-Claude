@@ -94,6 +94,10 @@
         <div id="playerChart"></div>
 
         <div id="playerMessage" class="text-muted small mt-2" hidden></div>
+
+        <!-- LINE LADDER (lines mode): the chart's line and 3 lines either side, hit rate vs what each line's odds need.
+             js/components/lineLadder.js; click a line to move the chart to it. -->
+        <div id="playerLadder" class="lines-only" hidden></div>
       </div>
     </section>
 
@@ -367,6 +371,7 @@
   <script src="js/components/hunt-score.js"></script>
   <script src="js/components/playerHunt.js"></script>
   <script src="js/components/playerPhoto.js"></script>
+  <script src="js/components/lineLadder.js"></script>
   <script src="js/components/playerJump.js"></script>
   <script src="js/components/cardCollapse.js"></script>
   <script src="js/pages/player.js"></script>

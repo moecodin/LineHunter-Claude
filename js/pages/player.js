@@ -60,6 +60,32 @@ const playerToolbar = createPropToolbar(document.getElementById("playerToolbar")
 });
 playerToolbar.setSide(["over", "under"].includes(playerParams.get("side")) ? playerParams.get("side") : null);
 
+// The line ladder under the chart (js/components/lineLadder.js): clicking a line moves the chart (and the toolbar) to it.
+const playerLadder = typeof createLineLadder === "function"
+  ? createLineLadder(document.getElementById("playerLadder"), { onPick: (value) => { playerChart.setActiveLine(value); renderProps(); } })
+  : null;
+
+// The ladder for the chart's games: their values, plus the last 10 / last 20 / season (same split) for the dots, and each nearby
+// line's best odds for the picked side (Over when nothing is picked).
+function renderLadder(tab, chartRows, seasonIsCurrent) {
+  if (!playerLadder) return;
+  const line = isResearchMode() ? null : playerChart.activeLine();
+  if (line === null || pageState.split === "h2h" || !chartRows.length) { playerLadder.hide(); return; }
+  const side = playerToolbar.getSide() || "over";
+  const valuesFor = (size) => calculateHitRate(pickWindowLogs(splitLogs(playerLogs, pageState.split), size, seasonIsCurrent), tab.stat, line, "all").games.map((row) => row.value);
+  playerLadder.render({
+    line,
+    posted: playerChart.mainLine(),
+    side,
+    current: chartRows.map((row) => row.value),
+    windows: { l10: valuesFor(10), l20: valuesFor(20), all: valuesFor("season") },
+    oddsFor: (at) => {
+      const best = typeof lhOdds !== "undefined" ? lhOdds.getOdds(playerId, pageState.propType, at, side)[0] : null;
+      return best && Number.isFinite(Number(best.odds)) ? { odds: Number(best.odds), book: best.book } : null;
+    },
+  });
+}
+
 // ---------- Small helpers ----------
 
 // The date on this computer as "2026-10-16" ("en-CA" happens to format dates exactly that way).
@@ -277,6 +303,13 @@ function renderPropTabs() {
 
     item.appendChild(button);
     tabs.appendChild(item);
+  });
+  // Phones: the tab row scrolls sideways, so bring the selected tab into view (without moving the page).
+  requestAnimationFrame(() => {
+    const active = tabs.querySelector(".nav-link.active");
+    if (active && tabs.scrollWidth > tabs.clientWidth) {
+      tabs.scrollLeft = active.parentElement.offsetLeft - (tabs.clientWidth - active.parentElement.offsetWidth) / 2;
+    }
   });
 }
 
@@ -674,6 +707,7 @@ function renderProps() {
         ? "No games match these filters."
         : pageState.split === "all" ? "No games played yet." : `No ${pageState.split} games in this window.`;
     message.hidden = false;
+    if (playerLadder) playerLadder.hide();
     renderGameLog([], result, line);
     renderRole([], []);
     renderOpportunity([]);
@@ -719,6 +753,7 @@ function renderProps() {
   const oldestFirst = [...result.games].reverse();
   playerChart.setDivider(chartDivider(oldestFirst, (playerLogs.current || []).filter(playedInGame).length));
   playerChart.draw(oldestFirst, `${pageState.propType}|${pageState.windowSize}|${pageState.split}|${JSON.stringify(pageState.teammates)}`);
+  renderLadder(tab, result.games, seasonIsCurrent);
   renderGameLog(games, result, line);
   renderRole(games, result.games);
   renderOpportunity(games);
