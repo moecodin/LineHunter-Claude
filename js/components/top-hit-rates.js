@@ -825,11 +825,13 @@ function showTopSlate(fullSlate) {
     renderTopPills();
     renderTopRows();
   }
-  ensureTopOdds(slate);
-  updateSlideLink();
-  if (typeof showHitList === "function") showHitList(slate);
-  if (typeof showFanCards === "function") showFanCards(slate);
-  if (typeof refreshQuickLookTopProps === "function") refreshQuickLookTopProps(); // schedule page: open Quick looks fill in their top prop
+  // Each reader draws on its own: one card failing (a missing number, a hidden section) must not stop the next one.
+  const safely = (name, draw) => { try { draw(); } catch (error) { console.error(`${name} failed:`, error); } };
+  safely("Odds", () => ensureTopOdds(slate));
+  safely("Slide link", updateSlideLink);
+  if (typeof showHitList === "function") safely("Hit List", () => showHitList(slate));
+  if (typeof showFanCards === "function") safely("Hot Players / Streaks", () => showFanCards(slate));
+  if (typeof refreshQuickLookTopProps === "function") safely("Quick look", refreshQuickLookTopProps); // schedule page: open Quick looks fill in their top prop
   document.dispatchEvent(new CustomEvent("lh-top-slate", { detail: { slate } })); // the Today page's tool tiles (js/pages/today.js)
 }
 
@@ -844,7 +846,13 @@ async function loadTopHitRates({ cacheKey, titleDate, getSlate }) {
   // Saved in the last 10 minutes? Show it straight away, no downloads.
   const cached = readTopCache(cacheKey);
   if (cached) {
-    showTopSlate(cached);
+    // This runs while the page is still reading its scripts: the readers loaded after this file (hit-list.js, fanCards.js, bbq.js...)
+    // don't exist yet, so a cached slate shown right now skipped them and left "Loading..." for good. Wait until every script is in.
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => { if (requestNumber === topRequestNumber) showTopSlate(cached); }, { once: true });
+    } else {
+      showTopSlate(cached);
+    }
     return;
   }
 
