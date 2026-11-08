@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Player bar on phones · mockup</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../../assets/img/lh-mark.svg">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!--
+    MOCKUP ONLY (design/indigo-mockup/player-mobile.html): the player page's top on phones. "Now" = the live page in a 412px frame
+    (needs the local netlify dev server, signed in); "New" = the proposed player bar: one header row, full-width stat tabs, one row for
+    the line + Over / Under with each side's best odds, Add only after a side is picked, and the chart controls on one row.
+    Jaden McDaniels' real numbers (Nov 8, 2026): Over 2.5 AST −174 DK, Under +132 FD, 9/10 L10, avg 3.7, vs UTA 7:00 PM.
+  -->
+  <style>
+    :root, [data-theme="dark"] {
+      --ink: #060a16; --panel: #0b1229; --navy: #14234c; --rule: #1f2e5a; --slate: #5f6da3; --mist: #93a1cb; --haze: #c3cce9;
+      --ice: #d8dff5; --strong: #d8dff5; --lift: #9a93ff; --indigo: #280ea1;
+      --over: #46a98f; --over-text: #7fdcc0; --under: #bd6570; --under-text: #f2969f; color-scheme: dark;
+    }
+    [data-theme="light"] {
+      --ink: #eef1fa; --panel: #ffffff; --navy: #e3e8f6; --rule: #cfd6ec; --slate: #8a96c2; --mist: #4b5784; --haze: #3e4a78;
+      --ice: #1b2850; --strong: #0b1229; --lift: #280ea1; --indigo: #280ea1;
+      --over: #2c7a67; --over-text: #22685a; --under: #ab5763; --under-text: #9a4c58; color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #03050c; color: #d8dff5; font: 400 15px/1.4 "Satoshi", "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+    button { font: inherit; color: inherit; }
+    .strip { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.5rem 1rem; padding: 0.45rem 1rem; background: #280ea1; color: #fff; font-size: 0.8125rem; font-weight: 500; }
+    .strip .seg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid rgba(255,255,255,.45); border-radius: 32px; }
+    .strip .seg button { background: none; border: 0; border-radius: 32px; padding: 0.1rem 0.75rem; color: #fff; cursor: pointer; font-weight: 600; }
+    .strip .seg button[aria-pressed="true"] { background: #fff; color: #280ea1; }
+    .stage { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; padding: 1.5rem 1rem 3rem; }
+    .phone { width: 412px; max-width: 100%; }
+    .phone h2 { margin: 0 0 0.6rem; font: 600 1.05rem "Clash Display"; color: #d8dff5; }
+    .phone h2 small { font: 500 0.8rem "Satoshi"; color: #93a1cb; margin-left: 0.4rem; }
+    .screen { height: 860px; overflow: auto; border: 1px solid #1f2e5a; border-radius: 18px; background: var(--ink); color: var(--ice); }
+    .screen iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+    /* ---------- NEW: the phone player bar ---------- */
+    .nav { display: flex; align-items: center; min-height: 56px; padding: 0 16px; }
+    .brand { display: flex; align-items: center; gap: 0.45rem; color: var(--strong); font: italic 600 1.2rem/1 "Clash Display"; }
+    .brand img { width: 28px; height: 28px; }
+    .wrap { padding: 0 16px; }
+    .bar { padding: 14px; background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; }
+    .head { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 10px; }
+    .back { display: grid; place-items: center; width: 32px; height: 40px; margin-left: -6px; border-radius: 8px; color: var(--mist); font-size: 1.05rem; }
+    .av { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #236192; color: #fff; font: 600 0.9rem "Clash Display"; }
+    .who { min-width: 0; }
+    .name { display: flex; align-items: center; gap: 6px; font: 600 1.35rem/1.1 "Clash Display"; color: var(--strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meta { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 0 6px; font-size: 0.8125rem; color: var(--mist); }
+    .meta b { color: var(--ice); font-weight: 600; }
+    .meta .team { color: #6fa8dc; font-weight: 700; }
+    .meta a { color: var(--ice); text-decoration: none; }
+    .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; margin-top: 14px; padding: 3px; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; }
+    .tabs button { min-height: 38px; background: none; border: 0; border-radius: 5px; color: var(--mist); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+    .tabs button[aria-pressed="true"] { background: var(--navy); color: var(--ice); box-shadow: inset 0 0 0 1px var(--lift); }
+    .line { display: grid; grid-template-columns: 116px 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .step { display: grid; grid-template-columns: 34px 1fr 34px; align-items: center; height: 56px; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; }
+    .step button { height: 100%; background: none; border: 0; color: var(--ice); font-size: 1.1rem; cursor: pointer; }
+    .step b { text-align: center; font: 600 1.25rem "Clash Display"; color: var(--strong); }
+    .side { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px; height: 56px; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer; }
+    .side .w { font-weight: 700; font-size: 0.9rem; }
+    .side.o .w { color: var(--over-text); } .side.u .w { color: var(--under-text); }
+    .side .od { font-size: 0.78rem; color: var(--mist); }
+    .side .od b { color: var(--ice); font-weight: 600; }
+    .side[aria-pressed="true"].o { background: rgba(70, 169, 143, 0.16); border-color: var(--over); }
+    .side[aria-pressed="true"].u { background: rgba(189, 101, 112, 0.16); border-color: var(--under); }
+    .side[aria-pressed="true"] .od b { color: var(--strong); }
+    .add { display: none; width: 100%; min-height: 46px; margin-top: 10px; background: var(--indigo); border: 0; border-radius: 8px; color: #fff; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+    .bar.picked .add { display: block; }
+    .more { display: none; margin-top: 8px; font-size: 0.75rem; color: var(--mist); text-align: center; }
+    .bar.picked .more { display: block; }
+    .jump { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-top: 12px; padding: 0 16px; }
+    .jump span { flex: none; min-height: 34px; display: inline-flex; align-items: center; padding: 0 0.8rem; border: 1px solid var(--rule); border-radius: 32px; color: var(--mist); font-size: 0.8rem; }
+    .jump span:first-child { background: var(--navy); color: var(--ice); border-color: var(--lift); }
+    .card { margin: 12px 16px 0; padding: 14px; background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; }
+    .card h3 { margin: 0; display: flex; justify-content: space-between; align-items: center; font: 600 1.1rem "Clash Display"; color: var(--strong); }
+    .card h3 i { color: var(--mist); font-size: 0.9rem; }
+    .ctl { display: flex; align-items: center; gap: 6px; margin-top: 12px; overflow-x: auto; scrollbar-width: none; }
+    .well { flex: none; display: inline-flex; gap: 2px; padding: 3px; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; }
+    .well span { padding: 0.35rem 0.6rem; border-radius: 5px; font-size: 0.78rem; color: var(--mist); }
+    .well span.on { background: var(--navy); color: var(--ice); box-shadow: inset 0 0 0 1px var(--lift); }
+    .share { flex: none; display: grid; place-items: center; width: 34px; height: 34px; margin-left: auto; border: 1px solid var(--rule); border-radius: 8px; color: var(--mist); }
+    .sum { display: flex; gap: 22px; margin-top: 14px; }
+    .sum small { display: block; font-size: 0.72rem; color: var(--mist); }
+    .sum b { font: 600 1.5rem "Clash Display"; color: var(--strong); }
+    .sum b.hi { color: var(--over-text); }
+    .bars { display: flex; align-items: flex-end; gap: 4px; height: 150px; margin-top: 14px; position: relative; }
+    .bars i { flex: 1; background: var(--over); }
+    .bars i.m { background: var(--under); }
+    .bars .ln { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--ice); }
+    .note { margin: 0.6rem 0 0; font-size: 0.78rem; color: #93a1cb; max-width: 412px; }
+  </style>
+</head>
+<body>
+  <div class="strip">
+    <span>Player bar on phones · Jaden McDaniels, Nov 8</span>
+    <span class="seg" role="group" aria-label="State"><button type="button" data-state="none" aria-pressed="true">Nothing picked</button><button type="button" data-state="over" aria-pressed="false">Over picked</button></span>
+    <span class="seg" role="group" aria-label="Theme"><button type="button" data-theme-set="dark" aria-pressed="true">Dark</button><button type="button" data-theme-set="light" aria-pressed="false">Light</button></span>
+  </div>
+
+  <div class="stage">
+    <section class="phone" aria-label="Now">
+      <h2>Now <small>the live page, 412px</small></h2>
+      <div class="screen"><iframe title="Current player page" src="../../player.html?id=3547259&prop=ast"></iframe></div>
+      <p class="note">Needs the local server and the site password.</p>
+    </section>
+
+    <section class="phone" aria-label="New">
+      <h2>New <small>proposed</small></h2>
+      <div class="screen" id="newScreen">
+        <div class="nav"><span class="brand"><img src="../../assets/img/lh-mark.svg" alt="">LINEHUNTER</span></div>
+        <div class="wrap">
+          <div class="bar" id="bar">
+            <!-- 1. one header row: back, photo / initials, name; everything else on one quiet line -->
+            <div class="head">
+              <span class="back"><i class="bi bi-chevron-left"></i></span>
+              <span class="av">JM</span>
+              <div class="who">
+                <div class="name">Jaden McDaniels</div>
+                <div class="meta"><span class="team">MIN</span><span>F · #3</span><span>·</span><a href="#"><b>vs UTA</b> 7:00 PM ›</a></div>
+              </div>
+            </div>
+            <!-- 2. full-width stat tabs, short labels -->
+            <div class="tabs" role="group" aria-label="Stat"><button>PTS</button><button>REB</button><button aria-pressed="true">AST</button><button>3PM</button><button>PRA</button></div>
+            <!-- 3. one row: the line + Over / Under, each with its best odds -->
+            <div class="line">
+              <div class="step"><button aria-label="Lower">−</button><b>2.5</b><button aria-label="Raise">+</button></div>
+              <button class="side o" id="sideO" aria-pressed="false"><span class="w">Over</span><span class="od"><b>−174</b> DK</span></button>
+              <button class="side u" id="sideU" aria-pressed="false"><span class="w">Under</span><span class="od"><b>+132</b> FD</span></button>
+            </div>
+            <!-- 4. Add only once a side is picked, naming the pick -->
+            <button class="add" id="addBtn">+ Add Over 2.5 AST to My Hunts</button>
+            <div class="more" id="moreOdds">Also BALLY −175 · BR −175</div>
+          </div>
+        </div>
+        <div class="jump"><span>Chart</span><span>Matchup</span><span>Log</span><span>Lineup</span><span>Shooting</span></div>
+        <!-- 5. the chart's controls on one row, Share as an icon -->
+        <div class="card">
+          <h3>Prop chart <i class="bi bi-chevron-up"></i></h3>
+          <div class="ctl">
+            <span class="well"><span>L5</span><span class="on">L10</span><span>L20</span><span>Season</span></span>
+            <span class="well"><span class="on">All</span><span>Home</span><span>Away</span><span>H2H</span></span>
+            <span class="share"><i class="bi bi-share"></i></span>
+          </div>
+          <div class="sum"><div><small>Hit rate · o2.5</small><b class="hi">9/10 · 90%</b></div><div><small>Average</small><b>3.7</b></div></div>
+          <div class="bars" id="bars"></div>
+        </div>
+      </div>
+      <p class="note">Tap Over or Under to see the picked state; the Add button and the other books' odds appear under the row.</p>
+    </section>
+  </div>
+
+  <script>
+    // McDaniels' real last 10 assists, oldest first, against 2.5
+    const vals = [1, 3, 3, 4, 4, 7, 3, 3, 4, 5], max = 8;
+    document.getElementById("bars").innerHTML = vals.map((v) => `<i class="${v > 2.5 ? "" : "m"}" style="height:${Math.max(v / max * 100, 4)}%"></i>`).join("") + `<span class="ln" style="bottom:${2.5 / max * 100}%"></span>`;
+    const bar = document.getElementById("bar"), o = document.getElementById("sideO"), u = document.getElementById("sideU");
+    const add = document.getElementById("addBtn"), more = document.getElementById("moreOdds");
+    function pick(side) {
+      o.setAttribute("aria-pressed", String(side === "over")); u.setAttribute("aria-pressed", String(side === "under"));
+      bar.classList.toggle("picked", side !== "none");
+      add.textContent = side === "under" ? "+ Add Under 2.5 AST to My Hunts" : "+ Add Over 2.5 AST to My Hunts";
+      more.textContent = side === "under" ? "Also DK +131 · MGM +130" : "Also BALLY −175 · BR −175";
+      document.querySelectorAll("[data-state]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.state === side)));
+    }
+    o.addEventListener("click", () => pick(o.getAttribute("aria-pressed") === "true" ? "none" : "over"));
+    u.addEventListener("click", () => pick(u.getAttribute("aria-pressed") === "true" ? "none" : "under"));
+    document.querySelectorAll("[data-state]").forEach((b) => b.addEventListener("click", () => pick(b.dataset.state)));
+    document.querySelectorAll("[data-theme-set]").forEach((b) => b.addEventListener("click", () => {
+      document.documentElement.dataset.theme = b.dataset.themeSet;
+      document.querySelectorAll("[data-theme-set]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    }));
+  </script>
+</body>
+</html>
