@@ -7112,3 +7112,12 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-bd-avatar > img { object-position: center 12%; transform: scale(1.18); transform-origin: center top; }
 @media (min-width: 768px) { .lh-bd-avatar { width: 40px; height: 42px; font-size: 0.72rem; } }
 @media (max-width: 767.98px) { .lh-bd-pick { margin-left: calc(46px + 0.65rem); } }
+
+/* Player page: the same slanted tile in the player bar (56 x 60; 46 x 50 on phones) */
+#playerAvatar.lh-avatar {
+  width: 56px; height: 60px; border-radius: 0; border: 0; font-size: 1rem;
+  clip-path: polygon(20% 0, 100% 0, 80% 100%, 0 100%);
+  background-image: linear-gradient(rgba(var(--lh-surface-rgb), 0.45), rgba(var(--lh-surface-rgb), 0.45));
+}
+#playerAvatar.lh-avatar > img { object-position: center 12%; transform: scale(1.18); transform-origin: center top; }
+@media (max-width: 767.98px) { #playerAvatar.lh-avatar { width: 46px; height: 50px; font-size: 0.85rem; } }
