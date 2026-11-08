@@ -300,6 +300,7 @@ function boardPanelShellHtml(item) {
           <span class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" data-bd-tracker${boardTrackerOn() ? " checked" : ""}></span>
         </label>
         <div class="lh-bd-tracker" data-slot="tracker"></div>
+        <div class="lh-bd-reportbar"><button type="button" class="lh-bd-reportbtn" data-bd-report aria-expanded="false">Show full report</button><span data-slot="barlinks"></span></div>
         <div class="lh-bd-cols">
           <div class="lh-bd-form">
             <div class="lh-bd-sechead">
@@ -309,7 +310,7 @@ function boardPanelShellHtml(item) {
             <div class="lh-bd-chart" data-slot="chart"></div>
             <div class="lh-bd-avgs" data-slot="avgs"></div>
           </div>
-          <div class="lh-bd-match">
+          <div class="lh-bd-match is-collapsed">
             <div class="lh-bd-sechead"><div><span class="lh-bd-kicker">Matchup</span><h3 class="lh-bd-title">Tonight ${boardEsc(item.row.matchup)}</h3></div></div>
             <div class="lh-sr" data-slot="scout"></div>
             <div class="lh-bd-links">
@@ -450,7 +451,7 @@ function boardPanelFill(item, { chart = true } = {}) {
   const slot = (name) => panel.querySelector(`[data-slot="${name}"]`);
   slot("sum").innerHTML = boardSumHtml(item);
   slot("avgs").innerHTML = boardAvgsHtml(item);
-  boardScoutFill(item, slot("scout"));
+  if (!panel.querySelector(".lh-bd-match").classList.contains("is-collapsed")) boardScoutFill(item, slot("scout"));
   panel.classList.toggle("is-tracker", boardTrackerOn());
 
   boardPanel.toolbar.render({
@@ -690,6 +691,24 @@ if (BOARD) {
     if (!event.target.matches("[data-bd-tracker]")) return;
     boardSetTracker(event.target.checked);
     if (boardPanel && boardPanel.el) boardPanel.el.classList.toggle("is-tracker", event.target.checked);
+  });
+
+  // "Show full report": opens the scouting report and moves the Player page / Matchup Analyzer links up next to the button.
+  BOARD.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-bd-report]");
+    if (!button || !boardPanel || !boardPanel.el) return;
+    const panel = boardPanel.el;
+    const match = panel.querySelector(".lh-bd-match");
+    const links = panel.querySelector(".lh-bd-links");
+    const open = match.classList.contains("is-collapsed");
+    match.classList.toggle("is-collapsed", !open);
+    button.setAttribute("aria-expanded", String(open));
+    button.textContent = open ? "Hide full report" : "Show full report";
+    (open ? panel.querySelector('[data-slot="barlinks"]') : match).appendChild(links);
+    if (open) {
+      const item = boardFindItem(boardPanel.key);
+      if (item) boardScoutFill(item, panel.querySelector('[data-slot="scout"]'));
+    }
   });
 
   // The slate for the shown day (or a message instead).
