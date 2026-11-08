@@ -682,6 +682,7 @@ function renderProps() {
   const line = lineForScoring(playerChart.activeLine());
   renderSamePosition(pageState.propType, playerChart.activeLine()); // the Same Position card follows the tab and line
   renderMatchupAnalysis(pageState.propType); // the Matchup Analysis battle section follows the tab
+  renderPlayerScout();
   // The Hunt Score is a beta tool for now (hunt-score.html): js/components/playerHunt.js isn't loaded on this page.
   if (typeof renderPlayerHunt === "function") renderPlayerHunt(playerId, pageState.propType, nextGame);
 
@@ -1365,3 +1366,35 @@ loadPlayerPage();
 
 // Research mode switched on or off (js/components/nav.js): redraw what depends on it (the chart's line, the With / Without text).
 document.addEventListener("lh-mode-change", () => renderProps());
+
+// "Show full report": the scouting report (js/components/scoutReport.js) for tonight's game. Prop-independent, so the tabs don't redraw it.
+function renderPlayerScout() {
+  const button = document.getElementById("playerScoutBtn");
+  const box = document.getElementById("playerScout");
+  if (!button || !box || typeof renderScoutReport !== "function") return;
+  if (!nextGame || !player || !player.team || !playerLogs) { button.hidden = true; box.hidden = true; return; }
+  button.hidden = false;
+  const isHome = nextGame.home_team.id === player.team.id;
+  const ctx = {
+    gameId: nextGame.id, playerId, team: player.team.abbreviation,
+    opp: isHome ? nextGame.visitor_team.abbreviation : nextGame.home_team.abbreviation,
+    gamesNewestFirst: [...(playerLogs.current || []), ...(playerLogs.previous || [])].filter(playedInGame).slice(0, 10).map((log) => ({
+      date: log.game.date, minutes: Number(String(log.min).split(":")[0]) || 0, opponent: log.opponent, homeAway: log.isHome ? "home" : "away",
+      teamScore: log.isHome ? log.game.home_team_score : log.game.visitor_team_score,
+      opponentScore: log.isHome ? log.game.visitor_team_score : log.game.home_team_score,
+      stats: { PTS: log.pts, REB: log.reb, AST: log.ast, "3PM": log.fg3m, BLK: log.blk, STL: log.stl },
+    })),
+  };
+  if (!button.dataset.bound) {
+    button.dataset.bound = "1";
+    button.addEventListener("click", () => {
+      const open = box.hidden;
+      box.hidden = !open;
+      button.setAttribute("aria-expanded", String(open));
+      button.textContent = open ? "Hide full report" : "Show full report";
+      if (open) renderScoutReport(box, button._ctx);
+    });
+  }
+  button._ctx = ctx;
+  if (!box.hidden) renderScoutReport(box, ctx);
+}

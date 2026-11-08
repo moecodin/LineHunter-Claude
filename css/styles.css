@@ -5791,7 +5791,6 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-bd-huntlabel.is-left { transform: translateX(-100%); padding: 0 0.3rem 0 0; }
 .lh-bd-huntlabel b { font-weight: 600; }
 
-.lh-bd-why { margin: 1rem 0 0; max-width: 52rem; font-size: 0.95rem; line-height: 1.5; color: var(--lh-text); }
 
 /* The hunts tracker (the prop toolbar) between hairlines; phones keep it behind the switch */
 .lh-bd-tracker { margin-top: 1rem; }
@@ -7171,3 +7170,44 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   .lh-board-tabs.lh-tabs.nav-underline .nav-item { flex: 1 1 0; min-width: 0; }
   .lh-board-tabs.lh-tabs.nav-underline .nav-link { width: 100%; padding: 0; justify-content: center; font-size: 0.78rem; text-align: center; }
 }
+
+/* Scouting report (js/components/scoutReport.js): The Board's opened row and the player page's "Show full report". Flat, no shadows. */
+.lh-sr-label { font-size: 0.75rem; font-weight: 500; color: var(--lh-muted); margin: 0 0 0.4rem; }
+.lh-sr-best { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; border-left: 3px solid var(--lh-over); padding: 0.1rem 0 0.1rem 0.75rem; }
+.lh-sr-best.is-under { border-left-color: var(--lh-under); }
+.lh-sr-pick { font: 600 1.3rem/1.15 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-sr-why { font-size: 0.8rem; color: var(--lh-muted); margin-top: 0.15rem; }
+.lh-sr-rate { text-align: right; font: 600 1.6rem/1 var(--lh-font-heading); }
+.lh-sr-rate small { display: block; font-size: 0.7rem; font-weight: 500; color: var(--lh-muted); margin-top: 0.15rem; }
+.lh-sr-note { margin: 0.5rem 0 0; padding: 0.5rem 0.65rem; background: rgba(var(--lh-ink-rgb), 0.05); font-size: 0.85rem; display: flex; gap: 0.5rem; align-items: baseline; }
+.lh-sr-note .lh-sr-tag { width: 4.2rem; flex: none; }
+.lh-sr-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.65rem; }
+.lh-sr-chip { border: 1px solid var(--lh-border); padding: 0.15rem 0.55rem; font-size: 0.78rem; color: var(--lh-text); border-radius: 0; }
+.lh-sr-chip b { font-weight: 600; color: var(--lh-strong); }
+.lh-sr-chip i { font-style: normal; font-weight: 600; margin-left: 0.25rem; }
+.lh-sr-chip.is-on { border-color: var(--lh-strong); }
+.lh-sr-rep { border-top: 1px solid var(--lh-border); margin-top: 1rem; padding-top: 0.9rem; }
+.lh-sr-rep .lh-bd-title { margin-bottom: 0.4rem; }
+.lh-sr-item { display: grid; grid-template-columns: 4.6rem 1fr; gap: 0 0.75rem; padding: 0.65rem 0; border-top: 1px solid var(--lh-border); }
+.lh-sr-item:first-of-type { border-top: 0; }
+.lh-sr-item[hidden] { display: none; }
+.lh-sr-tag { align-self: start; text-align: center; font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0; border: 1px solid; }
+.lh-sr-tag.is-boost { color: var(--lh-over-text); border-color: var(--lh-over); }
+.lh-sr-tag.is-risk { color: var(--lh-under-text); border-color: var(--lh-under); }
+.lh-sr-tag.is-ctx { color: var(--lh-muted); border-color: var(--lh-border); border-style: dashed; }
+.lh-sr-item p { margin: 0; color: var(--lh-text); }
+.lh-sr-item p b { color: var(--lh-strong); font-weight: 700; }
+.lh-sr-item small { display: block; color: var(--lh-muted); font-size: 0.75rem; margin-top: 0.1rem; }
+.lh-sr-more { margin-top: 0.4rem; background: none; border: 0; padding: 0; color: var(--lh-strong); font-size: 0.85rem; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+.lh-sr-empty { color: var(--lh-muted); font-size: 0.9rem; margin: 0.5rem 0; }
+.lh-sr-last { margin-top: 0.25rem; padding-top: 0.8rem; border-top: 1px solid var(--lh-border); }
+.lh-sr-strip { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--lh-border); margin-top: 0.4rem; padding-top: 0.5rem; }
+.lh-sr-strip div { padding: 0 0.5rem; border-left: 1px solid var(--lh-border); min-width: 0; }
+.lh-sr-strip div:first-child { padding-left: 0; border-left: 0; }
+.lh-sr-strip span { display: block; font-size: 0.7rem; color: var(--lh-muted); }
+.lh-sr-strip b { font: 600 1.15rem/1.2 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-sr-barwrap { padding: 0 var(--lh-pad) 0; }
+.lh-sr-pill { background: none; border: 1px solid var(--lh-border); border-radius: 8px; padding: 0.3rem 0.8rem; font-size: 0.85rem; color: var(--lh-strong); cursor: pointer; margin-bottom: 0.75rem; }
+.lh-sr-pill[hidden], .lh-sr-player[hidden] { display: none; }
+.lh-sr-pill:hover { border-color: var(--lh-strong); }
+.lh-sr-player { max-width: 40rem; margin-bottom: 1rem; }

@@ -60,6 +60,11 @@
       </div>
       <div id="playerToolbar" class="lh-pp-ctl"></div>
     </section>
+    <!-- SCOUTING REPORT: the pill opens the same report as The Board's opened row (js/components/scoutReport.js), minus the best prop -->
+    <div class="lh-sr-barwrap">
+      <button type="button" id="playerScoutBtn" class="lh-sr-pill" aria-expanded="false" aria-controls="playerScout" hidden>Show full report</button>
+      <div id="playerScout" class="lh-sr lh-sr-player" hidden></div>
+    </div>
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
         <span class="lh-label" data-lh-kicker="Form"><span class="lines-only">Prop chart</span><span class="research-only">Stat chart</span></span>
       </div>
@@ -358,6 +363,7 @@
   <script src="js/components/share.js"></script>
   <script src="js/data/nbaIds.js"></script>
   <script src="js/components/playerPhoto.js"></script>
+  <script src="js/components/scoutReport.js"></script>
   <script src="js/components/lineLadder.js"></script>
   <script src="js/components/playerJump.js"></script>
   <script src="js/components/cardCollapse.js"></script>

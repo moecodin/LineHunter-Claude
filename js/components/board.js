@@ -52,7 +52,7 @@ let boardShown = BOARD_STEP_ROWS;
 let boardOpen = null;    // the key of the open row, or null
 let boardPanel = null;   // { key, chart, toolbar, window, el } for the open row
 let boardPending = null; // { gameId, playerId, code, side } from boardOpenLinked, applied when the slate arrives
-const boardExtras = {};  // playerId -> { season: {...} | null | "loading", h2h: { [gameId]: logs | "loading" | null } }
+const boardExtras = {};  // playerId -> { season: {...} | null | "loading" }
 
 // ---------- Small helpers ----------
 
@@ -295,7 +295,6 @@ function boardPanelShellHtml(item) {
   return `
       <div class="lh-bd-panel" id="bdPanel" role="region" aria-label="Breakdown for ${boardEsc(item.row.name)}">
         <div class="lh-bd-sum" data-slot="sum"></div>
-        <p class="lh-bd-why" data-slot="why"></p>
         <label class="lh-bd-trackswitch">
           <span><b>Show hunts tracker</b><small>Line stepper, odds and Add to My Hunts</small></span>
           <span class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" data-bd-tracker${boardTrackerOn() ? " checked" : ""}></span>
@@ -312,7 +311,7 @@ function boardPanelShellHtml(item) {
           </div>
           <div class="lh-bd-match">
             <div class="lh-bd-sechead"><div><span class="lh-bd-kicker">Matchup</span><h3 class="lh-bd-title">Tonight ${boardEsc(item.row.matchup)}</h3></div></div>
-            <dl class="lh-bd-facts" data-slot="facts"></dl>
+            <div class="lh-sr" data-slot="scout"></div>
             <div class="lh-bd-links">
               <a href="player.html?id=${item.row.playerId}&prop=${item.row.code}">Player page ›</a>
               <a href="matchup.html?player=${item.row.playerId}&stat=${item.row.code}">Matchup Analyzer ›</a>
@@ -371,14 +370,6 @@ function boardSumHtml(item) {
         </div>`;
 }
 
-// The first "why" sentence (the engine's), or a plain record when the engine has no score at this line.
-function boardWhyText(item) {
-  if (item.hunt && item.hunt.why && item.hunt.why[0]) return item.hunt.why[0];
-  const { stats } = item;
-  const word = item.side === "under" ? "under" : "over";
-  return `${boardNameParts(item.row.name).last} went ${word} ${lineText(item.line)} in ${stats.hits} of the last ${stats.totalGames} (avg ${formatStatValue(stats.average)}).`;
-}
-
 // The chart's games at a line, oldest first, colored against the line itself (not flipped for the under side).
 function boardChartGames(row, size, line) {
   return [...row.w[size].games].reverse().map((game) => ({ ...game, overUnder: game.value > line ? "over" : game.value < line ? "under" : "push" }));
@@ -407,64 +398,37 @@ function boardAvgsHtml(item) {
       <div><span>Season avg</span>${season}</div>`;
 }
 
-function boardFactsHtml(item) {
-  const { row, hunt, line } = item;
-  const any = hunt || (boardHunts ? boardHunts.byStat[`${row.playerId}|${row.code}`] : null);
-  const facts = [];
-  const minutes = boardFactor(any, "minutes");
-  if (minutes && Number.isFinite(minutes.now)) facts.push({ label: "Projected minutes", note: Number.isFinite(minutes.base) ? `season ${minutes.base}` : "", value: minutes.now.toFixed(1) });
-  const opponent = boardFactor(any, "opponent");
-  const stat = BOARD_STAT_SHORT[row.code] || row.code.toUpperCase();
-  if (opponent && opponent.rank) {
-    const tone = opponent.rank <= 10 ? "is-over" : opponent.rank > opponent.of - 10 ? "is-under" : "";
-    facts.push({ label: `${row.opp} allows ${stat}`, note: `${opponent.perGame ?? ""} a game · 1 = allows the most`.replace(/^ a game · /, ""), value: `#${opponent.rank} of ${opponent.of}`, tone });
-  }
-  const zone = boardFactor(any, "zone");
-  if (zone && Number.isFinite(zone.extra) && Math.abs(zone.extra) >= 0.1) {
-    const what = row.code === "3pm" ? "threes" : "pts";
-    facts.push({ label: `${row.opp} zone defense`, note: `vs an average defense${zone.zone ? ` · biggest gap ${zone.zone}` : ""}`, value: `${zone.extra > 0 ? "+" : "−"}${Math.abs(zone.extra).toFixed(1)} ${what}`, tone: zone.extra > 0 ? "is-over" : "is-under" });
-  }
-  const pace = boardFactor(any, "pace");
-  if (pace && pace.rank) {
-    const tone = pace.rank <= 10 ? "is-over" : pace.rank > pace.of - 10 ? "is-under" : "";
-    facts.push({ label: `${row.opp} pace`, note: "possessions a game · 1 = fastest", value: `${pace.pace} · #${pace.rank}`, tone });
-  }
-  if (boardFactor(any, "b2b")) facts.push({ label: "Back-to-back", note: "played yesterday", value: "Yes", tone: "is-under" });
-
-  const extras = boardExtras[row.playerId] || {};
-  const h2h = extras.h2h ? extras.h2h[row.gameId] : undefined;
-  let h2hValue = "…";
-  let h2hNote = "loading";
-  if (Array.isArray(h2h)) {
-    const result = calculateHitRate(h2h.filter(playedInGame), propStatKey(PROP_CODES[row.code]), line, "all");
-    if (result.totalGames) {
-      const seasons = h2h.map((log) => log.game.season).filter(Boolean);
-      const since = seasons.length ? Math.min(...seasons) : null;
-      const word = item.side === "under" ? "under" : "over";
-      const hits = result.games.filter((game) => game.overUnder === word).length;
-      h2hValue = `${formatStatValue(result.average)} · ${hits} of ${result.totalGames} ${word}`;
-      h2hNote = since ? `since ${since}-${String(since + 1).slice(2)}` : "past meetings";
-    } else {
-      h2hValue = "No games";
-      h2hNote = "in the last 5 seasons";
-    }
-  } else if (h2h === null) {
-    h2hValue = "–";
-    h2hNote = "not available";
-  }
-  facts.push({ label: `vs ${row.opp}`, note: h2hNote, value: h2hValue });
-
-  const status = boardSlate.injuries ? boardSlate.injuries[row.playerId] : null;
-  facts.push({ label: "Status", note: "injury report", value: status || "Active", tone: status && plIsInjuredOut(status) ? "is-under" : "" });
-
-  return facts.map((fact) => `
-      <div><dt>${boardEsc(fact.label)}${fact.note ? `<small>${boardEsc(fact.note)}</small>` : ""}</dt><dd class="${fact.tone || ""}">${boardEsc(fact.value)}</dd></div>`).join("");
+// The scouting report: the player's best prop, his other props as chips and the prop-independent lines (js/components/scoutReport.js).
+function boardScoutFill(item, el) {
+  if (!el || typeof renderScoutReport !== "function") return;
+  const { row } = item;
+  const mine = boardSlate.rows.filter((r) => r.playerId === row.playerId && r.gameId === row.gameId);
+  const candidates = mine.map((r) => {
+    const spec = boardSpec(r, 10);
+    const resolved = plResolve(spec, "both");
+    return resolved ? { code: r.code, line: resolved.line, side: resolved.side, stats: plStatsAtLine(spec.games, resolved.line, resolved.side) } : null;
+  }).filter(Boolean);
+  const { best, all } = scoutBestProp(candidates);
+  const pack = (c) => ({ code: c.code, side: c.side, line: c.line, hits: c.stats.hits, total: c.stats.totalGames, rate: c.stats.hitRate, streak: c.stats.streak, average: c.stats.average });
+  const bestPacked = best ? pack(best) : null;
+  const offers = bestPacked ? lhOdds.getOdds(row.playerId, PROP_CODES[best.code], best.line, best.side) : [];
+  // Games newest first, with every prop's number for the same game, from the rows this player already has.
+  const byGame = {};
+  mine.forEach((r) => r.w[20].games.forEach((g) => {
+    const e = byGame[g.gameId] = byGame[g.gameId] || { date: g.date, minutes: g.minutes, opponent: g.opponent, homeAway: g.homeAway, teamScore: g.teamScore, opponentScore: g.opponentScore, stats: {} };
+    e.stats[(BOARD_STAT_SHORT[r.code] || r.code).toUpperCase()] = g.value;
+  }));
+  const games = Object.values(byGame).sort((a, b) => b.date.localeCompare(a.date));
+  renderScoutReport(el, {
+    gameId: row.gameId, playerId: row.playerId, team: row.team, opp: item.spec.opp, activeCode: row.code,
+    gamesNewestFirst: games, best: bestPacked, props: all.map(pack), odds: scoutOddsText(offers[0]),
+  });
 }
 
-// Season averages + H2H for the open row's player, once per player (and per game for H2H).
+// Season averages for the open row's player, once per player.
 function boardLoadExtras(item) {
   const { row } = item;
-  const extras = boardExtras[row.playerId] = boardExtras[row.playerId] || { season: undefined, h2h: {} };
+  const extras = boardExtras[row.playerId] = boardExtras[row.playerId] || { season: undefined };
   const refresh = () => {
     if (!boardPanel || boardPanel.key !== item.key) return;
     const fresh = boardFindItem(item.key);
@@ -477,13 +441,6 @@ function boardLoadExtras(item) {
       .catch(() => { extras.season = null; })
       .finally(refresh);
   }
-  if (!(row.gameId in extras.h2h)) {
-    extras.h2h[row.gameId] = "loading";
-    loadPlayerH2HForGame(row.playerId, row.gameId, row.opp)
-      .then((data) => { extras.h2h[row.gameId] = h2hLogsFor(data, row.playerId) || []; })
-      .catch(() => { extras.h2h[row.gameId] = null; })
-      .finally(refresh);
-  }
 }
 
 // Fill (or refresh) the open panel's parts. chart: false keeps the chart as it is (a late download only changed the text).
@@ -492,9 +449,8 @@ function boardPanelFill(item, { chart = true } = {}) {
   const panel = boardPanel.el;
   const slot = (name) => panel.querySelector(`[data-slot="${name}"]`);
   slot("sum").innerHTML = boardSumHtml(item);
-  slot("why").textContent = boardWhyText(item);
   slot("avgs").innerHTML = boardAvgsHtml(item);
-  slot("facts").innerHTML = boardFactsHtml(item);
+  boardScoutFill(item, slot("scout"));
   panel.classList.toggle("is-tracker", boardTrackerOn());
 
   boardPanel.toolbar.render({
