@@ -6188,7 +6188,7 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
   will-change: transform;
   cursor: inherit;
 }
-.lh-wcard[aria-current] { cursor: pointer; box-shadow: 0 0 0 2px var(--lh-strong); }
+.lh-wcard[aria-current] { cursor: pointer; }  /* no outline: the front card blends in (owner, Nov 8) */
 .lh-wcard:focus-visible { outline: 2px solid var(--lh-accent); outline-offset: 3px; }
 .lh-wcard-time {
   padding: clamp(0.45rem, 1vw, 0.7rem) 0.8rem;
