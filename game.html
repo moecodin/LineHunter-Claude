@@ -60,7 +60,7 @@
          (js/components/gameTopHits.js, from the rows js/pages/game.js sends). The Board itself lives on Today and in Tools. -->
     <section class="card lines-only" id="gameTopHits" data-lh-jump="Top hit rates" aria-labelledby="gameTopHitsTitle">
       <div class="card-header py-3 lh-gth-head">
-        <h2 class="lh-label mb-0" id="gameTopHitsTitle">Top hit rates <span class="lh-gp-sub">this game's props, highest first</span></h2>
+        <h2 class="lh-label mb-0" id="gameTopHitsTitle" data-lh-kicker="Props">Top hit rates <span class="lh-gp-sub">this game's props, highest first</span></h2>
         <div class="lh-window-toggle" id="gthTeams" role="group" aria-label="Team"></div>
       </div>
       <div class="card-body">
@@ -77,7 +77,7 @@
 
     <!-- PLAYER STATS CARD (research mode) -->
     <div class="card research-only" id="gamePropsCard" data-lh-jump="Stats">
-      <div class="card-header lh-label py-3">Player Stats</div>
+      <div class="card-header lh-label py-3" data-lh-kicker="Research">Player Stats</div>
       <div class="card-body">
 
         <!-- RESEARCH MODE: the stat tabs and window toggle of the "Player Stats" table. js/pages/game.js adds the buttons. -->
@@ -124,7 +124,7 @@
     <aside class="lh-pp-rail">
       <section class="card" id="gameInjuries" data-lh-jump="Injuries">
         <div class="card-header py-3">
-          <h2 class="lh-label mb-0">Injury report <span class="lh-gp-sub" id="gameInjurySummary">Loading…</span></h2>
+          <h2 class="lh-label mb-0" data-lh-kicker="Status">Injury report <span class="lh-gp-sub" id="gameInjurySummary">Loading…</span></h2>
         </div>
         <div class="collapse show" id="gameInjuryBody">
           <div id="gameInjuryList" class="lh-injury-list lh-game-injury-list">
@@ -135,7 +135,7 @@
 
       <section class="card" id="matchupDetails" data-lh-jump="Ratings">
         <div class="card-header py-3">
-          <h2 class="lh-label mb-0" id="ratingsTitle">Team ratings <span class="lh-gp-sub" id="ratingsSummary">&nbsp;</span></h2>
+          <h2 class="lh-label mb-0" id="ratingsTitle" data-lh-kicker="Matchup">Team ratings <span class="lh-gp-sub" id="ratingsSummary">&nbsp;</span></h2>
         </div>
         <div class="collapse show" id="teamCompareWrap">
           <div class="card-body" id="teamCompareBody"></div>

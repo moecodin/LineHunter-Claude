@@ -6340,7 +6340,6 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 .lh-pp .card { scroll-margin-top: 130px; }
 
 /* Panel titles: sentence-case Clash Display, no small caps kicker above */
-.lh-pp [data-lh-kicker]::before { display: none !important; }
 .lh-pp .card .lh-label[data-lh-kicker],
 .lh-pp .card h2.lh-label,
 .lh-pp #playerAveragesLabel,
@@ -6573,7 +6572,6 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 }
 .lh-gp .card > .card-header { padding: 0.9rem 1.25rem 0.4rem !important; border: 0; background: none; }
 .lh-gp .card > .card-body { padding: 0.5rem 1.25rem 1rem; }
-.lh-gp [data-lh-kicker]::before { display: none !important; }
 .lh-gp .card-header .lh-label, .lh-gp .card-header h2 { font: 600 1.2rem/1.2 var(--lh-font-heading); letter-spacing: 0; text-transform: none; color: var(--lh-strong); }
 .lh-gp-sub { font: 500 0.8125rem var(--lh-font-body); color: var(--lh-muted); margin-left: 0.4rem; }
 .lh-gp .lh-window-toggle { display: inline-flex; gap: 2px; padding: 3px; background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); }
@@ -6988,4 +6986,10 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
   .lh-shelf-head { display: flex; justify-content: space-between; align-items: flex-end; }
   .lh-shelf-head > div:first-child { text-align: left; }
   .lh-shelf-head .lh-top-title { justify-content: flex-start; }
+}
+
+/* Swiss idea 3: a small muted sentence-case label above each panel title */
+[data-lh-kicker]::before, .lh-pp [data-lh-kicker]::before, .lh-gp [data-lh-kicker]::before, .lh-swiss-card [data-lh-kicker]::before {
+  content: attr(data-lh-kicker); display: block; margin-bottom: 0.2rem;
+  font: 500 0.75rem/1.2 var(--lh-font-body); letter-spacing: 0; text-transform: none; color: var(--lh-muted);
 }
