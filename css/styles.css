@@ -6513,3 +6513,173 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 /* Verdict: navy behind the wedge's slanted cut (no light gap on narrow screens / light mode); the reasons and foot keep the panel color */
 .lh-vd { background: var(--lh-surface-2); }
 .lh-vd-why, .lh-vd-foot { background: var(--lh-surface); }
+
+/* ---------- Indigo restyle: the game page (game.html, main.lh-gp; mockup design/indigo-mockup/game.html) ---------- */
+.lh-gp { --lh-pp-gap: 12px; }
+.lh-gp .mb-4, .lh-gp .mb-5 { margin-bottom: 0 !important; }
+.lh-gp-crumbs { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.25rem 1rem; font-size: 0.875rem; }
+.lh-gp-crumbs a { display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; color: var(--lh-muted); text-decoration: none; }
+.lh-gp-crumbs a:hover { color: var(--lh-strong); }
+.lh-gp-neighbors { display: flex; gap: 1.25rem; }
+
+/* Header: time bar, then the team-color card with the slanted seam */
+.lh-gp-head { margin-top: 6px; overflow: hidden; border: 1px solid var(--lh-border); border-bottom: 0; border-radius: var(--lh-r-panel) var(--lh-r-panel) 0 0; background: var(--lh-surface-2); }
+.lh-gp-time { padding: 0.55rem 1rem; background: var(--lh-surface); text-align: center; font-size: 0.875rem; color: var(--lh-faint); }
+.lh-gp-body {
+  position: relative; isolation: isolate; margin: 0;
+  display: flex; justify-content: space-between; align-items: stretch; gap: 1rem;
+  min-height: clamp(9rem, 16vw, 12.5rem); padding: clamp(1rem, 2.5vw, 1.75rem) clamp(1rem, 3vw, 2.25rem);
+  background: var(--away); font-weight: 400;
+}
+.lh-gp-body::before, .lh-gp-body::after { content: ""; position: absolute; inset: 0; z-index: -1; }
+.lh-gp-body::before { background: var(--home); clip-path: polygon(58% 0, 100% 0, 100% 100%, 42% 100%); }
+.lh-gp-body::after { background: #d8dff5; clip-path: polygon(57.8% 0, 58.2% 0, 42.2% 100%, 41.8% 100%); }
+.lh-gp-team { display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; color: var(--away-text); min-width: 0; }
+.lh-gp-team.is-home { align-items: flex-end; text-align: right; color: var(--home-text); }
+.lh-gp-abbr { display: block; font: 600 clamp(2.6rem, 7vw, 5.25rem)/0.9 var(--lh-font-display); }
+.lh-gp-name { display: block; margin-top: 0.3rem; font-size: 0.9rem; opacity: 0.9; }
+.lh-gp-ml { display: block; min-height: 1.1em; font: 600 clamp(1.1rem, 2vw, 1.5rem)/1 var(--lh-font-display); }
+.lh-gp-rec { display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 0.3rem; font-size: 0.875rem; opacity: 0.92; }
+.lh-gp-team.is-home .lh-gp-rec { flex-direction: row-reverse; }
+.lh-gp-body .lh-hdr-form { display: inline-flex; align-items: center; gap: 0.4rem; }
+.lh-gp-body .lh-mi-record { display: none; }
+.lh-gp-body .lh-mi-dots { display: inline-flex; gap: 3px; }
+.lh-gp-body .lh-mi-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: currentColor; }
+.lh-gp-body .lh-mi-dot.is-loss { background: none; box-shadow: inset 0 0 0 1.5px currentColor; }
+.lh-gp-at { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; background: #060a16; color: #d8dff5; font-size: 1rem; font-weight: 600; }
+
+/* Fact strip under the header: spread / total, then matchupInfo.js's list laid out across */
+.lh-gp-facts {
+  display: grid; grid-template-columns: repeat(5, minmax(0, auto)); justify-content: space-between; gap: 0.75rem 1.5rem;
+  padding: 0.85rem 1.25rem; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 0 0 var(--lh-r-panel) var(--lh-r-panel);
+}
+.lh-gp-facts #matchup-info-body, .lh-gp-facts .lh-mi-list { display: contents; }
+.lh-gp-facts .lh-mi-city { display: none; }
+.lh-gp-facts .lh-mi-list > div, .lh-gp-fact { min-width: 0; margin: 0; padding: 0; border: 0; display: block; }
+.lh-gp-facts dt, .lh-gp-k { display: block; font-size: 0.75rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--lh-muted); }
+.lh-gp-facts dd, .lh-gp-fact b { display: block; margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--lh-strong); }
+.lh-gp-facts dd strong { font-weight: 600; }
+.lh-gp-book { font-size: 0.75rem; font-weight: 500; color: var(--lh-muted); margin-left: 0.2rem; }
+
+/* Jump bar + panels share the player page's rules */
+.lh-gp .lh-pj { margin: var(--lh-pp-gap) 0 0; border: 0; min-height: 52px; }
+.lh-gp .lh-pj.is-stuck { border-bottom: 1px solid var(--lh-border); }
+.lh-gp .lh-pj-links { gap: 0.35rem; }
+.lh-gp .lh-pj-links a { flex: none; min-height: 2.25rem; display: inline-flex; align-items: center; padding: 0 0.85rem; border: 1px solid var(--lh-border); border-radius: var(--lh-r-pill); color: var(--lh-muted); font-size: 0.8125rem; text-decoration: none; }
+.lh-gp .lh-pj-links a::after { display: none !important; }
+.lh-gp .lh-pj-links a.is-active, .lh-gp .lh-pj-links a[aria-current] { background: var(--lh-fill); color: var(--lh-on-fill); border-color: var(--lh-selected-edge); }
+.lh-gp .card {
+  --bs-card-bg: var(--lh-surface); background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: var(--lh-r-panel); scroll-margin-top: 130px;
+}
+.lh-gp .card > .card-header { padding: 0.9rem 1.25rem 0.4rem !important; border: 0; background: none; }
+.lh-gp .card > .card-body { padding: 0.5rem 1.25rem 1rem; }
+.lh-gp [data-lh-kicker]::before { display: none !important; }
+.lh-gp .card-header .lh-label, .lh-gp .card-header h2 { font: 600 1.2rem/1.2 var(--lh-font-heading); letter-spacing: 0; text-transform: none; color: var(--lh-strong); }
+.lh-gp-sub { font: 500 0.8125rem var(--lh-font-body); color: var(--lh-muted); margin-left: 0.4rem; }
+.lh-gp .lh-window-toggle { display: inline-flex; gap: 2px; padding: 3px; background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); }
+.lh-gp .lh-window-toggle .btn-ghost { min-height: 2.1rem; padding: 0 0.7rem; border: 0 !important; border-radius: var(--lh-r-inner) !important; background: none; color: var(--lh-muted); font: 500 0.8125rem var(--lh-font-body); letter-spacing: 0; text-transform: none; }
+.lh-gp .lh-window-toggle .btn-ghost:hover { color: var(--lh-strong); }
+.lh-gp .lh-window-toggle .btn-ghost.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+
+/* Model picks: the breakdown teaser as the verdict wedge (projected score + injuries on navy, picks on the indigo wedge) */
+.lh-gp-picks { overflow: hidden; }
+.lh-gp-picks > .card-body { padding: 0; }
+.lh-gp-picks #gameBreakdownBody { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); background: var(--lh-surface-2); }
+.lh-gp-picks #gameBreakdownBody > * { grid-column: 1 / -1; background: var(--lh-surface); margin: 0; padding-left: 1.25rem; padding-right: 1.25rem; }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-board { grid-column: 1; grid-row: 1; max-width: none; padding-top: 1.1rem; padding-bottom: 0.4rem; background: none; }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-injuries { grid-column: 1; grid-row: 2; align-self: start; border: 0; padding-top: 0.2rem; padding-bottom: 1.1rem; background: none; font-size: 0.85rem; color: var(--lh-faint); }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-picks,
+.lh-gp-picks #gameBreakdownBody > .lh-gb-list {
+  grid-column: 2; grid-row: 1 / span 2; margin: 0 0 0 -2.5rem; padding: 1.1rem 1.5rem 1.1rem 3rem;
+  background: var(--lh-primary); color: #e9e6ff; clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%);
+}
+.lh-gp-picks .lh-gb-boardlabel { text-transform: none; letter-spacing: 0; font-size: 0.75rem; color: var(--lh-faint); }
+.lh-gp-picks .lh-gb-side .lh-gb-abbr { font: 500 0.8125rem var(--lh-font-body); letter-spacing: 0; color: var(--lh-faint); }
+.lh-gp-picks .lh-gb-side .lh-gb-pts { font: 600 clamp(2rem, 3.6vw, 2.8rem)/1 var(--lh-font-display); letter-spacing: 0; color: var(--lh-faint); }
+.lh-gp-picks .lh-gb-side.is-lead .lh-gb-pts { color: var(--lh-strong); }
+.lh-gp-picks .lh-gb-side.is-home { border-left-color: var(--lh-border); }
+.lh-gp-picks .lh-gb-pick { border: 0; padding: 0; }
+.lh-gp-picks .lh-gb-pickhead { justify-content: flex-start; gap: 0.5rem; text-transform: none; letter-spacing: 0; font-size: 0.75rem; color: #e9e6ff; opacity: 0.9; }
+.lh-gp-picks .lh-gb-strength { padding: 0 0.45rem; border-radius: var(--lh-r-inner); background: rgba(255, 255, 255, 0.14); color: #fff; font-size: 0.65rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.lh-gp-picks .lh-gb-picktext { margin-top: 0.2rem; padding: 0; border: 0; font: 600 1.6rem/1.15 var(--lh-font-display); color: #fff; letter-spacing: 0; }
+.lh-gp-picks .lh-gb-nums > div { border-left-color: rgba(255, 255, 255, 0.2); }
+.lh-gp-picks .lh-gb-nums dt { color: #e9e6ff; opacity: 0.75; text-transform: none; letter-spacing: 0; font-size: 0.72rem; }
+.lh-gp-picks .lh-gb-nums dd { color: #fff; }
+.lh-gp-picks .lh-gb-list dt { color: #e9e6ff; opacity: 0.8; }
+.lh-gp-picks .lh-gb-list dd, .lh-gp-picks .lh-gb-list b { color: #fff; }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-note { padding-top: 0.75rem; border-top: 1px solid var(--lh-border); font-size: 0.8125rem; color: var(--lh-muted); }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-more { justify-self: start; margin: 0; padding-bottom: 0.75rem; background: var(--lh-surface); }
+.lh-gp-picks #gameBreakdownBody > #gameBreakdownMore { padding-bottom: 0.5rem; }
+.lh-gp-picks .lh-explain { padding: 0 1.25rem 0.9rem; }
+
+/* Top hit rates (js/components/gameTopHits.js) */
+.lh-gth-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; }
+.lh-gth-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.lh-gth-heads, .lh-gth-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.45fr) 3.5rem minmax(0, 0.9fr) 5.5rem 1rem; align-items: center; gap: 0.75rem; }
+.lh-gth-heads { padding: 0 0.5rem 0.4rem; font-size: 0.72rem; color: var(--lh-muted); border-bottom: 1px solid var(--lh-border); }
+.lh-gth-heads > :nth-child(4) { text-align: right; }
+.lh-gth-row { padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--lh-border); border-radius: var(--lh-r-control); cursor: pointer; }
+.lh-gth-row:hover { background: rgba(var(--lh-accent-rgb), 0.06); }
+.lh-gth-who { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+.lh-gth-who .lh-avatar { width: 2.1rem; height: 2.1rem; font-size: 0.72rem; }
+.lh-gth-name { min-width: 0; }
+.lh-gth-name a { display: block; font: 600 1rem/1.15 var(--lh-font-display); color: var(--lh-strong); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lh-gth-name a:hover { color: var(--lh-accent); }
+.lh-gth-row small { display: block; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-gth-pick { padding-left: 0.55rem; border-left: 3px solid var(--lh-over); }
+.lh-gth-pick.is-under { border-left-color: var(--lh-under); }
+.lh-gth-pick b { display: block; font-weight: 600; color: var(--lh-strong); }
+.lh-gth-hit { display: flex; align-items: center; gap: 0.5rem; }
+.lh-gth-hit b { font: 600 1.15rem var(--lh-font-display); min-width: 3rem; }
+.lh-gth-hit b.is-low { color: var(--lh-hr-low); } .lh-gth-hit b.is-mid { color: var(--lh-hr-mid); } .lh-gth-hit b.is-high { color: var(--lh-hr-high); }
+.lh-gth-hit small { min-width: 2.2rem; }
+.lh-gth-mini .lh-mini-graph, .lh-gth-mini { display: inline-flex; align-items: flex-end; height: 22px; }
+.lh-gth-avg { text-align: right; }
+.lh-gth-avg b { display: block; color: var(--lh-strong); }
+.lh-gth-odds b { display: block; color: var(--lh-over-text); font-size: 0.9rem; }
+.lh-gth-add { justify-self: end; }
+.lh-gth-chev { color: var(--lh-muted); }
+.lh-gth-note { margin: 0.75rem 0 0; font-size: 0.8125rem; color: var(--lh-muted); }
+
+/* Rail: injuries and ratings */
+.lh-gp .lh-game-injury-list { padding: 0 1.25rem 0.75rem; }
+.lh-gp-layout { margin-top: 6px; }
+
+@media (max-width: 1199.98px) {
+  .lh-gp-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lh-gth-heads, .lh-gth-row { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, 0.9fr) 5.5rem 1rem; }
+  .lh-gth-heads > :nth-child(4), .lh-gth-row > .lh-gth-avg { display: none; }
+}
+@media (max-width: 991.98px) {
+  .lh-gp-picks #gameBreakdownBody { grid-template-columns: minmax(0, 1fr); }
+  .lh-gp-picks #gameBreakdownBody > .lh-gb-picks,
+  .lh-gp-picks #gameBreakdownBody > .lh-gb-list { grid-column: 1; grid-row: 3; margin: 0; padding: 1.75rem 1.25rem 1.1rem; clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 100%); }
+}
+@media (max-width: 767.98px) {
+  /* Phones: one column in this order: Model picks, Injuries, Top hit rates, Ratings (and research mode's Player Stats) */
+  .lh-gp-layout, .lh-gp-layout > .lh-pp-main, .lh-gp-layout > .lh-pp-rail { display: contents; }
+  .lh-gp { display: flex; flex-direction: column; }
+  .lh-gp > * { order: 0; }
+  .lh-gp #gameBreakdown { order: 1; margin-top: 6px; }
+  .lh-gp #gameInjuries { order: 2; margin-top: var(--lh-pp-gap); }
+  .lh-gp #gameTopHits, .lh-gp #gamePropsCard { order: 3; margin-top: var(--lh-pp-gap); }
+  .lh-gp #matchupDetails { order: 4; margin-top: var(--lh-pp-gap); }
+  .lh-gp-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lh-gp-neighbors .is-prev { display: none; }
+  .lh-gp-picks .lh-gb-picks { grid-template-columns: minmax(0, 1fr); }
+  .lh-gth-heads { display: none; }
+  .lh-gth-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who who" "pick odds" "hit add"; gap: 0.45rem 0.75rem; }
+  .lh-gth-row > .lh-gth-who { grid-area: who; } .lh-gth-row > .lh-gth-pick { grid-area: pick; } .lh-gth-row > .lh-gth-odds { grid-area: odds; text-align: right; }
+  .lh-gth-row > .lh-gth-hit { grid-area: hit; } .lh-gth-row > .lh-gth-add { grid-area: add; }
+  .lh-gth-row > .lh-gth-chev { display: none; }
+}
+.lh-gp .lh-gp-picks > .card-body { padding: 0; }
+.lh-gp-picks .lh-gb-pick .lh-gb-picktext { color: #fff; }
+.lh-gp-picks .lh-gb-injuries .lh-gb-label { text-transform: none; letter-spacing: 0; font-size: 0.75rem; font-weight: 400; color: var(--lh-muted); }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-more { width: auto; justify-self: start; margin: 0 1.25rem 0.75rem; padding: 0; background: none; border: 0; color: var(--lh-accent); text-decoration: underline; text-underline-offset: 0.2em; font-size: 0.875rem; }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-more { width: 100%; margin: 0; padding: 0 1.25rem 0.75rem; background: var(--lh-surface); text-align: left; }
+/* Team ratings in the rail: one column, compact */
+.lh-gp .lh-pp-rail .lh-tc-grid { grid-template-columns: minmax(0, 1fr); }
+.lh-gp .lh-pp-rail .lh-tc-row { font-size: 0.8125rem; }
+@media (max-width: 1199.98px) and (min-width: 768px) { .lh-gp .lh-pp-rail { align-items: start; } }
+.lh-gp .lh-pp-rail .lh-game-injury-list { max-height: none; overflow: visible; }

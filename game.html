@@ -27,73 +27,39 @@
 
   <div id="site-nav"></div>
 
-  <main class="container-fluid lh-container px-3 px-lg-4">
+  <main class="container-fluid lh-container px-3 px-lg-4 my-3 lh-gp">
 
-    <a class="lh-back-link" href="schedule.html"><i class="bi bi-chevron-left" aria-hidden="true"></i> Today</a>
-
-    <!-- 1. MATCHUP (js/pages/game.js renderGameHeader) and 2. ARENA / COACHES (js/components/matchupInfo.js), side by side from 992px. -->
-    <div class="row g-5 mb-2" data-lh-jump="Matchup">
-      <div class="col-lg-7">
-        <section id="game-header" class="lh-gh">
-          <div class="text-muted py-5">Loading game...</div>
-        </section>
-      </div>
-      <div class="col-lg-5">
-        <section id="matchup-info" class="card h-100">
-          <div class="card-header py-3"><h2 class="lh-label mb-0" data-lh-kicker="Matchup" id="matchupArena">Arena</h2></div>
-          <div id="matchup-info-body" class="card-body">
-            <div class="text-muted py-3">Loading matchup info...</div>
-          </div>
-        </section>
-      </div>
+    <!-- Indigo restyle (Nov 2026; approved mockup design/indigo-mockup/game.html). Back to Today, and the next game of the day. -->
+    <div class="lh-gp-crumbs">
+      <a href="schedule.html"><i class="bi bi-chevron-left" aria-hidden="true"></i> Today's games</a>
+      <span id="gameNeighbors" class="lh-gp-neighbors"></span>
     </div>
 
-    <!-- JUMP BAR: one link per [data-lh-jump] section (js/components/playerJump.js, shared with the player page). It sticks under the
-         navbar once the header scrolls away; then "DET @ NYK" shows in front and the section in view is underlined. -->
-    <nav id="playerJump" class="lh-pj mb-4" aria-label="On this page">
+    <!-- 1. HEADER: the wheel's game card at full width (js/pages/game.js renderGameHeader): time + arena, the away team's color with the
+         home team's as a slanted wedge, abbreviations, moneylines, records and last-5 dots; then the fact strip (spread / total, and
+         js/components/matchupInfo.js: coaches, road / home records, rest, last meeting). -->
+    <section id="game-header" class="lh-gp-head" data-lh-jump="Matchup">
+      <div class="text-muted py-5 text-center">Loading game...</div>
+    </section>
+    <section id="matchup-info" class="lh-gp-facts" aria-label="Matchup facts">
+      <div class="lh-gp-fact" id="gameLineFact"><span class="lh-gp-k">Spread · Total</span><b class="lines-only" id="gameLineText">…</b><b class="research-only">–</b></div>
+      <h2 class="visually-hidden" id="matchupArena">Arena</h2>
+      <div id="matchup-info-body" class="lh-gp-factlist"><span class="text-muted">Loading matchup info...</span></div>
+    </section>
+
+    <!-- JUMP BAR: one pill per [data-lh-jump] section (js/components/playerJump.js, shared with the player page). -->
+    <nav id="playerJump" class="lh-pj" aria-label="On this page">
       <span id="playerJumpName" class="lh-pj-name" aria-hidden="true"></span>
       <div id="playerJumpLinks" class="lh-pj-links"></div>
     </nav>
 
-    <!-- 3. INJURY REPORT: hidden until "Show"; the header says how many are listed (js/components/gameInjuries.js). -->
-    <section class="card mb-5" id="gameInjuries" data-lh-jump="Injuries">
-      <div class="card-header py-3 lh-sec-head">
-        <div>
-          <h2 class="lh-label mb-0" data-lh-kicker="Status">Injury report</h2>
-          <div class="lh-sec-sub" id="gameInjurySummary">Loading…</div>
-        </div>
-        <button type="button" class="lh-sec-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#gameInjuryBody" aria-expanded="false" aria-controls="gameInjuryBody">
-            <span class="lh-when-closed">Show</span><span class="lh-when-open">Hide</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
-          </button>
-      </div>
-      <div class="collapse" id="gameInjuryBody">
-        <div id="gameInjuryList" class="lh-injury-list lh-game-injury-list">
-          <div class="text-muted small p-3">Loading…</div>
-        </div>
-      </div>
-    </section>
+    <div class="lh-pp-layout lh-gp-layout">
+    <div class="lh-pp-main">
 
-    <!-- 4. MATCHUP RATINGS (the team comparison): hidden until "Show"; the header says which team is better in more ratings.
-         js/components/teamCompare.js loads its data when this card scrolls into view. -->
-    <section class="card mb-5" id="matchupDetails" data-lh-jump="Ratings">
-      <div class="card-header py-3 lh-sec-head">
-        <div>
-          <h2 class="lh-label mb-0" data-lh-kicker="Teams" id="ratingsTitle">Team ratings</h2>
-          <div class="lh-sec-sub" id="ratingsSummary">&nbsp;</div>
-        </div>
-        <button type="button" class="lh-sec-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#teamCompareWrap" aria-expanded="false" aria-controls="teamCompareWrap">
-            <span class="lh-when-closed">Show</span><span class="lh-when-open">Hide</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
-          </button>
-      </div>
-      <div class="collapse" id="teamCompareWrap">
-        <div class="card-body" id="teamCompareBody"></div>
-      </div>
-    </section>
-
-    <!-- 5. GAME BREAKDOWN: the projected score from both teams' efficiency and pace vs the book's total. A teaser (score, model total, book,
-         lean) shows; "Show breakdown details" opens the number line and the build-up. js/components/gameBreakdown.js, loads when near view. -->
-    <section class="card mb-5" id="gameBreakdown" data-lh-jump="Breakdown">
-      <div class="card-header py-3"><h2 class="lh-label mb-0" data-lh-kicker="Spread &amp; total">Game Breakdown</h2></div>
+    <!-- 2. MODEL PICKS: the Game Breakdown teaser laid out as the beta's verdict wedge (projected score + injuries on navy, the spread and
+         total picks on the indigo wedge); "Show breakdown details" opens the build-up. js/components/gameBreakdown.js, loads when near view. -->
+    <section class="card lh-gp-picks" id="gameBreakdown" data-lh-jump="Model picks">
+      <div class="card-header py-3"><h2 class="lh-label mb-0">Model picks <span class="lh-gp-sub">spread &amp; total</span></h2></div>
       <div class="card-body">
         <div id="gameBreakdownBody"></div>
         <div class="lh-explain">
@@ -105,25 +71,27 @@
       </div>
     </section>
 
-    <!-- 6. THE BOARD (lines mode): this game's props, each row opens in place to its breakdown (js/components/board.js; js/pages/game.js
-         hands it the rows). ?player=237&prop=pts&side=under opens that player's row. -->
-    <section id="theBoard" class="lh-board lines-only mb-5" data-lh-jump="The Board" data-rows="10" data-single-game aria-labelledby="boardTitle">
-      <div class="lh-board-head">
-        <span class="lh-bd-kicker">Props</span>
-        <h2 class="lh-board-title" id="boardTitle">The Board <span class="lh-board-date" id="boardDate"></span></h2>
-        <p class="lh-board-sub">Every prop in this game with its hit rate, Hunt line and Hunt Score. Open a row for the full breakdown.</p>
+    <!-- 3. TOP HIT RATES (lines mode): this game's props, highest hit rate first; rows open the player page on that prop
+         (js/components/gameTopHits.js, from the rows js/pages/game.js sends). The Board itself lives on Today and in Tools. -->
+    <section class="card lines-only" id="gameTopHits" data-lh-jump="Top hit rates" aria-labelledby="gameTopHitsTitle">
+      <div class="card-header py-3 lh-gth-head">
+        <h2 class="lh-label mb-0" id="gameTopHitsTitle">Top hit rates <span class="lh-gp-sub">this game's props, highest first</span></h2>
+        <div class="lh-window-toggle" id="gthTeams" role="group" aria-label="Team"></div>
       </div>
-      <ul id="boardTabs" class="nav nav-underline lh-tabs lh-board-tabs" hidden></ul>
-      <div id="boardHeads" class="lh-bd-heads" hidden aria-hidden="true">
-        <span>Player</span><span>Pick</span><span>Hit rate</span><span>Avg</span><span>Hunt line</span><span>Score</span><span>Best odds</span><span></span><span></span>
+      <div class="card-body">
+        <div class="lh-gth-controls">
+          <div class="lh-window-toggle" id="gthStats" role="group" aria-label="Stat"></div>
+          <div class="lh-window-toggle" id="gthWindows" role="group" aria-label="How many games"></div>
+        </div>
+        <div class="lh-gth-heads" aria-hidden="true"><span>Player</span><span>Pick</span><span>Hit rate</span><span>Avg</span><span>Best odds</span><span></span><span></span></div>
+        <div id="gthList" aria-busy="true"><div class="text-muted py-3">Loading props...</div></div>
+        <button type="button" id="gthMore" class="btn btn-sm btn-ghost lh-gth-more w-100 mt-3" hidden>Show more</button>
+        <p class="lh-gth-note">Every prop for every game, with Hunt Scores, is on The Board: <a href="schedule.html">Today ›</a> or <a href="top-hit-rates.html">Tools › The Board ›</a>. Past results, not a prediction. Gambling problem? Call 1-800-GAMBLER.</p>
       </div>
-      <div id="boardList" aria-busy="true"></div>
-      <button type="button" id="boardMore" class="btn btn-sm btn-outline-secondary lh-board-more w-100 mt-3" hidden>Show more</button>
-      <p class="lh-board-note">Based on past results and a simulation, not a guarantee. Gambling problem? Call 1-800-GAMBLER.</p>
     </section>
 
     <!-- PLAYER STATS CARD (research mode) -->
-    <div class="card mb-4 research-only" id="gamePropsCard" data-lh-jump="Stats">
+    <div class="card research-only" id="gamePropsCard" data-lh-jump="Stats">
       <div class="card-header lh-label py-3">Player Stats</div>
       <div class="card-body">
 
@@ -165,6 +133,32 @@
       </div>
     </div>
 
+    </div>
+
+    <!-- RAIL: the injury report and the team ratings, both open. -->
+    <aside class="lh-pp-rail">
+      <section class="card" id="gameInjuries" data-lh-jump="Injuries">
+        <div class="card-header py-3">
+          <h2 class="lh-label mb-0">Injury report <span class="lh-gp-sub" id="gameInjurySummary">Loading…</span></h2>
+        </div>
+        <div class="collapse show" id="gameInjuryBody">
+          <div id="gameInjuryList" class="lh-injury-list lh-game-injury-list">
+            <div class="text-muted small p-3">Loading…</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="matchupDetails" data-lh-jump="Ratings">
+        <div class="card-header py-3">
+          <h2 class="lh-label mb-0" id="ratingsTitle">Team ratings <span class="lh-gp-sub" id="ratingsSummary">&nbsp;</span></h2>
+        </div>
+        <div class="collapse show" id="teamCompareWrap">
+          <div class="card-body" id="teamCompareBody"></div>
+        </div>
+      </section>
+    </aside>
+    </div>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -192,7 +186,7 @@
   <script src="js/components/gameBreakdown.js"></script>
   <script src="js/components/playerJump.js"></script>
   <script src="js/components/hunt-score.js"></script>
-  <script src="js/components/board.js"></script>
+  <script src="js/components/gameTopHits.js"></script>
   <script src="js/pages/game.js"></script>
 </body>
 </html>
