@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Board scouting report mockup</title>
+  <meta name="robots" content="noindex">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <!--
+    MOCKUP ONLY: the opened Board row for Jaden McDaniels (MIN vs UTA, Nov 8 2026), real numbers copied by hand from the
+    live Board and team stats (nothing is live). Best prop = the highest hit rate among his props (AST and REB both 9/10; AST wins on
+    the 9-game streak). The report below it does not change when you switch props.
+  -->
+  <style>
+    :root, [data-theme="dark"] { --ink:#060a16; --panel:#0b1229; --panel2:#101a38; --rule:#1f2e5a; --mist:#93a1cb; --strong:#d8dff5; --text:#c3cce9;
+      --over:#46a98f; --over-text:#7fdcc0; --under:#bd6570; --under-text:#f2969f; --gold:#ecc86f; --hr-high:#7fdcc0; --hr-mid:#ecc86f; --hr-low:#f2969f;
+      --sel:#14234c; --selEdge:#9a93ff; color-scheme: dark; }
+    [data-theme="light"] { --ink:#eef1fa; --panel:#fff; --panel2:#f3f5fc; --rule:#cfd6ec; --mist:#4b5784; --strong:#0b1229; --text:#26325e;
+      --over:#22685a; --over-text:#22685a; --under:#a33a4a; --under-text:#a33a4a; --gold:#8a5a00; --hr-high:#22685a; --hr-mid:#8a5a00; --hr-low:#a33a4a;
+      --sel:#14234c; --selEdge:#280ea1; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--ink); color: var(--text); font: 400 14px/1.45 Satoshi, system-ui, sans-serif; }
+    .bar { max-width: 460px; margin: 0 auto 12px; }
+    .bar button { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 6px 12px; font: inherit; cursor: pointer; }
+    .card { max-width: 460px; margin: 0 auto; background: var(--panel); border: 1px solid var(--rule); padding: 16px; }
+    .head { display: flex; align-items: center; gap: .65rem; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+    .av { width: 46px; height: 48px; flex: none; position: relative; overflow: hidden; background: color-mix(in srgb, #236192 55%, var(--panel)); clip-path: polygon(20% 0, 100% 0, 80% 100%, 0 100%); }
+    .av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 12%; transform: scale(1.18); transform-origin: center top; }
+    .nm small { display: block; font-size: .8rem; color: var(--strong); line-height: 1.1; }
+    .nm b { font: 600 1.25rem/1.1 "Clash Display", sans-serif; color: var(--strong); }
+    .nm span { display: block; font-size: .78rem; color: var(--mist); margin-top: 2px; }
+    .label { font-size: .75rem; color: var(--mist); margin: 16px 0 6px; font-weight: 500; }
+    h3 { font: 600 1.2rem/1.2 "Clash Display", sans-serif; color: var(--strong); margin: 0 0 8px; }
+
+    /* best prop */
+    .best { border-left: 3px solid var(--over); padding: 2px 0 2px 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .best .pick { font: 600 1.35rem/1.15 "Clash Display", sans-serif; color: var(--strong); }
+    .best .why { font-size: .8rem; color: var(--mist); margin-top: 2px; }
+    .best .rate { text-align: right; font: 600 1.6rem/1 "Clash Display", sans-serif; color: var(--hr-high); }
+    .best .rate small { display: block; font: 500 .7rem Satoshi; color: var(--mist); margin-top: 2px; }
+    .note { margin: 8px 0 0; padding: 8px 10px; background: var(--panel2); font-size: .82rem; display: flex; gap: 8px; align-items: baseline; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip { border: 1px solid var(--rule); padding: 3px 9px; font-size: .78rem; color: var(--text); background: none; }
+    .chip b { font-weight: 600; color: var(--strong); }
+    .chip.on { background: var(--sel); border-color: var(--selEdge); color: #d8dff5; }
+    .chip.on b { color: #d8dff5; }
+    .chip i { font-style: normal; font-weight: 600; margin-left: 4px; }
+    .hi { color: var(--hr-high); } .md { color: var(--hr-mid); } .lo { color: var(--hr-low); }
+
+    /* report */
+    .rep { border-top: 1px solid var(--rule); margin-top: 16px; padding-top: 14px; }
+    .item { display: grid; grid-template-columns: 4.6rem 1fr; gap: 0 12px; padding: 10px 0; border-top: 1px solid var(--rule); }
+    .item:first-of-type { border-top: 0; }
+    .tag { align-self: start; text-align: center; font-size: .72rem; font-weight: 700; padding: 2px 0; border: 1px solid; }
+    .tag.boost { color: var(--over-text); border-color: var(--over); }
+    .tag.risk { color: var(--under-text); border-color: var(--under); }
+    .tag.ctx { color: var(--mist); border-color: var(--rule); border-style: dashed; }
+    .item p { margin: 0; color: var(--text); }
+    .item p b { color: var(--strong); font-weight: 700; }
+    .item small { display: block; color: var(--mist); font-size: .75rem; margin-top: 2px; }
+    .more { margin-top: 6px; background: none; border: 0; color: var(--strong); text-decoration: underline; text-underline-offset: .2em; font: inherit; font-size: .85rem; cursor: pointer; padding: 0; }
+    .last { margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--rule); }
+    .strip { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--rule); margin-top: 8px; padding-top: 8px; }
+    .strip div { padding: 0 .5rem; border-left: 1px solid var(--rule); min-width: 0; }
+    .strip div:first-child { padding-left: 0; border-left: 0; }
+    .strip span { display: block; font-size: .7rem; color: var(--mist); }
+    .strip b { font: 600 1.15rem/1.2 "Clash Display", sans-serif; color: var(--strong); }
+    .src { max-width: 460px; margin: 12px auto 0; font-size: .75rem; color: var(--mist); }
+  </style>
+</head>
+<body>
+  <div class="bar"><button id="t">Switch to light</button></div>
+  <section class="card">
+    <div class="head">
+      <span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span>
+      <div class="nm"><small>Jaden</small><b>McDaniels</b><span>MIN vs UTA · 7:00 PM</span></div>
+    </div>
+
+    <div class="label">Best prop · highest hit rate over the last 10</div>
+    <div class="best">
+      <div>
+        <div class="pick">Over 2.5 AST</div>
+        <div class="why">9 straight overs · averaging 3.7 · best odds −174 DK</div>
+      </div>
+      <div class="rate">9/10<small>L10</small></div>
+    </div>
+    <p class="note"><span class="tag risk" style="width:4.2rem;flex:none">Risk</span><span>UTA allows the <b>2nd-fewest assists</b> in the league (22.8 a game).</span></p>
+    <div class="chips" aria-label="His other props, best side each">
+      <span class="chip on"><b>AST</b> Over <i class="hi">9/10</i></span>
+      <span class="chip"><b>REB</b> Over <i class="hi">9/10</i></span>
+      <span class="chip"><b>PRA</b> Under <i class="md">7/10</i></span>
+      <span class="chip"><b>PTS</b> Under <i class="md">6/10</i></span>
+      <span class="chip"><b>BLK</b> Under <i class="md">6/10</i></span>
+      <span class="chip"><b>3PM</b> Over <i class="lo">5/10</i></span>
+      <span class="chip"><b>STL</b> Over <i class="lo">5/10</i></span>
+    </div>
+
+    <div class="rep">
+      <h3>Scouting report</h3>
+      <div class="item"><span class="tag boost">Boost</span><div><p><b>UTA's defense is the 7th-worst</b> (114.5 rating) and gives up the 7th-most points a game (118.2).</p><small>Matchup · team stats this season</small></div></div>
+      <div class="item"><span class="tag risk">Risk</span><div><p><b>MIN is a 12.5-point favorite</b> with the #1 net rating (+10.6) against UTA's #26 (−11.2). Blowouts can cut starters' fourth quarters.</p><small>Game · total 222.5</small></div></div>
+      <div class="item"><span class="tag boost">Boost</span><div><p><b>Minutes are up:</b> 35.0 over his last 5 against 33.4 over his last 10.</p><small>Role · 39, 37, 29, 38, 32 in the last 5</small></div></div>
+      <div class="item"><span class="tag ctx">Context</span><div><p><b>Pace is middle of the pack:</b> UTA 12th, MIN 13th fastest, so no extra possessions either way.</p><small>Pace · possessions a game</small></div></div>
+      <div class="item"><span class="tag ctx">Context</span><div><p><b>At home on 1 day of rest.</b> Played at NOP on Nov 6, no back-to-back.</p><small>Rest</small></div></div>
+      <button class="more" type="button">Show 2 more</button>
+    </div>
+
+    <div class="last">
+      <div class="label" style="margin-top:0">Last game · Nov 6 @ NOP, W 115–109</div>
+      <div class="strip">
+        <div><span>MIN</span><b>39</b></div><div><span>PTS</span><b>23</b></div><div><span>REB</span><b>6</b></div>
+        <div><span>AST</span><b>5</b></div><div><span>3PM</span><b>2</b></div><div><span>BLK</span><b>2</b></div>
+      </div>
+    </div>
+  </section>
+  <p class="src">Mockup. The numbers are real (the live Board and team stats on Nov 8); nothing here updates. Ranks: 1 = most, except net rating and defensive rating where 1 = best.</p>
+  <script>
+    document.getElementById("t").onclick = (e) => {
+      const r = document.documentElement, light = r.dataset.theme !== "light";
+      r.dataset.theme = light ? "light" : "dark"; e.target.textContent = light ? "Switch to dark" : "Switch to light";
+    };
+  </script>
+</body>
+</html>
