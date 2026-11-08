@@ -7121,3 +7121,13 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 }
 #playerAvatar.lh-avatar > img { object-position: center 12%; transform: scale(1.18); transform-origin: center top; }
 @media (max-width: 767.98px) { #playerAvatar.lh-avatar { width: 46px; height: 50px; font-size: 0.85rem; } }
+
+/* Chart summary strip on narrow phones: labels and numbers stay on one line */
+#playerSummary .lh-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#playerSummary .lh-drawer-stat { white-space: nowrap; }
+#playerSummary .lh-drawer-stat .text-muted { font-size: 0.7em; }
+@media (max-width: 575.98px) {
+  #playerSummary > div { padding: 0 0.4rem !important; }
+  #playerSummary .lh-label { font-size: 0.7rem; }
+  #playerSummary .lh-drawer-stat { font-size: 1.05rem; }
+}
