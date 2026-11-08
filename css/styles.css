@@ -6729,3 +6729,66 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
   .lh-gm-chev { display: none; }
   .lh-gm-wide { grid-column: span 1; }
 }
+
+/* ---------- Indigo restyle: small labels and segmented controls, site-wide ----------
+   The beta's rule: size and the two fonts make the hierarchy, never heavy capitals. Labels, table heads, kickers and buttons go to
+   sentence case without the wide letter spacing. Caps stay only where the beta uses them: the Today eyebrow, the game-card time,
+   and small status tags (Beta, OUT / GTD / Q, B2B, Post, strength chips, ALT / STARTED). */
+.lh-label,
+.lh-navbar .nav-link, .btn-lh-primary, .btn-ghost, .lh-player-page-btn, .lh-slide-link, .lh-tabs .nav-link,
+.table thead th, .lh-top-title, .lh-next-game, .lh-ww-label, .lh-hitlist-head, .lh-zm-head, .lh-zm-pill, .lh-ma-sec,
+.lh-sp-cols, .lh-sp-game, .lh-sp-table th, .lh-mi-label, .lh-mi-toggle, .lh-tc-label, .lh-st-head, .lh-st-sep span, .lh-st-card-head,
+.lh-hunts-date, .lh-hunts-type, .lh-hunts-stake-label, .lh-ptb-hint, .lh-hpill-label, .lh-hadded-label, .lh-top-hint, .lh-hunts-sharebtn,
+.lh-shared-date, .lh-mx-chip, .lh-mx-vs > span, .lh-mx-play.is-head, .lh-mx-pace-label, .lh-hs-pick, .lh-hs-score-label, .lh-hs-heading,
+.lh-today-switch button, .lh-swiss-page [data-lh-kicker]::before, .lh-swiss-card [data-lh-kicker]::before, .lh-ph-of, .lh-ph-step--head,
+.lh-gb-facts dt, .lh-gb-subhead, .lh-bd-kicker, .lh-bd-heads, .lh-gc-ql, .lh-gc-go, .lh-gh-when, .lh-gb-boardlabel, .lh-gb-list dt,
+.lh-gb-pickhead, .lh-gb-label, .lh-gb-trow.is-head, .lh-gb-nums dt, .lh-step-card h3, .lh-slide-headline--split .lh-hit-question,
+.lh-demo-matchup, .lh-demo-meta, .lh-demo-stat-label, .lh-demo-row-value, .lh-demo-button, .lh-demo-tabs, .lh-demo-toggle {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.lh-label { font-size: 0.75rem; font-weight: 500; }
+.lh-swiss-page [data-lh-kicker]::before, .lh-swiss-card [data-lh-kicker]::before { font-size: 0.75rem; font-weight: 500; }
+.table thead th { font-size: 0.75rem; font-weight: 500; color: var(--lh-muted); }
+
+/* Segmented controls (L5 / L10 / Season, Home / Away, stat pills, Minutes / Usage...): the beta's well with inner pills */
+.lh-window-toggle { display: inline-flex; gap: 2px; padding: 3px; background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); }
+.lh-window-toggle .btn-ghost {
+  min-height: 2.1rem; padding: 0 0.7rem; border: 0 !important; border-radius: var(--lh-r-inner) !important; background: none;
+  color: var(--lh-muted); font: 500 0.8125rem var(--lh-font-body);
+}
+.lh-window-toggle .btn-ghost:hover { color: var(--lh-strong); background: none; }
+.lh-window-toggle .btn-ghost.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+
+/* Underline tabs (stat tabs on The Board, Hunt Score, research tables): quiet pills like the beta's chips */
+.lh-tabs.nav-underline { gap: 0.3rem; border-bottom: 0; }
+.lh-tabs.nav-underline .nav-link {
+  min-height: 2.1rem; padding: 0 0.8rem; display: inline-flex; align-items: center;
+  border: 1px solid var(--lh-border); border-radius: var(--lh-r-pill); color: var(--lh-muted); font-size: 0.8125rem; font-weight: 500;
+}
+.lh-tabs.nav-underline .nav-link::after { display: none; }
+.lh-tabs.nav-underline .nav-link:hover { color: var(--lh-strong); }
+.lh-tabs.nav-underline .nav-link.active { background: var(--lh-fill); color: var(--lh-on-fill); border-color: var(--lh-selected-edge); }
+
+/* Homepage headline: sentence case */
+.lh-home-headline { text-transform: none; letter-spacing: -0.01em; }
+
+/* Standings: each conference (and each division card) is a panel; the table fits its half from 1200px (narrower number columns) */
+.lh-st-conf, .lh-st-card { background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: var(--lh-r-panel); padding: 1rem 1.25rem; }
+.lh-st-heading, .lh-st-card-title { font: 600 1.2rem/1.2 var(--lh-font-heading); letter-spacing: 0; text-transform: none; color: var(--lh-strong); }
+.lh-st-sep span { font-size: 0.72rem; font-weight: 500; color: var(--lh-muted); }
+@media (min-width: 576px) {
+  .lh-st-table { width: 100%; min-width: 34rem; }
+  .lh-st-row { grid-template-columns: 1.6rem minmax(9rem, 1fr) 3.6rem 2.9rem 2.4rem 3.3rem 3.3rem 2.9rem 2.9rem; gap: 0 0.4rem; font-size: 0.875rem; }
+}
+/* Panel titles written as <h2 class="lh-label"> (Matchup Analyzer, ...): Clash Display titles like the rest of the site */
+.card h2.lh-label, .card h3.lh-label, .card-header > .lh-label:only-child {
+  font: 600 1.15rem/1.2 var(--lh-font-heading); letter-spacing: 0; text-transform: none; color: var(--lh-strong);
+}
+/* Hit List / Streaks shelf: panel cards, Clash Display card names, a real page title */
+.lh-hitlist-card { background: var(--lh-surface); }
+.lh-hitlist-head { font: 600 1rem/1.2 var(--lh-font-heading); color: var(--lh-strong); padding: 0.7rem 0.85rem; }
+.lh-top-title { font-weight: 600; }
+.lh-shelf-head .lh-top-title, .lh-tool-page h1.lh-top-title { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem); }
+#hitlist .lh-shelf-head .lh-top-title, #streaks .lh-shelf-head .lh-top-title { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem); }
+#hitlist .lh-top-title-date, #streaks .lh-top-title-date { font-size: 0.6em; }
