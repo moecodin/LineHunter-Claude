@@ -7046,3 +7046,8 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 }
 .lh-board-tabs.lh-tabs.nav-underline .nav-link { border: 0; border-radius: var(--lh-r-inner); background: none; color: var(--lh-muted); }
 .lh-board-tabs.lh-tabs.nav-underline .nav-link.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+
+/* Idea 5 on the tool pages and the homepage card: the same 16px inside, 12px between stacked panels */
+.lh-hs-card > .card-header, #hotPlayers > .card-header, .lh-top-compact > .card-header, main > .card > .card-header { padding: var(--lh-pad) var(--lh-pad) 0.25rem !important; }
+.lh-hs-card > .card-body:not(.p-0), #hotPlayers > .card-body, main > .card > .card-body:not(.p-0) { padding: 0.5rem var(--lh-pad) var(--lh-pad); }
+main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important; }
