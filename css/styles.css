@@ -6824,7 +6824,7 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 .lh-hero-stage { perspective: 1800px; min-width: 0; }
 .lh-hero-plane { display: flex; gap: var(--gap); height: var(--h); transform: rotateY(-13deg) rotateX(5deg) rotateZ(1.5deg); transform-origin: left center; }
 /* The stat sheet */
-.lh-sheet { flex: none; width: calc(var(--h) * 0.86); height: var(--h); display: flex; flex-direction: column; overflow: hidden; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 0.875rem; box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.45); font-size: calc(var(--h) * 0.022); pointer-events: none; }
+.lh-hero-sheet { flex: none; width: calc(var(--h) * 0.86); height: var(--h); display: flex; flex-direction: column; overflow: hidden; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 0.875rem; box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.45); font-size: calc(var(--h) * 0.022); pointer-events: none; }
 .lh-sh-bar { display: flex; align-items: center; gap: 0.8em; padding: 1em 1.2em; border-bottom: 1px solid var(--lh-border); }
 .lh-sh-av { display: grid; place-items: center; flex: none; width: 2.6em; height: 2.6em; border-radius: 50%; color: #fff; font: 600 0.95em var(--lh-font-display); }
 .lh-sh-name { font: 600 1.4em/1.1 var(--lh-font-display); color: var(--lh-strong); min-width: 0; }
@@ -6891,7 +6891,7 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
   .lh-hero { --bw: min((100vw - 2.5rem - var(--gap)) / 2, 13rem); }
   .lh-hero-grid { grid-template-columns: minmax(0, 1fr); min-height: 0; }
   .lh-hero-plane { transform: none; height: auto; justify-content: center; }
-  .lh-sheet { display: none; }
+  .lh-hero-sheet { display: none; }
   .lh-reel-col { height: calc(var(--bw) * 16 / 9 * 1.7); }
   .lh-inside-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lh-hero::after { background: linear-gradient(var(--lh-hero-veil) 22rem, transparent 40rem), linear-gradient(transparent 90%, var(--lh-bg)); }
