@@ -7051,3 +7051,16 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 .lh-hs-card > .card-header, #hotPlayers > .card-header, .lh-top-compact > .card-header, main > .card > .card-header { padding: var(--lh-pad) var(--lh-pad) 0.25rem !important; }
 .lh-hs-card > .card-body:not(.p-0), #hotPlayers > .card-body, main > .card > .card-body:not(.p-0) { padding: 0.5rem var(--lh-pad) var(--lh-pad); }
 main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important; }
+
+/* Jump bar (Chart, Matchup, Log...): back to the Swiss underlined links, no oval pills. Active = ink text with a 2px underline. */
+.lh-pp .lh-pj, .lh-gp .lh-pj { border-bottom: 1px solid var(--lh-border); min-height: 44px; }
+.lh-pp .lh-pj-links, .lh-gp .lh-pj-links { gap: 1.5rem; padding-left: 0; }
+.lh-pp .lh-pj-links a, .lh-gp .lh-pj-links a {
+  min-height: 44px; padding: 0; border: 0; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px;
+  background: none; color: var(--lh-muted); font-size: 0.875rem; font-weight: 500;
+}
+.lh-pp .lh-pj-links a:hover, .lh-gp .lh-pj-links a:hover { color: var(--lh-strong); background: none; }
+.lh-pp .lh-pj-links a.is-active, .lh-pp .lh-pj-links a[aria-current],
+.lh-gp .lh-pj-links a.is-active, .lh-gp .lh-pj-links a[aria-current] {
+  background: none; color: var(--lh-strong); font-weight: 600; border-color: transparent; border-bottom-color: var(--lh-strong);
+}
