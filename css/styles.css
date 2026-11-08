@@ -7131,3 +7131,14 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   #playerSummary .lh-label { font-size: 0.7rem; }
   #playerSummary .lh-drawer-stat { font-size: 1.05rem; }
 }
+
+/* Phones: no "Season" window pill on the player chart, so L5 / L10 / L20, All / Home / Away / H2H and Share fit without swiping */
+@media (max-width: 575.98px) {
+  #playerWindows > .btn-ghost:last-child { display: none; }
+}
+@media (max-width: 575.98px) {
+  .lh-pp-chartctl { gap: 0.35rem !important; overflow-x: visible; }
+  .lh-pp-chartctl .lh-window-toggle { padding: 2px; }
+  .lh-pp .lh-pp-chartctl .lh-window-toggle .btn-ghost { padding: 0 0.38rem; min-width: 0; }
+  .lh-pp-chartctl #playerShare { margin-left: auto; width: 32px; height: 32px; }
+}
