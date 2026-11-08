@@ -34,6 +34,8 @@ window.lhLockupHtml = lhLockupHtml;
 // Hot Players shares top-hit-rates.html (The Board's page) and Streaks shares hit-list.html: each page swaps its card with the mode.
 const LH_TOOLS = [
   { key: "hunt", href: "hunt-score.html", icon: "bi-crosshair", name: "Hunt Score", beta: true, sub: "Our prop and game models, in testing", mode: "lines" },
+  // Part of the Hunt Score beta: listed (with the Beta tag) exactly when Hunt Score is.
+  { key: "huntmodel", href: "hunt-model.html", icon: "bi-journal-text", name: "Hunt Model", beta: true, sub: "How the Hunt Score works", mode: "lines" },
   { key: "top", href: "top-hit-rates.html", icon: "bi-list-columns-reverse", name: "The Board", sub: "Every prop: hit rate, average and odds", mode: "lines" },
   { key: "hitlist", href: "hit-list.html", icon: "bi-bullseye", name: "Hit List", sub: "Ready-made slips from past results", mode: "lines" },
   { key: "hot", href: "top-hit-rates.html", icon: "bi-fire", name: "Hot Players", sub: "Last 5 games vs their season", mode: "research" },
