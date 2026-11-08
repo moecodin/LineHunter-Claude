@@ -7142,3 +7142,22 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   .lh-pp .lh-pp-chartctl .lh-window-toggle .btn-ghost { padding: 0 0.38rem; min-width: 0; }
   .lh-pp-chartctl #playerShare { margin-left: auto; width: 32px; height: 32px; }
 }
+
+/* Phones: Over / Under + stepper a little smaller, and the line ladder sized to fit the card without sideways scrolling */
+@media (max-width: 767.98px) {
+  #playerToolbar .lh-ptb-line { grid-template-columns: 100px minmax(0, 1fr); gap: 6px; }
+  #playerToolbar .lh-ptb-step, #playerToolbar .lh-ptb-side { height: 46px; }
+  #playerToolbar .lh-ptb-stepbtn { flex-basis: 30px; }
+  #playerToolbar .lh-ptb-value { font-size: 1.1rem; }
+  #playerToolbar .lh-ptb-sideword { font-size: 0.82rem; }
+  #playerToolbar .lh-ptb-sideodds { font-size: 0.7rem; }
+  #playerToolbar .lh-ptb-sides { gap: 6px; }
+}
+@media (max-width: 575.98px) {
+  .lh-ladder { grid-template-columns: 2.4rem repeat(7, minmax(0, 1fr)); gap: 0 1px; overflow-x: visible; --lh-ld-rows: 90px repeat(6, 1.45rem); }
+  .lh-ladder-labels { font-size: 0.6rem; }
+  .lh-ladder-line { font-size: 0.95rem; }
+  .lh-ladder-col { font-size: 0.68rem; }
+  .lh-ladder-odds small, .lh-ladder-dots { font-size: 0.6rem; }
+  .lh-ladder-dots { gap: 1px; }
+}
