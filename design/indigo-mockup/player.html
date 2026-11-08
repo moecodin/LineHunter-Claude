@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Player page mockup · Indigo</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../../assets/img/lh-mark.svg">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!--
+    MOCKUP ONLY (design/indigo-mockup/player.html): the main site's player page in the beta's look (PR #5, beta-website/DESIGN.md).
+    Static, sample data, no API. Layout: the beta's player bar + verdict wedge + game-by-game chart + line ladder, then the main
+    site's cards (Score build-up, Same Position, Matchup Analysis, Game log, With / Without, Opportunity, Role, Shot Chart,
+    Zone Matchup) as panels, with a side rail (Defense vs position, Injury report, Season averages, Players).
+  -->
+  <style>
+    :root, [data-theme="dark"] {
+      --ink: #060a16; --panel: #0b1229; --navy: #14234c; --rule: #1f2e5a; --miss-bg: #2b3a6c;
+      --slate: #5f6da3; --mist: #93a1cb; --haze: #c3cce9; --lilac: #d3d0ff; --ice: #d8dff5;
+      --lift: #9a93ff; --indigo: #280ea1;
+      --hit-1: #46a98f; --hit-2: #37907a; --hit-3: #2c7a67;
+      --miss-1: #bd6570; --miss-2: #ab5763; --miss-3: #9a4c58;
+      --hr-low: #f2969f; --hr-mid: #ecc86f; --hr-high: #7fdcc0;
+      --wedge-text: #d3d0ff; --strong: #d8dff5;
+      color-scheme: dark;
+    }
+    [data-theme="light"] {
+      --ink: #eef1fa; --panel: #ffffff; --navy: #e3e8f6; --rule: #cfd6ec; --miss-bg: #d9dff0;
+      --slate: #8a96c2; --mist: #4b5784; --haze: #3e4a78; --lilac: #e9e6ff; --ice: #1b2850;
+      --lift: #280ea1; --indigo: #280ea1;
+      --hit-1: #3a9a80; --hit-2: #2c7a67; --hit-3: #22685a;
+      --miss-1: #c26e79; --miss-2: #ab5763; --miss-3: #9a4c58;
+      --hr-low: #a33a4a; --hr-mid: #8a5a00; --hr-high: #22685a;
+      --wedge-text: #e9e6ff; --strong: #0b1229;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; background: var(--ink); color: var(--ice); font: 400 0.9375rem/1.35 "Satoshi", "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+    h1, h2, h3, p { margin: 0; }
+    a { color: var(--lift); }
+    button, select { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--lift); outline-offset: 2px; }
+    .display { font-family: "Clash Display", "Segoe UI", sans-serif; font-weight: 600; }
+    .muted { color: var(--mist); }
+    .label { font-size: 0.75rem; color: var(--mist); }
+    .wrap { width: min(100% - 2rem, 1560px); margin-inline: auto; }
+
+    /* Mockup strip */
+    .strip { background: var(--indigo); color: #fff; font-size: 0.8125rem; font-weight: 500; text-align: center; padding: 0.35rem 1rem; }
+    .strip button { margin-left: 0.75rem; background: none; border: 1px solid rgba(255,255,255,.5); border-radius: 32px; color: #fff; padding: 0 0.6rem; cursor: pointer; }
+
+    /* Navbar (the main site's, in the beta's quiet pills) */
+    .nav { position: sticky; top: 0; z-index: 20; background: var(--ink); border-bottom: 1px solid var(--rule); }
+    .nav-in { display: flex; align-items: center; gap: 1rem; min-height: 60px; }
+    .brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--strong); font: italic 600 1.35rem/1 "Clash Display", sans-serif; letter-spacing: 0.02em; }
+    .brand img { width: 30px; height: 30px; }
+    .league { display: flex; gap: 2px; padding: 3px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; font-size: 0.75rem; }
+    .league span { padding: 0.15rem 0.5rem; border-radius: 4.8px; color: var(--mist); }
+    .league .on { background: var(--navy); color: var(--ice); box-shadow: inset 0 0 0 1px var(--lift); }
+    .links { display: flex; gap: 0.25rem; }
+    .links a { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.75rem; border-radius: 8px; color: var(--mist); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+    .links a:hover { color: var(--ice); }
+    .search { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; width: 260px; min-height: 2.5rem; padding: 0 0.75rem; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; color: var(--mist); font-size: 0.875rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 44px; padding: 0 1rem; background: none; border: 1px solid var(--slate); border-radius: 8px; color: var(--ice); font-weight: 500; text-decoration: none; cursor: pointer; white-space: nowrap; }
+    .btn:hover { background: var(--navy); }
+    .btn-sm { min-height: 2.5rem; padding: 0 0.75rem; font-size: 0.875rem; }
+    .btn-primary { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+    .btn-primary:hover { background: #33139f; }
+
+    /* Player bar (the beta's header) */
+    .pbar { margin-top: 12px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1rem 1.25rem; padding: 1rem 1.25rem; background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; }
+    .pwho { display: flex; align-items: center; gap: 0.9rem; }
+    .back { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 8px; color: var(--mist); text-decoration: none; }
+    .back:hover { background: var(--navy); }
+    .avatar { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 50%; background: #0e2240; color: #fec524; font: 600 1.05rem "Clash Display"; box-shadow: inset 0 0 0 2px #fec524; }
+    .pname { font: 600 1.9rem/1.05 "Clash Display", sans-serif; color: var(--strong); }
+    .pname small { font: 500 1rem "Satoshi"; color: var(--mist); margin-left: 0.4rem; }
+    .pmeta { display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem; margin-top: 0.3rem; font-size: 0.875rem; color: var(--mist); }
+    .tag { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.05rem 0.45rem; border-radius: 4.8px; font-size: 0.75rem; font-weight: 700; }
+    .tag-gtd { background: rgba(236,200,111,.15); color: var(--hr-mid); }
+    .tag-b2b { background: var(--navy); color: var(--haze); }
+    .pnext { color: var(--ice); }
+    .pctl { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 0.5rem; }
+    .well { display: inline-flex; gap: 2px; padding: 3px; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; }
+    .well button { min-height: 2.25rem; padding: 0 0.7rem; background: none; border: 0; border-radius: 4.8px; color: var(--mist); cursor: pointer; font-size: 0.875rem; font-weight: 500; }
+    .well button[aria-pressed="true"] { background: var(--navy); color: var(--ice); box-shadow: inset 0 0 0 1px var(--lift); }
+    .stepper { display: inline-flex; align-items: center; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; }
+    .stepper button { width: 2.5rem; height: 2.5rem; background: none; border: 0; color: var(--ice); cursor: pointer; font-size: 1.1rem; }
+    .stepper b { min-width: 3.5rem; text-align: center; font: 600 1.15rem "Clash Display"; }
+    .side button[data-side="over"][aria-pressed="true"] { color: var(--hr-high); }
+    .side button[data-side="under"][aria-pressed="true"] { color: var(--hr-low); }
+    .books { display: flex; gap: 0.6rem; padding-left: 0.25rem; }
+    .book { display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; color: var(--mist); line-height: 1.25; }
+    .book b { font-size: 0.875rem; color: var(--ice); font-weight: 600; }
+    .book.best b { color: var(--hr-high); }
+    .book.best { color: var(--lift); }
+
+    /* Jump bar */
+    .jump { position: sticky; top: 61px; z-index: 15; display: flex; gap: 0.25rem; overflow-x: auto; scrollbar-width: none; margin-top: 12px; padding: 6px 0; background: var(--ink); }
+    .jump a { flex: none; min-height: 2.25rem; display: inline-flex; align-items: center; padding: 0 0.85rem; border: 1px solid var(--rule); border-radius: 32px; color: var(--mist); text-decoration: none; font-size: 0.8125rem; }
+    .jump a:first-child { background: var(--navy); color: var(--ice); border-color: var(--lift); }
+
+    /* Layout */
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 352px; gap: 12px; margin-top: 6px; align-items: start; }
+    .main, .rail { display: grid; gap: 12px; min-width: 0; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 1rem 1.25rem; min-width: 0; scroll-margin-top: 120px; }
+    .phead { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+    .ptitle { font: 600 1.2rem/1.2 "Clash Display", sans-serif; color: var(--strong); }
+    .ptitle .sub { font: 500 0.8125rem "Satoshi"; color: var(--mist); margin-left: 0.4rem; }
+    .chev { color: var(--mist); }
+    .note { font-size: 0.8125rem; color: var(--mist); margin-top: 0.75rem; }
+    .linkbtn { background: none; border: 0; padding: 0; color: var(--lift); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; font-size: 0.875rem; }
+
+    /* Verdict wedge (the beta's) carrying the Hunt Score */
+    .verdict { padding: 0; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+    .v-left { padding: 1.25rem 1.5rem; background: var(--navy); }
+    .v-pick { font: 600 calc(clamp(1.9rem, 3.4vw, 3.1rem) * 0.82)/1.1 "Clash Display", sans-serif; color: var(--strong); }
+    .v-pick .over { color: var(--hr-high); }
+    .v-sub { margin-top: 0.5rem; color: var(--haze); font-size: 0.9375rem; }
+    .v-sub b { color: var(--ice); }
+    .v-small { margin-top: 0.4rem; font-size: 0.8125rem; color: var(--mist); }
+    .v-right { position: relative; padding: 1.25rem 1.5rem 1.25rem 3rem; background: var(--indigo); color: var(--wedge-text); clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); margin-left: -2.5rem; }
+    .readout { display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: 0 1.5rem; }
+    .readout .k { font-size: 0.75rem; color: var(--wedge-text); opacity: 0.85; }
+    .readout .n { font: 600 1.76rem/1.1 "Clash Display", sans-serif; color: #fff; }
+    .readout .n.hi { color: #7fdcc0; }
+    .readout .s { font-size: 0.75rem; opacity: 0.8; }
+    .v-why { margin-top: 0.9rem; font-size: 0.875rem; color: #fff; }
+    .v-foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 1.5rem; border-top: 1px solid var(--rule); font-size: 0.875rem; }
+    .why { display: grid; gap: 0.5rem; padding: 0.9rem 1.5rem 1.1rem; grid-column: 1 / -1; border-top: 1px solid var(--rule); }
+    .why p { display: grid; grid-template-columns: 1.25rem 1fr; gap: 0.5rem; font-size: 0.9rem; }
+    .why i { color: var(--lift); }
+
+    /* Game-by-game chart */
+    .avgline { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+    .avgline .big { font: 600 2.4rem/1 "Clash Display"; color: var(--strong); }
+    .keys { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin-top: 0.75rem; font-size: 0.75rem; color: var(--mist); }
+    .keys i { display: inline-block; width: 0.65rem; height: 0.65rem; border-radius: 2px; margin-right: 0.3rem; vertical-align: -1px; }
+    .chart { position: relative; display: flex; align-items: flex-end; gap: 4px; height: 240px; margin-top: 1.5rem; padding-top: 1.25rem; }
+    .bar { position: relative; flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; }
+    .bar .val { text-align: center; font: 600 0.8rem "Clash Display"; margin-bottom: 3px; color: var(--ice); }
+    .bar .seg { width: 100%; }
+    .bar .lbl { position: absolute; top: 100%; left: 0; right: 0; margin-top: 5px; text-align: center; font-size: 0.65rem; color: var(--mist); line-height: 1.2; white-space: nowrap; }
+    .bar.tonight .shell { border: 1px dashed var(--slate); border-bottom: 0; }
+    .bar.tonight .val { color: var(--lift); }
+    .line { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed var(--ice); z-index: 2; pointer-events: none; }
+    .line span { position: absolute; left: -2px; top: -0.65rem; padding: 0 0.3rem; background: var(--panel); border: 1px solid var(--rule); border-radius: 4.8px; font-size: 0.7rem; color: var(--ice); }
+    .divider { position: absolute; top: 0; bottom: 0; border-left: 1px dashed var(--slate); z-index: 1; }
+    .divider span { position: absolute; top: -0.2rem; left: 4px; font-size: 0.65rem; color: var(--mist); white-space: nowrap; }
+    .chart-foot { height: 2rem; }
+
+    /* Range tiles + filter chips */
+    .ranges { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+    .tiles { display: inline-flex; gap: 2px; padding: 3px; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; }
+    .tile { display: grid; justify-items: center; gap: 1px; min-width: 4.25rem; padding: 0.35rem 0.6rem; border-radius: 4.8px; background: none; border: 0; cursor: pointer; font-size: 0.75rem; color: var(--mist); }
+    .tile b { font: 600 0.95rem "Clash Display"; }
+    .tile[aria-pressed="true"] { background: var(--navy); color: var(--ice); box-shadow: inset 0 0 0 1px var(--lift); }
+    .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .chip { min-height: 2.25rem; padding: 0 0.85rem; border: 1px solid var(--rule); border-radius: 32px; background: none; color: var(--mist); font-size: 0.8125rem; cursor: pointer; }
+    .chip small { opacity: 0.75; margin-left: 0.25rem; }
+    .chip[aria-pressed="true"] { background: var(--navy); color: var(--ice); border-color: var(--lift); }
+    .chip.off { border-style: dashed; color: var(--slate); }
+    .hr-low { color: var(--hr-low); } .hr-mid { color: var(--hr-mid); } .hr-high { color: var(--hr-high); }
+
+    /* Line ladder (the beta's signature) */
+    .ladder { display: grid; grid-template-columns: 5rem repeat(7, minmax(0, 1fr)); gap: 0 6px; margin-top: 1rem; }
+    .ladder .rl { font-size: 0.72rem; color: var(--mist); display: flex; align-items: center; }
+    .lad-col { display: contents; }
+    .lad-bar { position: relative; height: 150px; }
+    .lad-bar .zero { position: absolute; left: -6px; right: -6px; top: 50%; border-top: 2px solid var(--ice); }
+    .lad-bar .fill { position: absolute; left: 12%; right: 12%; }
+    .lad-cell { text-align: center; padding: 0.15rem 0; font-size: 0.8125rem; }
+    .lad-line { font: 600 1.35rem "Clash Display"; color: var(--strong); padding-top: 0.5rem; }
+    .lad-dots { letter-spacing: 2px; color: var(--ice); font-size: 0.7rem; }
+    .lad-posted { outline: 1px solid var(--lift); outline-offset: -1px; border-radius: 8px; background: rgba(154,147,255,.07); }
+    .posted-tag { display: inline-block; padding: 0 0.45rem; background: var(--lift); color: #060a16; font-size: 0.65rem; font-weight: 700; transform: skewX(-12deg); }
+
+    /* Score build-up */
+    .bu-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 3.5rem 3.5rem; align-items: center; gap: 0.75rem; padding: 0.55rem 0; border-top: 1px solid var(--rule); font-size: 0.875rem; }
+    .bu-row:first-of-type { border-top: 0; }
+    .bu-row .what b { display: block; color: var(--ice); font-weight: 600; }
+    .bu-row .what span { color: var(--mist); font-size: 0.8125rem; }
+    .bu-bar { position: relative; height: 10px; }
+    .bu-bar::before { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; border-left: 1px solid var(--slate); }
+    .bu-bar i { position: absolute; top: 0; bottom: 0; }
+    .bu-pts { text-align: right; font-weight: 600; }
+    .bu-run { text-align: right; color: var(--mist); }
+    .bu-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 2px solid var(--rule); }
+    .bu-total .n { font: 600 2rem "Clash Display"; color: var(--hr-high); }
+
+    /* Mirrored tale of the tape */
+    .tape-head { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: center; margin-bottom: 0.6rem; }
+    .who { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+    .who.r { justify-content: flex-end; }
+    .mini-av { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; font: 600 0.75rem "Clash Display"; }
+    .tape-row { display: grid; grid-template-columns: 2.5rem 1fr 3.5rem 1fr 2.5rem; align-items: center; gap: 0.4rem; padding: 0.3rem 0; font-size: 0.8125rem; }
+    .tape-row.hl { background: rgba(154,147,255,.08); border-radius: 4.8px; }
+    .tape-row .k { text-align: center; color: var(--mist); font-size: 0.75rem; }
+    .tape-row .v { font-weight: 600; }
+    .tape-row .v.r { text-align: right; }
+    .tbar { height: 8px; background: var(--ink); border-radius: 2px; overflow: hidden; display: flex; }
+    .tbar.l { justify-content: flex-end; }
+    .tbar i { display: block; height: 100%; background: var(--slate); }
+    .tbar i.win { background: var(--lift); }
+    .flag { margin-top: 0.75rem; padding: 0.6rem 0.75rem; border-radius: 8px; background: var(--navy); font-size: 0.8125rem; }
+    .flag b { color: var(--hr-high); }
+
+    /* Same position */
+    .verd { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .pill { padding: 0.1rem 0.6rem; border-radius: 32px; font-size: 0.75rem; font-weight: 700; }
+    .pill-fav { background: rgba(127,220,192,.14); color: var(--hr-high); }
+    .pill-tough { background: rgba(242,150,159,.14); color: var(--hr-low); }
+    .pill-neu { background: var(--navy); color: var(--haze); }
+    .sp-big { font: 600 1.6rem "Clash Display"; color: var(--strong); }
+    .dots { display: flex; gap: 4px; margin: 0.6rem 0; }
+    .dots i { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--hit-1); }
+    .dots i.m { background: none; box-shadow: inset 0 0 0 1.5px var(--miss-1); }
+    .sp-row { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr) 2.5rem 2.5rem; gap: 0.5rem; padding: 0.4rem 0; border-top: 1px solid var(--rule); font-size: 0.8125rem; align-items: center; }
+    .sp-row .n { text-align: right; font-weight: 600; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    th { text-align: right; font-weight: 500; color: var(--mist); font-size: 0.72rem; padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+    td { text-align: right; padding: 0.5rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+    th:nth-child(-n+3), td:nth-child(-n+3) { text-align: left; }
+    td.stat { background: rgba(154,147,255,.06); font-weight: 600; color: var(--strong); }
+    tr.avg td { background: var(--navy); font-weight: 600; }
+    .res-hit { color: var(--hr-high); font-weight: 600; } .res-miss { color: var(--hr-low); font-weight: 600; }
+    .tscroll { overflow-x: auto; }
+
+    /* Small cards */
+    .ww-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+    .ww-chip { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.25rem; padding: 0 0.7rem 0 0.25rem; border: 1px solid var(--rule); border-radius: 32px; font-size: 0.8125rem; color: var(--mist); background: none; }
+    .ww-chip .mini-av { width: 1.6rem; height: 1.6rem; font-size: 0.65rem; }
+    .ww-chip[aria-pressed="true"] { background: var(--navy); color: var(--ice); border-color: var(--lift); }
+    .ww-out { font-size: 0.65rem; color: var(--hr-low); font-weight: 700; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .split .box { padding: 0.75rem; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; }
+    .split .n { font: 600 1.6rem "Clash Display"; color: var(--strong); }
+    .opp-row { display: grid; grid-template-columns: 1fr auto auto; gap: 0.75rem; align-items: baseline; padding: 0.55rem 0; border-top: 1px solid var(--rule); font-size: 0.875rem; }
+    .opp-row:first-of-type { border-top: 0; }
+    .opp-row .n { font: 600 1.15rem "Clash Display"; color: var(--strong); }
+    .up { color: var(--hr-high); font-size: 0.8125rem; } .down { color: var(--hr-low); font-size: 0.8125rem; } .flat { color: var(--mist); font-size: 0.8125rem; }
+    .svgchart { width: 100%; height: 150px; display: block; }
+    .court { width: 100%; max-width: 360px; display: block; margin: 0 auto; }
+    .zm-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 4.5rem 2.75rem; gap: 0.6rem; align-items: center; padding: 0.5rem 0; border-top: 1px solid var(--rule); font-size: 0.8125rem; }
+    .zm-row.dim { opacity: 0.5; }
+    .share { height: 8px; background: var(--ink); border-radius: 2px; overflow: hidden; }
+    .share i { display: block; height: 100%; background: var(--lift); }
+    .rank { justify-self: end; padding: 0.05rem 0.4rem; border-radius: 4.8px; font-size: 0.72rem; font-weight: 700; background: var(--navy); }
+    .rank.bad { color: var(--hr-high); } .rank.good { color: var(--hr-low); }
+    .diet { display: flex; height: 10px; border-radius: 2px; overflow: hidden; margin-top: 0.75rem; }
+
+    /* Rail */
+    .def-big { display: flex; justify-content: space-between; align-items: flex-end; }
+    .def-big .n { font: 600 2.2rem/1 "Clash Display"; color: var(--strong); }
+    .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-top: 0.9rem; padding-top: 0.75rem; border-top: 1px solid var(--rule); }
+    .grid4 b { display: block; font: 600 1.05rem "Clash Display"; color: var(--strong); }
+    .inj-team { margin-top: 0.6rem; font-size: 0.75rem; color: var(--mist); font-weight: 700; }
+    .inj { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-top: 1px solid var(--rule); font-size: 0.875rem; }
+    .st { padding: 0.05rem 0.5rem; border-radius: 4.8px; font-size: 0.72rem; font-weight: 700; border: 1px solid var(--slate); }
+    .st.out { color: var(--hr-low); border-color: var(--hr-low); }
+    .st.q { color: var(--hr-mid); border-color: var(--hr-mid); }
+    .avg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem 0.5rem; }
+    .avg-grid div { padding-left: 0.6rem; border-left: 1px solid var(--rule); }
+    .avg-grid b { display: block; font: 600 1.5rem/1.1 "Clash Display"; color: var(--strong); }
+    .plist a { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0; border-top: 1px solid var(--rule); color: var(--ice); text-decoration: none; font-size: 0.875rem; }
+    .plist a:first-child { border-top: 0; }
+    .plist .r { margin-left: auto; color: var(--mist); font-size: 0.8125rem; }
+    .collapsed-panel { display: flex; justify-content: space-between; align-items: center; }
+
+    footer { margin-top: 2rem; padding: 1.5rem 0 3rem; border-top: 1px solid var(--rule); font-size: 0.8125rem; color: var(--mist); }
+    footer p + p { margin-top: 0.3rem; }
+
+    /* Bet bar on phones (the beta's: along the bottom) */
+    .betbar { display: none; }
+
+    @media (max-width: 1199.98px) {
+      .search { display: none; }
+      .layout { grid-template-columns: 1fr; }
+      .rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .row3 { grid-template-columns: 1fr 1fr; }
+      .row3 > :last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 991.98px) {
+      .pbar { grid-template-columns: auto 1fr; }
+      .pctl { grid-column: 1 / -1; justify-content: flex-start; }
+      .verdict { grid-template-columns: 1fr; }
+      .v-right { margin-left: 0; clip-path: polygon(0 12%, 100% 0, 100% 100%, 0 100%); padding: 1.75rem 1.5rem 1.25rem; }
+    }
+    @media (max-width: 719.98px) {
+      .wrap { width: calc(100% - 2rem); }
+      .links, .league { display: none; }
+      .phead { flex-wrap: wrap; }
+      .phead .chips { width: 100%; }
+      .pname { font-size: 1.5rem; }
+      .pctl .books, .pctl .add { display: none; }
+      .row2, .row3, .rail { grid-template-columns: 1fr; }
+      .row3 > :last-child { grid-column: auto; }
+      .readout { grid-template-columns: repeat(2, auto); gap: 0.6rem 1.5rem; }
+      .ladder { grid-template-columns: 3.75rem repeat(7, minmax(2.75rem, 1fr)); overflow-x: auto; }
+      .chart .bar:nth-child(-n+10) { display: none; }
+      .bu-row { grid-template-columns: minmax(0, 1fr) 4rem 2.75rem; }
+      .bu-row .bu-run { display: none; }
+      .betbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; gap: 0.75rem; align-items: center; justify-content: space-between; padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom)); background: var(--panel); border-top: 1px solid var(--rule); }
+      .betbar b { font-family: "Clash Display"; }
+      body { padding-bottom: 4.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <p class="strip">Mockup · the player page in the beta's look. Sample data, nothing here is live. <button type="button" id="themeBtn">Light mode</button></p>
+
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="#"><img src="../../assets/img/lh-mark.svg" alt="">LINEHUNTER</a>
+      <div class="league"><span class="on">NBA</span><span>NFL</span></div>
+      <nav class="links" aria-label="Main"><a href="#">Today</a><a href="#">Tools <i class="bi bi-chevron-down" style="font-size:.7rem;margin-left:.3rem"></i></a><a href="#">Standings</a></nav>
+      <div class="search"><i class="bi bi-search"></i> Search players</div>
+      <a class="btn btn-sm" href="#"><i class="bi bi-ticket-perforated"></i> My Hunts <b style="color:var(--lift)">2</b></a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- PLAYER BAR: who, next game, then the bet controls (stat, line, side, books, add) -->
+    <section class="pbar" aria-label="Player">
+      <div class="pwho">
+        <a class="back" href="#" aria-label="Back"><i class="bi bi-chevron-left"></i></a>
+        <span class="avatar" aria-hidden="true">MV</span>
+      </div>
+      <div>
+        <h1 class="pname">Marcus Vale <small>#7 · PG · Denver</small></h1>
+        <div class="pmeta">
+          <span class="pnext"><i class="bi bi-calendar3"></i> Tonight 9:00 PM vs PHX</span>
+          <span class="tag tag-b2b">B2B</span>
+          <span>34.6 min · 28.6 usg%</span>
+        </div>
+      </div>
+      <div class="pctl">
+        <div class="well" role="group" aria-label="Stat">
+          <button aria-pressed="false">PTS</button><button aria-pressed="false">REB</button><button aria-pressed="false">AST</button><button aria-pressed="false">3PM</button><button aria-pressed="true">PRA</button>
+        </div>
+        <div class="stepper"><button aria-label="Lower the line">−</button><b>38.5</b><button aria-label="Raise the line">+</button></div>
+        <div class="well side" role="group" aria-label="Side"><button data-side="over" aria-pressed="true">Over</button><button data-side="under" aria-pressed="false">Under</button></div>
+        <div class="books" aria-label="Odds">
+          <span class="book best">Best · DK<b>−107</b></span><span class="book">FD<b>−110</b></span><span class="book">MGM<b>−113</b></span>
+        </div>
+        <button class="btn btn-primary add" type="button"><i class="bi bi-plus-lg"></i> Add to My Hunts</button>
+      </div>
+    </section>
+
+    <nav class="jump" aria-label="Sections">
+      <a href="#verdict">Verdict</a><a href="#chart">Chart</a><a href="#buildup">Build-up</a><a href="#matchup">Matchup</a><a href="#log">Log</a><a href="#lineup">Lineup</a><a href="#shooting">Shooting</a><a href="#rail">Injuries</a>
+    </nav>
+
+    <div class="layout">
+      <div class="main">
+
+        <!-- VERDICT: the beta's wedge, now carrying the Hunt Score -->
+        <section class="panel verdict" id="verdict" aria-label="Verdict">
+          <div class="v-left">
+            <p class="label" style="color:var(--haze)">Hunt Score · tonight vs PHX</p>
+            <h2 class="v-pick" style="margin-top:.35rem"><span class="over">Over</span> 38.5 Pts + Reb + Ast</h2>
+            <p class="v-sub">Out tonight: <b>Reggie Holt (DEN C)</b>, <b>Tyrell Banks (PHX SG)</b></p>
+            <p class="v-small">Back-to-back · PHX allows the 5th most PRA to point guards · Past results, not a prediction.</p>
+          </div>
+          <div class="v-right">
+            <div class="readout">
+              <div><div class="k">Hunt Score</div><div class="n hi">71</div><div class="s">of 100</div></div>
+              <div><div class="k">Chance</div><div class="n">68%</div><div class="s">the sim's over</div></div>
+              <div><div class="k">Book needs</div><div class="n">51.7%</div><div class="s">−107 at DK</div></div>
+              <div><div class="k">Edge</div><div class="n">▲16.3</div><div class="s">points</div></div>
+            </div>
+            <p class="v-why">Hunt line 41.6 (most games 33 to 50). Cleared 38.5 in 11 of his last 20, 7 of 10.</p>
+          </div>
+          <div class="why">
+            <p><i class="bi bi-1-circle"></i><span>Vale went over 38.5 in 7 of his last 10 (avg 40.1), and his minutes are up 2.4 with Holt out.</span></p>
+            <p><i class="bi bi-2-circle"></i><span>PHX ranks 26th against PRA by point guards and plays the 4th fastest pace.</span></p>
+            <p><i class="bi bi-3-circle"></i><span>Biggest risk: the back-to-back (his PRA drops 2.1 on the second night). Biggest plus: the Role step, +3.8 minutes in 6 games without Holt.</span></p>
+          </div>
+          <div class="v-foot">
+            <span class="muted">Confidence: <b style="color:var(--ice)">MEDIUM</b> · 14 games this season, leaning on last season a little</span>
+            <span><button class="linkbtn">How the Hunt Score works</button></span>
+          </div>
+        </section>
+
+        <!-- GAME BY GAME + RANGES + LADDER -->
+        <section class="panel" id="chart" aria-label="Game by game">
+          <div class="phead">
+            <h2 class="ptitle">Game by game <span class="sub">Pts + Reb + Ast</span></h2>
+            <div class="chips"><button class="chip" aria-pressed="true">All</button><button class="chip" aria-pressed="false">Home <small>10</small></button><button class="chip" aria-pressed="false">Away <small>10</small></button><button class="chip" aria-pressed="false">H2H <small>6</small></button><button class="chip off" aria-pressed="false">Without Holt <small>0</small></button></div>
+          </div>
+          <div class="avgline"><span class="big">39.3</span><span class="muted">average over the last 20, 0.8 above the line</span></div>
+          <p class="note" style="margin-top:.4rem">Hits cleared 38.5 by 4.0 on average, misses fell short by 3.2. Includes 12 games from last season.</p>
+          <div class="keys">
+            <span><i style="background:var(--hit-1)"></i>Pts</span><span><i style="background:var(--hit-2)"></i>Reb</span><span><i style="background:var(--hit-3)"></i>Ast</span><span><i style="background:var(--miss-1)"></i>Miss</span><span><i style="border-top:2px dashed var(--ice);height:0;border-radius:0;width:.9rem"></i>The line</span>
+          </div>
+          <div class="chart" id="chartBars"></div>
+          <div class="chart-foot"></div>
+
+          <div class="ranges">
+            <div class="tiles" role="group" aria-label="Range">
+              <button class="tile" aria-pressed="false">L5<b class="hr-high">80%</b>4–1</button>
+              <button class="tile" aria-pressed="false">L10<b class="hr-mid">70%</b>7–3</button>
+              <button class="tile" aria-pressed="true">L20<b class="hr-mid">55%</b>11–9</button>
+              <button class="tile" aria-pressed="false">vs PHX<b class="hr-mid">67%</b>4–2</button>
+              <button class="tile" aria-pressed="false">2026-27<b class="hr-mid">64%</b>9–5</button>
+              <button class="tile" aria-pressed="false">2025-26<b class="hr-low">31%</b>5–11</button>
+            </div>
+            <span class="label">Number color = how often it hit</span>
+          </div>
+
+          <div class="phead" style="margin-top:1.25rem">
+            <h3 class="ptitle" style="font-size:1.05rem">Line ladder <span class="sub">white line = break-even · green above, red below</span></h3>
+            <span class="label">●●● clears break-even in L10, L20, All</span>
+          </div>
+          <div class="ladder" id="ladder"></div>
+          <p class="note"><button class="linkbtn">Pin 38.5 to compare</button> · <button class="linkbtn">What's break-even?</button></p>
+        </section>
+
+        <!-- SCORE BUILD-UP -->
+        <section class="panel" id="buildup" aria-label="Score build-up">
+          <div class="phead"><h2 class="ptitle">Score build-up <span class="sub">season baseline 58.0</span></h2><i class="bi bi-chevron-up chev"></i></div>
+          <div id="buildRows"></div>
+          <div class="bu-total"><span class="muted">58.0 + 13.2 = 71.2, rounded · 68% chance of the over</span><span class="n">71</span></div>
+        </section>
+
+        <!-- MATCHUP: Same position + Matchup Analysis -->
+        <div class="row2" id="matchup">
+          <section class="panel" aria-label="Same position">
+            <div class="phead"><h2 class="ptitle">Guards vs PHX <span class="sub">last 10 games</span></h2><i class="bi bi-chevron-up chev"></i></div>
+            <div class="verd"><span class="sp-big">+4.2 PRA</span><span class="pill pill-fav">Favorable</span></div>
+            <p class="note" style="margin-top:.3rem">31.6 vs PHX · 27.4 in their last 10 elsewhere</p>
+            <div class="dots" aria-label="9 of 13 went over"><i></i><i></i><i class="m"></i><i></i><i></i><i></i><i class="m"></i><i></i><i></i><i class="m"></i><i></i><i></i><i class="m"></i></div>
+            <p style="font-size:.875rem">9 of 13 beat their own usual PRA against PHX</p>
+            <div style="margin-top:.6rem" id="spRows"></div>
+            <p class="note"><button class="linkbtn">Show all (13)</button></p>
+          </section>
+          <section class="panel" aria-label="Matchup analysis">
+            <div class="phead"><h2 class="ptitle">Matchup analysis <span class="sub">vs PHX</span></h2><span class="label">Compare with: J. Okafor ▾</span></div>
+            <div class="tape-head">
+              <span class="who"><span class="mini-av" style="background:#0e2240;color:#fec524">MV</span>Vale</span>
+              <span class="label">Tale of the tape</span>
+              <span class="who r">Okafor<span class="mini-av" style="background:#1d1160;color:#e56020">JO</span></span>
+            </div>
+            <div id="tape"></div>
+            <p class="label" style="margin-top:.75rem">Playmaking</p>
+            <p style="font-size:.875rem;margin-top:.2rem">Vale throws 58.2 passes a game to Okafor's 41.0, so most of the creation runs through him.</p>
+            <div class="flag"><b>ACTIVE</b> · Okafor is not on the injury report. Past meetings: Vale averaged 41.3 PRA in 6 games.</div>
+            <p class="note"><a href="#">Open in Matchup Analyzer ›</a></p>
+          </section>
+        </div>
+
+        <!-- GAME LOG -->
+        <section class="panel" id="log" aria-label="Game log">
+          <div class="phead"><h2 class="ptitle">Game log <span class="sub">follows the filters · 20 games</span></h2><i class="bi bi-chevron-up chev"></i></div>
+          <div class="tscroll"><table>
+            <thead><tr><th>Date</th><th>Opp</th><th>W/L</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th>3PM</th><th>FG</th><th>FT</th><th>Usg%</th><th>PRA</th><th></th></tr></thead>
+            <tbody id="logRows"></tbody>
+          </table></div>
+          <p class="note"><button class="linkbtn">Show all games (20)</button></p>
+        </section>
+
+        <!-- LINEUP / VOLUME / MINUTES -->
+        <div class="row3" id="lineup">
+          <section class="panel" aria-label="With and without">
+            <div class="phead"><h2 class="ptitle">With / without</h2><i class="bi bi-chevron-up chev"></i></div>
+            <div class="ww-chips">
+              <button class="ww-chip" aria-pressed="true"><span class="mini-av" style="background:#0e2240;color:#fec524">RH</span>Holt <span class="ww-out">OUT</span></button>
+              <button class="ww-chip" aria-pressed="false"><span class="mini-av" style="background:#0e2240;color:#fec524">JO</span>Oster</button>
+            </div>
+            <div class="split">
+              <div class="box"><div class="label">With Holt · 14</div><div class="n">37.9</div><div class="label">7 of 14 over</div></div>
+              <div class="box" style="border-color:var(--lift)"><div class="label">Without · 6</div><div class="n">42.5</div><div class="label hr-high">5 of 6 over</div></div>
+            </div>
+            <p class="note">Small sample: 6 games without Holt, all last season.</p>
+          </section>
+          <section class="panel" aria-label="Opportunity">
+            <div class="phead"><h2 class="ptitle">Opportunity</h2><i class="bi bi-chevron-up chev"></i></div>
+            <p class="label" style="margin:-.4rem 0 .5rem">Filtered games vs season</p>
+            <div class="opp-row"><span>Touches</span><span class="n">84.1</span><span class="up">▲ 6.2</span></div>
+            <div class="opp-row"><span>Passes</span><span class="n">58.2</span><span class="up">▲ 3.9</span></div>
+            <div class="opp-row"><span>Rebound chances</span><span class="n">9.4</span><span class="flat">– 0.2</span></div>
+            <p class="note">He has the ball more than usual over these games, which feeds all three stats.</p>
+          </section>
+          <section class="panel" aria-label="Role">
+            <div class="phead"><h2 class="ptitle">Role</h2><div class="well" role="group"><button aria-pressed="true">Minutes</button><button aria-pressed="false">Usage %</button></div></div>
+            <svg class="svgchart" viewBox="0 0 300 150" preserveAspectRatio="none" aria-label="Minutes per game" id="roleSvg"></svg>
+            <p class="label">Dashed = season average 34.6</p>
+          </section>
+        </div>
+
+        <!-- SHOOTING -->
+        <div class="row2" id="shooting">
+          <section class="panel" aria-label="Shot chart">
+            <div class="phead"><h2 class="ptitle">Shot chart <span class="sub">2026-27</span></h2><i class="bi bi-chevron-up chev"></i></div>
+            <svg class="court" viewBox="0 0 300 250" aria-label="Half court by zone">
+              <rect x="0" y="0" width="300" height="250" fill="var(--ink)" rx="8"/>
+              <path d="M0 0 H22 V90 H0 Z" fill="var(--hit-1)" opacity=".55"/>
+              <path d="M278 0 H300 V90 H278 Z" fill="var(--slate)" opacity=".45"/>
+              <path d="M22 0 V90 A128 128 0 0 0 278 90 V0 Z" fill="var(--miss-1)" opacity=".38"/>
+              <path d="M0 90 H22 A128 128 0 0 0 278 90 H300 V250 H0 Z" fill="var(--hit-1)" opacity=".35"/>
+              <rect x="100" y="0" width="100" height="120" fill="var(--slate)" opacity=".55"/>
+              <path d="M120 0 V30 A30 30 0 0 0 180 30 V0 Z" fill="var(--hit-1)" opacity=".85"/>
+              <g fill="none" stroke="var(--mist)" stroke-width="1.2" opacity=".7"><rect x="100" y="0" width="100" height="120"/><path d="M22 0 V90 A128 128 0 0 0 278 90 V0"/><circle cx="150" cy="120" r="30"/></g>
+              <g font-family="Satoshi" font-size="11" fill="var(--strong)" text-anchor="middle" font-weight="700">
+                <text x="150" y="22">64%</text><text x="150" y="80">41%</text><text x="56" y="150">38%</text><text x="150" y="210">37%</text><text x="11" y="50" font-size="9">44%</text><text x="289" y="50" font-size="9">33%</text>
+              </g>
+            </svg>
+            <div class="diet"><i style="width:31%;background:var(--hit-1)"></i><i style="width:17%;background:var(--slate)"></i><i style="width:14%;background:var(--miss-1)"></i><i style="width:9%;background:var(--hit-3)"></i><i style="width:29%;background:var(--lift)"></i></div>
+            <p class="note">Shot diet: 31% at the rim, 17% paint, 14% mid-range, 9% corner 3, 29% above the break. Green = better than the league in that zone.</p>
+          </section>
+          <section class="panel" aria-label="Zone matchup">
+            <div class="phead"><h2 class="ptitle">Zone matchup <span class="sub">vs PHX</span></h2><span class="pill pill-fav">Favorable</span></div>
+            <p style="font-size:.875rem">PHX allows 68% at the rim, 4 points above the league, and that's where a third of his shots come from.</p>
+            <div style="margin-top:.6rem" id="zmRows"></div>
+            <p class="note"><button class="linkbtn">How to use this</button></p>
+          </section>
+        </div>
+      </div>
+
+      <!-- RAIL -->
+      <aside class="rail" id="rail" aria-label="Context">
+        <section class="panel">
+          <div class="phead"><h2 class="ptitle">Season averages <span class="sub">2026-27 · 14 games</span></h2></div>
+          <div class="avg-grid">
+            <div><span class="label">PTS</span><b>26.7</b></div><div><span class="label">REB</span><b>5.0</b></div><div><span class="label">AST</span><b>7.6</b></div>
+            <div><span class="label">3PM</span><b>2.5</b></div><div><span class="label">MIN</span><b>34.6</b></div><div><span class="label">FG%</span><b>48.1</b></div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="phead"><h2 class="ptitle">Defense vs point guards <span class="sub">PHX</span></h2><i class="bi bi-chevron-up chev"></i></div>
+          <div class="def-big"><div><span class="label">Pts + Reb + Ast allowed</span><div class="n">39.3</div></div><div style="text-align:right"><b>Gives up a lot</b><div class="label">5th most of 30</div></div></div>
+          <div class="grid4"><div><span class="label">Pts</span><b>25.8</b></div><div><span class="label">Reb</span><b>5.1</b></div><div><span class="label">Ast</span><b>8.4</b></div><div><span class="label">Pace</span><b>101.9</b></div></div>
+        </section>
+        <section class="panel">
+          <div class="phead"><h2 class="ptitle">Injury report <span class="sub">DEN and PHX</span></h2><i class="bi bi-chevron-up chev"></i></div>
+          <div class="inj-team">DEN</div>
+          <div class="inj"><span>Reggie Holt, C</span><span class="st out">OUT</span></div>
+          <div class="inj"><span>Jalen Oster, SG</span><span class="st q">Q</span></div>
+          <div class="inj-team">PHX</div>
+          <div class="inj"><span>Tyrell Banks, SG</span><span class="st out">OUT</span></div>
+        </section>
+        <section class="panel">
+          <div class="phead"><h2 class="ptitle">Players <span class="sub">DEN</span></h2></div>
+          <div class="plist">
+            <a href="#"><span class="mini-av" style="background:#0e2240;color:#fec524">JO</span>Jalen Oster<span class="r">19.8 PTS</span></a>
+            <a href="#"><span class="mini-av" style="background:#0e2240;color:#fec524">DK</span>Dario Kemp<span class="r">8.9 REB</span></a>
+            <a href="#"><span class="mini-av" style="background:#0e2240;color:#fec524">LS</span>Luca Serna<span class="r">2.4 3PM</span></a>
+          </div>
+        </section>
+        <section class="panel collapsed-panel"><h2 class="ptitle">Latest news</h2><i class="bi bi-chevron-down chev"></i></section>
+      </aside>
+    </div>
+
+    <footer>
+      <p>LineHunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+      <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+    </footer>
+  </main>
+
+  <div class="betbar"><span><b>Over 38.5 PRA</b> <span class="muted">· −107 · 68%</span></span><button class="btn btn-sm btn-primary" type="button">+ Add</button></div>
+
+  <script>
+    // Sample data (made up, like the beta's Marcus Vale).
+    const LINE = 38.5;
+    const games = [
+      ["3/22","@ DAL",31,6,5],["3/24","vs UTA",17,2,8],["3/27","vs PHX",27,5,8],["3/28","@ LAC",23,8,6],["4/1","@ MEM",26,4,7],
+      ["4/3","@ LAL",21,5,10],["4/5","vs SAC",29,3,6],["4/6","vs MIN",25,6,9],["4/9","vs HOU",20,7,7],["4/10","@ PHX",34,4,6],
+      ["10/20","vs UTA",27,5,8],["10/22","@ LAC",31,4,6],["10/24","@ SAC",26,6,9],["10/26","vs POR",33,5,7],["10/28","@ HOU",29,7,5],
+      ["10/30","vs MEM",25,3,10],["11/1","@ NOP",38,6,7],["11/3","vs OKC",30,4,8],["11/5","@ SAS",28,6,9],["11/7","vs GSW",32,5,6]
+    ];
+    const max = 55;
+    const bars = document.getElementById("chartBars");
+    games.forEach(([d, opp, p, r, a], i) => {
+      const t = p + r + a, hit = t > LINE;
+      const c = hit ? ["--hit-1","--hit-2","--hit-3"] : ["--miss-1","--miss-2","--miss-3"];
+      const h = (v) => (v / max * 100).toFixed(1) + "%";
+      bars.insertAdjacentHTML("beforeend",
+        `<div class="bar" title="${opp} · ${d} · ${p} pts, ${r} reb, ${a} ast"><span class="val">${t}</span>` +
+        `<span class="seg" style="height:${h(a)};background:var(${c[2]})"></span>` +
+        `<span class="seg" style="height:${h(r)};background:var(${c[1]})"></span>` +
+        `<span class="seg" style="height:${h(p)};background:var(${c[0]})"></span>` +
+        `<span class="lbl">${d}<br>${opp}</span></div>`);
+      if (i === 9) bars.insertAdjacentHTML("beforeend", "");
+    });
+    bars.insertAdjacentHTML("beforeend",
+      `<div class="bar tonight"><span class="val">?</span><span class="seg shell" style="height:${(LINE / max * 100).toFixed(1)}%"></span><span class="lbl" style="color:var(--lift)">vs PHX<br>TONIGHT</span></div>`);
+    const lineTop = (1 - LINE / max) * 100;
+    bars.insertAdjacentHTML("beforeend", `<div class="line" style="bottom:${(LINE / max * 100 * (bars.clientHeight - 20) / bars.clientHeight).toFixed(1)}%"><span>${LINE}</span></div>`);
+    // Season divider before game 11
+    requestAnimationFrame(() => {
+      const b = bars.children[10];
+      if (b && b.offsetLeft) bars.insertAdjacentHTML("beforeend", `<div class="divider" style="left:${b.offsetLeft - 2}px"><span>2026-27</span></div>`);
+    });
+
+    // Line ladder: hit rate minus break-even per line
+    const ladder = [
+      [35.5, "−163", 85, 62.0, "●●●"], [36.5, "−137", 80, 57.8, "●●●"], [37.5, "−121", 65, 54.8, "●●●"],
+      [38.5, "−107", 55, 51.7, "●●○"], [39.5, "+100", 55, 50.0, "●○○"], [40.5, "+118", 40, 45.9, "○○○"], [41.5, "+134", 25, 42.7, "○○○"]
+    ];
+    const L = document.getElementById("ladder");
+    const cls = (v) => v >= 75 ? "hr-high" : v >= 50 ? "hr-mid" : "hr-low";
+    const gapMax = Math.max(10, ...ladder.map((x) => Math.abs(x[2] - x[3])));
+    let html = `<div class="rl"></div>`;
+    ladder.forEach(([line, , hr, be]) => {
+      const g = hr - be, pct = Math.abs(g) / gapMax * 48;
+      const posted = line === LINE;
+      html += `<div class="lad-bar ${posted ? "lad-posted" : ""}">${posted ? '<span class="posted-tag" style="position:absolute;top:4px;left:50%;transform:translateX(-50%) skewX(-12deg)">Posted</span>' : ""}<span class="zero"></span>` +
+        `<span class="fill" style="${g >= 0 ? `bottom:50%;height:${pct}%;background:var(--hit-1)` : `top:50%;height:${pct}%;background:var(--miss-1)`}"></span></div>`;
+    });
+    const rows = [
+      ["Line", (x) => `<div class="lad-line">${x[0]}</div>`],
+      ["Samples", (x) => `<span class="lad-dots">${x[4]}</span>`],
+      ["Hit rate", (x) => `<b class="${cls(x[2])}">${x[2]}%</b>`],
+      ["Odds", (x) => `<span class="muted">${x[1]}</span>`],
+      ["Vs B/E", (x) => { const g = x[2] - x[3]; return `<span class="${g >= 0 ? "hr-high" : "hr-low"}">${g >= 0 ? "▲" : "▼"}${Math.abs(g).toFixed(1)}%</span>`; }]
+    ];
+    rows.forEach(([name, f]) => {
+      html += `<div class="rl">${name}</div>` + ladder.map((x) => `<div class="lad-cell">${f(x)}</div>`).join("");
+    });
+    L.innerHTML = html;
+
+    // Score build-up
+    const factors = [
+      ["Minutes", "34.6 → 37.0 min tonight", +3.1], ["Form", "last 3: 43.3 PRA", +2.4],
+      ["Role", "Holt out · 6 games · +3.8 min", +4.6], ["Opponent", "PHX 26th vs PRA", +3.9],
+      ["Zone", "+1.4 pts at the rim", +1.1], ["Pace", "4th fastest", +1.3],
+      ["Back-to-back", "×0.97", -2.2], ["Book line", "pulled 20% toward 38.5", -1.0]
+    ];
+    let run = 58.0;
+    document.getElementById("buildRows").innerHTML = factors.map(([n, d, p]) => {
+      run += p;
+      const w = Math.min(Math.abs(p) / 10 * 50, 50);
+      return `<div class="bu-row"><div class="what"><b>${n}</b><span>${d}</span></div>` +
+        `<div class="bu-bar"><i style="${p >= 0 ? `left:50%;width:${w}%;background:var(--hit-1)` : `right:50%;width:${w}%;background:var(--slate)`}"></i></div>` +
+        `<span class="bu-pts ${p >= 0 ? "hr-high" : "muted"}">${p >= 0 ? "+" : "−"}${Math.abs(p).toFixed(1)}</span><span class="bu-run">${run.toFixed(1)}</span></div>`;
+    }).join("");
+
+    // Same position rows
+    document.getElementById("spRows").innerHTML = [
+      ["11/5", "D. Ruiz", 31, 1], ["11/5", "K. Bell", 24, 0], ["11/2", "T. Ames", 38, 1], ["10/31", "J. Cole", 29, 1], ["10/29", "M. Price", 22, 0], ["10/27", "S. Hart", 35, 1]
+    ].map(([d, n, v, h]) => `<div class="sp-row"><span class="muted">${d}</span><span>${n}</span><span class="n">${v}</span><span class="${h ? "up" : "down"}">${h ? "▲" : "▼"}</span></div>`).join("");
+
+    // Tale of the tape
+    document.getElementById("tape").innerHTML = [
+      ["PTS", 26.7, 18.4], ["REB", 5.0, 4.1], ["AST", 7.6, 6.9], ["BLK", 0.4, 0.3], ["MIN", 34.6, 31.2], ["USG%", 28.6, 22.0]
+    ].map(([k, a, b], i) => {
+      const m = Math.max(a, b);
+      return `<div class="tape-row ${i === 2 ? "hl" : ""}"><span class="v">${a}</span><span class="tbar l"><i class="${a >= b ? "win" : ""}" style="width:${a / m * 100}%"></i></span>` +
+        `<span class="k">${k}</span><span class="tbar"><i class="${b > a ? "win" : ""}" style="width:${b / m * 100}%"></i></span><span class="v r">${b}</span></div>`;
+    }).join("");
+
+    // Game log (newest first, 10 shown)
+    document.getElementById("logRows").innerHTML =
+      `<tr class="avg"><td>Average</td><td></td><td></td><td>34.6</td><td>27.8</td><td>5.1</td><td>7.4</td><td>2.5</td><td></td><td></td><td>28.6</td><td>40.3</td><td></td></tr>` +
+      games.slice().reverse().slice(0, 10).map(([d, o, p, r, a], i) => {
+        const t = p + r + a, hit = t > LINE;
+        return `<tr><td>${d}</td><td>${o}</td><td class="muted">${i % 3 ? "W" : "L"}</td><td>${33 + (i % 5)}</td><td class="stat">${p}</td><td class="stat">${r}</td><td class="stat">${a}</td>` +
+          `<td>${(p % 4)}</td><td>${Math.round(p / 2.3)}-${Math.round(p / 1.2)}</td><td>${p % 7}-${p % 7 + 1}</td><td>${26 + (i % 6)}</td><td class="stat">${t}</td><td class="${hit ? "res-hit" : "res-miss"}">${hit ? "Hit" : "Miss"}</td></tr>`;
+      }).join("");
+
+    // Role line chart
+    const mins = [33, 36, 34, 35, 32, 37, 34, 36, 33, 38, 35, 34, 36, 37, 35, 33, 38, 36, 37, 39];
+    const x = (i) => 6 + i * (288 / (mins.length - 1)), y = (v) => 140 - (v - 28) / 14 * 130;
+    document.getElementById("roleSvg").innerHTML =
+      `<line x1="0" x2="300" y1="${y(34.6)}" y2="${y(34.6)}" stroke="var(--mist)" stroke-dasharray="4 4" stroke-width="1"/>` +
+      `<polyline fill="none" stroke="var(--lift)" stroke-width="2" points="${mins.map((v, i) => `${x(i)},${y(v)}`).join(" ")}"/>` +
+      mins.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="2.5" fill="var(--lift)"/>`).join("");
+
+    // Zone matchup
+    document.getElementById("zmRows").innerHTML = [
+      ["Restricted area", 31, "68.2% vs 64.1%", "#28", "bad"], ["Paint", 17, "43.0% vs 42.4%", "#17", ""],
+      ["Mid-range", 14, "40.1% vs 41.3%", "#11", "good"], ["Corner 3", 9, "38.6% vs 38.9%", "#14", ""], ["Above the break 3", 29, "36.9% vs 35.8%", "#22", "bad"]
+    ].map(([n, s, t, r, c]) => `<div class="zm-row ${s < 10 ? "dim" : ""}"><span>${n}<br><span class="label">${t}</span></span><span class="share"><i style="width:${s * 2.5}%"></i></span><span class="label">${s}% of shots</span><span class="rank ${c}">${r}</span></div>`).join("");
+
+    // Pick-one controls toggle within their group (mockup only)
+    document.addEventListener("click", (e) => {
+      const b = e.target.closest(".well button, .tile, .chips .chip:not(.off), .ww-chip");
+      if (!b) return;
+      b.parentElement.querySelectorAll("[aria-pressed]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    });
+    document.getElementById("themeBtn").addEventListener("click", (e) => {
+      const light = document.documentElement.dataset.theme !== "light";
+      document.documentElement.dataset.theme = light ? "light" : "dark";
+      e.target.textContent = light ? "Dark mode" : "Light mode";
+    });
+  </script>
+</body>
+</html>
