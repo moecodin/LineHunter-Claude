@@ -34,19 +34,6 @@
     <!-- PLAYER BAR (indigo restyle, the beta's header): back, the photo / initials circle (js/components/playerPhoto.js), the name
          block (js/pages/player.js renderHeader) and, in lines mode, the bet controls (stat tabs, line stepper, Over / Under,
          odds, Add: js/components/prop-toolbar.js; research mode keeps the stat tabs in the chart card). -->
-    <section class="lh-pp-bar" aria-label="Player">
-      <div class="lh-pp-who">
-        <a href="schedule.html" id="playerBack" class="lh-pp-back" aria-label="Back"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
-        <span id="playerAvatar" class="lh-avatar lh-avatar--lg" aria-hidden="true"></span>
-        <section id="playerHeader" class="lh-pp-head">
-          <div class="placeholder-glow" aria-busy="true">
-            <span class="placeholder col-8 rounded lh-skeleton-title"></span>
-            <div class="mt-2"><span class="placeholder col-5 rounded"></span></div>
-          </div>
-        </section>
-      </div>
-      <div id="playerToolbar" class="lh-pp-ctl"></div>
-    </section>
 
     <!-- JUMP BAR: one pill per [data-lh-jump] section below; sticks under the navbar (js/components/playerJump.js) -->
     <nav id="playerJump" class="lh-pj" aria-label="On this page">
@@ -60,6 +47,19 @@
 
     <!-- 4. PROPS: stat tabs, window + home/away toggles, hit rate, chart with the alt line -->
     <section class="card mb-4" data-lh-jump="Chart" data-lh-collapse="chart" data-lh-collapse-name="Chart">
+    <section class="lh-pp-bar" aria-label="Player">
+      <div class="lh-pp-who">
+        <a href="schedule.html" id="playerBack" class="lh-pp-back" aria-label="Back"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+        <span id="playerAvatar" class="lh-avatar lh-avatar--lg" aria-hidden="true"></span>
+        <section id="playerHeader" class="lh-pp-head">
+          <div class="placeholder-glow" aria-busy="true">
+            <span class="placeholder col-8 rounded lh-skeleton-title"></span>
+            <div class="mt-2"><span class="placeholder col-5 rounded"></span></div>
+          </div>
+        </section>
+      </div>
+      <div id="playerToolbar" class="lh-pp-ctl"></div>
+    </section>
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
         <span class="lh-label" data-lh-kicker="Form"><span class="lines-only">Prop chart</span><span class="research-only">Stat chart</span></span>
       </div>

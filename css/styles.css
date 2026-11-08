@@ -7089,3 +7089,8 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 }
 .lh-window-toggle > .btn-ghost.active::before, .lh-window-toggle > .btn-ghost.active + .btn-ghost::before,
 .nav-link.active::before, .nav-item:has(> .nav-link.active) + .nav-item .nav-link::before { display: none; }
+
+/* Player bar lives inside the chart card: one seamless card (name, bet controls, chart), a hairline under the bar */
+.lh-pp .card > .lh-pp-bar { background: none; border: 0; border-radius: 0; padding: var(--lh-pad) var(--lh-pad) 0; }
+.lh-pp .lh-pj { margin-top: 0; margin-bottom: var(--lh-pp-gap); }
+.lh-pp-layout { margin-top: 0; }
