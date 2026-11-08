@@ -293,6 +293,8 @@ const FAN_STATS = [
   { code: "ast", key: "ast" },
   { code: "3pm", key: "fg3m" },
   { code: "pra", key: "pts+reb+ast" },
+  { code: "stl", key: "stl" },
+  { code: "blk", key: "blk" },
 ];
 const FAN_MIN_GAMES = 5; // L5 and season averages need at least 5 games
 
@@ -323,7 +325,7 @@ function buildFanPlayers(lines, players, loaded, gamesById, seasonAverages = {})
     if (games.length < FAN_MIN_GAMES) return null;
     // Season-level numbers come from the season averages (one request for everyone): this season once the player has 10+ games, else last season.
     const averages = seasonAverages[id] && seasonAverages[id].gp >= FAN_MIN_GAMES ? seasonAverages[id] : null;
-    const seasonValue = { pts: "pts", reb: "reb", ast: "ast", "3pm": "fg3m", pra: ["pts", "reb", "ast"] };
+    const seasonValue = { pts: "pts", reb: "reb", ast: "ast", "3pm": "fg3m", pra: ["pts", "reb", "ast"], stl: "stl", blk: "blk" };
     const seasonOf = (code) => {
       if (!averages) return null;
       const keys = [].concat(seasonValue[code]);

@@ -39,8 +39,9 @@ const BOARD_SORTS_ALL = [
   { code: "game", label: "Game" },
 ];
 const BOARD_SORTS = BOARD_HUNT ? BOARD_SORTS_ALL : BOARD_SORTS_ALL.filter((sort) => sort.code !== "score" && sort.code !== "edge");
-const BOARD_STAT_SHORT = { pts: "PTS", reb: "REB", ast: "AST", "3pm": "3PM", pra: "PRA" };
-const BOARD_SEASON_KEYS = { pts: ["pts"], reb: ["reb"], ast: ["ast"], "3pm": ["fg3m"], pra: ["pts", "reb", "ast"] };
+const BOARD_STAT_SHORT = { pts: "PTS", reb: "REB", ast: "AST", "3pm": "3PM", pra: "PRA", stl: "STL", blk: "BLK" };
+const BOARD_LOW_LINE_STATS = ["3pm", "stl", "blk"];
+const BOARD_SEASON_KEYS = { pts: ["pts"], reb: ["reb"], ast: ["ast"], "3pm": ["fg3m"], pra: ["pts", "reb", "ast"], stl: ["stl"], blk: ["blk"] };
 
 let boardSlate = null;   // the slate for the shown day (already without started games)
 let boardMessage = null; // HTML shown instead of rows (no games, no lines, ...)
@@ -187,8 +188,13 @@ function boardItems() {
     .filter((item) => item.stats.totalGames >= Math.max(BOARD_MIN_SAMPLE, ui.minGames));
 
   const full = (item) => (item.stats.totalGames >= ui.window ? 1 : 0);
-  const byRate = (a, b) => (full(b) - full(a)) || (b.stats.hitRate - a.stats.hitRate)
-    || (b.stats.totalGames - a.stats.totalGames) || (b.stats.streak - a.stats.streak);
+  // Ranking rate: the real hit rate, except an Under on a very low line (1.5 or less on 3PM / STL / BLK) counts 15 points lower.
+  // "Under 1.5 threes" hits all the time because the stat is usually 0 or 1, so it says little. The number on the row is unchanged.
+  const rank = (item) => item.stats.hitRate - (item.side === "under" && item.line <= 1.5 && BOARD_LOW_LINE_STATS.includes(item.row.code) ? 15 : 0);
+  // Ties: more games, then the longer streak, then the over (most bettors lean over).
+  const byRate = (a, b) => (full(b) - full(a)) || (rank(b) - rank(a))
+    || (b.stats.totalGames - a.stats.totalGames) || (b.stats.streak - a.stats.streak)
+    || ((a.side === "over" ? 0 : 1) - (b.side === "over" ? 0 : 1));
   const pickEdge = (item) => (item.edge === null ? -Infinity : item.side === "under" ? -item.edge : item.edge);
   const score = (item) => (item.hunt ? item.hunt.score : -1);
   const compare = {
@@ -552,6 +558,20 @@ function boardRenderTabs() {
     <li class="nav-item"><button type="button" class="nav-link text-nowrap${tab.code === boardTab ? " active" : ""}" data-bd-tab="${tab.code}" aria-pressed="${tab.code === boardTab}">${tab.label}</button></li>`).join("");
 }
 
+// Over | Under | Both, next to the stat pills. Mirrors boardUi.state.side (the Filter panel and the chips change it too) and is
+// remembered in localStorage (lh-board-side). First visit: Over.
+let boardSideReady = false; // false while the bar is first built, so its default "both" never overwrites the saved choice
+function boardRenderSide(state) {
+  const box = document.getElementById("boardSide");
+  if (!box || !state) return;
+  const side = state.side;
+  if (boardSideReady) {
+    try { localStorage.setItem("lh-board-side", side); } catch (error) { /* storage blocked: the choice just isn't remembered */ }
+  }
+  box.innerHTML = [["over", "Over"], ["under", "Under"], ["both", "Both"]].map(([value, label]) =>
+    `<button type="button" class="btn btn-ghost${value === side ? " active" : ""}" data-bd-side="${value}" aria-pressed="${value === side}">${label}</button>`).join("");
+}
+
 function boardSetHeader() {
   const date = document.getElementById("boardDate");
   if (!date) return;
@@ -570,6 +590,7 @@ function renderBoard() {
   if (boardMessage) {
     boardUi.hide();
     document.getElementById("boardTabs").hidden = true;
+    const sideBox = document.getElementById("boardSide"); if (sideBox) sideBox.hidden = true;
     document.getElementById("boardHeads").hidden = true;
     list.removeAttribute("aria-busy");
     list.innerHTML = boardMessageHtml(boardMessage);
@@ -582,6 +603,7 @@ function renderBoard() {
     return;
   }
   document.getElementById("boardTabs").hidden = false;
+  const sideBoxShown = document.getElementById("boardSide"); if (sideBoxShown) sideBoxShown.hidden = false;
   boardUi.render();
   boardRenderTabs();
   list.removeAttribute("aria-busy");
@@ -668,12 +690,27 @@ const boardUi = BOARD ? createPropListBar({
   },
   isInjured: (playerId) => plIsInjuredOut(boardSlate && boardSlate.injuries ? boardSlate.injuries[playerId] : null),
   onChange: () => { boardShown = BOARD_STEP_ROWS; renderBoard(); },
+  hideSideChip: true, // the Over | Under | Both well next to the stat pills already shows it
+  onBar: (state) => boardRenderSide(state),
 }) : null;
+if (boardUi) {
+  let savedSide = null;
+  try { savedSide = localStorage.getItem("lh-board-side"); } catch (error) { /* ignore */ }
+  boardUi.state.side = ["over", "under", "both"].includes(savedSide) ? savedSide : "over";
+  boardSideReady = true;
+  boardUi.render();
+}
 
 // ---------- Events ----------
 
 if (BOARD) {
   BOARD.addEventListener("click", (event) => {
+    const sideButton = event.target.closest("[data-bd-side]");
+    if (sideButton) {
+      boardUi.state.side = sideButton.dataset.bdSide;
+      boardUi.refresh();
+      return;
+    }
     const tab = event.target.closest("[data-bd-tab]");
     if (tab) {
       boardTab = tab.dataset.bdTab;

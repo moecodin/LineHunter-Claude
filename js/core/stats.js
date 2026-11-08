@@ -185,6 +185,8 @@ const PROP_CODES = {
   ast: "assists",
   "3pm": "threes",
   pra: "points_rebounds_assists",
+  stl: "steals",
+  blk: "blocks",
 };
 
 // "threes" -> "3pm" (or null if it has no short code)

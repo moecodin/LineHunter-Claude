@@ -23,8 +23,10 @@ const PL_STAT_TABS = [
   { code: "ast", label: "AST" },
   { code: "3pm", label: "3PM" },
   { code: "pra", label: "PRA" },
+  { code: "stl", label: "STL" },
+  { code: "blk", label: "BLK" },
 ];
-const PL_PROP_WORDS = { pts: "Points", reb: "Rebounds", ast: "Assists", "3pm": "Threes Made", pra: "PRA" };
+const PL_PROP_WORDS = { pts: "Points", reb: "Rebounds", ast: "Assists", "3pm": "Threes Made", pra: "PRA", stl: "Steals", blk: "Blocks" };
 
 // ---------- Search ----------
 
@@ -172,7 +174,7 @@ function createPropListBar(cfg) {
   // ----- chips -----
   function activeChips() {
     const chips = [];
-    if (state.side !== "both") chips.push({ label: state.side === "over" ? "Overs only" : "Unders only", remove: () => { state.side = "both"; } });
+    if (state.side !== "both" && !cfg.hideSideChip) chips.push({ label: state.side === "over" ? "Overs only" : "Unders only", remove: () => { state.side = "both"; } });
     if (cfg.withGame && state.game !== "all") {
       const match = cfg.getGames().find((game) => String(game.value) === String(state.game));
       chips.push({ label: match ? match.label : "One game", remove: () => { state.game = "all"; } });

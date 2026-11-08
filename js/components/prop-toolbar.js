@@ -22,7 +22,7 @@
 // Needs js/core/hunts.js, js/data/odds.js, js/components/hunt-button.js and lineText() from js/components/propChart.js.
 
 // The highest line a typed number may be, per prop type (a sensible ceiling, not a book limit).
-const LINE_MAX = { points: 70.5, rebounds: 30.5, assists: 25.5, threes: 14.5, points_rebounds_assists: 100.5 };
+const LINE_MAX = { points: 70.5, rebounds: 30.5, assists: 25.5, threes: 14.5, points_rebounds_assists: 100.5, steals: 8.5, blocks: 10.5 };
 const LINE_MAX_DEFAULT = 100.5;
 
 // Typed text -> a line: the nearest x.5 between 0.5 and the maximum, or null when it isn't a number.
@@ -146,7 +146,7 @@ function createPropToolbar(container, { statTabs = null, showHead = false, edita
   }));
 
   const oddsText = (odds) => (odds > 0 ? `+${odds}` : `${odds}`);
-  const STAT_SHORT = { points: "PTS", rebounds: "REB", assists: "AST", threes: "3PM", points_rebounds_assists: "PRA" };
+  const STAT_SHORT = { points: "PTS", rebounds: "REB", assists: "AST", threes: "3PM", points_rebounds_assists: "PRA", steals: "STL", blocks: "BLK" };
 
   // ctx = { head: { name, matchup }, line, mainLine, legBase: { playerId, player, team, opp, gameId, tipoff, stat }, stat }
   //   stat = the API prop type ("points"); line = the line on the chart (null = no line to move).

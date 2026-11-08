@@ -7161,3 +7161,13 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   .lh-ladder-odds small, .lh-ladder-dots { font-size: 0.6rem; }
   .lh-ladder-dots { gap: 1px; }
 }
+
+/* The Board: stat pills and the Over | Under | Both well on one row (wrapping on narrow screens) */
+.lh-board-tabrow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin-bottom: 0.75rem; }
+.lh-board-tabrow .lh-board-tabs { margin-bottom: 0; }
+.lh-board-tabrow .lh-board-side[hidden] { display: none; }
+@media (max-width: 575.98px) {
+  .lh-board-tabs.lh-tabs.nav-underline { display: flex; width: 100%; overflow-x: visible; }
+  .lh-board-tabs.lh-tabs.nav-underline .nav-item { flex: 1 1 0; min-width: 0; }
+  .lh-board-tabs.lh-tabs.nav-underline .nav-link { width: 100%; padding: 0; justify-content: center; font-size: 0.78rem; text-align: center; }
+}

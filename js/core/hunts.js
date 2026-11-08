@@ -61,9 +61,9 @@ const lhHunts = (() => {
   };
 
   // ----- share links -----
-  const STAT_CODES = { points: "pts", rebounds: "reb", assists: "ast", threes: "3pm", points_rebounds_assists: "pra" };
+  const STAT_CODES = { points: "pts", rebounds: "reb", assists: "ast", threes: "3pm", points_rebounds_assists: "pra", steals: "stl", blocks: "blk" };
   const CODE_STATS = Object.fromEntries(Object.entries(STAT_CODES).map(([stat, code]) => [code, stat]));
-  const SHARE_LEG = /^(\d+)\.(\d+)\.(pts|reb|ast|3pm|pra)\.(o|u)\.(\d+(?:\.\d+)?)$/;
+  const SHARE_LEG = /^(\d+)\.(\d+)\.(pts|reb|ast|3pm|pra|stl|blk)\.(o|u)\.(\d+(?:\.\d+)?)$/;
   const MAX_SHARED_LEGS = 20;
 
   // Legs that have a game id and a stat with a short code. Returns the link, or "" when nothing can be shared.
