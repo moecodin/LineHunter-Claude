@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Avatar mockup · Board rows</title>
+  <meta name="robots" content="noindex">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <!-- MOCKUP ONLY: four ways to draw the player on a Board row, same four players in each. Headshots are the NBA CDN's; hit rates are made up. -->
+  <style>
+    :root, [data-theme="dark"] { --ink:#060a16; --panel:#0b1229; --rule:#1f2e5a; --mist:#93a1cb; --strong:#d8dff5; --over:#46a98f; --under:#bd6570;
+      --hr-low:#f2969f; --hr-mid:#ecc86f; --hr-high:#7fdcc0; --out:#f2969f; color-scheme: dark; }
+    [data-theme="light"] { --ink:#eef1fa; --panel:#fff; --rule:#cfd6ec; --mist:#4b5784; --strong:#0b1229; --over:#22685a; --under:#a33a4a;
+      --hr-low:#a33a4a; --hr-mid:#8a5a00; --hr-high:#22685a; --out:#a33a4a; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--ink); color: var(--strong); font: 400 14px/1.4 Satoshi, system-ui, sans-serif; }
+    h1 { font: 600 1.4rem/1.2 "Clash Display", sans-serif; margin: 0 0 4px; }
+    .note { color: var(--mist); margin: 0 0 16px; max-width: 60ch; }
+    .bar { display: flex; gap: 8px; margin-bottom: 16px; }
+    .bar button { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 6px 12px; font: inherit; cursor: pointer; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; align-items: start; }
+    .panel { background: var(--panel); border: 1px solid var(--rule); padding: 16px; }
+    .panel h2 { font: 600 1.1rem/1.2 "Clash Display", sans-serif; margin: 0; }
+    .panel > p { margin: 2px 0 8px; color: var(--mist); font-size: .8rem; }
+    .row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0 .65rem; padding: .7rem 0; border-top: 1px solid var(--rule); }
+    .who { display: flex; flex-direction: column; min-width: 0; }
+    .first { font-size: .8rem; font-weight: 500; line-height: 1.1; }
+    .last { font: 600 1.2rem/1.1 "Clash Display", sans-serif; }
+    .team { font-size: .7rem; color: var(--mist); margin-left: .35rem; border-bottom: 2px solid var(--tc); }
+    .pick { grid-column: 2; display: flex; align-items: center; gap: .6rem; margin-top: .3rem; font-size: .9rem; }
+    .pick b { border-left: 3px solid var(--over); padding-left: .5rem; font-weight: 600; }
+    .pick .u { border-left-color: var(--under); }
+    .pick .n { color: var(--mist); }
+    .odds { font-weight: 600; font-size: .85rem; color: var(--mist); }
+    .hr-low { color: var(--hr-low); } .hr-mid { color: var(--hr-mid); } .hr-high { color: var(--hr-high); }
+
+    /* 1 current: plain circle, team color */
+    .a1 { width: 40px; height: 40px; border-radius: 50%; background: var(--tc); border: 2px solid color-mix(in srgb, var(--tc) 60%, #fff); overflow: hidden; position: relative; }
+    .a1 img, .a2 img, .a3 img, .a4 img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+
+    /* 2 hit-rate ring: an arc of the how-often color around a neutral photo circle */
+    .a2 { --p: 0; width: 46px; height: 46px; border-radius: 50%; padding: 3px; position: relative;
+      background: conic-gradient(var(--rc) calc(var(--p) * 1%), color-mix(in srgb, var(--mist) 28%, transparent) 0); }
+    .a2 > span { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--panel); position: relative; overflow: hidden; border: 2px solid var(--panel); }
+    .a2 img { background: color-mix(in srgb, var(--mist) 18%, var(--panel)); }
+
+    /* 3 cutout tile: taller than wide, flat team tint, shoulders cropped at the bottom */
+    .a3 { width: 40px; height: 48px; border-radius: 8px 8px 4px 4px; background: color-mix(in srgb, var(--tc) 55%, var(--panel)); overflow: hidden; position: relative; }
+    .a3 img { object-fit: cover; object-position: center 12%; transform: scale(1.18); transform-origin: center top; }
+
+    /* 4 duotone: grey photo taking the team color through a luminosity blend */
+    .a4 { width: 44px; height: 44px; border-radius: 50%; background: var(--tc); overflow: hidden; position: relative; isolation: isolate; }
+    .a4 img { filter: grayscale(1) contrast(1.25) brightness(1.05); mix-blend-mode: luminosity; }
+    .a4::after { content: ""; position: absolute; inset: 0; background: var(--tc); mix-blend-mode: multiply; opacity: .35; }
+  </style>
+</head>
+<body>
+  <h1>Player avatar on the Board</h1>
+  <p class="note">Same four rows, four treatments. Toggle the theme to check both. Ring colors follow the how-often rule: rose under 50%, gold 50–74%, teal 75%+.</p>
+  <div class="bar"><button id="t">Switch to light</button></div>
+  <div class="grid" id="grid"></div>
+  <script>
+    const players = [
+      { f: "LeBron", l: "James", t: "LAL", c: "#552583", id: 2544, side: "Over", line: "17.5", st: "PTS", h: 9, o: "-104" },
+      { f: "Victor", l: "Wembanyama", t: "SAS", c: "#8a8d8f", id: 1641705, side: "Over", line: "3.5", st: "BLK", h: 7, o: "+110" },
+      { f: "Nikola", l: "Jokić", t: "DEN", c: "#0e2240", id: 203999, side: "Under", line: "11.5", st: "REB", h: 5, o: "-120" },
+      { f: "Luka", l: "Dončić", t: "LAL", c: "#fdb927", id: 1629029, side: "Under", line: "8.5", st: "AST", h: 3, o: "-135" }
+    ];
+    const img = (p) => `<img src="https://cdn.nba.com/headshots/nba/latest/1040x760/${p.id}.png" alt="" loading="lazy" onerror="this.remove()">`;
+    const rc = (h) => (h * 10 >= 75 ? "var(--hr-high)" : h * 10 >= 50 ? "var(--hr-mid)" : "var(--hr-low)");
+    const cls = (h) => (h * 10 >= 75 ? "hr-high" : h * 10 >= 50 ? "hr-mid" : "hr-low");
+    const variants = [
+      ["1 · Current", "Plain circle on the team color.", (p) => `<span class="a1" style="--tc:${p.c}">${img(p)}</span>`],
+      ["2 · Hit-rate ring", "The arc is the hit rate: full teal for 9/10, short rose for 3/10. Team color moves to the badge only.", (p) => `<span class="a2" style="--p:${p.h * 10};--rc:${rc(p.h)}"><span>${img(p)}</span></span>`],
+      ["3 · Cutout tile", "Taller tile, flat team tint, shoulders cropped at the bottom.", (p) => `<span class="a3" style="--tc:${p.c}">${img(p)}</span>`],
+      ["4 · Duotone", "Grey photo washed with the team color.", (p) => `<span class="a4" style="--tc:${p.c}">${img(p)}</span>`]
+    ];
+    document.getElementById("grid").innerHTML = variants.map(([title, sub, av]) => `
+      <section class="panel"><h2>${title}</h2><p>${sub}</p>
+      ${players.map((p) => `<div class="row" style="--tc:${p.c}">
+        ${av(p)}
+        <div class="who"><span class="first">${p.f}</span><span class="last">${p.l}<span class="team">${p.t}</span></span></div>
+        <span class="odds">${p.o}</span>
+        <div class="pick"><b class="${p.side === "Under" ? "u" : ""}">${p.side} ${p.line} ${p.st}</b><span class="n ${cls(p.h)}">${p.h}/10</span></div>
+      </div>`).join("")}</section>`).join("");
+    document.getElementById("t").onclick = (e) => {
+      const r = document.documentElement, light = r.dataset.theme !== "light";
+      r.dataset.theme = light ? "light" : "dark"; e.target.textContent = light ? "Switch to dark" : "Switch to light";
+    };
+  </script>
+</body>
+</html>
