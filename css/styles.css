@@ -7064,3 +7064,9 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-gp .lh-pj-links a.is-active, .lh-gp .lh-pj-links a[aria-current] {
   background: none; color: var(--lh-strong); font-weight: 600; border-color: transparent; border-bottom-color: var(--lh-strong);
 }
+
+/* Jump bar: a thin vertical rule between the links */
+.lh-pp .lh-pj-links, .lh-gp .lh-pj-links { gap: 0; }
+.lh-pp .lh-pj-links a, .lh-gp .lh-pj-links a { padding: 0 0.9rem; border-left: 1px solid var(--lh-border); }
+.lh-pp .lh-pj-links a:first-of-type, .lh-gp .lh-pj-links a:first-of-type { padding-left: 0; border-left: 0; }
+.lh-pp .lh-pj-links a[hidden], .lh-gp .lh-pj-links a[hidden] { display: none; }
