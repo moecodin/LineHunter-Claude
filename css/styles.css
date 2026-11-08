@@ -7076,3 +7076,16 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-pp .lh-pj-links a + a::before, .lh-gp .lh-pj-links a + a::before {
   content: ""; position: absolute; left: 0; top: 50%; height: 1em; transform: translateY(-50%); border-left: 1px solid var(--lh-border);
 }
+
+/* Segmented wells: one well, thin text-height dividers between options, the selected one filled (no divider next to it) */
+.lh-pp .lh-window-toggle, .lh-gp .lh-window-toggle, .lh-board .lh-window-toggle,
+.lh-pp-ctl #playerPropTabs, .lh-board-tabs.lh-tabs.nav-underline { gap: 0; }
+.lh-pp .lh-window-toggle > .btn-ghost, .lh-gp .lh-window-toggle > .btn-ghost, .lh-board .lh-window-toggle > .btn-ghost,
+.lh-pp-ctl #playerPropTabs .nav-link, .lh-board-tabs.lh-tabs.nav-underline .nav-link { position: relative; }
+.lh-pp .lh-window-toggle > .btn-ghost + .btn-ghost::before, .lh-gp .lh-window-toggle > .btn-ghost + .btn-ghost::before,
+.lh-board .lh-window-toggle > .btn-ghost + .btn-ghost::before,
+.lh-pp-ctl #playerPropTabs .nav-item + .nav-item .nav-link::before, .lh-board-tabs.lh-tabs.nav-underline .nav-item + .nav-item .nav-link::before {
+  content: ""; position: absolute; left: 0; top: 50%; height: 1em; transform: translateY(-50%); border-left: 1px solid var(--lh-border);
+}
+.lh-window-toggle > .btn-ghost.active::before, .lh-window-toggle > .btn-ghost.active + .btn-ghost::before,
+.nav-link.active::before, .nav-item:has(> .nav-link.active) + .nav-item .nav-link::before { display: none; }
