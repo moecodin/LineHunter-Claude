@@ -185,7 +185,7 @@ const lineAndValuesPlugin = {
     if (options.bookLine !== null && options.bookLine !== options.line) {
       const y = drawDashedLine(chart, options.bookLine, { color: `rgba(${options.colors.textRgb}, 0.3)`, dash: [3, 4], width: 1 });
       ctx.fillStyle = `rgba(${options.colors.textRgb}, 0.55)`;
-      ctx.font = "500 10px 'Inter Tight', sans-serif";
+      ctx.font = "500 10px Satoshi, sans-serif";
       ctx.textAlign = "right";
       ctx.textBaseline = "bottom";
       ctx.fillText(`${options.bookLabel || "Book"} ${lineText(options.bookLine)}`, chartArea.right - 2, y - 3);
@@ -210,7 +210,7 @@ const lineAndValuesPlugin = {
 
     // 3. Each bar's number, just above the bar. While a bar is hovered, the other numbers fade too.
     ctx.fillStyle = options.colors.text;
-    ctx.font = "700 12px 'Inter Tight', sans-serif";
+    ctx.font = "700 12px Satoshi, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
     const values = chart.data.datasets[0].data;
@@ -574,7 +574,7 @@ function createPropChart(container, { height = 260, maxBarWidth = 40, onLineChan
               color: palette.muted,
               autoSkip: false, // show every label; the scroll gives them room
               maxRotation: 0,
-              font: { family: "Inter Tight, sans-serif", size: 10 },
+              font: { family: "Satoshi, sans-serif", size: 10 },
             },
           },
           y: {

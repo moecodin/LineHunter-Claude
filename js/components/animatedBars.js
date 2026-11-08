@@ -234,7 +234,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
     const baseY = PLOT_TOP + layout.plotHeight;
     const yOf = (value) => baseY - (Math.min(value, layout.scaleMax) / layout.scaleMax) * layout.plotHeight;
 
-    ctx.font = "10px 'Inter Tight', sans-serif";
+    ctx.font = "10px Satoshi, sans-serif";
     layout.ticks.forEach((tick) => {
       ctx.strokeStyle = `rgba(${colors.lineRgb}, 0.12)`;
       ctx.beginPath();
@@ -275,14 +275,14 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       const centerX = x + bar.width / 2;
       if (bar.showValue) {
         ctx.fillStyle = colors.text;
-        ctx.font = "700 12px 'Inter Tight', sans-serif";
+        ctx.font = "700 12px Satoshi, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
         if (!bar.isTonight) ctx.fillText(bar.game.value, centerX, top - 4);
       }
       if (bar.showLabel) {
         ctx.fillStyle = colors.muted;
-        ctx.font = "10px 'Inter Tight', sans-serif";
+        ctx.font = "10px Satoshi, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.fillText(bar.isTonight ? bar.tonightLabel : opponentLabel(bar.game), centerX, baseY + 6);
@@ -298,7 +298,7 @@ function createAnimatedBars(host, { maxBarWidth = 56, onHover = () => {}, onLeav
       ctx.lineTo(x, baseY);
       ctx.stroke();
       ctx.fillStyle = colors.muted;
-      ctx.font = "600 10px 'Inter Tight', sans-serif";
+      ctx.font = "600 10px Satoshi, sans-serif";
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
       ctx.fillText(layout.divider.label, x + 5, PLOT_TOP);

@@ -54,7 +54,7 @@ function createRoleChart(container, { height = 160 } = {}) {
       const { ctx, chartArea } = c;
       ctx.save();
       ctx.fillStyle = palette().muted;
-      ctx.font = "10px 'Inter Tight', sans-serif";
+      ctx.font = "10px Satoshi, sans-serif";
       ctx.textAlign = "right";
       ctx.textBaseline = "bottom";
       ctx.fillText(`Avg ${current.average.toFixed(1)}`, chartArea.right, y - 3);
@@ -106,7 +106,7 @@ function createRoleChart(container, { height = 160 } = {}) {
         scales: {
           x: {
             grid: { display: false },
-            ticks: { color: palette().muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, font: { family: "Inter Tight, sans-serif", size: 10 } },
+            ticks: { color: palette().muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, font: { family: "Satoshi, sans-serif", size: 10 } },
           },
           y: {
             grace: "10%",
