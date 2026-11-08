@@ -146,6 +146,7 @@ function createPropToolbar(container, { statTabs = null, showHead = false, edita
   }));
 
   const oddsText = (odds) => (odds > 0 ? `+${odds}` : `${odds}`);
+  const STAT_SHORT = { points: "PTS", rebounds: "REB", assists: "AST", threes: "3PM", points_rebounds_assists: "PRA" };
 
   // ctx = { head: { name, matchup }, line, mainLine, legBase: { playerId, player, team, opp, gameId, tipoff, stat }, stat }
   //   stat = the API prop type ("points"); line = the line on the chart (null = no line to move).
@@ -165,6 +166,10 @@ function createPropToolbar(container, { statTabs = null, showHead = false, edita
       const on = button.dataset.side === side;
       button.classList.toggle("is-on", on);
       button.setAttribute("aria-pressed", String(on));
+      // Each side carries its best odds (shown on phones, where the odds boxes are hidden): "Over / −174 DK".
+      const word = button.dataset.side === "under" ? "Under" : "Over";
+      const top = line === null ? null : lhOdds.getOdds(ctx.legBase.playerId, ctx.stat, line, button.dataset.side)[0];
+      button.innerHTML = `<span class="lh-ptb-sideword">${word}</span>${top ? `<span class="lh-ptb-sideodds"><b>${oddsText(top.odds)}</b> ${top.book}</span>` : `<span class="lh-ptb-sideodds is-none">no odds</span>`}`;
     });
 
     parts.odds.innerHTML = "";
@@ -198,6 +203,8 @@ function createPropToolbar(container, { statTabs = null, showHead = false, edita
       + (books.length > 3 ? `<span class="lh-ptb-box lh-ptb-more" title="${books.slice(3).map((entry) => `${entry.book} ${oddsText(entry.odds)}`).join(", ")}"><span class="lh-ptb-price">+${books.length - 3}</span></span>` : "");
 
     const best = books[0];
+    const pickText = `${side === "under" ? "Under" : "Over"} ${lineText(line)} ${STAT_SHORT[ctx.stat] || ""}`.trim();
+    const also = books.slice(1, 3).map((entry) => `${entry.book} ${oddsText(entry.odds)}`).join(" · ");
     parts.add.innerHTML = huntButtonHtml({
       ...ctx.legBase,
       side,
@@ -205,7 +212,8 @@ function createPropToolbar(container, { statTabs = null, showHead = false, edita
       odds: best.odds,
       book: best.vendor,
       isAlt: ctx.mainLine === null || ctx.mainLine === undefined || line !== ctx.mainLine,
-    }, { labelOut: "ADD TO MY HUNTS", labelIn: "IN MY HUNTS", iconFirst: true, className: "lh-add--block" });
+    }, { labelOut: `Add ${pickText} to My Hunts`, labelIn: `${pickText} is in My Hunts`, iconFirst: true, className: "lh-add--block" })
+      + (also ? `<span class="lh-ptb-also">Also ${also}</span>` : ""); // phones: the other books, under the Add button
   }
 
   return {

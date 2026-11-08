@@ -219,8 +219,14 @@ function renderHeader(injury) {
   if (nextGame) {
     const isHome = nextGame.home_team.abbreviation === team;
     const opponent = isHome ? nextGame.visitor_team.abbreviation : nextGame.home_team.abbreviation;
+    // Today's game shows its tip time ("vs UTA · 7:00 PM"), a later one its date ("vs UTA · Tue, Nov 10").
+    const tip = new Date(nextGame.datetime || nextGame.date);
+    const isToday = String(nextGame.date).slice(0, 10) === new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+    const when = isToday && nextGame.datetime && !Number.isNaN(tip.getTime())
+      ? tip.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+      : weekdayDate(nextGame.date);
     nextGameHtml = `<a href="game.html?id=${nextGame.id}" class="lh-next-game">
-      ${isHome ? "vs" : "@"} ${opponent} · ${weekdayDate(nextGame.date)} <span aria-hidden="true">›</span></a>`;
+      ${isHome ? "vs" : "@"} ${opponent} · ${when} <span aria-hidden="true">›</span></a>`;
   }
 
   const badge = injury ? injuryBadge(injury) : null;
@@ -233,6 +239,7 @@ function renderHeader(injury) {
       ${teamBadge}
       ${badge ? `<button type="button" class="lh-injury-badge ${badge.className}" id="injuryBadge"
                    aria-label="Injury: ${injury.status}. Show details">${badge.label}</button>` : ""}
+      <span class="lh-pp-pos">${[meta, player.jersey_number ? `#${player.jersey_number}` : ""].filter(Boolean).join(" · ")}</span>
       <span class="lh-pp-next"><i class="bi bi-calendar3" aria-hidden="true"></i> ${nextGameHtml}</span>
     </div>`;
   if (typeof fillPlayerAvatar === "function") {
@@ -289,7 +296,8 @@ function renderPropTabs() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = option.propType === pageState.propType ? "nav-link active text-nowrap" : "nav-link text-nowrap";
-    button.textContent = option.label;
+    // The full name on wider screens, the short code on phones ("Points" / "PTS"): five equal tabs fit across a phone.
+    button.innerHTML = `<span class="lh-tab-long">${option.label}</span><span class="lh-tab-short">${propCode(option.propType).toUpperCase()}</span>`;
     button.addEventListener("click", () => {
       pageState.propType = option.propType;
       playerToolbar.setSide(null); // a new prop starts with nothing picked

@@ -6911,3 +6911,81 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
    Desktop and tablets show the long name ("Assists") under the pick instead. */
 .lh-bd-statshort { display: none; font-style: normal; font-weight: 600; color: var(--lh-muted); }
 @media (max-width: 767.98px) { .lh-bd-statshort { display: inline; } }
+
+/* ---------- Player bar on phones (approved mockup design/indigo-mockup/player-mobile.html) ----------
+   One header row (back, photo, name) with one quiet line under it; full-width stat tabs with short codes; the line and Over / Under in
+   one row, each side with its best odds; Add (naming the pick) only after a side is picked, the other books under it; the chart's
+   controls on one swipeable row with Share as an icon. Wider screens keep their layout (the extra bits are hidden there). */
+.lh-tab-short, .lh-pp-pos, .lh-ptb-sideodds, .lh-ptb-also { display: none; }
+@media (max-width: 767.98px) {
+  .lh-pp-bar { padding: 14px; gap: 0; }
+  .lh-pp-who { gap: 10px; align-items: center; }
+  .lh-pp-back { width: 32px; height: 40px; margin-left: -6px; }
+  .lh-pp .lh-avatar--lg { width: 44px; height: 44px; font-size: 0.9rem; }
+  .lh-pp-name { font-size: 1.35rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lh-pp-name small { display: none; }
+  .lh-pp-meta { flex-wrap: wrap; gap: 0 6px; margin-top: 3px; font-size: 0.8125rem; }
+  .lh-pp-pos { display: inline; color: var(--lh-muted); }
+  .lh-pp-pos::after { content: " ·"; }
+  .lh-pp-next .bi-calendar3 { display: none; }
+
+  .lh-swiss-page #playerToolbar.lh-ptb { display: block; margin-top: 14px; }
+  .lh-swiss-page #playerToolbar .lh-ptb-stat { width: 100%; }
+  .lh-pp-ctl #playerPropTabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; overflow: visible; }
+  .lh-pp-ctl #playerPropTabs .nav-link { width: 100%; justify-content: center; min-height: 38px; padding: 0; font-weight: 600; }
+  .lh-pp-ctl #playerPropTabs .lh-tab-long { display: none; }
+  .lh-pp-ctl #playerPropTabs .lh-tab-short { display: inline; }
+
+  .lh-swiss-page #playerToolbar .lh-ptb-controls { display: block; margin-top: 10px; }
+  #playerToolbar .lh-ptb-line { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 8px; }
+  #playerToolbar .lh-ptb-step { height: 56px; border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); background: var(--lh-bg); overflow: hidden; }
+  #playerToolbar .lh-ptb-stepbtn { flex: 0 0 34px; border: 0; background: none; }
+  #playerToolbar .lh-ptb-value { flex: 1; min-width: 0; border: 0; font-size: 1.25rem; }
+  #playerToolbar .lh-ptb-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #playerToolbar .lh-ptb-side {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 56px; padding: 0;
+    background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control);
+  }
+  #playerToolbar .lh-ptb-sideword { font-weight: 700; font-size: 0.9rem; }
+  #playerToolbar .lh-ptb-side--over .lh-ptb-sideword { color: var(--lh-over-text); }
+  #playerToolbar .lh-ptb-side--under .lh-ptb-sideword { color: var(--lh-under-text); }
+  #playerToolbar .lh-ptb-sideodds { display: block; font-size: 0.78rem; font-weight: 400; color: var(--lh-muted); }
+  #playerToolbar .lh-ptb-sideodds b { color: var(--lh-text); font-weight: 600; }
+  #playerToolbar .lh-ptb-side.is-on { color: inherit; }
+  #playerToolbar .lh-ptb-side--over.is-on { background: rgba(var(--lh-over-rgb), 0.16); border-color: var(--lh-over); }
+  #playerToolbar .lh-ptb-side--under.is-on { background: rgba(var(--lh-under-rgb), 0.16); border-color: var(--lh-under); }
+  #playerToolbar .lh-ptb-side.is-on .lh-ptb-sideodds b { color: var(--lh-strong); }
+  #playerToolbar .lh-ptb-odds, #playerToolbar .lh-ptb-hint { display: none !important; }
+  #playerToolbar .lh-ptb-add { width: 100%; margin-top: 10px; }
+  #playerToolbar .lh-ptb-add[hidden] { display: none; }
+  #playerToolbar .lh-add--block { width: 100%; min-height: 46px; justify-content: center; border-radius: var(--lh-r-control); background: var(--lh-primary); border-color: var(--lh-primary); color: #fff; font-weight: 600; text-transform: none; letter-spacing: 0; }
+  #playerToolbar .lh-add--block.is-in, #playerToolbar .lh-add--block[aria-pressed="true"] { background: rgba(var(--lh-over-rgb), 0.18); border-color: var(--lh-over); color: var(--lh-strong); }
+  #playerToolbar .lh-ptb-also { display: block; margin-top: 8px; text-align: center; font-size: 0.75rem; color: var(--lh-muted); }
+
+  .lh-pp-chartctl { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; }
+  .lh-pp-chartctl::-webkit-scrollbar { display: none; }
+  .lh-pp-chartctl > * { flex: none; }
+  .lh-pp-chartctl .lh-share-word { display: none; }
+  .lh-pp-chartctl #playerShare { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
+}
+
+/* ---------- Borrowed from the Swiss design (owner's pick, Nov 8): 1. one left edge, 2. hairlines instead of boxes in boxes ----------
+   1. Inside a section, titles, text, numbers and controls start on the same left edge: no centered rows among left-aligned ones. */
+@media (max-width: 1199.98px) {
+  .lh-swiss-page #playerToolbar.lh-ptb, .lh-swiss-page #playerToolbar .lh-ptb-controls { justify-content: flex-start; }
+}
+.lh-shelf-head { text-align: left; }
+.lh-shelf-head .lh-top-title { justify-content: flex-start; }
+.lh-hitlist-head { justify-content: flex-start; text-align: left; }
+.lh-hitlist-blurb, .lh-hitlist-empty { text-align: left; }
+/* 2. Inside a panel, content is split by thin rules, not drawn as its own box (outlined wells stay for controls only). */
+.lh-ma-flag { background: none; border: 0; border-top: 1px solid var(--lh-border); border-bottom: 1px solid var(--lh-border); border-radius: 0; padding-left: 0; padding-right: 0; }
+.lh-mx-tiles { gap: 0; border-top: 1px solid var(--lh-border); }
+.lh-mx-tile { background: none; border: 0; border-left: 1px solid var(--lh-border); border-radius: 0; padding: 0.6rem 0.75rem; }
+.lh-mx-tile:nth-child(4n + 1) { border-left: 0; padding-left: 0; }
+@media (max-width: 575.98px) { .lh-mx-tile:nth-child(2n + 1) { border-left: 0; padding-left: 0; } .lh-mx-tile:nth-child(4n + 3) { border-left: 0; } }
+@media (min-width: 992px) {
+  .lh-shelf-head { display: flex; justify-content: space-between; align-items: flex-end; }
+  .lh-shelf-head > div:first-child { text-align: left; }
+  .lh-shelf-head .lh-top-title { justify-content: flex-start; }
+}
