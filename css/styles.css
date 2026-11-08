@@ -7070,3 +7070,9 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-pp .lh-pj-links a, .lh-gp .lh-pj-links a { padding: 0 0.9rem; border-left: 1px solid var(--lh-border); }
 .lh-pp .lh-pj-links a:first-of-type, .lh-gp .lh-pj-links a:first-of-type { padding-left: 0; border-left: 0; }
 .lh-pp .lh-pj-links a[hidden], .lh-gp .lh-pj-links a[hidden] { display: none; }
+
+/* Jump bar: the rule is only as tall as the text */
+.lh-pp .lh-pj-links a, .lh-gp .lh-pj-links a { border-left: 0; position: relative; }
+.lh-pp .lh-pj-links a + a::before, .lh-gp .lh-pj-links a + a::before {
+  content: ""; position: absolute; left: 0; top: 50%; height: 1em; transform: translateY(-50%); border-left: 1px solid var(--lh-border);
+}
