@@ -7038,3 +7038,11 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 .lh-beta-tag { background: var(--lh-surface-2); color: var(--lh-muted); border: 1px solid var(--lh-border); }
 .lh-ma-badge.is-backup { color: var(--lh-muted); }
 .lh-pp-next .lh-next-game:hover, .lh-gth-name a:hover { color: var(--lh-strong); text-decoration: underline; }
+
+/* The Board's stat pills: one segmented well like L5 / L10 / L20 and the player page's stat tabs, not loose outlined pills */
+.lh-board-tabs.lh-tabs.nav-underline {
+  display: inline-flex; flex-wrap: nowrap; gap: 2px; padding: 3px; max-width: 100%; overflow-x: auto;
+  background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control);
+}
+.lh-board-tabs.lh-tabs.nav-underline .nav-link { border: 0; border-radius: var(--lh-r-inner); background: none; color: var(--lh-muted); }
+.lh-board-tabs.lh-tabs.nav-underline .nav-link.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
