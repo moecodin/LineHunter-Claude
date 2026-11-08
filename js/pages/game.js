@@ -511,7 +511,8 @@ async function loadPage() {
     loadGameLines(game); // moneylines in the header, spread / total in the fact strip
     loadGameNeighbors(game); // the earlier / next game links above the header
     setUpTeamComparison(game); // the Team Comparison panel (js/components/teamCompare.js): closed unless the visitor left it open
-    setUpGameBreakdown(game); // the Game Breakdown card (js/components/gameBreakdown.js): projected score vs the book total
+    // Model picks (the Game Breakdown) moved to the beta Hunt Score page (hunt-score.html) while the model is in testing.
+    if (document.getElementById("gameBreakdown")) setUpGameBreakdown(game);
     loadGameInjuries(game); // the Injury report card beside it (js/components/gameInjuries.js)
     loadMatchupInfo(game); // the Matchup Info card next to it (js/components/matchupInfo.js): loads on its own and never blocks the table
 

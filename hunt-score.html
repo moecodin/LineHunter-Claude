@@ -35,13 +35,19 @@
   <main class="container-fluid lh-container px-3 px-lg-4 lh-tool-page">
     <a class="lh-back-link" href="schedule.html"><i class="bi bi-chevron-left" aria-hidden="true"></i> Today</a>
 
+    <!-- BETA: the Hunt Score and the game model are only on this page while they are being tuned (the rest of the site shows none). -->
+    <div class="lh-beta-note lines-only" role="note">
+      <span class="lh-beta-tag">Beta</span>
+      <p class="mb-0">The Hunt Score and the game model are still being tested and tuned, so their numbers can change. They're shown only here for now. Past results and simulations, not betting advice.</p>
+    </div>
+
     <!-- HUNT SCORE (lines mode): every scored prop for the day from /api/hunt (netlify/functions/hunt.js), best side per player + prop,
          highest score first. Each row shows its reasons; "See all factors" opens how the score was built. js/pages/hunt-score.js draws it. -->
     <section id="huntScore" class="card lh-hs-card lines-only mb-5" aria-labelledby="huntScoreTitle">
       <div class="card-header py-3">
         <div class="d-flex align-items-start flex-wrap gap-2">
           <div class="me-auto">
-            <h1 class="lh-top-title mb-1" id="huntScoreTitle"><i class="bi bi-crosshair" aria-hidden="true"></i>Hunt Score</h1>
+            <h1 class="lh-top-title mb-1" id="huntScoreTitle"><i class="bi bi-crosshair" aria-hidden="true"></i>Hunt Score <span class="lh-beta-tag">Beta</span></h1>
             <div class="small text-muted">Props scored 0–100. Every score shows its reasons.</div>
           </div>
           <span class="lh-label text-muted" id="huntScoreMeta"></span>
@@ -65,6 +71,15 @@
           <div class="collapse" id="explainHuntScore"><p class="lh-explain-text">Every prop starts at 50. Points are added or taken away for how often the player cleared the line in the last 10 games and this season, how the line compares with the recent average, how much the opponent allows of that stat, a minutes trend, and the second night of a back-to-back. The total is kept between 0 and 100. Only props scoring 65+ reach the Top 5, one per player, and injured or game-time-decision players are left out. These are past results, so they do not guarantee the next game.</p></div>
         </div>
       </div>
+    </section>
+
+    <!-- GAME MODEL (beta): Model picks for every game of the day, moved off the game page (js/components/gameModelList.js) -->
+    <section id="gameModel" class="card lh-hs-card lines-only mb-5" aria-labelledby="gameModelTitle">
+      <div class="card-header py-3">
+        <h2 class="lh-top-title mb-1" id="gameModelTitle"><i class="bi bi-diagram-3" aria-hidden="true"></i>Game model <span class="lh-beta-tag">Beta</span></h2>
+        <div class="small text-muted">Projected score, spread pick and total pick for each game. Strength is the gap to the book: Slight under 1.5, Moderate 1.5–3, Strong over 3.</div>
+      </div>
+      <div class="card-body" id="gameModelList"><p class="text-muted py-3 mb-0">Loading the games...</p></div>
     </section>
 
     <!-- Research mode: the Hunt Score is about lines -->
@@ -94,6 +109,9 @@
   <script src="js/components/propChart.js"></script>
   <script src="js/components/prop-toolbar.js"></script>
   <script src="js/components/hunt-score.js"></script>
+  <script src="js/components/gameBreakdown.js"></script>
+  <script src="js/components/gameModelList.js"></script>
   <script src="js/pages/hunt-score.js"></script>
+  <script>if (typeof renderGameModelList === "function") renderGameModelList(hsDate);</script>
 </body>
 </html>

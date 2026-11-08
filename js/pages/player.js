@@ -674,7 +674,8 @@ function renderProps() {
   const line = lineForScoring(playerChart.activeLine());
   renderSamePosition(pageState.propType, playerChart.activeLine()); // the Same Position card follows the tab and line
   renderMatchupAnalysis(pageState.propType); // the Matchup Analysis battle section follows the tab
-  renderPlayerHunt(playerId, pageState.propType, nextGame); // tonight's Hunt Score for this tab (js/components/playerHunt.js)
+  // The Hunt Score is a beta tool for now (hunt-score.html): js/components/playerHunt.js isn't loaded on this page.
+  if (typeof renderPlayerHunt === "function") renderPlayerHunt(playerId, pageState.propType, nextGame);
 
   // The games in this window and split, newest first (pickWindowLogs in js/core/stats.js),
   // scored against the line. The table below uses the very same games.

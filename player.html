@@ -57,9 +57,6 @@
     <div class="lh-pp-layout">
     <div class="lh-pp-main">
 
-    <!-- VERDICT (lines mode): the beta's wedge carrying tonight's Hunt Score for the selected stat tab
-         (js/components/playerHunt.js). Hidden when the engine has no scored prop for this player + stat. -->
-    <section id="playerHuntHead" class="lh-verdict lines-only" data-lh-jump="Verdict" aria-label="Hunt Score" hidden></section>
 
     <!-- 4. PROPS: stat tabs, window + home/away toggles, hit rate, chart with the alt line -->
     <section class="card mb-4" data-lh-jump="Chart" data-lh-collapse="chart" data-lh-collapse-name="Chart">
@@ -99,15 +96,6 @@
              js/components/lineLadder.js; click a line to move the chart to it. -->
         <div id="playerLadder" class="lines-only" hidden></div>
       </div>
-    </section>
-
-    <!-- SCORE BUILD-UP (lines mode): how tonight's Hunt Score (shown in the header) was built, step by step from the
-         season baseline. Hidden when the engine has no scored prop for this player + stat. js/components/playerHunt.js -->
-    <section id="playerHunt" class="card mb-4 lines-only" data-lh-jump="Score" data-lh-collapse="hunt" data-lh-collapse-name="Hunt Score" hidden>
-      <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
-        <span class="lh-label" data-lh-kicker="Score">Score build-up</span>
-      </div>
-      <div class="card-body" id="playerHuntBody"></div>
     </section>
 
     <!-- MATCHUP ROW: Same Position (players at this position vs the next opponent's last 10 games, vs this player's line
@@ -368,8 +356,6 @@
   <script src="js/components/samePosition.js"></script>
   <script src="js/components/matchupAnalysis.js"></script>
   <script src="js/components/share.js"></script>
-  <script src="js/components/hunt-score.js"></script>
-  <script src="js/components/playerHunt.js"></script>
   <script src="js/components/playerPhoto.js"></script>
   <script src="js/components/lineLadder.js"></script>
   <script src="js/components/playerJump.js"></script>

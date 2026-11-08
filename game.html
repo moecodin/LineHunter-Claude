@@ -56,21 +56,6 @@
     <div class="lh-pp-layout lh-gp-layout">
     <div class="lh-pp-main">
 
-    <!-- 2. MODEL PICKS: the Game Breakdown teaser laid out as the beta's verdict wedge (projected score + injuries on navy, the spread and
-         total picks on the indigo wedge); "Show breakdown details" opens the build-up. js/components/gameBreakdown.js, loads when near view. -->
-    <section class="card lh-gp-picks" id="gameBreakdown" data-lh-jump="Model picks">
-      <div class="card-header py-3"><h2 class="lh-label mb-0">Model picks <span class="lh-gp-sub">spread &amp; total</span></h2></div>
-      <div class="card-body">
-        <div id="gameBreakdownBody"></div>
-        <div class="lh-explain">
-          <button type="button" class="lh-explain-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#explainBreakdown" aria-expanded="false" aria-controls="explainBreakdown">
-            How this works <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
-          </button>
-          <div class="collapse" id="explainBreakdown"><p class="lh-explain-text">Offensive rating is points scored per 100 possessions and defensive rating is points allowed. Each team's offense is paired with the other team's defense and scaled by both teams' pace, then home court, back-to-backs and injuries adjust each team's score. The spread pick and the total pick are the sides where the model's numbers beat the book's, and the strength is how far apart they are. Books watch the same things, so a big gap means take a closer look, not guaranteed.</p></div>
-        </div>
-      </div>
-    </section>
-
     <!-- 3. TOP HIT RATES (lines mode): this game's props, highest hit rate first; rows open the player page on that prop
          (js/components/gameTopHits.js, from the rows js/pages/game.js sends). The Board itself lives on Today and in Tools. -->
     <section class="card lines-only" id="gameTopHits" data-lh-jump="Top hit rates" aria-labelledby="gameTopHitsTitle">
@@ -86,7 +71,7 @@
         <div class="lh-gth-heads" aria-hidden="true"><span>Player</span><span>Pick</span><span>Hit rate</span><span>Avg</span><span>Best odds</span><span></span><span></span></div>
         <div id="gthList" aria-busy="true"><div class="text-muted py-3">Loading props...</div></div>
         <button type="button" id="gthMore" class="btn btn-sm btn-ghost lh-gth-more w-100 mt-3" hidden>Show more</button>
-        <p class="lh-gth-note">Every prop for every game, with Hunt Scores, is on The Board: <a href="schedule.html">Today ›</a> or <a href="top-hit-rates.html">Tools › The Board ›</a>. Past results, not a prediction. Gambling problem? Call 1-800-GAMBLER.</p>
+        <p class="lh-gth-note">Every prop for every game is on The Board: <a href="schedule.html">Today ›</a> or <a href="top-hit-rates.html">Tools › The Board ›</a>. Past results, not a prediction. Gambling problem? Call 1-800-GAMBLER.</p>
       </div>
     </section>
 
@@ -183,9 +168,7 @@
   <script src="js/components/matchupInfo.js"></script>
   <script src="js/components/gameInjuries.js"></script>
   <script src="js/components/teamCompare.js"></script>
-  <script src="js/components/gameBreakdown.js"></script>
   <script src="js/components/playerJump.js"></script>
-  <script src="js/components/hunt-score.js"></script>
   <script src="js/components/gameTopHits.js"></script>
   <script src="js/pages/game.js"></script>
 </body>

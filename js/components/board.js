@@ -26,13 +26,19 @@ const BOARD_WINDOWS = [5, 10, 20];
 const BOARD_STEP_ROWS = BOARD ? Number(BOARD.dataset.rows) || 25 : 25; // rows shown at first and added by "Show more"
 const BOARD_MIN_SAMPLE = 3;            // fewer games than this in the window = no row
 const BOARD_TRACKER_KEY = "lh-board-tracker"; // phones: "1" = the hunts tracker shows in an open row
-const BOARD_SORTS = [
+// The Hunt Score is a beta tool for now (hunt-score.html only): with BOARD_HUNT off, The Board loads no Hunt Scores, hides the Hunt line /
+// Score columns (.lh-board--nohunt in css/styles.css) and the Edge / Hunt Score strip in an opened row, and sorts by hit rate.
+// Set it back to true once the model leaves beta.
+const BOARD_HUNT = false;
+if (BOARD && !BOARD_HUNT) BOARD.classList.add("lh-board--nohunt");
+const BOARD_SORTS_ALL = [
   { code: "score", label: "Hunt Score" },
   { code: "rate", label: "Hit rate" },
   { code: "edge", label: "Edge" },
   { code: "streak", label: "Streak" },
   { code: "game", label: "Game" },
 ];
+const BOARD_SORTS = BOARD_HUNT ? BOARD_SORTS_ALL : BOARD_SORTS_ALL.filter((sort) => sort.code !== "score" && sort.code !== "edge");
 const BOARD_STAT_SHORT = { pts: "PTS", reb: "REB", ast: "AST", "3pm": "3PM", pra: "PRA" };
 const BOARD_SEASON_KEYS = { pts: ["pts"], reb: ["reb"], ast: ["ast"], "3pm": ["fg3m"], pra: ["pts", "reb", "ast"] };
 
@@ -309,6 +315,7 @@ function boardPanelShellHtml(item) {
 
 // Edge | the number line | Hunt Score + confidence
 function boardSumHtml(item) {
+  if (!BOARD_HUNT) return "";
   const { projection: proj, hunt, line, side } = item;
   if (!proj) {
     return `<p class="lh-bd-note">${boardHunts ? "The Hunt Score engine hasn't scored this prop yet." : "Loading the Hunt Score..."}</p>`;
@@ -647,7 +654,7 @@ const boardUi = BOARD ? createPropListBar({
   windows: BOARD_WINDOWS,
   window: 10,
   sorts: BOARD_SORTS,
-  sort: "score",
+  sort: BOARD_HUNT ? "score" : "rate",
   withGame: !BOARD.hasAttribute("data-single-game"),
   getGames: () => {
     const games = [];
@@ -715,7 +722,7 @@ if (BOARD) {
       const row = BOARD.querySelector(`[data-bd-row="${CSS.escape(linked)}"]`);
       if (row) row.scrollIntoView({ block: "start" });
     }
-    if (slate.date && (!boardHunts || boardHunts.date !== slate.date)) {
+    if (BOARD_HUNT && slate.date && (!boardHunts || boardHunts.date !== slate.date)) {
       const request = ++boardHuntsRequest;
       boardHunts = null;
       loadHunts(slate.date)

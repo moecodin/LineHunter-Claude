@@ -6683,3 +6683,49 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
 .lh-gp .lh-pp-rail .lh-tc-row { font-size: 0.8125rem; }
 @media (max-width: 1199.98px) and (min-width: 768px) { .lh-gp .lh-pp-rail { align-items: start; } }
 .lh-gp .lh-pp-rail .lh-game-injury-list { max-height: none; overflow: visible; }
+
+/* The Board without the Hunt Score (beta tool only for now; BOARD_HUNT in js/components/board.js): no Hunt line / Score columns,
+   no Edge / Hunt Score strip in an opened row. Columns: player, pick, hit rate, avg, odds, add, chevron. */
+.lh-board--nohunt .lh-bd-proj,
+.lh-board--nohunt .lh-bd-score,
+.lh-board--nohunt .lh-bd-heads span:nth-child(5),
+.lh-board--nohunt .lh-bd-heads span:nth-child(6),
+.lh-board--nohunt .lh-bd-sum { display: none; }
+.lh-board--nohunt .lh-bd-heads,
+.lh-board--nohunt .lh-bd-head { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.15fr) minmax(0, 1.7fr) minmax(0, 0.6fr) minmax(0, 1.1fr) 5.5rem 2.5rem; }
+@media (max-width: 1199.98px) {
+  .lh-board--nohunt .lh-bd-heads,
+  .lh-board--nohunt .lh-bd-head { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.2fr) minmax(0, 1.6fr) minmax(0, 1.1fr) 2.5rem; }
+}
+@media (max-width: 767.98px) {
+  .lh-board--nohunt .lh-bd-head {
+    grid-template-columns: auto auto minmax(0, 1fr) 2rem;
+    grid-template-areas: "player player player chev" "pick hit odds chev";
+  }
+}
+
+/* "Beta" tag next to a tool name (LH_TOOLS beta: true in js/components/nav.js) */
+.lh-beta-tag {
+  display: inline-block; margin-left: 0.35rem; padding: 0 0.4rem; border-radius: var(--lh-r-pill);
+  background: rgba(var(--lh-accent-rgb), 0.16); color: var(--lh-accent); font: 700 0.62rem/1.5 var(--lh-font-body);
+  letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 0.15em;
+}
+
+/* Beta note on the Hunt Score page */
+.lh-beta-note { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0.5rem 0 1rem; padding: 0.75rem 1rem; border: 1px solid var(--lh-border); border-radius: var(--lh-r-panel); background: var(--lh-surface); font-size: 0.875rem; color: var(--lh-text); }
+.lh-beta-note .lh-beta-tag { margin: 0.1rem 0 0; flex: none; }
+/* Game model rows (js/components/gameModelList.js) */
+.lh-gm-row { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 1rem; align-items: center; gap: 0.75rem; padding: 0.7rem 0.25rem; border-bottom: 1px solid var(--lh-border); color: inherit; text-decoration: none; }
+.lh-gm-row:hover { background: rgba(var(--lh-accent-rgb), 0.05); }
+.lh-gm-row b { display: block; font-weight: 600; color: var(--lh-strong); }
+.lh-gm-row small { display: block; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-gm-match b { font: 600 1.05rem var(--lh-font-display); }
+.lh-gm-wide { grid-column: span 3; }
+.lh-gm-str { margin-left: 0.3rem; padding: 0 0.4rem; border-radius: var(--lh-r-inner); background: var(--lh-surface-2); color: var(--lh-faint); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; vertical-align: 0.15em; }
+.lh-gm-str.is-strong { background: rgba(var(--lh-over-rgb), 0.2); color: var(--lh-over-text); }
+.lh-gm-chev { color: var(--lh-muted); }
+@media (max-width: 767.98px) {
+  .lh-gm-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .lh-gm-chev { display: none; }
+  .lh-gm-wide { grid-column: span 1; }
+}
