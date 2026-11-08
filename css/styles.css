@@ -7154,7 +7154,7 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   #playerToolbar .lh-ptb-sides { gap: 6px; }
 }
 @media (max-width: 575.98px) {
-  .lh-ladder { grid-template-columns: 2.4rem repeat(7, minmax(0, 1fr)); gap: 0 1px; overflow-x: visible; --lh-ld-rows: 90px repeat(6, 1.45rem); }
+  .lh-ladder { grid-template-columns: 2.4rem repeat(7, minmax(0, 1fr)); gap: 0 1px; overflow-x: clip; --lh-ld-rows: 90px repeat(6, 1.45rem); }
   .lh-ladder-labels { font-size: 0.6rem; }
   .lh-ladder-line { font-size: 0.95rem; }
   .lh-ladder-col { font-size: 0.68rem; }
