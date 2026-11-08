@@ -6993,3 +6993,48 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
   content: attr(data-lh-kicker); display: block; margin-bottom: 0.2rem;
   font: 500 0.75rem/1.2 var(--lh-font-body); letter-spacing: 0; text-transform: none; color: var(--lh-muted);
 }
+
+/* ---------- Swiss idea 4: number strips ----------
+   Big numbers in one row split by thin vertical rules, a tiny label above each (the Analyzer's .lh-mx-tile is the model). */
+.lh-strip, #playerSummary, .lh-opp-grid, .lh-bd-avgs {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0;
+  border-top: 1px solid var(--lh-border); padding: 0.6rem 0 0;
+}
+#playerSummary > div, .lh-opp-grid > div, .lh-bd-avgs > div {
+  min-width: 0; padding: 0 0.75rem !important; border-left: 1px solid var(--lh-border) !important;
+}
+#playerSummary > div:first-child, .lh-opp-grid > div:first-child, .lh-bd-avgs > div:first-child {
+  padding-left: 0 !important; border-left: 0 !important;
+}
+#playerSummary .lh-label, .lh-opp-grid .lh-label, .lh-bd-avgs span { font-size: 0.75rem; font-weight: 500; color: var(--lh-muted); }
+#playerSummary .lh-drawer-stat, .lh-opp-grid .lh-drawer-stat, .lh-bd-avgs b {
+  font: 600 1.5rem/1.15 var(--lh-font-display); letter-spacing: 0; color: var(--lh-strong);
+}
+#playerSummary { display: grid !important; margin-bottom: 1rem !important; }
+@media (max-width: 575.98px) {
+  #playerSummary .lh-drawer-stat, .lh-opp-grid .lh-drawer-stat, .lh-bd-avgs b { font-size: 1.2rem; }
+  #playerSummary > div, .lh-opp-grid > div, .lh-bd-avgs > div { padding: 0 0.5rem !important; }
+}
+/* The beta's how-often colors, on hit-rate numbers only */
+.lh-hr-lo, .lh-hr-lo .text-muted { color: var(--lh-hr-low) !important; }
+.lh-hr-md, .lh-hr-md .text-muted { color: var(--lh-hr-mid) !important; }
+.lh-hr-hi, .lh-hr-hi .text-muted { color: var(--lh-hr-high) !important; }
+
+/* ---------- Swiss idea 5: one spacing step ---------- 12px between panels, 16px inside */
+:root { --lh-gap: 12px; --lh-pad: 16px; }
+.lh-pp, .lh-gp { --lh-pp-gap: var(--lh-gap); }
+.lh-gp .card > .card-header { padding: var(--lh-pad) var(--lh-pad) 0.25rem !important; }
+.lh-gp .card > .card-body { padding: 0.5rem var(--lh-pad) var(--lh-pad); }
+.lh-swiss-page .card > .card-header, .lh-swiss-card > .card-header { padding: var(--lh-pad) var(--lh-pad) 0.25rem !important; }
+.lh-swiss-page .card > .card-body, .lh-swiss-card > .card-body { padding: 0.5rem var(--lh-pad) var(--lh-pad); }
+.lh-ph-headcard, .lh-board, .lh-gh, .lh-gc { padding: var(--lh-pad); }
+
+/* ---------- Swiss idea 6: color only for meaning ----------
+   Teal / rose = over / under. Periwinkle = selected or active. Team color = photo circle and team badge only.
+   Names, labels, links, markers and chips stay neutral. Hit-rate numbers keep the how-often colors. */
+.lh-vd-why li::marker { color: var(--lh-muted); }
+.lh-vd-link, .lh-wgo, .lh-inside-tool small, .lh-gp-picks #gameBreakdownBody > .lh-gb-more { color: var(--lh-text); }
+.lh-inside-tool > i { color: var(--lh-strong); }
+.lh-beta-tag { background: var(--lh-surface-2); color: var(--lh-muted); border: 1px solid var(--lh-border); }
+.lh-ma-badge.is-backup { color: var(--lh-muted); }
+.lh-pp-next .lh-next-game:hover, .lh-gth-name a:hover { color: var(--lh-strong); text-decoration: underline; }

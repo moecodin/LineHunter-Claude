@@ -726,14 +726,27 @@ function renderProps() {
   const hitRateText = line === null
     ? "–"
     : `${result.hits}/${result.totalGames} <span class="text-muted">(${Math.round(result.hitRate)}%)</span>`;
+  const avgOf = (size) => {
+    const r = calculateHitRate(pickWindowLogs(splitLogs(playerLogs, pageState.split), size, seasonIsCurrent), tab.stat, line ?? 0, "all");
+    return r.totalGames ? formatStatValue(r.average) : "–";
+  };
+  const hitColor = line === null ? "" : result.hitRate >= 75 ? "lh-hr-hi" : result.hitRate >= 50 ? "lh-hr-md" : "lh-hr-lo";
   summary.innerHTML = `
     <div class="lines-only">
       <div class="lh-label">Hit rate${line !== null ? ` <span class="lh-alt-tag">o${lineText(line)}</span>` : ""}</div>
-      <div class="lh-drawer-stat">${hitRateText}</div>
+      <div class="lh-drawer-stat ${hitColor}">${hitRateText}</div>
     </div>
     <div>
       <div class="lh-label">Average</div>
       <div class="lh-drawer-stat">${formatStatValue(result.average)}</div>
+    </div>
+    <div>
+      <div class="lh-label">Last 5</div>
+      <div class="lh-drawer-stat">${avgOf(5)}</div>
+    </div>
+    <div>
+      <div class="lh-label">Season</div>
+      <div class="lh-drawer-stat">${avgOf("season")}</div>
     </div>${pageState.split === "h2h" ? h2hNoteHtml((h2hOpponent() || {}).abbreviation, h2hLogsFor(h2hData, playerId)) : ""}`;
 
   // Research mode: "25+ PTS in 7 of last 10 · avg 24.3"
