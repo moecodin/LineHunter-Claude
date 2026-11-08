@@ -11,9 +11,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
   <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Fontshare: Clash Display (headlines, big numbers) + Satoshi (everything you read) -->
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -70,7 +72,7 @@
         <section class="card h-100" data-lh-collapse="mx-style" data-lh-collapse-name="Style clash">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Style clash</h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Play types">Style clash</h2>
               <span id="mxStyleNote" class="small text-muted"></span>
             </div>
             <div id="mxStyleBody" class="text-muted small py-4 text-center">Loading...</div>
@@ -83,7 +85,7 @@
         <section class="card h-100" data-lh-collapse="mx-tape" data-lh-collapse-name="Tale of the tape">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Tale of the tape</h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Season">Tale of the tape</h2>
               <span id="mxTapeNote" class="small text-muted"></span>
             </div>
             <div id="mxTapeBody" class="text-muted small py-4 text-center">Loading...</div>
@@ -96,7 +98,7 @@
         <section class="card h-100" data-lh-collapse="mx-defender" data-lh-collapse-name="Defender check">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Defender check</h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Defense">Defender check</h2>
               <span id="mxDefNote" class="small text-muted"></span>
             </div>
             <div id="mxDefBody" class="text-muted small py-4 text-center">Loading...</div>
@@ -109,7 +111,7 @@
         <section class="card h-100" data-lh-collapse="mx-status" data-lh-collapse-name="Status &amp; pace">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
-              <h2 class="lh-label mb-0 me-auto">Status &amp; pace</h2>
+              <h2 class="lh-label mb-0 me-auto" data-lh-kicker="Status">Status &amp; pace</h2>
               <span id="mxStatusNote" class="small text-muted"></span>
             </div>
             <div id="mxStatusBody" class="text-muted small py-4 text-center">Loading...</div>

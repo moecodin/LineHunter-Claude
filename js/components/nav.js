@@ -33,8 +33,10 @@ window.lhLockupHtml = lhLockupHtml;
 // mode "lines" = lines mode only (class lines-only), "research" = research mode only (research-only), "both" = always.
 // Hot Players shares top-hit-rates.html (The Board's page) and Streaks shares hit-list.html: each page swaps its card with the mode.
 const LH_TOOLS = [
-  { key: "hunt", href: "hunt-score.html", icon: "bi-crosshair", name: "Hunt Score", sub: "Tonight's best props, scored 0–100", mode: "lines" },
-  { key: "top", href: "top-hit-rates.html", icon: "bi-list-columns-reverse", name: "The Board", sub: "Every prop: hit rate, Hunt line and score", mode: "lines" },
+  { key: "hunt", href: "hunt-score.html", icon: "bi-crosshair", name: "Hunt Score", beta: true, sub: "Our prop and game models, in testing", mode: "lines" },
+  // Part of the Hunt Score beta: listed (with the Beta tag) exactly when Hunt Score is.
+  { key: "huntmodel", href: "hunt-model.html", icon: "bi-journal-text", name: "Hunt Model", beta: true, sub: "How the Hunt Score works", mode: "lines" },
+  { key: "top", href: "top-hit-rates.html", icon: "bi-list-columns-reverse", name: "The Board", sub: "Every prop: hit rate, average and odds", mode: "lines" },
   { key: "hitlist", href: "hit-list.html", icon: "bi-bullseye", name: "Hit List", sub: "Ready-made slips from past results", mode: "lines" },
   { key: "hot", href: "top-hit-rates.html", icon: "bi-fire", name: "Hot Players", sub: "Last 5 games vs their season", mode: "research" },
   { key: "streaks", href: "hit-list.html", icon: "bi-graph-up-arrow", name: "Streaks", sub: "Players on a run", mode: "research" },
@@ -76,7 +78,7 @@ const lhToolModeClass = (tool) => ({ lines: "lines-only", research: "research-on
   const onToolPage = LH_TOOLS.some((tool) => tool.href === currentPage);
   const toolMenuItems = LH_TOOLS.map((tool) => `
           <li class="${lhToolModeClass(tool)}"><a class="dropdown-item lh-tools-item${tool.href === currentPage ? " active" : ""}" href="${tool.href}"${tool.href === currentPage ? ' aria-current="page"' : ""}>
-            <i class="bi ${tool.icon}" aria-hidden="true"></i><span><strong>${tool.name}</strong><small>${tool.sub}</small></span>
+            <i class="bi ${tool.icon}" aria-hidden="true"></i><span><strong>${tool.name}${tool.beta ? ` <span class="lh-beta-tag">Beta</span>` : ""}</strong><small>${tool.sub}</small></span>
           </a></li>`).join("");
   const navLinks = `
         <div class="lh-nav-links d-none d-lg-flex" role="group" aria-label="Sections">
@@ -158,7 +160,7 @@ const lhToolModeClass = (tool) => ({ lines: "lines-only", research: "research-on
               <div class="col-12 col-md-6 col-lg-3 ${lhToolModeClass(tool)}">
                 <a class="lh-drawer-tile ${activePage === tool.href ? "active" : ""}" href="${tool.href}" data-page="${tool.href}">
                   <i class="lh-drawer-tile-icon bi ${tool.icon}"></i>
-                  <span>${tool.name}</span>
+                  <span>${tool.name}${tool.beta ? ` <span class="lh-beta-tag">Beta</span>` : ""}</span>
                 </a>
               </div>`).join("")}
             </div>
@@ -410,7 +412,7 @@ const lhToolModeClass = (tool) => ({ lines: "lines-only", research: "research-on
       <div class="offcanvas-body">${LH_TOOLS.map((tool) => `
         <a class="lh-sheet-row lh-tool-row ${lhToolModeClass(tool)}${tool.href === currentPage ? " is-active" : ""}" href="${tool.href}">
           <span class="lh-tool-row-icon"><i class="bi ${tool.icon}" aria-hidden="true"></i></span>
-          <span class="me-auto"><strong>${tool.name}</strong><small>${tool.sub}</small></span>
+          <span class="me-auto"><strong>${tool.name}${tool.beta ? ` <span class="lh-beta-tag">Beta</span>` : ""}</strong><small>${tool.sub}</small></span>
           <i class="bi bi-chevron-right" aria-hidden="true"></i>
         </a>`).join("")}
       </div>

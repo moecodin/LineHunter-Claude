@@ -159,32 +159,89 @@ function gameTeamBadge(team) {
     : teamBadgeHtml(team);
 }
 
-// The Swiss header: the date / tip time, both abbreviations big and underlined in the team colors (matchup clash rule),
-// city + season record, and the last-5 dots (#formAway / #formHome and the records come from js/components/matchupInfo.js).
+// The header (indigo restyle, the beta's game card at full width): time + arena on top, then the away team's color with the home
+// team's as a slanted wedge and a thin ice seam, both abbreviations, team names, moneylines (#mlAway / #mlHome, filled by
+// loadGameLines) and the season record + last-5 dots (#recordAway / #formAway..., filled by js/components/matchupInfo.js).
+// Colors: each team's main color (the secondary when the primary vanishes on the page), the away team on its secondary when the
+// two clash; text white or dark, whichever reads.
+function gameHeaderColors(away, home) {
+  let a = teamBaseColor(away);
+  const h = teamBaseColor(home);
+  if (colorDistance(a, h) < COLOR_CLASH_DISTANCE && TEAM_INFO[away]) a = TEAM_INFO[away].colors.secondary;
+  return `--away:${a};--away-text:${readableTextOn(a)};--home:${h};--home-text:${readableTextOn(h)}`;
+}
+
 function renderGameHeader(game) {
   currentGame = game;
   const away = game.visitor_team;
   const home = game.home_team;
   document.title = `${away.abbreviation} @ ${home.abbreviation} · LineHunter`;
-  const colors = matchupColors(away.abbreviation, home.abbreviation);
-  const day = new Date(`${game.date.slice(0, 10)}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  const when = game.status === "Final" || game.period > 0 ? describeTime(game) : `${day} · ${describeTime(game).split(", ").pop()}`;
-  const team = (t, color, side) => `
-      <div class="lh-gh-team${side === "home" ? " is-home" : ""}">
-        <span class="lh-gh-abbr" style="border-bottom-color: ${color}">${t.abbreviation}</span>
-        <span class="lh-gh-city">${t.city} <span class="lh-gh-rec" id="record${side === "home" ? "Home" : "Away"}"></span></span>
-        <div class="lh-hdr-form" id="form${side === "home" ? "Home" : "Away"}"></div>
+  const day = new Date(`${game.date.slice(0, 10)}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const when = game.status === "Final" || game.period > 0 ? `${day} · ${describeTime(game)}` : `${day} · ${describeTime(game).split(", ").pop()}`;
+  const info = TEAM_INFO[home.abbreviation] || {};
+  const arena = info.arena ? ` · ${info.arena}, ${info.city || home.city}` : "";
+  const team = (t, side) => `
+      <div class="lh-gp-team${side === "home" ? " is-home" : ""}">
+        <div><span class="lh-gp-abbr">${t.abbreviation}</span><span class="lh-gp-name">${t.full_name}</span></div>
+        <div>
+          <span class="lh-gp-ml lines-only" id="ml${side === "home" ? "Home" : "Away"}"></span>
+          <span class="lh-gp-rec"><span id="record${side === "home" ? "Home" : "Away"}"></span> <span class="lh-hdr-form" id="form${side === "home" ? "Home" : "Away"}"></span></span>
+        </div>
       </div>`;
   document.getElementById("game-header").innerHTML = `
-    <div class="lh-gh-when">${when}</div>
-    <h1 class="lh-gh-teams"><span class="visually-hidden">${away.full_name} at ${home.full_name}</span>
-      ${team(away, colors.away, "away")}
-      <span class="lh-gh-at" aria-hidden="true">@</span>
-      ${team(home, colors.home, "home")}
+    <div class="lh-gp-time">${when}${arena}</div>
+    <h1 class="lh-gp-body" data-away="${away.abbreviation}" data-home="${home.abbreviation}" style="${gameHeaderColors(away.abbreviation, home.abbreviation)}">
+      <span class="visually-hidden">${away.full_name} at ${home.full_name}</span>
+      ${team(away, "away")}
+      <span class="lh-gp-at" aria-hidden="true">@</span>
+      ${team(home, "home")}
     </h1>`;
   if (typeof setPlayerJumpName === "function") setPlayerJumpName(`${away.abbreviation} @ ${home.abbreviation}`);
-  const ratings = document.getElementById("ratingsTitle"); // "Team ratings" with "MIA @ ATL" as its small label
-  if (ratings) ratings.dataset.lhKicker = `${away.abbreviation} @ ${home.abbreviation}`;
+}
+
+// Moneylines in the header and the spread / total in the fact strip: one odds request for this game; the Sportsbook filter's book,
+// else DraftKings, else the first book posting a moneyline.
+async function loadGameLines(game) {
+  const text = document.getElementById("gameLineText");
+  try {
+    const json = await bdlGet(`/api/bdl/nba/v2/odds?game_ids[]=${game.id}`);
+    const rows = (json.data || []).filter((row) => row.game_id === game.id);
+    const chosen = typeof lhOdds !== "undefined" && lhOdds.getBook ? lhOdds.getBook() : null;
+    const row = rows.find((r) => r.vendor === chosen && r.moneyline_home_odds != null)
+      || rows.find((r) => r.vendor === "draftkings" && r.moneyline_home_odds != null)
+      || rows.find((r) => r.moneyline_home_odds != null) || rows[0];
+    const fmt = (n) => (n == null || n === "" ? "" : Number(n) > 0 ? `+${Number(n)}` : `−${Math.abs(Number(n))}`);
+    const mlAway = document.getElementById("mlAway");
+    const mlHome = document.getElementById("mlHome");
+    if (!row) { if (text) text.textContent = "Lines not posted yet"; return; }
+    if (mlAway) mlAway.textContent = fmt(row.moneyline_away_odds);
+    if (mlHome) mlHome.textContent = fmt(row.moneyline_home_odds);
+    if (text) {
+      const spread = Number(row.spread_home_value);
+      const fav = spread <= 0 ? game.home_team.abbreviation : game.visitor_team.abbreviation;
+      const book = typeof lhHunts !== "undefined" ? lhHunts.bookLabel(row.vendor) : row.vendor;
+      text.innerHTML = `${Number.isFinite(spread) ? `${fav} ${spread === 0 ? "PK" : `−${Math.abs(spread)}`}` : "–"} · ${row.total_value != null ? Number(row.total_value) : "–"} <span class="lh-gp-book">${book}</span>`;
+    }
+  } catch (error) {
+    if (text) text.textContent = "Lines unavailable";
+  }
+}
+
+// "‹ Earlier: MIA @ WAS" / "Next: LAL @ DET ›": the games before and after this one on the same day, by tip-off.
+async function loadGameNeighbors(game) {
+  const box = document.getElementById("gameNeighbors");
+  if (!box) return;
+  try {
+    const day = game.date.slice(0, 10);
+    const json = await bdlGet(`${BDL_BASE}/games?start_date=${day}&end_date=${day}&per_page=25`);
+    const games = (json.data || []).sort((a, b) => new Date(a.datetime || a.date) - new Date(b.datetime || b.date) || a.id - b.id);
+    const index = games.findIndex((item) => item.id === game.id);
+    if (index === -1) return;
+    const label = (item) => `${item.visitor_team.abbreviation} @ ${item.home_team.abbreviation}`;
+    const prev = games[index - 1];
+    const next = games[index + 1];
+    box.innerHTML = `${prev ? `<a href="game.html?id=${prev.id}" class="is-prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> ${label(prev)}</a>` : ""}${next ? `<a href="game.html?id=${next.id}">Next: ${label(next)} <i class="bi bi-chevron-right" aria-hidden="true"></i></a>` : ""}`;
+  } catch (error) { /* no neighbors: nothing shows */ }
 }
 
 // One pill button per prop type. Clicking one shows that prop's lines.
@@ -434,6 +491,13 @@ function openLinkedPlayer(propTypes) {
 }
 
 async function loadPage() {
+  // The Board is no longer on this page (it lives on Today and in Tools): a link that opened a player's row
+  // (game.html?id=&player=&prop=&side=) goes to that player's page on the same prop instead.
+  if (linkedPlayerId && !isResearchMode()) {
+    const code = pageParams.get("prop") || "pts";
+    location.replace(`player.html?id=${linkedPlayerId}&prop=${encodeURIComponent(code)}${linkedSide ? `&side=${linkedSide}` : ""}`);
+    return;
+  }
   if (!gameId) {
     showLinesMessage("No game picked. Go back and click a game card.", "text-danger");
     return;
@@ -444,8 +508,11 @@ async function loadPage() {
     const gameJson = await bdlGet(`${BDL_BASE}/games/${gameId}`);
     const game = gameJson.data;
     renderGameHeader(game);
+    loadGameLines(game); // moneylines in the header, spread / total in the fact strip
+    loadGameNeighbors(game); // the earlier / next game links above the header
     setUpTeamComparison(game); // the Team Comparison panel (js/components/teamCompare.js): closed unless the visitor left it open
-    setUpGameBreakdown(game); // the Game Breakdown card (js/components/gameBreakdown.js): projected score vs the book total
+    // Model picks (the Game Breakdown) moved to the beta Hunt Score page (hunt-score.html) while the model is in testing.
+    if (document.getElementById("gameBreakdown")) setUpGameBreakdown(game);
     loadGameInjuries(game); // the Injury report card beside it (js/components/gameInjuries.js)
     loadMatchupInfo(game); // the Matchup Info card next to it (js/components/matchupInfo.js): loads on its own and never blocks the table
 
@@ -532,6 +599,12 @@ async function loadPage() {
 }
 
 loadPage();
+
+// Theme change: the header's team colors are picked against the page color, so redo them.
+document.addEventListener("lh-theme-change", () => {
+  const body = document.querySelector(".lh-gp-body");
+  if (body) body.setAttribute("style", gameHeaderColors(body.dataset.away, body.dataset.home));
+});
 
 // Research mode switched on or off (js/components/nav.js): the Hit % column appears or disappears, so move the sort off (or back to) it.
 document.addEventListener("lh-mode-change", () => {

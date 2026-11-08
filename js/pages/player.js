@@ -60,6 +60,32 @@ const playerToolbar = createPropToolbar(document.getElementById("playerToolbar")
 });
 playerToolbar.setSide(["over", "under"].includes(playerParams.get("side")) ? playerParams.get("side") : null);
 
+// The line ladder under the chart (js/components/lineLadder.js): clicking a line moves the chart (and the toolbar) to it.
+const playerLadder = typeof createLineLadder === "function"
+  ? createLineLadder(document.getElementById("playerLadder"), { onPick: (value) => { playerChart.setActiveLine(value); renderProps(); } })
+  : null;
+
+// The ladder for the chart's games: their values, plus the last 10 / last 20 / season (same split) for the dots, and each nearby
+// line's best odds for the picked side (Over when nothing is picked).
+function renderLadder(tab, chartRows, seasonIsCurrent) {
+  if (!playerLadder) return;
+  const line = isResearchMode() ? null : playerChart.activeLine();
+  if (line === null || pageState.split === "h2h" || !chartRows.length) { playerLadder.hide(); return; }
+  const side = playerToolbar.getSide() || "over";
+  const valuesFor = (size) => calculateHitRate(pickWindowLogs(splitLogs(playerLogs, pageState.split), size, seasonIsCurrent), tab.stat, line, "all").games.map((row) => row.value);
+  playerLadder.render({
+    line,
+    posted: playerChart.mainLine(),
+    side,
+    current: chartRows.map((row) => row.value),
+    windows: { l10: valuesFor(10), l20: valuesFor(20), all: valuesFor("season") },
+    oddsFor: (at) => {
+      const best = typeof lhOdds !== "undefined" ? lhOdds.getOdds(playerId, pageState.propType, at, side)[0] : null;
+      return best && Number.isFinite(Number(best.odds)) ? { odds: Number(best.odds), book: best.book } : null;
+    },
+  });
+}
+
 // ---------- Small helpers ----------
 
 // The date on this computer as "2026-10-16" ("en-CA" happens to format dates exactly that way).
@@ -193,29 +219,32 @@ function renderHeader(injury) {
   if (nextGame) {
     const isHome = nextGame.home_team.abbreviation === team;
     const opponent = isHome ? nextGame.visitor_team.abbreviation : nextGame.home_team.abbreviation;
+    // Today's game shows its tip time ("vs UTA · 7:00 PM"), a later one its date ("vs UTA · Tue, Nov 10").
+    const tip = new Date(nextGame.datetime || nextGame.date);
+    const isToday = String(nextGame.date).slice(0, 10) === new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+    const when = isToday && nextGame.datetime && !Number.isNaN(tip.getTime())
+      ? tip.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+      : weekdayDate(nextGame.date);
     nextGameHtml = `<a href="game.html?id=${nextGame.id}" class="lh-next-game">
-      ${isHome ? "vs" : "@"} ${opponent} · ${weekdayDate(nextGame.date)} <span aria-hidden="true">›</span></a>`;
+      ${isHome ? "vs" : "@"} ${opponent} · ${when} <span aria-hidden="true">›</span></a>`;
   }
 
   const badge = injury ? injuryBadge(injury) : null;
-  // First name smaller on its own line, the last name big with the jersey number beside it (Swiss layout).
+  // The beta's player bar: the full name in Clash Display with "#7 · PG · Denver" beside it, then team, injury and the next game.
+  const city = player.team ? player.team.full_name || player.team.city || "" : "";
+  const sub = [player.jersey_number ? `#${player.jersey_number}` : "", meta, city].filter(Boolean).join(" · ");
   document.getElementById("playerHeader").innerHTML = `
-    <div>
-      <h1 class="lh-player-name mb-0">
-        <span class="lh-player-first">${player.first_name}</span>
-        <span class="lh-player-last">${player.last_name}${player.jersey_number ? `<span class="lh-player-jersey">#${player.jersey_number}</span>` : ""}</span>
-      </h1>
-      <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
-        ${teamBadge}
-        <span class="lh-label">${meta}</span>
-        ${badge ? `<button type="button" class="lh-injury-badge ${badge.className}" id="injuryBadge"
-                     aria-label="Injury: ${injury.status}. Show details">${badge.label}</button>` : ""}
-      </div>
-      <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
-        <span class="lh-label">Next game</span>
-        ${nextGameHtml}
-      </div>
+    <h1 class="lh-pp-name mb-0">${name}${sub ? ` <small>${sub}</small>` : ""}</h1>
+    <div class="lh-pp-meta">
+      ${teamBadge}
+      ${badge ? `<button type="button" class="lh-injury-badge ${badge.className}" id="injuryBadge"
+                   aria-label="Injury: ${injury.status}. Show details">${badge.label}</button>` : ""}
+      <span class="lh-pp-pos">${[meta, player.jersey_number ? `#${player.jersey_number}` : ""].filter(Boolean).join(" · ")}</span>
+      <span class="lh-pp-next"><i class="bi bi-calendar3" aria-hidden="true"></i> ${nextGameHtml}</span>
     </div>`;
+  if (typeof fillPlayerAvatar === "function") {
+    fillPlayerAvatar(document.getElementById("playerAvatar"), { id: player.id, first: player.first_name, last: player.last_name, team });
+  }
 
   if (badge) setUpInjuryPopover(document.getElementById("injuryBadge"), injury);
   if (typeof setPlayerJumpName === "function") {
@@ -267,7 +296,8 @@ function renderPropTabs() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = option.propType === pageState.propType ? "nav-link active text-nowrap" : "nav-link text-nowrap";
-    button.textContent = option.label;
+    // The full name on wider screens, the short code on phones ("Points" / "PTS"): five equal tabs fit across a phone.
+    button.innerHTML = `<span class="lh-tab-long">${option.label}</span><span class="lh-tab-short">${propCode(option.propType).toUpperCase()}</span>`;
     button.addEventListener("click", () => {
       pageState.propType = option.propType;
       playerToolbar.setSide(null); // a new prop starts with nothing picked
@@ -281,6 +311,13 @@ function renderPropTabs() {
 
     item.appendChild(button);
     tabs.appendChild(item);
+  });
+  // Phones: the tab row scrolls sideways, so bring the selected tab into view (without moving the page).
+  requestAnimationFrame(() => {
+    const active = tabs.querySelector(".nav-link.active");
+    if (active && tabs.scrollWidth > tabs.clientWidth) {
+      tabs.scrollLeft = active.parentElement.offsetLeft - (tabs.clientWidth - active.parentElement.offsetWidth) / 2;
+    }
   });
 }
 
@@ -645,7 +682,8 @@ function renderProps() {
   const line = lineForScoring(playerChart.activeLine());
   renderSamePosition(pageState.propType, playerChart.activeLine()); // the Same Position card follows the tab and line
   renderMatchupAnalysis(pageState.propType); // the Matchup Analysis battle section follows the tab
-  renderPlayerHunt(playerId, pageState.propType, nextGame); // tonight's Hunt Score for this tab (js/components/playerHunt.js)
+  // The Hunt Score is a beta tool for now (hunt-score.html): js/components/playerHunt.js isn't loaded on this page.
+  if (typeof renderPlayerHunt === "function") renderPlayerHunt(playerId, pageState.propType, nextGame);
 
   // The games in this window and split, newest first (pickWindowLogs in js/core/stats.js),
   // scored against the line. The table below uses the very same games.
@@ -678,6 +716,7 @@ function renderProps() {
         ? "No games match these filters."
         : pageState.split === "all" ? "No games played yet." : `No ${pageState.split} games in this window.`;
     message.hidden = false;
+    if (playerLadder) playerLadder.hide();
     renderGameLog([], result, line);
     renderRole([], []);
     renderOpportunity([]);
@@ -687,14 +726,27 @@ function renderProps() {
   const hitRateText = line === null
     ? "–"
     : `${result.hits}/${result.totalGames} <span class="text-muted">(${Math.round(result.hitRate)}%)</span>`;
+  const avgOf = (size) => {
+    const r = calculateHitRate(pickWindowLogs(splitLogs(playerLogs, pageState.split), size, seasonIsCurrent), tab.stat, line ?? 0, "all");
+    return r.totalGames ? formatStatValue(r.average) : "–";
+  };
+  const hitColor = line === null ? "" : result.hitRate >= 75 ? "lh-hr-hi" : result.hitRate >= 50 ? "lh-hr-md" : "lh-hr-lo";
   summary.innerHTML = `
     <div class="lines-only">
       <div class="lh-label">Hit rate${line !== null ? ` <span class="lh-alt-tag">o${lineText(line)}</span>` : ""}</div>
-      <div class="lh-drawer-stat">${hitRateText}</div>
+      <div class="lh-drawer-stat ${hitColor}">${hitRateText}</div>
     </div>
     <div>
       <div class="lh-label">Average</div>
       <div class="lh-drawer-stat">${formatStatValue(result.average)}</div>
+    </div>
+    <div>
+      <div class="lh-label">Last 5</div>
+      <div class="lh-drawer-stat">${avgOf(5)}</div>
+    </div>
+    <div>
+      <div class="lh-label">Season</div>
+      <div class="lh-drawer-stat">${avgOf("season")}</div>
     </div>${pageState.split === "h2h" ? h2hNoteHtml((h2hOpponent() || {}).abbreviation, h2hLogsFor(h2hData, playerId)) : ""}`;
 
   // Research mode: "25+ PTS in 7 of last 10 · avg 24.3"
@@ -723,6 +775,7 @@ function renderProps() {
   const oldestFirst = [...result.games].reverse();
   playerChart.setDivider(chartDivider(oldestFirst, (playerLogs.current || []).filter(playedInGame).length));
   playerChart.draw(oldestFirst, `${pageState.propType}|${pageState.windowSize}|${pageState.split}|${JSON.stringify(pageState.teammates)}`);
+  renderLadder(tab, result.games, seasonIsCurrent);
   renderGameLog(games, result, line);
   renderRole(games, result.games);
   renderOpportunity(games);

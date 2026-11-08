@@ -11,9 +11,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
   <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Fontshare: Clash Display (headlines, big numbers) + Satoshi (everything you read) -->
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -25,214 +27,44 @@
   <script>try { if (localStorage.getItem("lh-mode") === "research") document.body.classList.add("research-mode"); } catch (error) { /* storage blocked: lines mode */ }</script>
   <div id="site-nav"></div>
 
-  <main class="container-fluid lh-container px-3 px-lg-4 lh-home">
-    <section class="lh-home-hero row align-items-center g-4 py-4 py-lg-5">
-      <div class="col-12">
-        <div class="lh-label mb-3">NBA research tool</div>
-        <h1 class="lh-display lh-home-headline">
-          <span class="text-strong">HUNT THE</span> <span class="text-accent">LINE.</span>
-        </h1>
-        <p class="lh-home-copy">
-          LineHunter helps you compare the market, spot the angles, and scan what’s trending before a game gets underway.
-        </p>
-        <div class="d-flex flex-wrap gap-3">
-          <a href="schedule.html" class="btn btn-lh-primary">Hunt Today's Lines</a>
+  <!-- HERO (indigo restyle; approved mockup design/indigo-mockup/home.html, from the beta's front page in PR #5): the tagline and the
+       two buttons on the left; on the right one slanted plane with a small stat sheet and two forever-scrolling columns of player
+       cards, both built from the next slate's top hit rates by js/components/homeReel.js (sample cards until the slate loads). -->
+  <section class="lh-hero" aria-labelledby="homeTitle">
+    <div class="lh-container container-fluid px-3 px-lg-4 lh-hero-grid">
+      <div class="lh-hero-copy">
+        <a class="lh-hero-pill" href="https://discord.gg/BYZfZhjfm" target="_blank" rel="noopener"><i class="bi bi-discord" aria-hidden="true"></i> Join the Discord</a>
+        <p class="lh-eyebrow lh-hero-eyebrow">NBA player props · research</p>
+        <h1 class="lh-hero-title" id="homeTitle">Research the line. <span class="lh-hero-accent">Then hunt it.</span></h1>
+        <p class="lh-hero-sub">Hit rates, game logs, matchups and the line ladder for every NBA player prop, all in one place. You make the call.</p>
+        <div class="lh-hero-ctas">
+          <a href="schedule.html" class="btn btn-lh-primary lh-hero-go">See tonight's games <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+          <a href="top-hit-rates.html" class="btn lh-hero-quiet lines-only">Open The Board</a>
+          <a href="top-hit-rates.html" class="btn lh-hero-quiet research-only">See Hot Players</a>
+        </div>
+        <p class="lh-hero-tonight" id="homeTonight">&nbsp;</p>
+      </div>
+      <div class="lh-hero-stage" aria-hidden="true">
+        <div class="lh-hero-plane">
+          <div class="lh-hero-sheet" id="homeSheet"></div>
+          <div class="lh-reel-col"><div class="lh-reel-track" id="homeReelA"></div></div>
+          <div class="lh-reel-col"><div class="lh-reel-track" id="homeReelB"></div></div>
         </div>
       </div>
+    </div>
+  </section>
 
-    </section>
+  <main class="container-fluid lh-container px-3 px-lg-4 lh-home">
 
-    <section class="lh-tool-grid">
-      <div id="toolCarousel" class="carousel slide carousel-fade lh-carousel" data-bs-ride="carousel" data-bs-interval="5000" data-bs-pause="hover">
-        <div class="carousel-indicators lh-carousel-indicators">
-          <button type="button" data-bs-target="#toolCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-          <button type="button" data-bs-target="#toolCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-          <button type="button" data-bs-target="#toolCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-          <button type="button" data-bs-target="#toolCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
-        </div>
-
-        <div class="carousel-inner">
-          <div class="carousel-item active">
-            <div class="row g-4 align-items-center lh-carousel-slide">
-              <div class="col-lg-6 d-flex align-items-center">
-                <div class="lh-slide-copy">
-                  <div class="lh-label lh-slide-kicker">Top hit rates · NBA</div>
-                  <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">Over or under?</span><span class="lh-hit-answer">Know first.</span></h3>
-                  <p>See who has gone over their line the most across their last 10 games, for every game on the slate.</p>
-                  <!-- js/components/top-hit-rates.js swaps this for a link to the Top Hit Rates card once there's data -->
-                  <span class="lh-coming-soon" id="hitRatesSlideCta">Coming soon</span>
-                </div>
-              </div>
-              <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
-                <div class="lh-demo-device lh-demo-device--hit-rates">
-                  <div class="lh-demo-header">
-                    <div class="lh-demo-matchup"><i class="bi bi-lightning-charge-fill text-accent"></i> Top Hit Rates</div>
-                    <div class="lh-demo-matchup">L10 · Over</div>
-                  </div>
-                  <div class="lh-demo-list">
-                  <div class="lh-demo-toprow">
-                    <div class="lh-demo-toprow-player"><span class="fw-semibold">L. James</span> <span class="lh-top-team">PHI</span><div class="small text-muted">@ NYK</div></div>
-                    <div class="lh-demo-toprow-prop">PTS o16.5</div>
-                    <div class="lh-mini-graph" aria-hidden="true"><span class="lh-mini-bar lh-mini-bar--over" style="height: 60%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 75%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 55%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 90%"></span><span class="lh-mini-bar lh-mini-bar--under" style="height: 40%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 80%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 70%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 95%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 65%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 85%"></span></div>
-                    <div class="lh-demo-toprow-hit">9/10 <span>(90%)</span></div>
-                  </div>
-                  <div class="lh-demo-toprow">
-                    <div class="lh-demo-toprow-player"><span class="fw-semibold">C. Cunningham</span> <span class="lh-top-team">DET</span><div class="small text-muted">vs BOS</div></div>
-                    <div class="lh-demo-toprow-prop">AST o8.5</div>
-                    <div class="lh-mini-graph" aria-hidden="true"><span class="lh-mini-bar lh-mini-bar--over" style="height: 70%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 85%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 60%"></span><span class="lh-mini-bar lh-mini-bar--under" style="height: 45%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 80%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 90%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 75%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 65%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 95%"></span><span class="lh-mini-bar lh-mini-bar--under" style="height: 50%"></span></div>
-                    <div class="lh-demo-toprow-hit">8/10 <span>(80%)</span></div>
-                  </div>
-                  <div class="lh-demo-toprow">
-                    <div class="lh-demo-toprow-player"><span class="fw-semibold">J. Brunson</span> <span class="lh-top-team">NYK</span><div class="small text-muted">vs PHI</div></div>
-                    <div class="lh-demo-toprow-prop">PTS o26.5</div>
-                    <div class="lh-mini-graph" aria-hidden="true"><span class="lh-mini-bar lh-mini-bar--over" style="height: 65%"></span><span class="lh-mini-bar lh-mini-bar--under" style="height: 50%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 80%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 90%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 70%"></span><span class="lh-mini-bar lh-mini-bar--under" style="height: 45%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 85%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 75%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 95%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 60%"></span></div>
-                    <div class="lh-demo-toprow-hit">8/10 <span>(80%)</span></div>
-                  </div>
-                  <div class="lh-demo-toprow">
-                    <div class="lh-demo-toprow-player"><span class="fw-semibold">K. Towns</span> <span class="lh-top-team">NYK</span><div class="small text-muted">vs PHI</div></div>
-                    <div class="lh-demo-toprow-prop">REB o12.5</div>
-                    <div class="lh-mini-graph" aria-hidden="true"><span class="lh-mini-bar lh-mini-bar--over" style="height: 60%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 75%"></span><span class="lh-mini-bar lh-mini-bar--under" style="height: 40%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 70%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 85%"></span><span class="lh-mini-bar lh-mini-bar--under" style="height: 45%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 80%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 65%"></span><span class="lh-mini-bar lh-mini-bar--under" style="height: 55%"></span><span class="lh-mini-bar lh-mini-bar--over" style="height: 90%"></span></div>
-                    <div class="lh-demo-toprow-hit">7/10 <span>(70%)</span></div>
-                  </div>
-                  </div>
-                  <a class="lh-demo-button" href="#top-hit-rates">VIEW TOP HIT RATES »</a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-item">
-            <div class="row g-4 align-items-center lh-carousel-slide">
-              <div class="col-lg-6 d-flex align-items-center">
-                <div class="lh-slide-copy">
-                  <div class="lh-label lh-slide-kicker">Hit List · NBA</div>
-                  <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">Ready-made slips.</span><span class="lh-hit-answer">Straight from the data.</span></h3>
-                  <p>Perfect Five, Heat Check and more: <span class="lines-only">props</span><span class="research-only">stats</span> that hit in 100% of recent games, with combined odds in one tap.</p>
-                  <a href="schedule.html" class="lh-slide-link">Open tonight's Hit List <span>→</span></a>
-                </div>
-              </div>
-              <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
-                <div class="lh-demo-device lh-demo-device--hit-list">
-                  <div class="lh-demo-header">
-                    <div class="lh-demo-matchup"><i class="bi bi-bullseye text-accent"></i> Hit List</div>
-                    <div class="lh-demo-matchup">100% of recent games</div>
-                  </div>
-                  <div class="lh-demo-slips">
-                <div class="lh-hitlist-card lh-demo-slip">
-                  <div class="lh-hitlist-head"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>Perfect Five</span></div>
-                  <div class="lh-hitlist-blurb">Went over the line in each of the last 5 games</div>
-                  <div class="lh-hitlist-list">
-                    <div class="lh-hitlist-leg"><span class="lh-hitlist-name">J. Brunson</span><span class="lh-hitlist-pick">Over 26.5 PTS</span><span class="lh-hitlist-proof">5/5</span></div>
-                    <div class="lh-hitlist-leg"><span class="lh-hitlist-name">K. Towns</span><span class="lh-hitlist-pick">Over 12.5 REB</span><span class="lh-hitlist-proof">5/5</span></div>
-                    <div class="lh-hitlist-leg"><span class="lh-hitlist-name">C. Cunningham</span><span class="lh-hitlist-pick">Over 8.5 AST</span><span class="lh-hitlist-proof">5/5</span></div>
-                  </div>
-                </div>
-                <div class="lh-hitlist-card lh-demo-slip">
-                  <div class="lh-hitlist-head"><i class="bi bi-fire" aria-hidden="true"></i><span>Heat Check</span></div>
-                  <div class="lh-hitlist-blurb">Longest current streaks over tonight's line (6+)</div>
-                  <div class="lh-hitlist-list">
-                    <div class="lh-hitlist-leg"><span class="lh-hitlist-name">L. James</span><span class="lh-hitlist-pick">Over 16.5 PTS</span><span class="lh-hitlist-proof">9 str</span></div>
-                    <div class="lh-hitlist-leg"><span class="lh-hitlist-name">O. Anunoby</span><span class="lh-hitlist-pick">Over 2.5 3PM</span><span class="lh-hitlist-proof">7 str</span></div>
-                    <div class="lh-hitlist-leg"><span class="lh-hitlist-name">M. Bridges</span><span class="lh-hitlist-pick">Over 13.5 PTS</span><span class="lh-hitlist-proof">6 str</span></div>
-                  </div>
-                </div>
-                  </div>
-                  <a class="lh-demo-button" href="schedule.html">VIEW THE HIT LIST »</a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-item">
-            <div class="row g-4 align-items-center lh-carousel-slide">
-              <div class="col-lg-6 d-flex align-items-center">
-                <div class="lh-slide-copy">
-                  <div class="lh-label lh-slide-kicker">Opportunity · NBA</div>
-                  <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">More touches.</span><span class="lh-hit-answer">More opportunity.</span></h3>
-                  <p>Compare recent volume, like shots, rebound chances and passes, against the season average for each prop.</p>
-                  <a href="schedule.html" class="lh-slide-link">Pick a game to start <span>→</span></a>
-                </div>
-              </div>
-              <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
-                <div class="lh-demo-device lh-demo-device--opportunity">
-                  <div class="lh-demo-header">
-                    <div class="lh-demo-matchup">Opportunity</div>
-                    <div class="lh-demo-matchup">Points · filtered vs season</div>
-                  </div>
-                  <div class="lh-demo-tabs" aria-hidden="true">
-                    <span class="active">Points</span><span>Rebounds</span><span>Assists</span><span>3PM</span>
-                  </div>
-                  <div class="lh-opp-grid lh-demo-opp">
-                    <div>
-                      <div class="lh-label">FGA</div>
-                      <div class="lh-drawer-stat">18.2<i class="bi bi-arrow-up-short lh-opp-up"></i></div>
-                      <div class="small text-muted">Season 16.4</div>
-                    </div>
-                    <div>
-                      <div class="lh-label">FTA</div>
-                      <div class="lh-drawer-stat">4.6<i class="bi bi-arrow-down-short lh-opp-down"></i></div>
-                      <div class="small text-muted">Season 6.0</div>
-                    </div>
-                    <div>
-                      <div class="lh-label">Touches</div>
-                      <div class="lh-drawer-stat">62.0<i class="bi bi-dash lh-opp-flat"></i></div>
-                      <div class="small text-muted">Season 61.2</div>
-                    </div>
-                  </div>
-                  <div class="lh-opp-insight">Taking more shots and getting to the line less than the season average.</div>
-                  <a class="lh-demo-button mt-3" href="schedule.html">OPEN A PLAYER PAGE »</a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="carousel-item">
-            <div class="row g-4 align-items-center lh-carousel-slide">
-              <div class="col-lg-6 d-flex align-items-center">
-                <div class="lh-slide-copy">
-                  <div class="lh-label lh-slide-kicker">Role · NBA</div>
-                  <h3 class="lh-display lh-slide-headline lh-slide-headline--split"><span class="lh-hit-question">Minutes and usage.</span><span class="lh-hit-answer">Game by game.</span></h3>
-                  <p>Follow a player's minutes or usage % across recent games, with the season average as a reference line.</p>
-                  <a href="schedule.html" class="lh-slide-link">Pick a game to start <span>→</span></a>
-                </div>
-              </div>
-              <div class="col-lg-6 d-flex justify-content-lg-end justify-content-center">
-                <div class="lh-demo-device lh-demo-device--role">
-                  <div class="lh-demo-header">
-                    <div class="lh-demo-matchup">Role</div>
-                    <div class="lh-demo-toggle" aria-hidden="true"><span class="active">Minutes</span><span>Usage %</span></div>
-                  </div>
-                  <div class="lh-demo-meta-row">
-                    <span><i class="bi bi-person"></i> J. Brunson</span>
-                    <span><i class="bi bi-calendar3"></i> Last 10</span>
-                    <span><i class="bi bi-clock"></i> Avg 34.2</span>
-                  </div>
-                  <svg class="lh-demo-role-chart" viewBox="0 0 320 130" role="img" aria-label="Sample line chart of minutes per game with a dashed season average">
-                    <line class="lh-demo-role-avg" x1="0" y1="62" x2="320" y2="62" stroke-width="1" stroke-dasharray="6 4"/>
-                    <text class="lh-demo-role-label" x="316" y="56" text-anchor="end" font-family="Inter Tight, sans-serif" font-size="10">Avg 34.2</text>
-                    <polyline class="lh-demo-role-line" fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
-                      points="10,70 45,50 80,78 115,40 150,58 185,30 220,66 255,36 290,52 312,24"/>
-                    <g class="lh-demo-role-dots">
-                      <circle cx="10" cy="70" r="3.5"/><circle cx="45" cy="50" r="3.5"/><circle cx="80" cy="78" r="3.5"/><circle cx="115" cy="40" r="3.5"/><circle cx="150" cy="58" r="3.5"/>
-                      <circle cx="185" cy="30" r="3.5"/><circle cx="220" cy="66" r="3.5"/><circle cx="255" cy="36" r="3.5"/><circle cx="290" cy="52" r="3.5"/><circle cx="312" cy="24" r="3.5"/>
-                    </g>
-                  </svg>
-                  <div class="lh-demo-role-note">@BOS · Oct 22 · 36 min</div>
-                  <a class="lh-demo-button mt-3" href="schedule.html">OPEN A PLAYER PAGE »</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button class="carousel-control-prev lh-carousel-control" type="button" data-bs-target="#toolCarousel" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next lh-carousel-control" type="button" data-bs-target="#toolCarousel" data-bs-slide="next">
-          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-          <span class="visually-hidden">Next</span>
-        </button>
+    <!-- WHAT'S INSIDE: one panel per main tool -->
+    <section class="lh-inside" aria-labelledby="insideTitle">
+      <div class="lh-inside-head"><h2 id="insideTitle">What's inside</h2><p>Everything is free while LineHunter is in beta.</p></div>
+      <div class="lh-inside-grid">
+        <a class="lh-inside-tool" href="schedule.html"><i class="bi bi-calendar3" aria-hidden="true"></i><b>Today</b><span>Tonight's games on a wheel you can spin, with moneylines, spreads and totals.</span><small>See tonight ›</small></a>
+        <a class="lh-inside-tool lines-only" href="top-hit-rates.html"><i class="bi bi-list-columns-reverse" aria-hidden="true"></i><b>The Board</b><span>Every prop on the slate with its hit rate, average and best odds.</span><small>Open The Board ›</small></a>
+        <a class="lh-inside-tool research-only" href="top-hit-rates.html"><i class="bi bi-fire" aria-hidden="true"></i><b>Hot Players</b><span>Who's playing above their season over the last 5 games.</span><small>See Hot Players ›</small></a>
+        <a class="lh-inside-tool" href="schedule.html"><i class="bi bi-person-badge" aria-hidden="true"></i><b>Player pages</b><span>Game by game charts, the line ladder, matchups, lineups and shooting.</span><small>Pick a game, then a player ›</small></a>
+        <a class="lh-inside-tool" href="matchup.html"><i class="bi bi-intersect" aria-hidden="true"></i><b>Matchup Analyzer</b><span>Any player against any team: style, defenders, pace and status.</span><small>Open the Analyzer ›</small></a>
       </div>
     </section>
 
@@ -241,7 +73,7 @@
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-start gap-2 py-3">
           <div>
-            <h2 class="lh-top-title mb-1"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i><span id="topHitRatesTitle">Top Hit Rates</span></h2>
+            <h2 class="lh-top-title mb-1"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i><span id="topHitRatesTitle">Top hit rates</span></h2>
             <div class="small text-muted">Players who went over their line most often in their last 10 games</div>
           </div>
           <span class="lh-label text-muted">L10 · Over</span>
@@ -256,75 +88,11 @@
       </div>
     </section>
 
-    <section class="lh-steps">
-      <div class="lh-label mb-3">How it works</div>
-      <div class="row g-4">
-        <div class="col-12 col-md-4">
-          <div class="lh-step-card">
-            <div class="lh-step-number">01</div>
-            <h3>Pick a game</h3>
-            <p>Open today’s slate and pick the matchup that matches your read.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-4">
-          <div class="lh-step-card">
-            <div class="lh-step-number">02</div>
-            <h3>Compare the lines</h3>
-            <p>Look for movement, market structure, and where the price feels off.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-4">
-          <div class="lh-step-card">
-            <div class="lh-step-number">03</div>
-            <h3>Check the hit rates</h3>
-            <p>Use recent form and sample data to separate noise from real trends.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/core/api.js"></script>
   <script src="js/data/teams.js"></script>
-  <script>
-    (function () {
-      const carousel = document.getElementById("toolCarousel");
-      if (!carousel) return;
-
-      // Team chips: the team's color as the background (the light or dark palette for the theme), and white or dark letters,
-      // whichever reads better on that color (readableTextOn in js/data/teams.js). Redone when the theme changes.
-      const paintChips = () => {
-        document.querySelectorAll(".lh-team-chip[data-team-abbr]").forEach((chip) => {
-          const color = getTeamColor(chip.dataset.teamAbbr);
-          chip.style.background = color;
-          chip.style.color = readableTextOn(color);
-        });
-      };
-      paintChips();
-      document.addEventListener("lh-theme-change", paintChips);
-
-      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-      const applyMotionPreference = () => {
-        if (prefersReducedMotion.matches) {
-          carousel.classList.remove("carousel-fade");
-          carousel.setAttribute("data-bs-ride", "false");
-          carousel.setAttribute("data-bs-interval", "false");
-        } else {
-          carousel.classList.add("carousel-fade");
-          carousel.setAttribute("data-bs-ride", "carousel");
-          carousel.setAttribute("data-bs-interval", "5000");
-        }
-      };
-
-      applyMotionPreference();
-      if (typeof prefersReducedMotion.addEventListener === "function") {
-        prefersReducedMotion.addEventListener("change", applyMotionPreference);
-      }
-    })();
-  </script>
   <script src="js/core/hunts.js"></script>
   <script src="js/components/nav.js"></script>
   <script src="js/components/hunt-button.js"></script>
@@ -332,6 +100,7 @@
   <script src="js/data/odds.js"></script>
   <script src="js/core/stats.js"></script>
   <script src="js/components/prop-list.js"></script>
+  <script src="js/components/homeReel.js"></script>
   <script src="js/components/top-hit-rates.js"></script>
 </body>
 </html>

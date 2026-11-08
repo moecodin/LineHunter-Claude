@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Homepage mockup · Indigo</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../../assets/img/lh-mark.svg">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!--
+    MOCKUP ONLY (design/indigo-mockup/home.html): the main site's homepage (index.html) with the beta's front page hero
+    (beta-website/signin.html, PR #5): the hook on the left, and on the right one slanted plane holding a small stat sheet and
+    two columns of 9:16 player cards that scroll forever in opposite directions (the owner's rule: they never stop).
+    The cards are tonight's real top hit rates (Nov 8, 2026, copied in by hand; the real page would build them from the
+    Top Hit Rates data it already loads). No sign-in, no background video: an indigo glow instead.
+  -->
+  <style>
+    :root, [data-theme="dark"] {
+      --ink: #060a16; --panel: #0b1229; --navy: #14234c; --rule: #1f2e5a; --miss: #2b3a6c; --slate: #5f6da3; --mist: #93a1cb;
+      --haze: #c3cce9; --ice: #d8dff5; --strong: #ffffff; --lift: #9a93ff; --indigo: #280ea1;
+      --hit: #46a98f; --miss-bar: #bd6570; --hr-low: #f2969f; --hr-mid: #ecc86f; --hr-high: #7fdcc0;
+      --glow-a: rgba(109, 102, 240, 0.55); --glow-b: rgba(40, 14, 161, 0.65); --veil: rgba(6, 10, 22, 0.86);
+      color-scheme: dark;
+    }
+    [data-theme="light"] {
+      --ink: #eef1fa; --panel: #ffffff; --navy: #e3e8f6; --rule: #cfd6ec; --miss: #cfd6ec; --slate: #8a96c2; --mist: #4b5784;
+      --haze: #3e4a78; --ice: #1b2850; --strong: #0b1229; --lift: #280ea1; --indigo: #280ea1;
+      --hit: #2c7a67; --miss-bar: #ab5763; --hr-low: #a33a4a; --hr-mid: #8a5a00; --hr-high: #22685a;
+      --glow-a: rgba(154, 147, 255, 0.45); --glow-b: rgba(40, 14, 161, 0.25); --veil: rgba(238, 241, 250, 0.82);
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--ink); color: var(--ice); font: 400 0.9375rem/1.4 "Satoshi", "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+    h1, h2, h3, p { margin: 0; }
+    a { color: var(--lift); }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--lift); outline-offset: 2px; }
+    .wrap { width: min(100% - 2rem, 1560px); margin-inline: auto; }
+
+    .strip { position: relative; z-index: 30; display: flex; justify-content: center; align-items: center; gap: 1rem; background: var(--indigo); color: #fff; font-size: 0.8125rem; font-weight: 500; padding: 0.35rem 1rem; }
+    .strip button { background: none; border: 1px solid rgba(255,255,255,.45); border-radius: 32px; color: #fff; padding: 0.05rem 0.7rem; cursor: pointer; }
+
+    /* Navbar: the restyled site's */
+    .nav { position: relative; z-index: 20; }
+    .nav-in { display: flex; align-items: center; gap: 1rem; min-height: 64px; }
+    .brand { display: flex; align-items: center; gap: 0.5rem; color: var(--strong); text-decoration: none; font: italic 600 1.35rem/1 "Clash Display", sans-serif; }
+    .brand img { width: 30px; height: 30px; }
+    .links { display: flex; gap: 0.25rem; }
+    .links a { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.75rem; border-radius: 8px; color: var(--mist); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+    .links a:hover { color: var(--ice); }
+    .nav .r { margin-left: auto; display: flex; gap: 0.5rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 2.75rem; padding: 0 1.1rem; background: none; border: 1px solid var(--slate); border-radius: 8px; color: var(--ice); font-size: 0.9375rem; font-weight: 500; text-decoration: none; cursor: pointer; white-space: nowrap; }
+    .btn:hover { background: var(--navy); }
+    .btn-sm { min-height: 2.5rem; font-size: 0.875rem; }
+
+    /* HERO: the beta's front page */
+    .hero {
+      --h: min(100vh - 11rem, 37vw, 46rem);
+      --gap: 0.75rem;
+      --bw: calc((var(--h) - var(--gap)) / 2 * 9 / 16);
+      position: relative; isolation: isolate; overflow: hidden; margin-top: -64px; padding: calc(64px + 1.5rem) 0 2.5rem;
+      background:
+        radial-gradient(60rem 30rem at 78% 30%, var(--glow-a), transparent 60%),
+        radial-gradient(50rem 28rem at 92% 85%, var(--glow-b), transparent 60%),
+        var(--ink);
+    }
+    .hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--veil), transparent 55%), linear-gradient(transparent 86%, var(--ink)); }
+    .hero-grid { display: grid; grid-template-columns: clamp(19rem, 30vw, 36rem) minmax(0, 1fr); align-items: center; gap: clamp(1.5rem, 3vw, 3rem); min-height: var(--h); }
+    .pill { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.5rem; padding: 0 0.9rem; background: var(--panel); border: 1px solid var(--miss); border-radius: 999px; color: var(--ice); font-size: 0.875rem; font-weight: 500; text-decoration: none; }
+    .pill:hover { border-color: var(--lift); }
+    .eyebrow { margin-top: 1.4rem; font: 600 0.95rem/1.2 "Clash Display"; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lift); }
+    .copy h1 { margin-top: 0.6rem; font: 600 clamp(2.6rem, 4.2vw, 5rem)/1.04 "Clash Display", sans-serif; color: var(--strong); text-wrap: balance; }
+    .sub { margin-top: 1rem; font-size: clamp(1rem, 1.25vw, 1.3rem); line-height: 1.45; color: var(--haze); max-width: 32rem; }
+    .sub b { color: var(--strong); }
+    .ctas { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.6rem; }
+    .btn-primary { min-height: 3.25rem; padding: 0 1.6rem; background: var(--indigo); border-color: var(--indigo); color: #fff; font-size: 1.0625rem; box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,.35); }
+    .btn-primary:hover { background: #33139f; }
+    .btn-quiet { min-height: 3.25rem; padding: 0 1.4rem; font-size: 1.0625rem; background: linear-gradient(105deg, var(--ink) 0%, var(--navy) 60%); border-color: var(--slate); }
+    .tonight { margin-top: 1.1rem; font-size: 0.875rem; color: var(--mist); }
+    .tonight b { color: var(--ice); }
+
+    /* One slanted plane: a stat sheet beside the two card columns */
+    .stage { perspective: 1800px; min-width: 0; }
+    .plane { display: flex; gap: var(--gap); height: var(--h); transform: rotateY(-13deg) rotateX(5deg) rotateZ(1.5deg); transform-origin: left center; pointer-events: none; user-select: none; }
+    .sheet { flex: none; width: calc(var(--h) * 0.86); height: var(--h); display: flex; flex-direction: column; overflow: hidden; background: var(--panel); border: 1px solid var(--miss); border-radius: 0.875rem; box-shadow: 0 1.5rem 3rem rgba(0,0,0,.55); font-size: calc(var(--h) * 0.022); }
+    .sh-bar { display: flex; align-items: center; gap: 0.8em; padding: 1em 1.2em; border-bottom: 1px solid var(--rule); }
+    .sh-av { display: grid; place-items: center; width: 2.6em; height: 2.6em; border-radius: 50%; background: #006bb6; color: #fff; font: 600 0.95em "Clash Display"; }
+    .sh-name { font: 600 1.4em/1.1 "Clash Display"; color: var(--strong); }
+    .sh-name small { display: block; font: 500 0.6em "Satoshi"; color: var(--mist); margin-top: 0.2em; }
+    .sh-tabs { margin-left: auto; display: flex; gap: 0.2em; padding: 0.2em; background: var(--ink); border: 1px solid var(--rule); border-radius: 0.5em; font-size: 0.8em; }
+    .sh-tabs span { padding: 0.35em 0.6em; border-radius: 0.3em; color: var(--mist); }
+    .sh-tabs span.on { background: var(--navy); color: var(--ice); box-shadow: inset 0 0 0 1px var(--lift); }
+    .sh-verdict { display: grid; grid-template-columns: 1.15fr 1fr; }
+    .sh-v-left { padding: 1.1em 1.2em; background: var(--navy); }
+    .sh-v-left b { display: block; font: 600 1.7em/1.1 "Clash Display"; color: var(--strong); }
+    .sh-v-left b span { color: var(--hr-high); }
+    .sh-v-left small { display: block; margin-top: 0.4em; font-size: 0.8em; color: var(--haze); }
+    .sh-v-right { margin-left: -1.6em; padding: 1.1em 1.2em 1.1em 2.2em; background: var(--indigo); color: #e9e6ff; clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); display: grid; grid-template-columns: repeat(3, auto); gap: 0 1.2em; align-content: center; }
+    .sh-v-right small { display: block; font-size: 0.7em; opacity: 0.85; }
+    .sh-v-right b { font: 600 1.45em/1.1 "Clash Display"; color: #fff; }
+    .sh-v-right b.hi { color: #7fdcc0; }
+    .sh-chart { position: relative; flex: 1; display: flex; align-items: flex-end; gap: 0.35em; padding: 1.8em 1.2em 2.4em; }
+    .sh-chart i { position: relative; flex: 1; background: var(--hit); border-radius: 0.15em 0.15em 0 0; }
+    .sh-chart i.m { background: var(--miss-bar); }
+    .sh-chart i::after { content: attr(data-v); position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 0.25em; text-align: center; font: 600 0.75em "Clash Display"; color: var(--ice); }
+    .sh-line { position: absolute; left: 1.2em; right: 1.2em; border-top: 0.12em dashed var(--ice); }
+    .sh-line span { position: absolute; left: 0; top: -0.8em; padding: 0 0.35em; background: var(--panel); border: 1px solid var(--rule); border-radius: 0.3em; font-size: 0.7em; }
+    .sh-ladder { display: flex; gap: 0.4em; padding: 0 1.2em 1.1em; }
+    .sh-ladder div { flex: 1; padding: 0.4em 0; border: 1px solid transparent; border-radius: 0.45em; text-align: center; font-size: 0.8em; color: var(--mist); }
+    .sh-ladder div b { display: block; font: 600 1.25em "Clash Display"; color: var(--strong); }
+    .sh-ladder div.on { border-color: var(--lift); background: rgba(154,147,255,.08); }
+
+    /* Two card columns, running opposite ways (doubled lists loop without a seam) */
+    .col { --bleed: 1.5rem; flex: none; width: calc(var(--bw) + var(--bleed) * 2); height: var(--h); margin-inline: calc(var(--bleed) * -1); overflow: hidden; -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent); }
+    .track { display: flex; flex-direction: column; gap: var(--gap); padding: 0 var(--bleed) var(--gap); will-change: transform; }
+    .card { position: relative; flex: none; display: flex; flex-direction: column; width: var(--bw); aspect-ratio: 9 / 16; padding: 0.9em; overflow: hidden; background: var(--panel); border: 1px solid var(--miss); border-radius: 1em; box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,.45); color: var(--ice); font-size: calc(var(--bw) * 0.082); line-height: 1.25; }
+    .card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 29%; background: var(--team); clip-path: polygon(0 0, 100% 0, 100% 62%, 0 100%); }
+    .c-who { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+    .c-av { display: grid; place-items: center; width: 3em; height: 3em; background: var(--ink); border-radius: 50%; font: 600 1em/1 "Clash Display"; color: var(--ice); }
+    .c-tag { padding: 0.15em 0.5em; background: var(--ink); border-radius: 0.3em; font-size: 0.78em; font-weight: 600; }
+    .c-name { position: relative; margin-top: 2.4em; font: 600 1.22em/1.1 "Clash Display"; color: var(--strong); }
+    .c-meta { font-size: 0.86em; color: var(--mist); }
+    .c-avg { margin-top: 0.55em; font: 600 2.6em/1 "Clash Display"; color: var(--strong); }
+    .c-label { font-size: 0.86em; color: var(--haze); }
+    .c-prop { margin-top: 0.45em; padding-left: 0.45em; border-left: 0.2em solid var(--hit); font-size: 0.92em; font-weight: 600; }
+    .c-prop.u { border-left-color: var(--miss-bar); }
+    .c-bars { flex: 1; display: flex; align-items: flex-end; gap: 2px; min-height: 0; margin-top: 0.7em; position: relative; }
+    .c-bars i { flex: 1; background: var(--hit); border-radius: 1px 1px 0 0; }
+    .c-bars i.m { background: var(--miss-bar); }
+    .c-bars .ln { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--ice); opacity: 0.8; }
+
+    /* Below the hero: what's inside + the live Top Hit Rates block (as on today's homepage) */
+    .section { padding: 3rem 0 0; }
+    .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .sec-head h2 { font: 600 clamp(1.6rem, 2.4vw, 2.2rem)/1.1 "Clash Display"; color: var(--strong); }
+    .sec-head p { color: var(--mist); }
+    .tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .tool { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.1rem 1.2rem; background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; color: var(--ice); text-decoration: none; transition: border-color .15s; }
+    .tool:hover { border-color: var(--lift); }
+    .tool i { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 8px; background: var(--navy); color: var(--lift); font-size: 1.1rem; }
+    .tool b { font: 600 1.15rem "Clash Display"; color: var(--strong); }
+    .tool span { font-size: 0.875rem; color: var(--mist); }
+    .tool small { margin-top: auto; padding-top: 0.4rem; color: var(--lift); font-weight: 600; }
+    .tophits { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 0.5rem 1.25rem; }
+    .th-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 5rem minmax(0, 1fr) 1rem; align-items: center; gap: 0.75rem; padding: 0.7rem 0; border-bottom: 1px solid var(--rule); color: inherit; text-decoration: none; }
+    .th-row:last-child { border-bottom: 0; }
+    .th-row b { display: block; font: 600 1rem "Clash Display"; color: var(--strong); }
+    .th-row small { font-size: 0.75rem; color: var(--mist); }
+    .th-pk { padding-left: 0.55rem; border-left: 3px solid var(--hit); font-weight: 600; }
+    .th-pk.u { border-left-color: var(--miss-bar); }
+    .th-hr { font: 600 1.15rem "Clash Display"; color: var(--hr-high); }
+    .th-mini { display: flex; align-items: flex-end; gap: 2px; height: 22px; }
+    .th-mini i { width: 5px; background: var(--hit); }
+    .th-mini i.m { background: var(--miss-bar); }
+    footer { margin-top: 3rem; padding: 1.5rem 0 3rem; border-top: 1px solid var(--rule); font-size: 0.8125rem; color: var(--mist); }
+    footer p + p { margin-top: 0.3rem; }
+
+    @media (max-width: 1100px) {
+      .hero { --bw: min((100vw - 2.5rem - var(--gap)) / 2, 13rem); }
+      .hero-grid { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+      .plane { transform: none; height: auto; justify-content: center; }
+      .sheet { display: none; }
+      .col { height: calc(var(--bw) * 16 / 9 * 1.7); }
+      .tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero::after { background: linear-gradient(var(--veil) 22rem, transparent 40rem), linear-gradient(transparent 90%, var(--ink)); }
+    }
+    @media (max-width: 720px) {
+      .links, .nav .r .btn:not(.keep) { display: none; }
+      .ctas .btn { flex: 1; }
+      .tools { grid-template-columns: minmax(0, 1fr); }
+      .th-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who hr" "pk mini"; }
+      .th-row > :nth-child(1) { grid-area: who; } .th-row > :nth-child(2) { grid-area: pk; } .th-row > :nth-child(3) { grid-area: hr; text-align: right; }
+      .th-row > :nth-child(4) { grid-area: mini; justify-self: end; } .th-row > :nth-child(5) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <p class="strip">Homepage mockup · cards are tonight's real top hit rates (Nov 8), copied in · <button type="button" id="themeBtn">Light mode</button></p>
+
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="#"><img src="../../assets/img/lh-mark.svg" alt="">LINEHUNTER</a>
+      <nav class="links" aria-label="Main"><a href="#">Today</a><a href="#">Tools</a><a href="#">Standings</a></nav>
+      <div class="r"><a class="btn btn-sm keep" href="#"><i class="bi bi-ticket-perforated"></i> My Hunts</a></div>
+    </div>
+  </header>
+
+  <section class="hero" aria-label="LineHunter">
+    <div class="wrap hero-grid">
+      <div class="copy">
+        <a class="pill" href="#"><i class="bi bi-discord" aria-hidden="true"></i> Join the Discord</a>
+        <p class="eyebrow">NBA player props · research</p>
+        <h1>Read the line, not the hype.</h1>
+        <p class="sub">Hit rates, game logs, matchups and the line ladder for every NBA player prop, all in one place. You make the call. <b>Join the hunt.</b></p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="#">See tonight's games <i class="bi bi-arrow-right"></i></a>
+          <a class="btn btn-quiet" href="#">Open The Board</a>
+        </div>
+        <p class="tonight">Tonight: <b>7 games</b> · <b>312 props</b> on The Board · free, no sign-up</p>
+      </div>
+
+      <div class="stage" aria-hidden="true">
+        <div class="plane">
+          <!-- A small stat sheet: Tyrese Maxey Over 25.5 points, his real last 10 -->
+          <div class="sheet">
+            <div class="sh-bar"><span class="sh-av">TM</span><span class="sh-name">Tyrese Maxey<small>#0 · G · Philadelphia 76ers · @ CHI</small></span><span class="sh-tabs"><span class="on">PTS</span><span>REB</span><span>AST</span><span>PRA</span></span></div>
+            <div class="sh-verdict">
+              <div class="sh-v-left"><b><span>Over</span> 25.5 Points</b><small>Cleared it in 8 of his last 10 · avg 26.9</small></div>
+              <div class="sh-v-right"><div><small>Hit rate</small><b class="hi">80%</b></div><div><small>Needs</small><b>50.0%</b></div><div><small>Odds</small><b>+100</b></div></div>
+            </div>
+            <div class="sh-chart" id="sheetChart"></div>
+            <div class="sh-ladder"><div>24.5<b>80%</b></div><div class="on">25.5<b>80%</b></div><div>26.5<b>60%</b></div><div>27.5<b>50%</b></div></div>
+          </div>
+          <div class="col"><div class="track" id="colA"></div></div>
+          <div class="col"><div class="track" id="colB"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <section class="section" aria-labelledby="inside">
+      <div class="sec-head"><h2 id="inside">What's inside</h2><p>Everything is free while LineHunter is in beta.</p></div>
+      <div class="tools">
+        <a class="tool" href="#"><i class="bi bi-calendar3"></i><b>Today</b><span>Tonight's games on a wheel you can spin, with moneylines, spreads and totals.</span><small>See tonight ›</small></a>
+        <a class="tool" href="#"><i class="bi bi-list-columns-reverse"></i><b>The Board</b><span>Every prop on the slate with its hit rate, average and best odds.</span><small>Open The Board ›</small></a>
+        <a class="tool" href="#"><i class="bi bi-person-badge"></i><b>Player pages</b><span>Game by game charts, the line ladder, matchups, lineups and shooting.</span><small>Search a player ›</small></a>
+        <a class="tool" href="#"><i class="bi bi-bullseye"></i><b>Hit List</b><span>Ready-made slips from props that hit in every recent game.</span><small>See the Hit List ›</small></a>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="hits">
+      <div class="sec-head"><h2 id="hits">Top hit rates tonight</h2><p>Last 10 games · the side that hit more often</p></div>
+      <div class="tophits" id="topHits"></div>
+    </section>
+
+    <footer>
+      <p>LineHunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+      <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+    </footer>
+  </main>
+
+  <script>
+    // Tonight's real top hit rates (Nov 8, 2026), L10, from The Board's data. vals = last 10 games, oldest first.
+    const P = [
+      ["Jaden McDaniels", "MIN", "vs UTA", "ast", 2.5, "over", 9, [1,3,3,4,4,7,3,3,4,5], "#236192"],
+      ["Kyle Kuzma", "MIL", "vs BOS", "ast", 2.5, "over", 9, [5,3,4,3,3,1,3,3,4,3], "#2c7a3f"],
+      ["Kris Dunn", "LAC", "vs NOP", "3pm", 1.5, "under", 9, [0,1,2,1,1,1,0,0,1,1], "#c8102e"],
+      ["Cade Cunningham", "DET", "vs LAL", "ast", 8.5, "under", 9, [8,5,8,8,8,8,7,4,7,11], "#1d42ba"],
+      ["Tyrese Maxey", "PHI", "@ CHI", "pts", 25.5, "over", 8, [28,32,26,29,27,27,38,26,19,17], "#006bb6"],
+      ["Tyler Herro", "MIL", "vs BOS", "pts", 20.5, "over", 8, [23,24,34,13,23,23,15,21,25,23], "#2c7a3f"],
+      ["Saddiq Bey", "NOP", "@ LAC", "pts", 12.5, "over", 8, [32,13,20,14,9,10,25,18,22,17], "#b4975a"],
+      ["Jeremiah Fears", "NOP", "@ LAC", "3pm", 1.5, "under", 9, [0,1,1,0,1,3,1,0,1,0], "#b4975a"],
+      ["Darius Acuff Jr.", "SAC", "vs MIA", "reb", 2.5, "over", 8, [3,2,3,3,6,5,5,3,3], "#5a2d81"],
+      ["Dejounte Murray", "NOP", "@ LAC", "3pm", 1.5, "under", 9, [1,0,1,0,2,0,1,0,1,1], "#b4975a"],
+    ];
+    const WORD = { pts: "Points", reb: "Rebounds", ast: "Assists", "3pm": "Threes", pra: "PRA" };
+    const init = (n) => n.split(" ").filter((w) => /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join("");
+    const hitOf = (v, line, side) => (side === "under" ? v < line : v > line);
+
+    function card([name, team, match, code, line, side, hits, vals, color]) {
+      const n = vals.length, avg = vals.reduce((a, b) => a + b, 0) / n, max = Math.max(...vals, line) * 1.15;
+      const bars = vals.map((v) => `<i class="${hitOf(v, line, side) ? "" : "m"}" style="height:${Math.max(v / max * 100, 4)}%"></i>`).join("");
+      return `<article class="card" style="--team:${color}">
+        <div class="c-who"><span class="c-av">${init(name)}</span><span class="c-tag">${hits} of ${n}</span></div>
+        <p class="c-name">${name}</p>
+        <p class="c-meta">${team} · ${match}</p>
+        <p class="c-avg">${avg.toFixed(1)}</p>
+        <p class="c-label">${WORD[code]}, last ${n} average</p>
+        <p class="c-prop ${side === "under" ? "u" : ""}">${side === "under" ? "Under" : "Over"} ${line} ${WORD[code]}</p>
+        <div class="c-bars">${bars}<span class="ln" style="bottom:${line / max * 100}%"></span></div>
+      </article>`;
+    }
+    [["colA", 0], ["colB", 1]].forEach(([id, side]) => {
+      const once = P.filter((_, i) => i % 2 === side).map(card).join("");
+      document.getElementById(id).innerHTML = once + once; // doubled, so the loop has no seam
+    });
+    // The owner's rule (beta DESIGN.md): the columns scroll forever and never stop. Left runs up, right runs down.
+    const LOOP = 40000, up = document.getElementById("colA"), down = document.getElementById("colB");
+    (function frame(now) {
+      const shift = ((now % LOOP) / LOOP) * 50;
+      up.style.transform = `translate3d(0, ${-shift}%, 0)`;
+      down.style.transform = `translate3d(0, ${shift - 50}%, 0)`;
+      requestAnimationFrame(frame);
+    })(0);
+
+    // The sheet's chart: Maxey's real last 10 against 25.5
+    const mx = P[4][7], mmax = 42;
+    document.getElementById("sheetChart").innerHTML = mx.map((v) => `<i class="${v > 25.5 ? "" : "m"}" data-v="${v}" style="height:${v / mmax * 100}%"></i>`).join("") +
+      `<span class="sh-line" style="bottom:calc(2.4em + (100% - 4.2em) * ${25.5 / mmax})"><span>25.5</span></span>`;
+
+    // Top hit rates list under the hero
+    document.getElementById("topHits").innerHTML = P.slice(0, 6).map(([name, team, match, code, line, side, hits, vals]) => `
+      <a class="th-row" href="#">
+        <span><b>${name}</b><small>${team} · ${match}</small></span>
+        <span class="th-pk ${side === "under" ? "u" : ""}">${side === "under" ? "Under" : "Over"} ${line} <small>${WORD[code]}</small></span>
+        <span class="th-hr">${Math.round(hits / vals.length * 100)}%<small style="display:block">${hits}/${vals.length}</small></span>
+        <span class="th-mini">${vals.map((v) => `<i class="${hitOf(v, line, side) ? "" : "m"}" style="height:${Math.max(v / Math.max(...vals, line) * 100, 6)}%"></i>`).join("")}</span>
+        <i class="bi bi-chevron-right" style="color:var(--mist)"></i>
+      </a>`).join("");
+
+    document.getElementById("themeBtn").addEventListener("click", (e) => {
+      const light = document.documentElement.dataset.theme !== "light";
+      document.documentElement.dataset.theme = light ? "light" : "dark";
+      e.target.textContent = light ? "Dark mode" : "Light mode";
+    });
+  </script>
+</body>
+</html>

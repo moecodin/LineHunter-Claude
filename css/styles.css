@@ -14,201 +14,195 @@
    toggle in js/components/nav.js changes it. Both blocks define the SAME names. The --bs-... lines override Bootstrap's own variables. */
 :root,
 [data-bs-theme="dark"] {
-  /* Our colors */
-  --lh-bg: #000000;                 /* page background: near-black */
-  --lh-surface: #0d0c0a;            /* cards: navy */
-  --lh-surface-2: #171512;          /* hover / raised parts */
-  --lh-card-bg: rgba(242, 235, 221, 0.025);   /* cards: see-through navy, so the dark page shows through */
-  --lh-card-tint: 0.04;                   /* how much blue the gradient cards start with (0 = none, 1 = solid) */
-  --lh-border: #26231e;             /* lighter navy */
-  --lh-text: #f2ebdd;
-  --lh-muted: #9a9284;
-  --lh-faint: #aaa294;              /* a touch lighter than muted (the jersey number) */
-  --lh-strong: #f2ebdd;                /* the strongest text: headings, big numbers, names (white here, near-black in light) */
-  --lh-text-rgb: 242, 235, 221;     /* --lh-text as "r, g, b" (chart lines and labels) */
+  /* Indigo restyle (Nov 2026): the beta's "Night Scout" palette (beta-website/DESIGN.md). Near-black blues, periwinkle for
+     anything selected or linked, teal / rose for hits and misses. --lh-accent = marks (links, underlines, icons, chart lines),
+     --lh-fill = the selected look (navy fill, ice text). */
+  --lh-bg: #060a16;                 /* Night Ink: page */
+  --lh-surface: #0b1229;            /* Deep Panel: every panel */
+  --lh-surface-2: #14234c;          /* Selected Navy: hover / raised parts */
+  --lh-card-bg: #0b1229;
+  --lh-card-tint: 0.06;
+  --lh-border: #1f2e5a;             /* Quiet Rule */
+  --lh-text: #d8dff5;               /* Pale Ice */
+  --lh-muted: #93a1cb;              /* Mist */
+  --lh-faint: #c3cce9;              /* Haze */
+  --lh-strong: #d8dff5;
+  --lh-text-rgb: 216, 223, 245;
 
-  /* Swiss restyle (Oct 2026): black + bone (#f2ebdd) here, bone + navy (#052350) in light. Teal / coral are the only colors; the accent is the ink itself.
-     Older note: brand colors navy #052350, pale blue #d2e0f8, royal indigo #2107a9.
-     --lh-accent = marks: text, links, underlines, icons, chart lines (pale blue on dark: indigo is too dark to read there).
-     --lh-fill   = filled elements: primary buttons, selected pills, active switches (indigo, white text on top). */
-  --lh-accent: #f2ebdd;             /* pale blue: text, underlines, icons, chart lines */
-  --lh-accent-2: #d9cfbb;           /* the other end of accent gradients (progress bars) */
-  --lh-accent-light: #f2ebdd;       /* accent text on dark backgrounds */
-  --lh-accent-rgb: 242, 235, 221;   /* same pale blue as numbers, for faint tints and glows */
-  --lh-logo-ink: #f2ebdd;           /* the logo's letters: pale blue */
-  --lh-slip-bg: #0d0c0a;            /* My Hunts drawer */
-  --lh-slip-leg: #171512;           /* a My Hunts ticket */
-  --lh-slip-line: #2c2924;          /* My Hunts dividers */
-  --lh-pill-bg: #171512;             /* the floating My Hunts pill: lighter than the page */
-  --lh-pill-border: #34302a;
-  --lh-fill: #f2ebdd;               /* indigo: filled elements */
-  --lh-fill-2: #f2ebdd;             /* the other end of the fill gradient (buttons) */
-  --lh-fill-rgb: 242, 235, 221;
-  --lh-on-fill: #000000;            /* text on a fill */
+  --lh-accent: #9a93ff;             /* Soft Periwinkle (lift) */
+  --lh-accent-2: #d3d0ff;           /* Lilac */
+  --lh-accent-light: #9a93ff;
+  --lh-accent-rgb: 154, 147, 255;
+  --lh-primary: #280ea1;            /* Logo Indigo: the header wedge (a place, not a button) */
+  --lh-primary-rgb: 40, 14, 161;
+  --lh-logo-ink: #d8dff5;
+  --lh-slip-bg: #0b1229;
+  --lh-slip-leg: #14234c;
+  --lh-slip-line: #1f2e5a;
+  --lh-pill-bg: #14234c;
+  --lh-pill-border: #2b3a6c;
+  --lh-fill: #14234c;               /* the selected look: navy fill ... */
+  --lh-fill-2: #14234c;
+  --lh-fill-rgb: 20, 35, 76;
+  --lh-on-fill: #d8dff5;            /* ... ice text */
+  --lh-selected-edge: #9a93ff;      /* ... periwinkle outline */
 
-  /* Division colors (Standings page): one per division, never the over / under teal and coral */
   --lh-div-atlantic: #a78bfa;  --lh-div-central: #60a5fa;  --lh-div-southeast: #fbbf24;
   --lh-div-northwest: #22d3ee; --lh-div-pacific: #f472b6;  --lh-div-southwest: #94a3b8;
 
-  /* Over / under / push. The darker values are for bars, fills and outlines; the lighter "-text"
-     values are for text and icons on the dark background. Used by the CSS below AND by the Chart.js bars (js/components/propChart.js). */
-  --lh-over: #1D9E75;               /* teal: over / hit */
-  --lh-over-text: #5DCAA5;
-  --lh-under: #D85A30;              /* coral: under / miss */
-  --lh-under-text: #F0997B;
-  --lh-push: #888780;               /* exactly on the line */
-  --lh-over-rgb: 29, 158, 117;      /* the same colors as "r, g, b" for see-through fills and glows */
-  --lh-under-rgb: 216, 90, 48;
-  --lh-push-rgb: 136, 135, 128;
+  /* Over / under / push: the beta's teal and dusty rose (deeper on bars, lighter on numbers) */
+  --lh-over: #46a98f;
+  --lh-over-text: #7fdcc0;
+  --lh-under: #bd6570;
+  --lh-under-text: #f2969f;
+  --lh-push: #6573a8;               /* Slate edge */
+  --lh-over-rgb: 70, 169, 143;
+  --lh-under-rgb: 189, 101, 112;
+  --lh-push-rgb: 101, 115, 168;
 
-  /* Injury / status colors (the tint is the see-through version used behind the text) */
-  --lh-out: #FF3B5C;       --lh-out-rgb: 255, 59, 92;
-  --lh-dtd: #FFC83D;       --lh-dtd-rgb: 255, 200, 61;      /* day-to-day, "no line" */
-  --lh-q: #C9CEDE;         --lh-q-rgb: 201, 206, 222;       /* questionable */
-  --lh-warn: #f5c542;                                       /* small-sample warning */
+  --lh-out: #f2969f;       --lh-out-rgb: 242, 150, 159;
+  --lh-dtd: #ecc86f;       --lh-dtd-rgb: 236, 200, 111;
+  --lh-q: #c3cce9;         --lh-q-rgb: 195, 204, 233;
+  --lh-warn: #ecc86f;
 
-  /* "Ink": the color of faint fills, dividers and soft text on cards (white tints here, dark tints in light mode) */
-  --lh-ink-rgb: 242, 235, 221;
-  --lh-line-rgb: 154, 146, 132;     /* court lines, skeletons */
-  --lh-bg-rgb: 0, 0, 0;             /* the page background as "r, g, b": see-through bars and panels */
-  --lh-surface-rgb: 13, 12, 10;      /* the card surface as "r, g, b" */
-  --lh-deep-rgb: 8, 7, 6;          /* the dark wash behind the homepage carousel slides */
-  --lh-hero-rgb: 242, 235, 221;        /* indigo: second tint of the game header gradient */
-  --lh-hero-from: rgba(242, 235, 221, 0.05);   /* game header gradient: navy ... */
-  --lh-hero-to: rgba(242, 235, 221, 0);    /* ... to indigo */
-  --lh-popover-bg: #0d0c0a;
-  --lh-tab-hover: #f2ebdd;
+  --lh-ink-rgb: 216, 223, 245;
+  --lh-line-rgb: 147, 161, 203;
+  --lh-bg-rgb: 6, 10, 22;
+  --lh-surface-rgb: 11, 18, 41;
+  --lh-deep-rgb: 4, 7, 16;
+  --lh-hero-rgb: 40, 14, 161;
+  --lh-hero-from: rgba(20, 35, 76, 0.9);
+  --lh-hero-to: rgba(40, 14, 161, 0.35);
+  --lh-popover-bg: #0b1229;
+  --lh-tab-hover: #d8dff5;
 
-  /* Glows and shadows: the colors, and a strength multiplier (1 = as designed; light mode turns them down) */
   --lh-shadow-rgb: 0, 0, 0;
   --lh-demo-shadow-rgb: 2, 6, 23;
-  --lh-shadow-k: 1;
-  --lh-glow-k: 1;
-  --lh-tint-k: 1;                   /* strength of the blue washes (game header, etc.) */
-  --lh-team-tint: 0.08;             /* the faint team-color wash on each side of a matchup card */
-  --lh-city-alpha: 0.09;            /* the city watermark letters */
-  --lh-city-shine-keep: 45%;        /* the sweep over the watermark: how much of the team color the light band keeps (the rest is white) */
-  --lh-city-shine-alpha: 35%;       /* ...and how strong the band is */
+  --lh-shadow-k: 0;                 /* no shadows: depth comes from tonal steps */
+  --lh-glow-k: 0.5;
+  --lh-tint-k: 1;
+  --lh-team-tint: 0.1;
+  --lh-city-alpha: 0.1;
+  --lh-city-shine-keep: 45%;
+  --lh-city-shine-alpha: 35%;
 
-  /* The hover lift on Hit List cards: a faint white glow in dark mode, a soft blue-gray shadow in light mode */
-  --lh-lift-shadow: 0 8px 24px rgba(var(--lh-accent-rgb), 0.10);   /* faint pale-blue glow */
-  --lh-lift-border: rgba(var(--lh-accent-rgb), 0.30);
+  --lh-lift-shadow: none;
+  --lh-lift-border: #2b3a6c;
 
   color-scheme: dark;
 
-  /* Our fonts */
-  --lh-font-display: "Inter Tight", sans-serif;   /* big numbers, team abbreviations, logo */
-  --lh-font-heading: "Inter Tight", sans-serif;              /* headings and titles (Fontshare) */
-  --lh-font-label: "Inter Tight", sans-serif;        /* tiny caps labels */
-  --lh-font-body: "Inter Tight", sans-serif;               /* everything else (Fontshare) */
+  /* Our fonts: Clash Display for bets, players and big numbers; Satoshi for everything you read (Fontshare) */
+  --lh-font-display: "Clash Display", "Segoe UI", sans-serif;
+  --lh-font-heading: "Clash Display", "Segoe UI", sans-serif;
+  --lh-font-label: "Satoshi", "Segoe UI", sans-serif;
+  --lh-font-body: "Satoshi", "Segoe UI", sans-serif;
 
-  /* Point Bootstrap at our values */
-
-  /* Square corners everywhere (Swiss look) */
-  --bs-border-radius: 0; --bs-border-radius-sm: 0; --bs-border-radius-lg: 0; --bs-border-radius-xl: 0; --bs-border-radius-xxl: 0; --bs-border-radius-pill: 0;
+  /* Gently rounded: 12px panels, 8px controls, ~5px inside a well, full pills for chips. Bars stay square. */
+  --lh-r-inner: 4.8px; --lh-r-control: 8px; --lh-r-panel: 12px; --lh-r-pill: 32px;
+  --bs-border-radius: 8px; --bs-border-radius-sm: 4.8px; --bs-border-radius-lg: 12px; --bs-border-radius-xl: 12px; --bs-border-radius-xxl: 12px; --bs-border-radius-pill: 32px;
   --bs-body-bg: var(--lh-bg);
   --bs-body-color: var(--lh-text);
   --bs-body-font-family: var(--lh-font-body);
   --bs-border-color: var(--lh-border);
-  --bs-secondary-color: var(--lh-muted);   /* used by .text-muted */
-  --bs-primary-rgb: var(--lh-accent-rgb);  /* used by .text-primary */
-  --bs-link-color-rgb: 242, 235, 221;
-  --bs-link-hover-color-rgb: 255, 255, 255;
+  --bs-secondary-color: var(--lh-muted);
+  --bs-primary-rgb: var(--lh-accent-rgb);
+  --bs-link-color-rgb: 154, 147, 255;
+  --bs-link-hover-color-rgb: 211, 208, 255;
 }
 
 
-/* ---------- Light theme: same names, light values ----------
-   A soft off-white page with the faintest lavender tint, white cards with thin light-blue borders, near-black headings,
-   dark gray body text, deeper blue for anything active, darker teal / coral for over / under. */
+/* ---------- Light theme: same names, light values ---------- */
 [data-bs-theme="light"] {
-  --lh-bg: #f2ebdd;
-  --lh-surface: #f7f2e8;
-  --lh-surface-2: #ebe3d3;
-  --lh-card-bg: rgba(247, 242, 232, 0.9);
-  --lh-card-tint: 0.04;
-  --lh-border: #dcd2be;
-  --lh-text: #1c2a47;               /* body: dark navy-gray */
-  --lh-muted: #4a5878;              /* labels: medium gray-blue */
-  --lh-faint: #5d6a86;
-  --lh-strong: #052350;             /* headings, player names, team abbreviations, big numbers: navy */
-  --lh-text-rgb: 28, 42, 71;
+  /* Indigo restyle, light: pale ice page, white panels, navy ink, Logo Indigo for marks (periwinkle is too pale on white) */
+  --lh-bg: #eef1fa;
+  --lh-surface: #ffffff;
+  --lh-surface-2: #e3e8f6;
+  --lh-card-bg: #ffffff;
+  --lh-card-tint: 0.05;
+  --lh-border: #cfd6ec;
+  --lh-text: #1b2850;
+  --lh-muted: #4b5784;
+  --lh-faint: #3e4a78;
+  --lh-strong: #0b1229;
+  --lh-text-rgb: 27, 40, 80;
 
-  --lh-accent: #052350;             /* royal indigo: links, active tabs, underlines, icons */
-  --lh-accent-2: #1a3a6e;
-  --lh-accent-light: #052350;       /* indigo text and links: dark enough on white */
-  --lh-accent-rgb: 5, 35, 80;
-  --lh-logo-ink: #052350;           /* the logo's letters: navy */
-  --lh-slip-bg: #ebe3d3;            /* My Hunts drawer: the light raised-card color */
-  --lh-slip-leg: #f7f2e8;           /* a My Hunts ticket: the light card color */
-  --lh-slip-line: #dcd2be;          /* My Hunts dividers: the light border */
-  --lh-pill-bg: #f7f2e8;            /* the floating My Hunts pill: the light card color */
-  --lh-pill-border: #dcd2be;
-  --lh-fill: #052350;               /* filled elements: primary buttons, selected pills, switches */
-  --lh-fill-2: #052350;
-  --lh-fill-rgb: 5, 35, 80;
-  --lh-on-fill: #f2ebdd;
+  --lh-accent: #280ea1;
+  --lh-accent-2: #4a36c4;
+  --lh-accent-light: #280ea1;
+  --lh-accent-rgb: 40, 14, 161;
+  --lh-primary: #280ea1;
+  --lh-primary-rgb: 40, 14, 161;
+  --lh-logo-ink: #14234c;
+  --lh-slip-bg: #eef1fa;
+  --lh-slip-leg: #ffffff;
+  --lh-slip-line: #cfd6ec;
+  --lh-pill-bg: #ffffff;
+  --lh-pill-border: #cfd6ec;
+  --lh-fill: #14234c;
+  --lh-fill-2: #14234c;
+  --lh-fill-rgb: 20, 35, 76;
+  --lh-on-fill: #eef1fa;
+  --lh-selected-edge: #280ea1;
   --lh-div-atlantic: #7c3aed;  --lh-div-central: #2563eb;  --lh-div-southeast: #d97706;
   --lh-div-northwest: #0891b2; --lh-div-pacific: #db2777;  --lh-div-southwest: #64748b;
 
-  --lh-over: #138a67;               /* darker teal / coral */
-  --lh-over-text: #0b6e50;
-  --lh-under: #c4471f;
-  --lh-under-text: #b4441e;
-  --lh-push: #8a8982;
-  --lh-over-rgb: 19, 138, 103;
-  --lh-under-rgb: 196, 71, 31;
-  --lh-push-rgb: 138, 137, 130;
+  --lh-over: #2c7a67;
+  --lh-over-text: #22685a;
+  --lh-under: #ab5763;
+  --lh-under-text: #9a4c58;
+  --lh-push: #5f6da3;
+  --lh-over-rgb: 44, 122, 103;
+  --lh-under-rgb: 171, 87, 99;
+  --lh-push-rgb: 95, 109, 163;
 
-  /* Status colors: text darker than the dark theme's, and no yellow text on white (day-to-day / "no line" are a deep amber) */
-  --lh-out: #c4173e;       --lh-out-rgb: 196, 23, 62;
+  --lh-out: #a33a4a;       --lh-out-rgb: 189, 101, 112;
   --lh-dtd: #8a5a00;       --lh-dtd-rgb: 224, 164, 0;
-  --lh-q: #5a6178;         --lh-q-rgb: 90, 97, 120;
+  --lh-q: #4b5784;         --lh-q-rgb: 75, 87, 132;
   --lh-warn: #8a5a00;
 
-  --lh-ink-rgb: 5, 35, 80;
-  --lh-line-rgb: 120, 110, 90;
-  --lh-bg-rgb: 242, 235, 221;
-  --lh-surface-rgb: 247, 242, 232;
-  --lh-deep-rgb: 235, 227, 211;
-  --lh-hero-rgb: 5, 35, 80;
-  --lh-hero-from: rgba(5, 35, 80, 0.05);   /* game header gradient: faint pale blue ... */
-  --lh-hero-to: rgba(5, 35, 80, 0);     /* ... to white */
-  --lh-popover-bg: #f7f2e8;
-  --lh-tab-hover: #052350;
+  --lh-ink-rgb: 20, 35, 76;
+  --lh-line-rgb: 95, 109, 163;
+  --lh-bg-rgb: 238, 241, 250;
+  --lh-surface-rgb: 255, 255, 255;
+  --lh-deep-rgb: 227, 232, 246;
+  --lh-hero-rgb: 40, 14, 161;
+  --lh-hero-from: rgba(20, 35, 76, 0.06);
+  --lh-hero-to: rgba(40, 14, 161, 0.08);
+  --lh-popover-bg: #ffffff;
+  --lh-tab-hover: #14234c;
 
-  --lh-shadow-rgb: 60, 45, 20;
-  --lh-demo-shadow-rgb: 5, 35, 80;
-  --lh-shadow-k: 0.25;              /* softer shadows */
-  --lh-glow-k: 0.35;                /* much softer glows */
+  --lh-shadow-rgb: 20, 35, 76;
+  --lh-demo-shadow-rgb: 20, 35, 76;
+  --lh-shadow-k: 0;
+  --lh-glow-k: 0.35;
   --lh-tint-k: 0.45;
-  --lh-team-tint: 0.1;              /* 15% is much fainter on white: these are clearly visible but still subtle */
+  --lh-team-tint: 0.1;
   --lh-city-alpha: 0.12;
-  --lh-city-shine-keep: 100%;       /* light page: a lighter band would vanish, so the band is the team color itself, a bit stronger */
+  --lh-city-shine-keep: 100%;
   --lh-city-shine-alpha: 70%;
 
-  --lh-lift-shadow: 0 8px 24px rgba(var(--lh-shadow-rgb), 0.18);
-  --lh-lift-border: rgba(var(--lh-line-rgb), 0.45);
+  --lh-lift-shadow: none;
+  --lh-lift-border: #9aa6cf;
 
   color-scheme: light;
 
-  /* Our fonts */
-  --lh-font-display: "Inter Tight", sans-serif;   /* big numbers, team abbreviations, logo */
-  --lh-font-heading: "Inter Tight", sans-serif;              /* headings and titles (Fontshare) */
-  --lh-font-label: "Inter Tight", sans-serif;        /* tiny caps labels */
-  --lh-font-body: "Inter Tight", sans-serif;               /* everything else (Fontshare) */
+  /* Our fonts: Clash Display for bets, players and big numbers; Satoshi for everything you read (Fontshare) */
+  --lh-font-display: "Clash Display", "Segoe UI", sans-serif;
+  --lh-font-heading: "Clash Display", "Segoe UI", sans-serif;
+  --lh-font-label: "Satoshi", "Segoe UI", sans-serif;
+  --lh-font-body: "Satoshi", "Segoe UI", sans-serif;
 
-  /* Point Bootstrap at our values */
-
-  /* Square corners everywhere (Swiss look) */
-  --bs-border-radius: 0; --bs-border-radius-sm: 0; --bs-border-radius-lg: 0; --bs-border-radius-xl: 0; --bs-border-radius-xxl: 0; --bs-border-radius-pill: 0;
+  /* Gently rounded: 12px panels, 8px controls, ~5px inside a well, full pills for chips. Bars stay square. */
+  --lh-r-inner: 4.8px; --lh-r-control: 8px; --lh-r-panel: 12px; --lh-r-pill: 32px;
+  --bs-border-radius: 8px; --bs-border-radius-sm: 4.8px; --bs-border-radius-lg: 12px; --bs-border-radius-xl: 12px; --bs-border-radius-xxl: 12px; --bs-border-radius-pill: 32px;
   --bs-body-bg: var(--lh-bg);
   --bs-body-color: var(--lh-text);
   --bs-body-font-family: var(--lh-font-body);
   --bs-border-color: var(--lh-border);
-  --bs-secondary-color: var(--lh-muted);   /* used by .text-muted */
-  --bs-primary-rgb: var(--lh-accent-rgb);  /* used by .text-primary */
-  --bs-link-color-rgb: 5, 35, 80;
-  --bs-link-hover-color-rgb: 28, 42, 71;
+  --bs-secondary-color: var(--lh-muted);
+  --bs-primary-rgb: var(--lh-accent-rgb);
+  --bs-link-color-rgb: 40, 14, 161;
+  --bs-link-hover-color-rgb: 20, 35, 76;
 }
 
 
@@ -297,7 +291,7 @@ html {
 .lh-nav-toggle {
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
   background: rgba(var(--lh-ink-rgb), 0.02);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   width: 42px;
   height: 42px;
   padding: 0;
@@ -386,7 +380,7 @@ html {
 .lh-drawer-close {
   width: 38px;
   height: 38px;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.9);
   background: transparent;
   color: var(--lh-accent-light);
@@ -425,7 +419,7 @@ html {
   min-height: 52px;
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: rgba(var(--lh-ink-rgb), 0.02);
   text-decoration: none;
   color: var(--lh-text);
@@ -477,7 +471,7 @@ html {
 .card {
   --bs-card-bg: var(--lh-card-bg);
   --bs-card-border-color: var(--lh-border);
-  --bs-card-border-radius: 0;
+  --bs-card-border-radius: var(--lh-r-panel);
   --bs-card-inner-border-radius: 0;
   --bs-card-cap-bg: transparent;     /* card headers and footers blend in */
 }
@@ -534,7 +528,7 @@ html {
 .btn-lh-primary {
   background: linear-gradient(135deg, var(--lh-fill) 0%, var(--lh-fill-2) 100%);
   border: none;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   padding: 0.8rem 1.4rem;
   font-family: var(--lh-font-label);
   font-size: 0.76rem;
@@ -553,7 +547,7 @@ html {
 .lh-home-preview {
   background: linear-gradient(160deg, rgba(var(--lh-accent-rgb), var(--lh-card-tint)), var(--lh-card-bg));
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   padding: 1.2rem;
   min-height: 100%;
   box-shadow: inset 0 0 0 1px rgba(var(--lh-ink-rgb), 0.04);
@@ -572,7 +566,7 @@ html {
   padding: 0.7rem 0.8rem;
   background: rgba(var(--lh-ink-rgb), 0.02);
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   margin-bottom: 0.7rem;
 }
 
@@ -590,7 +584,7 @@ html {
   padding: 0.45rem 0.65rem;
   font-size: 0.74rem;
   font-family: var(--lh-font-label);
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   background: rgba(var(--lh-accent-rgb), 0.1);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.38);
   color: var(--lh-strong);
@@ -627,7 +621,7 @@ html {
   min-height: 30rem;
   padding: 2rem 1.4rem 1rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.18);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   background: linear-gradient(180deg, rgba(var(--lh-deep-rgb), 0.28) 0%, rgba(var(--lh-deep-rgb), 0.0) 18%, rgba(var(--lh-deep-rgb), 0.1) 100%);
 }
 
@@ -704,7 +698,7 @@ html {
   min-height: 2rem;
   padding: 0.5rem 0.9rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.5);
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   color: var(--lh-accent-light);
   font-family: var(--lh-font-label);
   font-size: 0.7rem;
@@ -716,7 +710,7 @@ html {
   width: min(100%, 380px);
   background: var(--lh-card-bg);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   padding: 1rem 1rem 0.9rem;
   box-shadow: 0 24px 50px rgba(var(--lh-demo-shadow-rgb), calc(0.4 * var(--lh-shadow-k))), 0 0 0 1px rgba(var(--lh-accent-rgb), 0.08), 0 0 26px rgba(var(--lh-accent-rgb), calc(0.1 * var(--lh-glow-k)));
   position: relative;
@@ -779,7 +773,7 @@ html {
   justify-content: center;
   padding: 0.35rem 0.7rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.8);
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   color: var(--lh-accent-light);
   font-family: var(--lh-font-label);
   font-size: 0.62rem;
@@ -801,7 +795,7 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   color: #0c1220;
   font-family: var(--lh-font-label);
   font-size: 0.65rem;
@@ -833,7 +827,7 @@ html {
 .lh-demo-stat-box {
   background: rgba(var(--lh-ink-rgb), 0.02);
   border: 1px solid rgba(var(--lh-ink-rgb), 0.08);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   padding: 0.7rem 0.65rem 0.6rem;
 }
 
@@ -879,7 +873,7 @@ html {
   gap: 0.8rem;
   padding: 0.7rem 0.7rem;
   border: 1px solid rgba(var(--lh-ink-rgb), 0.08);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: rgba(var(--lh-ink-rgb), 0.02);
   margin-bottom: 0.55rem;
   font-size: 0.8rem;
@@ -908,7 +902,7 @@ html {
 .lh-demo-button {
   width: 100%;
   border: none;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: linear-gradient(90deg, var(--lh-fill) 0%, var(--lh-fill-2) 100%);
   color: var(--lh-on-fill);
   padding: 0.9rem 1rem;
@@ -928,7 +922,7 @@ html {
 .lh-carousel-indicators [data-bs-target] {
   width: 0.7rem;
   height: 0.7rem;
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   background-color: rgba(var(--lh-ink-rgb), 0.4);
   margin: 0 0.3rem;
   border: none;
@@ -946,7 +940,7 @@ html {
   height: 2.5rem;
   top: 50%;
   transform: translateY(-50%);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
   background: rgba(var(--lh-surface-rgb), 0.68);
   color: var(--lh-strong);
@@ -1021,7 +1015,7 @@ html {
 .lh-step-card {
   background: var(--lh-card-bg);
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   padding: 1.25rem;
   height: 100%;
 }
@@ -1144,7 +1138,7 @@ html {
   --bs-btn-hover-border-color: rgba(var(--lh-accent-rgb), 0.5);
   --bs-btn-active-color: var(--lh-strong);
   --bs-btn-active-bg: var(--lh-surface-2);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   font-family: var(--lh-font-label);
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -1244,13 +1238,13 @@ html {
 /* L5 / L10 / L20 / Season: the buttons sit together as one pill-shaped group
    (above the props table and inside the drawer) */
 .lh-window-toggle .btn-ghost {
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
 }
 .lh-window-toggle .btn-ghost:first-child {
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
 }
 .lh-window-toggle .btn-ghost:last-child {
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
 }
 .lh-window-toggle .btn-ghost.active {
   color: var(--lh-on-fill);
@@ -1267,7 +1261,7 @@ html {
   --bs-btn-hover-border-color: var(--lh-accent);
   --bs-btn-active-color: var(--lh-strong);
   --bs-btn-active-bg: rgba(var(--lh-accent-rgb), 0.25);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   font-family: var(--lh-font-label);
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -1285,7 +1279,7 @@ html {
   display: inline-flex;
   align-items: center;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.45);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   overflow: hidden;
 }
 .lh-alt-btn {
@@ -1317,7 +1311,7 @@ html {
 /* The player page's HTML bars (js/components/animatedBars.js). Bars are keyed by game: they slide / resize with transform + width,
    grow and shrink with height. 220 ms ease-out; skipped for reduced motion and while .is-still (first draw, resizes). */
 .lh-bars {
-  --lh-bar-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --lh-bar-ease: cubic-bezier(0.16, 1, 0.3, 1);   /* the beta's curve */
   position: absolute;
   inset: 0;
 }
@@ -1334,7 +1328,7 @@ html {
   right: 0;
   height: 0;
   border-top: 1px solid rgba(var(--lh-line-rgb), 0.12);
-  transition: bottom 220ms var(--lh-bar-ease), opacity 220ms;
+  transition: bottom 280ms var(--lh-bar-ease), opacity 280ms;
 }
 .lh-bars-tick span {
   position: absolute;
@@ -1353,7 +1347,7 @@ html {
   height: 0;
   z-index: 1;
   pointer-events: none; /* never blocks hovering the bars */
-  transition: bottom 220ms var(--lh-bar-ease);
+  transition: bottom 280ms var(--lh-bar-ease);
 }
 .lh-bars-line { border-top: 2px dashed var(--lh-accent); }
 .lh-bars-line::before,
@@ -1383,7 +1377,7 @@ html {
   border-left: 1px solid var(--lh-muted);
   z-index: 2;
   pointer-events: none;
-  transition: transform 220ms var(--lh-bar-ease);
+  transition: transform 280ms var(--lh-bar-ease);
 }
 .lh-bars-divider span {
   position: absolute;
@@ -1402,7 +1396,7 @@ html {
   bottom: 0;
   left: 0;
   cursor: pointer;
-  transition: transform 220ms var(--lh-bar-ease), width 220ms var(--lh-bar-ease);
+  transition: transform 280ms var(--lh-bar-ease), width 280ms var(--lh-bar-ease);
 }
 .lh-bar-fill {
   position: absolute;
@@ -1410,7 +1404,7 @@ html {
   right: 0;
   bottom: 0;
   background: var(--lh-push);
-  transition: height 220ms var(--lh-bar-ease), opacity 160ms;
+  transition: height 280ms var(--lh-bar-ease), opacity 160ms;
 }
 .lh-bar-fill.is-over { background: var(--lh-over); }
 .lh-bar-fill.is-under { background: var(--lh-under); }
@@ -1492,7 +1486,7 @@ html {
   padding: 0.5rem 0.65rem;
   background: rgba(var(--lh-bg-rgb), 0.95);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.45);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   font-size: 0.78rem;
   line-height: 1.45;
   color: var(--lh-text);
@@ -1524,7 +1518,7 @@ html {
   display: inline-block;
   padding: 0 0.4rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   color: var(--lh-muted);
   font-size: 0.65rem;
   font-weight: 600;
@@ -1739,7 +1733,7 @@ a.lh-top-row:focus-visible {
 /* Injury badge: red OUT, yellow Q / Doubtful. A button, so tap and keyboard open the details. */
 .lh-injury-badge {
   border: 1px solid currentColor;
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   background: transparent;
   padding: 0.2rem 0.65rem;
   font-family: var(--lh-font-label);
@@ -1785,7 +1779,7 @@ a.lh-top-row:focus-visible {
 .lh-avg-box {
   background: var(--lh-card-bg);
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   padding: 0.75rem 0.9rem;
   min-height: 4.4rem;
 }
@@ -1886,7 +1880,7 @@ a.lh-top-row:focus-visible {
   width: 100%;
   height: 42px;
   padding: 0 1rem 0 2.4rem;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
   background: rgba(var(--lh-ink-rgb), 0.02);
   color: var(--lh-text);
@@ -1905,7 +1899,7 @@ a.lh-top-row:focus-visible {
   z-index: 1050;
   background: var(--lh-surface);
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   overflow: hidden;
   box-shadow: 0 12px 32px rgba(var(--lh-shadow-rgb), calc(0.5 * var(--lh-shadow-k)));
 }
@@ -1972,7 +1966,7 @@ a.lh-top-row:focus-visible {
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.75rem 0.25rem 0.3rem;
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   border: 1px solid var(--lh-border);
   background: transparent;
   color: var(--lh-text);
@@ -2021,7 +2015,7 @@ a.lh-top-row:focus-visible {
   display: inline-block;
   margin-top: 0.25rem;
   padding: 0.15rem 0.6rem;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   border: 1px solid var(--lh-warn);
   color: var(--lh-warn);
   font-size: 0.75rem;
@@ -2087,7 +2081,7 @@ h3.lh-display,
   flex-direction: column;
   height: 100%;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   background: rgba(var(--lh-ink-rgb), 0.02);
   overflow: hidden;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -2123,7 +2117,7 @@ h3.lh-display,
   transform: translateY(-50%);
   padding: 0.2rem 0.35rem;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: none;
   color: var(--lh-muted);
 }
@@ -2476,7 +2470,7 @@ body > main {
 .lh-demo-toggle {
   display: inline-flex;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   overflow: hidden;
   font-family: var(--lh-font-label);
   font-size: 0.6rem;
@@ -2604,7 +2598,7 @@ a.lh-demo-button:focus-visible {
 }
 .lh-zm-pill {
   padding: 0.25rem 0.8rem;
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   border: 1px solid;
   font-family: var(--lh-font-label);
   font-size: 0.75rem;
@@ -2664,7 +2658,7 @@ a.lh-demo-button:focus-visible {
 .lh-zm-rank {
   justify-self: end;
   padding: 0.1rem 0.45rem;
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   border: 1px solid var(--lh-push);
   font-family: var(--lh-font-label);
   font-size: 0.7rem;
@@ -2679,7 +2673,7 @@ a.lh-demo-button:focus-visible {
 .lh-ma { display: flex; flex-direction: column; gap: 1rem; }
 .lh-ma-flag {
   display: flex; align-items: flex-start; gap: 0.6rem;
-  padding: 0.6rem 0.75rem; border-radius: 0; font-size: 0.82rem; line-height: 1.4;
+  padding: 0.6rem 0.75rem; border-radius: var(--lh-r-control); font-size: 0.82rem; line-height: 1.4;
   color: var(--lh-muted); background: rgba(var(--lh-ink-rgb), 0.03); border: 1px solid var(--lh-border);
 }
 .lh-ma-flag b { color: var(--lh-strong); font-weight: 700; }
@@ -2687,7 +2681,7 @@ a.lh-demo-button:focus-visible {
 .lh-ma-flag.is-gtd { color: var(--lh-text); background: rgba(var(--lh-dtd-rgb), 0.08); border-color: rgba(var(--lh-dtd-rgb), 0.45); }
 .lh-ma-badge {
   flex: none; font-family: var(--lh-font-label); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em;
-  border-radius: 0; padding: 0.1rem 0.4rem; margin-top: 0.1rem;
+  border-radius: var(--lh-r-inner); padding: 0.1rem 0.4rem; margin-top: 0.1rem;
 }
 .lh-ma-badge.is-ok { color: var(--lh-over-text); border: 1px solid var(--lh-over); }
 .lh-ma-badge.is-out { color: #fff; background: var(--lh-out); }
@@ -2910,7 +2904,7 @@ a.lh-demo-button:focus-visible {
   display: inline-block;
   padding: 0 0.35rem;
   border: 1px solid var(--lh-under);
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   font-family: var(--lh-font-label);
   font-size: 0.6rem;
   color: var(--lh-under-text);
@@ -2999,7 +2993,7 @@ a.lh-demo-button:focus-visible {
 .lh-tc-rank {
   padding: 0 0.35rem;
   border: 1px solid var(--lh-push);
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   font-size: 0.62rem;
   color: var(--lh-muted);
   cursor: help;
@@ -3066,7 +3060,7 @@ a.lh-demo-button:focus-visible {
 .lh-inj-badge {
   padding: 0.05rem 0.5rem;
   border: 1px solid currentColor;
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   font-family: var(--lh-font-label);
   font-size: 0.62rem;
   font-weight: 700;
@@ -3122,7 +3116,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-mode-badge {
   padding: 0.15rem 0.6rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.6);
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   background: rgba(var(--lh-accent-rgb), 0.15);
   color: var(--lh-accent-light);
   font-family: var(--lh-font-label);
@@ -3171,7 +3165,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 /* "New" badge next to the research mode link */
 .lh-new-badge {
   padding: 0.05rem 0.45rem;
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   background: var(--lh-fill);
   color: var(--lh-on-fill);
   font-family: var(--lh-font-label);
@@ -3484,7 +3478,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-soon-badge {
   padding: 0.1rem 0.5rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   font-family: var(--lh-font-label);
   font-size: 0.58rem;
   letter-spacing: 0.06em;
@@ -3556,7 +3550,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-soon-tag {
   padding: 0 0.35rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   font-size: 0.5rem;
   letter-spacing: 0.06em;
   line-height: 1.5;
@@ -3696,7 +3690,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   margin-bottom: 0.5rem;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--lh-border);   /* (replaces the old thin divider between rows) */
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: rgba(var(--lh-ink-rgb), 0.02);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
@@ -3728,7 +3722,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 #top-hit-rates > .card,
 #hotPlayers.card {
   --bs-card-bg: rgba(var(--lh-ink-rgb), 0.02);
-  --bs-card-border-radius: 0;
+  --bs-card-border-radius: var(--lh-r-panel);
   --bs-card-inner-border-radius: 0;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -3753,7 +3747,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 }
 .lh-top-controls[hidden], .lh-top-chips[hidden] { display: none; }
 .lh-top-controls .dropdown { position: relative; }
-.lh-top-ctl { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 0; }
+.lh-top-ctl { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: var(--lh-r-control); }
 
 /* Filter / Sort dropdowns (Bootstrap dropdown menus, anchored under their own button): frosted glass in the card's colors.
    The card background (--lh-bg-rgb) at 78%, blurred behind; browsers without backdrop-filter get it fully opaque. */
@@ -3763,13 +3757,13 @@ body:not(.research-mode) .research-only { display: none !important; }
   --bs-dropdown-padding-y: 0.75rem;
   --bs-dropdown-color: var(--lh-strong);
   --bs-dropdown-border-color: var(--lh-border);
-  --bs-dropdown-border-radius: 0;
+  --bs-dropdown-border-radius: var(--lh-r-panel);
   --bs-dropdown-box-shadow: var(--lh-lift-shadow);
   --bs-dropdown-zindex: 1050;
   min-width: 16rem;
   background-color: rgb(var(--lh-bg-rgb));   /* the card's own (page) background, not the old navy surface */
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   box-shadow: var(--lh-lift-shadow);
 }
 @supports ((backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px))) {
@@ -3795,13 +3789,13 @@ body:not(.research-mode) .research-only { display: none !important; }
   flex: 1 1 auto;
   padding: 0.3rem 0.75rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: transparent;
   color: var(--lh-text, inherit);
   font-size: 0.85rem;
   text-align: center;
 }
-.lh-top-opts--list .lh-top-opt { text-align: left; border-radius: 0; padding: 0.5rem 0.75rem; }
+.lh-top-opts--list .lh-top-opt { text-align: left; border-radius: var(--lh-r-control); padding: 0.5rem 0.75rem; }
 .lh-top-opt.active {
   color: var(--lh-on-fill);
   background: var(--lh-fill);
@@ -3815,7 +3809,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-top-chip {
   padding: 0.15rem 0.6rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.5);
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   background: rgba(var(--lh-accent-rgb), 0.12);
   color: var(--lh-strong);
   font-size: 0.78rem;
@@ -3866,7 +3860,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   display: block;
   padding: 0;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: none;
   box-shadow: none;
 }
@@ -3877,7 +3871,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   grid-template-columns: var(--tk-stub) minmax(0, 1fr);
   align-items: stretch;
   border: 1px solid var(--tk-line);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background-origin: border-box;
   background-image:
     radial-gradient(circle at var(--tk-n1x) var(--tk-n1y), transparent var(--tk-r), var(--tk-line) var(--tk-r), var(--tk-line) calc(var(--tk-r) + 1px), transparent calc(var(--tk-r) + 1px)),
@@ -4113,7 +4107,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   position: relative;
   padding: 0.75rem 0.9rem 0.5rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   background: rgba(var(--lh-ink-rgb), 0.02);
 }
 .lh-st-card::before {          /* the triangle tab, top-left */
@@ -4239,7 +4233,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   height: 28px;
   padding: 0 0.45rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: transparent;
   color: var(--lh-accent-light);
   font-family: var(--lh-font-label);
@@ -4297,7 +4291,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   margin-right: 0.5rem;
   padding: 0.3rem 0.7rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: transparent;
   color: var(--lh-text);
   font-size: 0.85rem;
@@ -4373,7 +4367,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   height: 26px;
   padding: 0;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: transparent;
   color: var(--lh-muted);
 }
@@ -4419,7 +4413,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-hunts-stake-box input { width: 100%; min-width: 0; border: 0; background: transparent; color: var(--lh-strong); font-size: 1rem; outline: none; }
 .lh-hunts-stake-box:focus-within { border-color: rgba(var(--lh-accent-rgb), 0.6); }
 .lh-hunts-win-amount { display: flex; align-items: center; height: 40px; font-family: var(--lh-font-display); font-size: 1.5rem; font-weight: 700; color: var(--lh-over); }
-.lh-hunts-clear { width: 100%; margin-top: 0.85rem; height: 38px; border: 1px solid var(--lh-slip-line); border-radius: 0; background: transparent; color: var(--lh-muted); font-size: 0.8rem; }
+.lh-hunts-clear { width: 100%; margin-top: 0.85rem; height: 38px; border: 1px solid var(--lh-slip-line); border-radius: var(--lh-r-control); background: transparent; color: var(--lh-muted); font-size: 0.8rem; }
 .lh-hunts-clear:hover, .lh-hunts-clear:focus-visible { color: var(--lh-under-text); border-color: rgba(var(--lh-under-rgb), 0.5); }
 .lh-hunts-legal { margin-top: 0.75rem; text-align: center; font-family: var(--lh-font-label); font-size: 0.6rem; letter-spacing: 0.04em; color: var(--lh-muted); }
 
@@ -4431,7 +4425,7 @@ body:not(.research-mode) .research-only { display: none !important; }
 .lh-ptb {
   background: var(--lh-slip-bg);
   border-top: 3px solid var(--lh-fill);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   padding: 0.85rem 1rem 1rem;
   margin-bottom: 1rem;
 }
@@ -4464,7 +4458,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   width: 36px;
   height: 38px;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: transparent;
   color: var(--lh-strong);
   font-size: 1.15rem;
@@ -4479,7 +4473,7 @@ body:not(.research-mode) .research-only { display: none !important; }
   min-width: 4.6rem;
   padding: 0 0.9rem;
   border: 1px solid var(--lh-slip-line);
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   background: transparent;
   font-weight: 700;
   font-size: 0.85rem;
@@ -4612,7 +4606,7 @@ body:not(.research-mode) .lh-player-drawer .offcanvas-header { background: var(-
   padding: 0.5rem 0.8rem;
   border: 1px solid var(--lh-pill-border);
   border-top: 2px solid var(--lh-fill);
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   background: var(--lh-pill-bg);
   color: var(--lh-strong);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
@@ -4668,13 +4662,13 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 @media (min-width: 768px) { .lh-ticket-main { grid-template-columns: minmax(0, 13rem) 2.75rem 140px minmax(0, 1fr); grid-template-areas: "player count graph ."; gap: 0.25rem 0.6rem; } }
 .lh-top-linectl { display: flex; align-items: center; gap: 0.75rem; position: static; margin: 0; flex-wrap: wrap; }
 .lh-top-addwrap > .lh-top-linectl { margin: 0.35rem 0 0.2rem 1rem; }
-.lh-top-step { display: inline-flex; align-items: stretch; height: 30px; border: 1px solid var(--lh-border); border-radius: 0; overflow: hidden; }
+.lh-top-step { display: inline-flex; align-items: stretch; height: 30px; border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); overflow: hidden; }
 .lh-top-stepbtn { width: 28px; border: 0; background: none; color: var(--lh-strong); font-size: 1.05rem; line-height: 1; cursor: pointer; }
 .lh-top-stepbtn:hover:not(:disabled), .lh-top-stepbtn:focus-visible { background: rgba(var(--lh-accent-rgb), 0.12); }
 .lh-top-stepbtn:disabled { opacity: 0.35; cursor: default; }
 .lh-top-line { min-width: 3rem; display: flex; align-items: center; justify-content: center; border-left: 1px solid var(--lh-border); border-right: 1px solid var(--lh-border); font-family: var(--lh-font-display); font-size: 1rem; font-weight: 700; color: var(--lh-strong); }
 .lh-top-sides { display: inline-flex; gap: 6px; }
-.lh-top-sidebtn { height: 30px; padding: 0 0.7rem; border: 1px solid var(--lh-border); border-radius: 0; background: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
+.lh-top-sidebtn { height: 30px; padding: 0 0.7rem; border: 1px solid var(--lh-border); border-radius: var(--lh-r-inner); background: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
 .lh-top-sidebtn--over { color: var(--lh-over-text); border-color: var(--lh-over); }
 .lh-top-sidebtn--under { color: var(--lh-under-text); border-color: var(--lh-under); }
 .lh-top-sidebtn--over.is-on { background: var(--lh-over); color: #fff; }
@@ -4712,7 +4706,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-top-search[hidden] { display: none; }
 .lh-top-search-input {
   width: 100%; height: 36px; padding: 0 2.2rem 0 2.15rem;
-  border: 1px solid var(--lh-border); border-radius: 0;
+  border: 1px solid var(--lh-border); border-radius: var(--lh-r-control);
   background: rgba(var(--lh-ink-rgb), 0.04); color: var(--lh-text);
   font-size: 0.9rem;
 }
@@ -4722,7 +4716,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-top-search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--lh-muted); font-size: 0.85rem; pointer-events: none; }
 .lh-top-search-clear {
   position: absolute; right: 0.3rem; top: 50%; transform: translateY(-50%);
-  width: 28px; height: 28px; border: 0; border-radius: 0; background: none; color: var(--lh-muted); cursor: pointer;
+  width: 28px; height: 28px; border: 0; border-radius: var(--lh-r-control); background: none; color: var(--lh-muted); cursor: pointer;
 }
 .lh-top-search-clear:hover, .lh-top-search-clear:focus-visible { color: var(--lh-strong); background: rgba(var(--lh-accent-rgb), 0.12); }
 @media (max-width: 575.98px) {
@@ -4787,7 +4781,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hunts-share-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.85rem; }
 .lh-hunts-sharebtn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
-  min-height: 38px; padding: 0 0.4rem; border: 1px solid var(--lh-slip-line); border-radius: 0; background: none;
+  min-height: 38px; padding: 0 0.4rem; border: 1px solid var(--lh-slip-line); border-radius: var(--lh-r-control); background: none;
   color: var(--lh-text); font-family: var(--lh-font-label); font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap;
 }
 .lh-hunts-sharebtn:hover, .lh-hunts-sharebtn:focus-visible { color: var(--lh-strong); border-color: rgba(var(--lh-accent-rgb), 0.6); }
@@ -4820,7 +4814,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   margin-left: 0.5rem;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: none;
   color: var(--lh-muted);
   font-size: 0.8rem;
@@ -4854,13 +4848,13 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-mx-field { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
 .lh-mx-search { max-width: none; margin: 0; }
 .lh-mx-search .lh-search-input { height: 38px; }
-.lh-mx-select { height: 38px; border-radius: 0; }
+.lh-mx-select { height: 38px; border-radius: var(--lh-r-control); }
 .lh-mx-result { width: 100%; border: 0; background: transparent; text-align: left; }
 .lh-mx-filters { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; }
 .lh-mx-sections { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; padding-top: 0.75rem; border-top: 1px dashed var(--lh-border); }
 .lh-mx-chip {
   display: inline-flex; align-items: center; gap: 0.3rem;
-  padding: 0.25rem 0.7rem; border-radius: 0;
+  padding: 0.25rem 0.7rem; border-radius: var(--lh-r-pill);
   border: 1px solid var(--lh-border); background: transparent; color: var(--lh-muted);
   font-family: var(--lh-font-label); font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
 }
@@ -4901,14 +4895,14 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-mx-allowed-val { font-family: var(--lh-font-display); font-weight: 700; font-size: 1.05rem; color: var(--lh-text); white-space: nowrap; }
 .lh-mx-allowed-val span { font-family: inherit; font-weight: 500; font-size: 0.8rem; color: var(--lh-muted); }
 .lh-mx-diff {
-  justify-self: end; min-width: 3rem; text-align: center; padding: 0.1rem 0.4rem; border-radius: 0;
+  justify-self: end; min-width: 3rem; text-align: center; padding: 0.1rem 0.4rem; border-radius: var(--lh-r-inner);
   border: 1px solid var(--lh-push); font-family: var(--lh-font-label); font-size: 0.7rem; color: var(--lh-muted); cursor: help;
 }
 .lh-mx-diff.is-over  { border-color: var(--lh-over);  color: var(--lh-over-text); }
 .lh-mx-diff.is-under { border-color: var(--lh-under); color: var(--lh-under-text); }
 .lh-mx-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
 .lh-mx-tile {
-  display: flex; flex-direction: column; gap: 0.1rem; padding: 0.5rem 0.6rem; border-radius: 0;
+  display: flex; flex-direction: column; gap: 0.1rem; padding: 0.5rem 0.6rem; border-radius: var(--lh-r-control);
   border: 1px solid var(--lh-border); background: rgba(var(--lh-ink-rgb), 0.02);
 }
 .lh-mx-tile b { font-family: var(--lh-font-display); font-weight: 700; font-size: 1.15rem; color: var(--lh-strong); line-height: 1.1; }
@@ -5009,7 +5003,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   --bs-dropdown-zindex: 1050;
   background-color: rgb(var(--lh-bg-rgb));
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-panel);
   box-shadow: var(--lh-lift-shadow);
 }
 .lh-tools-item {
@@ -5035,7 +5029,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: rgba(var(--lh-accent-rgb), 0.12);
   color: var(--lh-accent-light);
 }
@@ -5054,7 +5048,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   min-height: 6.5rem;
   padding: 1rem 1.1rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: rgba(var(--lh-ink-rgb), 0.02);
   color: var(--lh-text);
   text-decoration: none;
@@ -5093,7 +5087,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 /* ---------- Today page: Top 5 Hunts card (the Top Hit Rates card's outer style) ---------- */
 .lh-today-hunts.card {
   --bs-card-bg: rgba(var(--lh-ink-rgb), 0.02);
-  --bs-card-border-radius: 0;
+  --bs-card-border-radius: var(--lh-r-panel);
   --bs-card-inner-border-radius: 0;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -5163,7 +5157,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 /* ---------- Hunt Score page (the approved mockup in the site's tokens) ---------- */
 .lh-hs-card.card {
   --bs-card-bg: rgba(var(--lh-ink-rgb), 0.02);
-  --bs-card-border-radius: 0;
+  --bs-card-border-radius: var(--lh-r-panel);
   --bs-card-inner-border-radius: 0;
   --bs-card-cap-bg: transparent;
 }
@@ -5181,7 +5175,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hs-tag {
   padding: 0 0.3rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   color: var(--lh-muted);
   font-family: var(--lh-font-label);
   font-size: 0.62rem;
@@ -5192,7 +5186,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hs-pick {
   padding: 0.15rem 0.55rem 0.15rem 0.5rem;
   border-left: 3px solid var(--lh-over);
-  border-radius: 0;
+  border-radius: var(--lh-r-inner);
   background: rgba(var(--lh-ink-rgb), 0.04);
   font-family: var(--lh-font-display);
   font-weight: 700;
@@ -5206,7 +5200,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-hs-chip {
   padding: 0.15rem 0.45rem;
   border: 1px solid rgba(var(--lh-accent-rgb), 0.4);
-  border-radius: 0;
+  border-radius: var(--lh-r-pill);
   background: rgba(var(--lh-accent-rgb), 0.1);
   color: var(--lh-accent-light);
   font-size: 0.72rem;
@@ -5239,7 +5233,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   margin: 0.9rem 0 0 2.5rem;
   padding: 0.9rem 1rem;
   border: 1px solid var(--lh-border);
-  border-radius: 0;
+  border-radius: var(--lh-r-control);
   background: rgba(var(--lh-bg-rgb), 0.55);
 }
 .lh-hs-section { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -5865,7 +5859,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   }
   .lh-bd-player { grid-area: player; }
   .lh-bd-pick { grid-area: pick; }
-  .lh-bd-pick span { display: none; }
+  .lh-bd-pick > span { display: none; } /* the long stat name; the short code (.lh-bd-statshort) stays in the pick */
   .lh-bd-pick b { font-size: 0.9rem; }
   .lh-bd-hit { grid-area: hit; }
   .lh-bd-hit b { min-width: 0; font-size: 0.85rem; font-weight: 500; color: var(--lh-muted); }
@@ -6101,3 +6095,1006 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
 .lh-gb-nums > div:first-child { padding-left: 0; border-left: 0; }
 .lh-gb-nums dt { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lh-muted); white-space: nowrap; }
 .lh-gb-nums dd { margin: 0.15rem 0 0; font-size: 1rem; font-weight: 600; color: var(--lh-strong); white-space: nowrap; }
+
+
+/* ---------- Indigo restyle (Nov 2026): the beta's look on top of the Swiss layout ----------
+   Source: beta-website/DESIGN.md (PR #5). Colors, fonts and corner tokens are in section 1; this block puts the boxes back.
+   Panels = Deep Panel fill, 1px Quiet Rule, 12px corners, no shadows. Selected = navy fill, periwinkle outline, ice text. */
+.lh-swiss-page .card,
+.card.lh-swiss-card,
+.lh-ph-headcard,
+.lh-board,
+.lh-gc,
+.lh-gh {
+  --bs-card-bg: var(--lh-surface);
+  background: var(--lh-surface);
+  border: 1px solid var(--lh-border);
+  border-radius: var(--lh-r-panel);
+  box-shadow: none;
+}
+.lh-swiss-page .card > .card-header,
+.lh-swiss-card > .card-header { padding: 0.9rem 1rem 0.5rem !important; }
+.lh-swiss-page .card > .card-body,
+.lh-swiss-card > .card-body { padding: 0.5rem 1rem 1rem; }
+.lh-ph-headcard, .lh-board, .lh-gh { padding: 1rem; }
+.lh-gc { padding: 0.9rem 1rem 0.75rem; }
+.lh-pj { border-top-color: var(--lh-border); }
+
+/* Headlines and big numbers: Clash Display, semibold, sentence case */
+h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 600; letter-spacing: 0; }
+
+/* One selected look for every pick-one control and chip */
+.lh-window-toggle .btn-ghost.active,
+.lh-tabs .nav-link.active,
+.lh-demo-toggle .active,
+.lh-top-chip.active, .lh-mx-chip.active, .lh-ww-chip.active, .lh-hs-chip.active {
+  background: var(--lh-fill);
+  color: var(--lh-on-fill);
+  box-shadow: inset 0 0 0 1px var(--lh-selected-edge);
+}
+
+/* Focus rings and text links in periwinkle */
+:focus-visible { outline-color: var(--lh-accent); }
+
+/* Sentence case for headings (the beta: size and the two fonts make the hierarchy, never heavy capitals).
+   Team abbreviations are capitals in the text itself, so .lh-display keeps them. */
+.lh-display { text-transform: none; font-weight: 600; letter-spacing: 0; }
+.lh-top-title, .lh-board-title { text-transform: none; font-family: var(--lh-font-heading); font-weight: 600; letter-spacing: 0; }
+
+/* The beta's hero head on the Today page: periwinkle caps eyebrow over a big Clash Display title */
+.lh-eyebrow {
+  font: 600 0.95rem/1.2 var(--lh-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lh-accent);
+}
+.lh-hero-title {
+  font: 600 calc(clamp(2.75rem, 6vw, 4.75rem) * 0.82)/1.1 var(--lh-font-display);
+  color: var(--lh-strong);
+  margin-top: 0.5rem;
+}
+
+/* ---------- The game wheel (js/components/gameWheel.js; the beta's tonight.html) ---------- */
+#wheelWrap:not([hidden]) + .lh-games-carousel { display: none; }  /* the wheel replaces the card row once games load */
+.lh-wheel-wrap { overflow: hidden; padding-block: 0.5rem 0; }
+.lh-wheel {
+  --card-w: clamp(13.5rem, 40vw, 27rem);
+  --card-h: clamp(9rem, 26vw, 15.5rem);
+  position: relative;
+  height: calc(var(--card-h) + 1.5rem);
+  margin: 1rem auto 0;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.lh-wheel.is-dragging { cursor: grabbing; }
+.lh-wheel:focus-visible { outline: 2px solid var(--lh-accent); outline-offset: -2px; border-radius: var(--lh-r-panel); }
+.lh-wcard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--card-w);
+  height: var(--card-h);
+  margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--lh-surface-2);
+  border-radius: 0.9rem;
+  color: inherit;
+  text-decoration: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+  cursor: inherit;
+}
+.lh-wcard[aria-current] { cursor: pointer; }  /* no outline: the front card blends in (owner, Nov 8) */
+.lh-wcard:focus-visible { outline: 2px solid var(--lh-accent); outline-offset: 3px; }
+.lh-wcard-time {
+  padding: clamp(0.45rem, 1vw, 0.7rem) 0.8rem;
+  background: var(--lh-surface);
+  font: 600 clamp(0.85rem, 1.5vw, 1.2rem)/1.2 var(--lh-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--lh-muted);
+}
+.lh-wcard-body {
+  position: relative;
+  isolation: isolate;
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--away);
+  padding-inline: clamp(0.75rem, 2vw, 1.75rem);
+}
+/* The slant from the logo: away color, the home color as a wedge, a thin ice seam between */
+.lh-wcard-body::before,
+.lh-wcard-body::after { content: ""; position: absolute; inset: 0; z-index: -1; }
+.lh-wcard-body::before { background: var(--home); clip-path: polygon(58% 0, 100% 0, 100% 100%, 42% 100%); }
+.lh-wcard-body::after { background: #d8dff5; clip-path: polygon(57.5% 0, 58.5% 0, 42.5% 100%, 41.5% 100%); }
+.lh-wteam { display: flex; flex-direction: column; gap: 0.15rem; color: var(--away-text); }
+.lh-wteam.is-home { align-items: flex-end; color: var(--home-text); }
+.lh-wteam b { font: 600 calc(clamp(2rem, 5.6vw, 4.5rem) * 0.88)/1 var(--lh-font-display); }
+.lh-wml { font-size: clamp(0.875rem, 1.5vw, 1.25rem); font-weight: 500; min-height: 1.2em; }
+.lh-wat {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: clamp(1.5rem, 3vw, 2.25rem);
+  height: clamp(1.5rem, 3vw, 2.25rem);
+  transform: translate(-50%, -50%);
+  background: #060a16;
+  color: #d8dff5;
+  border-radius: 50%;
+  font-size: clamp(0.8125rem, 1.4vw, 1.0625rem);
+  font-weight: 600;
+}
+.lh-wcard-dim { position: absolute; inset: 0; background: var(--lh-bg); pointer-events: none; }
+
+.lh-wheel-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 2rem; margin-top: 1.25rem; }
+.lh-wheel-detail { min-height: 3rem; font-size: 1rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem; }
+.lh-wlabel { flex-basis: 100%; font-size: 0.8125rem; color: var(--lh-muted); }
+.lh-wrec { color: var(--lh-faint); }
+.lh-wline { color: var(--lh-strong); font-weight: 500; }
+.lh-wgo { color: var(--lh-accent); font-weight: 600; text-decoration: underline; text-underline-offset: 0.2em; }
+.lh-wheel-controls { display: flex; align-items: center; gap: 0.5rem; }
+.lh-wheel-hint { margin-right: 0.5rem; font-size: 0.8125rem; color: var(--lh-muted); }
+.lh-wheel-count { min-width: 4.25rem; text-align: center; font-size: 0.9375rem; }
+.lh-wheel-btn {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  background: var(--lh-surface);
+  border: 1px solid var(--lh-border);
+  border-radius: var(--lh-r-control);
+  color: var(--lh-strong);
+  transition: border-color 0.15s, transform 0.12s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.lh-wheel-btn:active { transform: scale(0.96); }
+@media (hover: hover) and (pointer: fine) { .lh-wheel-btn:hover { border-color: var(--lh-muted); } }
+@media (max-width: 767.98px) {
+  .lh-wheel-hint { display: none; }
+  .lh-wheel-foot { flex-direction: column; align-items: stretch; }
+  .lh-wheel-controls { justify-content: center; }
+}
+
+/* Navbar links as the beta's quiet pills: mist text, the selected one in navy */
+.lh-nav-links { gap: 0.25rem; }
+.lh-nav-link { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.75rem; border-radius: var(--lh-r-control); }
+.lh-nav-link.active { background: var(--lh-fill); color: var(--lh-on-fill); }
+.lh-nav-link.active:not(.dropdown-toggle)::after { display: none; }
+.lh-nav-link.dropdown-toggle.active { text-decoration: none; }
+
+/* ---------- Indigo restyle: the player page (player.html, main.lh-pp; mockup design/indigo-mockup/player.html) ----------
+   Player bar (who + bet controls), sticky pill jump bar, then a main column and a 352px rail (the rail joins the main column
+   under 1200px). Panels: Deep Panel fill, 1px rule, 12px corners (the .lh-swiss-page .card rule above). */
+.lh-pp { --lh-pp-gap: 12px; }
+.lh-pp .mb-4, .lh-pp .mb-5 { margin-bottom: 0 !important; }
+
+/* Player bar */
+.lh-pp-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  padding: 1rem 1.25rem;
+  background: var(--lh-surface);
+  border: 1px solid var(--lh-border);
+  border-radius: var(--lh-r-panel);
+}
+.lh-pp-who { display: flex; align-items: center; gap: 0.9rem; min-width: 0; }
+.lh-pp-back { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--lh-r-control); color: var(--lh-muted); text-decoration: none; }
+.lh-pp-back:hover { background: var(--lh-surface-2); color: var(--lh-strong); }
+.lh-pp-head { min-width: 0; }
+.lh-pp-name { font: 600 clamp(1.5rem, 1.1rem + 1.4vw, 2rem)/1.05 var(--lh-font-display); color: var(--lh-strong); }
+.lh-pp-name small { font: 500 0.95rem var(--lh-font-body); color: var(--lh-muted); margin-left: 0.35rem; white-space: nowrap; }
+.lh-pp-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.75rem; margin-top: 0.35rem; font-size: 0.875rem; color: var(--lh-muted); }
+.lh-pp-next { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--lh-text); }
+.lh-pp-next .lh-next-game { color: var(--lh-text); text-decoration: none; }
+.lh-pp-next .lh-next-game:hover { color: var(--lh-accent); }
+
+/* Initials circle with a photo slot (js/components/playerPhoto.js) */
+.lh-avatar { position: relative; display: grid; place-items: center; flex: none; width: 2rem; height: 2rem; overflow: hidden; border-radius: 50%; border: 2px solid transparent; font: 600 0.75rem var(--lh-font-display); }
+.lh-avatar--lg { width: 3.25rem; height: 3.25rem; font-size: 1.05rem; }
+.lh-avatar > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; background: inherit; }
+
+/* Bet controls in the player bar (the prop toolbar, moved up from the chart card) */
+.lh-swiss-page #playerToolbar.lh-ptb { margin: 0; padding: 0; background: none; border: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.5rem 0.75rem; }
+.lh-swiss-page #playerToolbar .lh-ptb-stat { margin: 0; }
+.lh-swiss-page #playerToolbar .lh-ptb-controls { padding: 0; border: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+.lh-pp-ctl #playerPropTabs {
+  display: inline-flex; flex-wrap: nowrap; gap: 2px; margin: 0 !important; padding: 3px;
+  background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control);
+}
+.lh-pp-ctl #playerPropTabs .nav-link {
+  min-height: 2.25rem; padding: 0 0.7rem; display: inline-flex; align-items: center;
+  border: 0; border-radius: var(--lh-r-inner); color: var(--lh-muted); font-size: 0.85rem; font-weight: 500;
+}
+.lh-pp-ctl #playerPropTabs .nav-link::after { display: none; }
+.lh-pp-ctl #playerPropTabs .nav-link.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+
+/* Jump bar: quiet pills, the section in view selected */
+.lh-pp .lh-pj { margin: var(--lh-pp-gap) 0 0; border: 0; min-height: 52px; }
+.lh-pp .lh-pj.is-stuck { border-bottom: 1px solid var(--lh-border); }
+.lh-pp .lh-pj-links { gap: 0.35rem; }
+.lh-pp .lh-pj-links a {
+  flex: none; min-height: 2.25rem; display: inline-flex; align-items: center; padding: 0 0.85rem;
+  border: 1px solid var(--lh-border); border-radius: var(--lh-r-pill); color: var(--lh-muted); font-size: 0.8125rem; text-decoration: none;
+}
+.lh-pp .lh-pj-links a::after { display: none !important; }
+.lh-pp .lh-pj-links a:hover { color: var(--lh-strong); }
+.lh-pp .lh-pj-links a.is-active, .lh-pp .lh-pj-links a[aria-current] { background: var(--lh-fill); color: var(--lh-on-fill); border-color: var(--lh-selected-edge); }
+
+/* Main column + rail */
+.lh-pp-layout { display: grid; grid-template-columns: minmax(0, 1fr) 352px; gap: var(--lh-pp-gap); margin-top: 6px; align-items: start; }
+.lh-pp-main, .lh-pp-rail { display: grid; gap: var(--lh-pp-gap); min-width: 0; }
+.lh-pp-row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--lh-pp-gap); }
+.lh-pp-row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--lh-pp-gap); }
+.lh-pp-row2 > div > .card, .lh-pp-row3 > div > .card { height: 100%; }
+.lh-pp .card { scroll-margin-top: 130px; }
+
+/* Panel titles: sentence-case Clash Display, no small caps kicker above */
+.lh-pp .card .lh-label[data-lh-kicker],
+.lh-pp .card h2.lh-label,
+.lh-pp #playerAveragesLabel,
+.lh-pp .lh-players-card [data-lh-kicker] {
+  font: 600 1.2rem/1.2 var(--lh-font-heading); letter-spacing: 0; text-transform: none; color: var(--lh-strong);
+}
+
+/* Season averages in the rail: three across, numerals between hairlines */
+.lh-pp-rail .lh-avg-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem 0.5rem; border: 0; padding: 0; }
+.lh-pp-rail .lh-avg-box { border-left: 1px solid var(--lh-border) !important; padding: 0 0 0 0.6rem !important; }
+.lh-pp-rail .lh-avg-value { font: 600 1.5rem/1.1 var(--lh-font-display); }
+
+/* Verdict: the beta's wedge carrying the Hunt Score (js/components/playerHunt.js) */
+.lh-verdict { padding: 0; overflow: hidden; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: var(--lh-r-panel); }
+.lh-vd { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.lh-vd-left { padding: 1.25rem 1.5rem; background: var(--lh-surface-2); }
+.lh-vd-label { font-size: 0.75rem; color: var(--lh-faint); }
+.lh-vd-pick { margin: 0.35rem 0 0; font: 600 calc(clamp(1.9rem, 3.4vw, 3.1rem) * 0.82)/1.1 var(--lh-font-display); color: var(--lh-strong); }
+.lh-vd-side { color: var(--lh-ph-side-text); }
+.lh-vd-ctx { margin: 0.5rem 0 0; color: var(--lh-faint); font-size: 0.9375rem; }
+.lh-vd-ctx b { color: var(--lh-text); }
+.lh-vd-small { margin: 0.4rem 0 0; font-size: 0.8125rem; color: var(--lh-muted); }
+.lh-vd-wedge {
+  margin-left: -2.5rem; padding: 1.25rem 1.5rem 1.25rem 3rem;
+  background: var(--lh-primary); color: #e9e6ff;
+  clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
+}
+.lh-vd-readout { display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: 0.5rem 1.5rem; }
+.lh-vd-readout > div { display: flex; flex-direction: column; }
+.lh-vd-k { font-size: 0.75rem; opacity: 0.85; }
+.lh-vd-n { font: 600 1.76rem/1.1 var(--lh-font-display); color: #fff; }
+.lh-vd-n.is-score { color: #7fdcc0; }
+.lh-ph--under .lh-vd-n.is-score { color: #f2969f; }
+.lh-vd-s { font-size: 0.75rem; opacity: 0.8; }
+.lh-vd-line { margin: 0.9rem 0 0; font-size: 0.875rem; color: #fff; }
+.lh-vd-why { grid-column: 1 / -1; margin: 0; padding: 0.9rem 1.5rem 0.9rem 3rem; border-top: 1px solid var(--lh-border); display: grid; gap: 0.45rem; font-size: 0.9rem; }
+.lh-vd-why li::marker { color: var(--lh-accent); font-weight: 600; }
+.lh-vd-foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 1.5rem; border-top: 1px solid var(--lh-border); }
+.lh-vd-link { font-size: 0.875rem; color: var(--lh-accent); }
+
+@media (max-width: 1199.98px) {
+  .lh-pp-layout { grid-template-columns: minmax(0, 1fr); }
+  .lh-pp-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lh-pp-row3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lh-pp-row3 > :last-child { grid-column: 1 / -1; }
+  .lh-pp-bar { grid-template-columns: minmax(0, 1fr); }
+  .lh-swiss-page #playerToolbar.lh-ptb { justify-content: center; }
+  .lh-swiss-page #playerToolbar .lh-ptb-controls { justify-content: center; }
+}
+@media (max-width: 991.98px) {
+  .lh-vd { grid-template-columns: minmax(0, 1fr); }
+  .lh-vd-wedge { margin-left: 0; padding: 1.75rem 1.5rem 1.25rem; clip-path: polygon(0 12%, 100% 0, 100% 100%, 0 100%); }
+  .lh-pp-row2 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767.98px) {
+  .lh-pp-rail, .lh-pp-row3 { grid-template-columns: minmax(0, 1fr); }
+  .lh-pp-row3 > :last-child { grid-column: auto; }
+  .lh-vd-readout { grid-template-columns: repeat(2, auto); }
+  .lh-vd-why { padding-left: 2.5rem; }
+  .lh-pp-bar { padding: 0.9rem 1rem; }
+}
+.lh-pp .lh-pp-next .lh-next-game { font: 500 0.875rem var(--lh-font-body); letter-spacing: 0; text-transform: none; }
+
+/* Range / split / role toggles on the player page: the beta's well (ink background, inner pills, the one selected look) */
+.lh-pp .lh-window-toggle { display: inline-flex; gap: 2px; padding: 3px; background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); }
+.lh-pp .lh-window-toggle .btn-ghost {
+  min-height: 2.1rem; padding: 0 0.7rem; border: 0 !important; border-radius: var(--lh-r-inner) !important; background: none;
+  color: var(--lh-muted); font: 500 0.8125rem var(--lh-font-body); letter-spacing: 0; text-transform: none;
+}
+.lh-pp .lh-window-toggle .btn-ghost:hover { color: var(--lh-strong); }
+.lh-pp .lh-window-toggle .btn-ghost.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+.lh-pp .lh-zm-select { max-width: 11.5rem; }
+/* Stat tabs never push the page sideways: the well scrolls inside itself when the five tabs don't fit */
+.lh-swiss-page #playerToolbar .lh-ptb-stat { max-width: 100%; min-width: 0; }
+.lh-pp-ctl #playerPropTabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.lh-pp-ctl #playerPropTabs::-webkit-scrollbar { display: none; }
+.lh-pp-ctl #playerPropTabs .nav-item { flex: none; }
+@media (max-width: 575.98px) {
+  .lh-pp-ctl #playerPropTabs .nav-link { padding: 0 0.55rem; font-size: 0.78rem; }
+}
+@media (max-width: 575.98px) {
+  .lh-pp .lh-zm-head, .lh-pp .lh-zm-row { grid-template-columns: minmax(4.5rem, 1.1fr) minmax(3.5rem, 1fr) minmax(4.75rem, 1fr) 2.5rem; gap: 0.4rem 0.5rem; }
+}
+
+/* Stacked bars (js/components/animatedBars.js): the parts of a combined stat, bottom first, each a shade darker, a thin gap between */
+.lh-bar-segs { position: absolute; inset: 0; display: flex; flex-direction: column-reverse; pointer-events: none; }
+.lh-bar-segs > i { flex: 1 1 0; min-height: 0; transition: flex-grow 280ms var(--lh-bar-ease); }
+.lh-bar-segs > i + i { border-bottom: 1px solid rgba(var(--lh-surface-rgb), 0.7); }
+.lh-bar-segs > i:nth-child(2) { background: rgba(0, 0, 0, 0.16); }
+.lh-bar-segs > i:nth-child(3) { background: rgba(0, 0, 0, 0.3); }
+.lh-bars-keys { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.25rem 0.9rem; margin-top: 0.25rem; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-bars-keys[hidden] { display: none; }
+.lh-bars-keys span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.lh-bars-key { display: inline-block; width: 0.65rem; height: 0.65rem; border-radius: 2px; background: var(--lh-over); }
+.lh-bars-key--2 { box-shadow: inset 0 0 0 99px rgba(0, 0, 0, 0.16); }
+.lh-bars-key--3 { box-shadow: inset 0 0 0 99px rgba(0, 0, 0, 0.3); }
+@media (prefers-reduced-motion: reduce) { .lh-bar-segs > i { transition: none; } }
+
+/* Hit-rate number colors (the beta's How-Often Rule: 49% and below rose, 50–74% gold, 75%+ teal). Only on hit-rate numbers. */
+:root, [data-bs-theme="dark"] { --lh-hr-low: #f2969f; --lh-hr-mid: #ecc86f; --lh-hr-high: #7fdcc0; }
+[data-bs-theme="light"] { --lh-hr-low: #a33a4a; --lh-hr-mid: #8a5a00; --lh-hr-high: #22685a; }
+
+/* ---------- Line ladder (js/components/lineLadder.js, player page under the chart) ---------- */
+.lh-ladder-wrap { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--lh-border); }
+.lh-ladder-wrap[hidden] { display: none; }
+.lh-ladder-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 1rem; margin-bottom: 0.75rem; }
+.lh-ladder-title { margin: 0; font: 600 1.05rem/1.2 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-ladder-key { margin: 0; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-ladder-dotkey { letter-spacing: 1px; color: var(--lh-text); }
+.lh-ladder {
+  --lh-ld-rows: 120px repeat(6, 1.75rem);
+  display: grid;
+  grid-template-columns: 4.75rem repeat(7, minmax(3.25rem, 1fr));
+  gap: 0 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.lh-ladder::-webkit-scrollbar { display: none; }
+.lh-ladder-labels, .lh-ladder-col { display: grid; grid-template-rows: var(--lh-ld-rows); align-items: center; }
+.lh-ladder-labels { font-size: 0.72rem; color: var(--lh-muted); }
+.lh-ladder-barlabel { display: flex; flex-direction: column; justify-content: space-around; height: 100%; }
+.lh-ladder-barlabel b { font-weight: 400; }
+.lh-ladder-col {
+  justify-items: center; padding: 0 0 0.25rem; background: none; border: 1px solid transparent; border-radius: var(--lh-r-control);
+  color: var(--lh-text); font-size: 0.8125rem; cursor: pointer;
+}
+.lh-ladder-col[hidden] { display: none; }
+.lh-ladder-col:hover { background: rgba(var(--lh-ink-rgb), 0.04); }
+.lh-ladder-col.is-current { border-color: var(--lh-selected-edge); background: rgba(var(--lh-accent-rgb), 0.07); }
+.lh-ladder-bar { position: relative; align-self: stretch; justify-self: stretch; }
+.lh-ladder-zero { position: absolute; left: -2px; right: -2px; top: 50%; border-top: 2px solid var(--lh-strong); z-index: 1; }
+.lh-ladder-fill {
+  position: absolute; left: 18%; right: 18%; bottom: 50%; height: 0;
+  transform-origin: bottom; background: var(--lh-over);
+  transition: height 280ms var(--lh-bar-ease, cubic-bezier(0.16, 1, 0.3, 1)), transform 280ms cubic-bezier(0.16, 1, 0.3, 1), background-color 180ms;
+}
+.lh-ladder-fill.is-below { background: var(--lh-under); }
+.lh-ladder-col.is-hollow .lh-ladder-fill { background: none; box-shadow: inset 0 0 0 2px var(--lh-over); }
+.lh-ladder-col.is-hollow .lh-ladder-fill.is-below { box-shadow: inset 0 0 0 2px var(--lh-under); }
+.lh-ladder-col.has-no-odds .lh-ladder-zero { border-top-style: dashed; opacity: 0.45; }
+.lh-ladder-posted {
+  display: none; position: absolute; top: 4px; left: 50%; transform: translateX(-50%) skewX(-12deg);
+  padding: 0 0.4rem; background: var(--lh-accent); color: var(--lh-bg); font-size: 0.62rem; font-weight: 700; white-space: nowrap;
+}
+.lh-ladder-col.is-posted .lh-ladder-posted { display: block; }
+.lh-ladder-line { font: 600 1.25rem/1 var(--lh-font-display); color: var(--lh-strong); }
+.lh-ladder-rec { color: var(--lh-muted); }
+.lh-ladder-hr { font-weight: 700; }
+.lh-ladder-hr.is-low { color: var(--lh-hr-low); }
+.lh-ladder-hr.is-mid { color: var(--lh-hr-mid); }
+.lh-ladder-hr.is-high { color: var(--lh-hr-high); }
+.lh-ladder-odds { color: var(--lh-text); white-space: nowrap; }
+.lh-ladder-odds small { color: var(--lh-muted); font-size: 0.7rem; }
+.lh-ladder-gap.is-above { color: var(--lh-over-text); }
+.lh-ladder-gap.is-below { color: var(--lh-under-text); }
+.lh-ladder-dots { display: flex; gap: 3px; font-size: 0.7rem; color: var(--lh-text); }
+.lh-ladder-dots i { font-style: normal; }
+.lh-ladder-dots .is-none { color: var(--lh-muted); }
+.lh-ladder-note { margin: 0.6rem 0 0; font-size: 0.75rem; color: var(--lh-muted); }
+@media (max-width: 575.98px) {
+  .lh-ladder { grid-template-columns: 3.5rem repeat(7, minmax(3.1rem, 1fr)); --lh-ld-rows: 100px repeat(6, 1.65rem); }
+  .lh-ladder-labels { font-size: 0.65rem; }
+}
+@media (prefers-reduced-motion: reduce) { .lh-ladder-fill { transition: opacity 180ms; } }
+@media (max-width: 575.98px) {
+  .lh-ladder-book { display: none; }
+  .lh-ladder-labels > span:last-child { font-size: 0; }
+  .lh-ladder-labels > span:last-child::after { content: "Dots"; font-size: 0.65rem; }
+}
+/* Verdict: navy behind the wedge's slanted cut (no light gap on narrow screens / light mode); the reasons and foot keep the panel color */
+.lh-vd { background: var(--lh-surface-2); }
+.lh-vd-why, .lh-vd-foot { background: var(--lh-surface); }
+
+/* ---------- Indigo restyle: the game page (game.html, main.lh-gp; mockup design/indigo-mockup/game.html) ---------- */
+.lh-gp { --lh-pp-gap: 12px; }
+.lh-gp .mb-4, .lh-gp .mb-5 { margin-bottom: 0 !important; }
+.lh-gp-crumbs { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.25rem 1rem; font-size: 0.875rem; }
+.lh-gp-crumbs a { display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; color: var(--lh-muted); text-decoration: none; }
+.lh-gp-crumbs a:hover { color: var(--lh-strong); }
+.lh-gp-neighbors { display: flex; gap: 1.25rem; }
+
+/* Header: time bar, then the team-color card with the slanted seam */
+.lh-gp-head { margin-top: 6px; overflow: hidden; border: 1px solid var(--lh-border); border-bottom: 0; border-radius: var(--lh-r-panel) var(--lh-r-panel) 0 0; background: var(--lh-surface-2); }
+.lh-gp-time { padding: 0.55rem 1rem; background: var(--lh-surface); text-align: center; font-size: 0.875rem; color: var(--lh-faint); }
+.lh-gp-body {
+  position: relative; isolation: isolate; margin: 0;
+  display: flex; justify-content: space-between; align-items: stretch; gap: 1rem;
+  min-height: clamp(9rem, 16vw, 12.5rem); padding: clamp(1rem, 2.5vw, 1.75rem) clamp(1rem, 3vw, 2.25rem);
+  background: var(--away); font-weight: 400;
+}
+.lh-gp-body::before, .lh-gp-body::after { content: ""; position: absolute; inset: 0; z-index: -1; }
+.lh-gp-body::before { background: var(--home); clip-path: polygon(58% 0, 100% 0, 100% 100%, 42% 100%); }
+.lh-gp-body::after { background: #d8dff5; clip-path: polygon(57.8% 0, 58.2% 0, 42.2% 100%, 41.8% 100%); }
+.lh-gp-team { display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; color: var(--away-text); min-width: 0; }
+.lh-gp-team.is-home { align-items: flex-end; text-align: right; color: var(--home-text); }
+.lh-gp-abbr { display: block; font: 600 clamp(2.6rem, 7vw, 5.25rem)/0.9 var(--lh-font-display); }
+.lh-gp-name { display: block; margin-top: 0.3rem; font-size: 0.9rem; opacity: 0.9; }
+.lh-gp-ml { display: block; min-height: 1.1em; font: 600 clamp(1.1rem, 2vw, 1.5rem)/1 var(--lh-font-display); }
+.lh-gp-rec { display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 0.3rem; font-size: 0.875rem; opacity: 0.92; }
+.lh-gp-team.is-home .lh-gp-rec { flex-direction: row-reverse; }
+.lh-gp-body .lh-hdr-form { display: inline-flex; align-items: center; gap: 0.4rem; }
+.lh-gp-body .lh-mi-record { display: none; }
+.lh-gp-body .lh-mi-dots { display: inline-flex; gap: 3px; }
+.lh-gp-body .lh-mi-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: currentColor; }
+.lh-gp-body .lh-mi-dot.is-loss { background: none; box-shadow: inset 0 0 0 1.5px currentColor; }
+.lh-gp-at { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; background: #060a16; color: #d8dff5; font-size: 1rem; font-weight: 600; }
+
+/* Fact strip under the header: spread / total, then matchupInfo.js's list laid out across */
+.lh-gp-facts {
+  display: grid; grid-template-columns: repeat(5, minmax(0, auto)); justify-content: space-between; gap: 0.75rem 1.5rem;
+  padding: 0.85rem 1.25rem; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 0 0 var(--lh-r-panel) var(--lh-r-panel);
+}
+.lh-gp-facts #matchup-info-body, .lh-gp-facts .lh-mi-list { display: contents; }
+.lh-gp-facts .lh-mi-city { display: none; }
+.lh-gp-facts .lh-mi-list > div, .lh-gp-fact { min-width: 0; margin: 0; padding: 0; border: 0; display: block; }
+.lh-gp-facts dt, .lh-gp-k { display: block; font-size: 0.75rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--lh-muted); }
+.lh-gp-facts dd, .lh-gp-fact b { display: block; margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--lh-strong); }
+.lh-gp-facts dd strong { font-weight: 600; }
+.lh-gp-book { font-size: 0.75rem; font-weight: 500; color: var(--lh-muted); margin-left: 0.2rem; }
+
+/* Jump bar + panels share the player page's rules */
+.lh-gp .lh-pj { margin: var(--lh-pp-gap) 0 0; border: 0; min-height: 52px; }
+.lh-gp .lh-pj.is-stuck { border-bottom: 1px solid var(--lh-border); }
+.lh-gp .lh-pj-links { gap: 0.35rem; }
+.lh-gp .lh-pj-links a { flex: none; min-height: 2.25rem; display: inline-flex; align-items: center; padding: 0 0.85rem; border: 1px solid var(--lh-border); border-radius: var(--lh-r-pill); color: var(--lh-muted); font-size: 0.8125rem; text-decoration: none; }
+.lh-gp .lh-pj-links a::after { display: none !important; }
+.lh-gp .lh-pj-links a.is-active, .lh-gp .lh-pj-links a[aria-current] { background: var(--lh-fill); color: var(--lh-on-fill); border-color: var(--lh-selected-edge); }
+.lh-gp .card {
+  --bs-card-bg: var(--lh-surface); background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: var(--lh-r-panel); scroll-margin-top: 130px;
+}
+.lh-gp .card > .card-header { padding: 0.9rem 1.25rem 0.4rem !important; border: 0; background: none; }
+.lh-gp .card > .card-body { padding: 0.5rem 1.25rem 1rem; }
+.lh-gp .card-header .lh-label, .lh-gp .card-header h2 { font: 600 1.2rem/1.2 var(--lh-font-heading); letter-spacing: 0; text-transform: none; color: var(--lh-strong); }
+.lh-gp-sub { font: 500 0.8125rem var(--lh-font-body); color: var(--lh-muted); margin-left: 0.4rem; }
+.lh-gp .lh-window-toggle { display: inline-flex; gap: 2px; padding: 3px; background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); }
+.lh-gp .lh-window-toggle .btn-ghost { min-height: 2.1rem; padding: 0 0.7rem; border: 0 !important; border-radius: var(--lh-r-inner) !important; background: none; color: var(--lh-muted); font: 500 0.8125rem var(--lh-font-body); letter-spacing: 0; text-transform: none; }
+.lh-gp .lh-window-toggle .btn-ghost:hover { color: var(--lh-strong); }
+.lh-gp .lh-window-toggle .btn-ghost.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+
+/* Model picks: the breakdown teaser as the verdict wedge (projected score + injuries on navy, picks on the indigo wedge) */
+.lh-gp-picks { overflow: hidden; }
+.lh-gp-picks > .card-body { padding: 0; }
+.lh-gp-picks #gameBreakdownBody { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); background: var(--lh-surface-2); }
+.lh-gp-picks #gameBreakdownBody > * { grid-column: 1 / -1; background: var(--lh-surface); margin: 0; padding-left: 1.25rem; padding-right: 1.25rem; }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-board { grid-column: 1; grid-row: 1; max-width: none; padding-top: 1.1rem; padding-bottom: 0.4rem; background: none; }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-injuries { grid-column: 1; grid-row: 2; align-self: start; border: 0; padding-top: 0.2rem; padding-bottom: 1.1rem; background: none; font-size: 0.85rem; color: var(--lh-faint); }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-picks,
+.lh-gp-picks #gameBreakdownBody > .lh-gb-list {
+  grid-column: 2; grid-row: 1 / span 2; margin: 0 0 0 -2.5rem; padding: 1.1rem 1.5rem 1.1rem 3rem;
+  background: var(--lh-primary); color: #e9e6ff; clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%);
+}
+.lh-gp-picks .lh-gb-boardlabel { text-transform: none; letter-spacing: 0; font-size: 0.75rem; color: var(--lh-faint); }
+.lh-gp-picks .lh-gb-side .lh-gb-abbr { font: 500 0.8125rem var(--lh-font-body); letter-spacing: 0; color: var(--lh-faint); }
+.lh-gp-picks .lh-gb-side .lh-gb-pts { font: 600 clamp(2rem, 3.6vw, 2.8rem)/1 var(--lh-font-display); letter-spacing: 0; color: var(--lh-faint); }
+.lh-gp-picks .lh-gb-side.is-lead .lh-gb-pts { color: var(--lh-strong); }
+.lh-gp-picks .lh-gb-side.is-home { border-left-color: var(--lh-border); }
+.lh-gp-picks .lh-gb-pick { border: 0; padding: 0; }
+.lh-gp-picks .lh-gb-pickhead { justify-content: flex-start; gap: 0.5rem; text-transform: none; letter-spacing: 0; font-size: 0.75rem; color: #e9e6ff; opacity: 0.9; }
+.lh-gp-picks .lh-gb-strength { padding: 0 0.45rem; border-radius: var(--lh-r-inner); background: rgba(255, 255, 255, 0.14); color: #fff; font-size: 0.65rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.lh-gp-picks .lh-gb-picktext { margin-top: 0.2rem; padding: 0; border: 0; font: 600 1.6rem/1.15 var(--lh-font-display); color: #fff; letter-spacing: 0; }
+.lh-gp-picks .lh-gb-nums > div { border-left-color: rgba(255, 255, 255, 0.2); }
+.lh-gp-picks .lh-gb-nums dt { color: #e9e6ff; opacity: 0.75; text-transform: none; letter-spacing: 0; font-size: 0.72rem; }
+.lh-gp-picks .lh-gb-nums dd { color: #fff; }
+.lh-gp-picks .lh-gb-list dt { color: #e9e6ff; opacity: 0.8; }
+.lh-gp-picks .lh-gb-list dd, .lh-gp-picks .lh-gb-list b { color: #fff; }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-note { padding-top: 0.75rem; border-top: 1px solid var(--lh-border); font-size: 0.8125rem; color: var(--lh-muted); }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-more { justify-self: start; margin: 0; padding-bottom: 0.75rem; background: var(--lh-surface); }
+.lh-gp-picks #gameBreakdownBody > #gameBreakdownMore { padding-bottom: 0.5rem; }
+.lh-gp-picks .lh-explain { padding: 0 1.25rem 0.9rem; }
+
+/* Top hit rates (js/components/gameTopHits.js) */
+.lh-gth-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; }
+.lh-gth-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.lh-gth-heads, .lh-gth-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.45fr) 3.5rem minmax(0, 0.9fr) 5.5rem 1rem; align-items: center; gap: 0.75rem; }
+.lh-gth-heads { padding: 0 0.5rem 0.4rem; font-size: 0.72rem; color: var(--lh-muted); border-bottom: 1px solid var(--lh-border); }
+.lh-gth-heads > :nth-child(4) { text-align: right; }
+.lh-gth-row { padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--lh-border); border-radius: var(--lh-r-control); cursor: pointer; }
+.lh-gth-row:hover { background: rgba(var(--lh-accent-rgb), 0.06); }
+.lh-gth-who { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+.lh-gth-who .lh-avatar { width: 2.1rem; height: 2.1rem; font-size: 0.72rem; }
+.lh-gth-name { min-width: 0; }
+.lh-gth-name a { display: block; font: 600 1rem/1.15 var(--lh-font-display); color: var(--lh-strong); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lh-gth-name a:hover { color: var(--lh-accent); }
+.lh-gth-row small { display: block; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-gth-pick { padding-left: 0.55rem; border-left: 3px solid var(--lh-over); }
+.lh-gth-pick.is-under { border-left-color: var(--lh-under); }
+.lh-gth-pick b { display: block; font-weight: 600; color: var(--lh-strong); }
+.lh-gth-hit { display: flex; align-items: center; gap: 0.5rem; }
+.lh-gth-hit b { font: 600 1.15rem var(--lh-font-display); min-width: 3rem; }
+.lh-gth-hit b.is-low { color: var(--lh-hr-low); } .lh-gth-hit b.is-mid { color: var(--lh-hr-mid); } .lh-gth-hit b.is-high { color: var(--lh-hr-high); }
+.lh-gth-hit small { min-width: 2.2rem; }
+.lh-gth-mini .lh-mini-graph, .lh-gth-mini { display: inline-flex; align-items: flex-end; height: 22px; }
+.lh-gth-avg { text-align: right; }
+.lh-gth-avg b { display: block; color: var(--lh-strong); }
+.lh-gth-odds b { display: block; color: var(--lh-over-text); font-size: 0.9rem; }
+.lh-gth-add { justify-self: end; }
+.lh-gth-chev { color: var(--lh-muted); }
+.lh-gth-note { margin: 0.75rem 0 0; font-size: 0.8125rem; color: var(--lh-muted); }
+
+/* Rail: injuries and ratings */
+.lh-gp .lh-game-injury-list { padding: 0 1.25rem 0.75rem; }
+.lh-gp-layout { margin-top: 6px; }
+
+@media (max-width: 1199.98px) {
+  .lh-gp-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lh-gth-heads, .lh-gth-row { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.05fr) minmax(0, 1.4fr) minmax(0, 0.9fr) 5.5rem 1rem; }
+  .lh-gth-heads > :nth-child(4), .lh-gth-row > .lh-gth-avg { display: none; }
+}
+@media (max-width: 991.98px) {
+  .lh-gp-picks #gameBreakdownBody { grid-template-columns: minmax(0, 1fr); }
+  .lh-gp-picks #gameBreakdownBody > .lh-gb-picks,
+  .lh-gp-picks #gameBreakdownBody > .lh-gb-list { grid-column: 1; grid-row: 3; margin: 0; padding: 1.75rem 1.25rem 1.1rem; clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 100%); }
+}
+@media (max-width: 767.98px) {
+  /* Phones: one column in this order: Model picks, Injuries, Top hit rates, Ratings (and research mode's Player Stats) */
+  .lh-gp-layout, .lh-gp-layout > .lh-pp-main, .lh-gp-layout > .lh-pp-rail { display: contents; }
+  .lh-gp { display: flex; flex-direction: column; }
+  .lh-gp > * { order: 0; }
+  .lh-gp #gameBreakdown { order: 1; margin-top: 6px; }
+  .lh-gp #gameInjuries { order: 2; margin-top: var(--lh-pp-gap); }
+  .lh-gp #gameTopHits, .lh-gp #gamePropsCard { order: 3; margin-top: var(--lh-pp-gap); }
+  .lh-gp #matchupDetails { order: 4; margin-top: var(--lh-pp-gap); }
+  .lh-gp-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lh-gp-neighbors .is-prev { display: none; }
+  .lh-gp-picks .lh-gb-picks { grid-template-columns: minmax(0, 1fr); }
+  .lh-gth-heads { display: none; }
+  .lh-gth-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who who" "pick odds" "hit add"; gap: 0.45rem 0.75rem; }
+  .lh-gth-row > .lh-gth-who { grid-area: who; } .lh-gth-row > .lh-gth-pick { grid-area: pick; } .lh-gth-row > .lh-gth-odds { grid-area: odds; text-align: right; }
+  .lh-gth-row > .lh-gth-hit { grid-area: hit; } .lh-gth-row > .lh-gth-add { grid-area: add; }
+  .lh-gth-row > .lh-gth-chev { display: none; }
+}
+.lh-gp .lh-gp-picks > .card-body { padding: 0; }
+.lh-gp-picks .lh-gb-pick .lh-gb-picktext { color: #fff; }
+.lh-gp-picks .lh-gb-injuries .lh-gb-label { text-transform: none; letter-spacing: 0; font-size: 0.75rem; font-weight: 400; color: var(--lh-muted); }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-more { width: auto; justify-self: start; margin: 0 1.25rem 0.75rem; padding: 0; background: none; border: 0; color: var(--lh-accent); text-decoration: underline; text-underline-offset: 0.2em; font-size: 0.875rem; }
+.lh-gp-picks #gameBreakdownBody > .lh-gb-more { width: 100%; margin: 0; padding: 0 1.25rem 0.75rem; background: var(--lh-surface); text-align: left; }
+/* Team ratings in the rail: one column, compact */
+.lh-gp .lh-pp-rail .lh-tc-grid { grid-template-columns: minmax(0, 1fr); }
+.lh-gp .lh-pp-rail .lh-tc-row { font-size: 0.8125rem; }
+@media (max-width: 1199.98px) and (min-width: 768px) { .lh-gp .lh-pp-rail { align-items: start; } }
+.lh-gp .lh-pp-rail .lh-game-injury-list { max-height: none; overflow: visible; }
+
+/* The Board without the Hunt Score (beta tool only for now; BOARD_HUNT in js/components/board.js): no Hunt line / Score columns,
+   no Edge / Hunt Score strip in an opened row. Columns: player, pick, hit rate, avg, odds, add, chevron. */
+.lh-board--nohunt .lh-bd-proj,
+.lh-board--nohunt .lh-bd-score,
+.lh-board--nohunt .lh-bd-heads span:nth-child(5),
+.lh-board--nohunt .lh-bd-heads span:nth-child(6),
+.lh-board--nohunt .lh-bd-sum { display: none; }
+.lh-board--nohunt .lh-bd-heads,
+.lh-board--nohunt .lh-bd-head { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.15fr) minmax(0, 1.7fr) minmax(0, 0.6fr) minmax(0, 1.1fr) 5.5rem 2.5rem; }
+@media (max-width: 1199.98px) {
+  .lh-board--nohunt .lh-bd-heads,
+  .lh-board--nohunt .lh-bd-head { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.2fr) minmax(0, 1.6fr) minmax(0, 1.1fr) 2.5rem; }
+}
+@media (max-width: 767.98px) {
+  .lh-board--nohunt .lh-bd-head {
+    grid-template-columns: auto auto minmax(0, 1fr) 2rem;
+    grid-template-areas: "player player player chev" "pick hit odds chev";
+  }
+}
+
+/* "Beta" tag next to a tool name (LH_TOOLS beta: true in js/components/nav.js) */
+.lh-beta-tag {
+  display: inline-block; margin-left: 0.35rem; padding: 0 0.4rem; border-radius: var(--lh-r-pill);
+  background: rgba(var(--lh-accent-rgb), 0.16); color: var(--lh-accent); font: 700 0.62rem/1.5 var(--lh-font-body);
+  letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 0.15em;
+}
+
+/* Beta note on the Hunt Score page */
+.lh-beta-note { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0.5rem 0 1rem; padding: 0.75rem 1rem; border: 1px solid var(--lh-border); border-radius: var(--lh-r-panel); background: var(--lh-surface); font-size: 0.875rem; color: var(--lh-text); }
+.lh-beta-note .lh-beta-tag { margin: 0.1rem 0 0; flex: none; }
+/* Game model rows (js/components/gameModelList.js) */
+.lh-gm-row { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 1.2fr) 1rem; align-items: center; gap: 0.75rem; padding: 0.7rem 0.25rem; border-bottom: 1px solid var(--lh-border); color: inherit; text-decoration: none; }
+.lh-gm-row:hover { background: rgba(var(--lh-accent-rgb), 0.05); }
+.lh-gm-row b { display: block; font-weight: 600; color: var(--lh-strong); }
+.lh-gm-row small { display: block; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-gm-match b { font: 600 1.05rem var(--lh-font-display); }
+.lh-gm-wide { grid-column: span 3; }
+.lh-gm-str { margin-left: 0.3rem; padding: 0 0.4rem; border-radius: var(--lh-r-inner); background: var(--lh-surface-2); color: var(--lh-faint); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; vertical-align: 0.15em; }
+.lh-gm-str.is-strong { background: rgba(var(--lh-over-rgb), 0.2); color: var(--lh-over-text); }
+.lh-gm-chev { color: var(--lh-muted); }
+@media (max-width: 767.98px) {
+  .lh-gm-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .lh-gm-chev { display: none; }
+  .lh-gm-wide { grid-column: span 1; }
+}
+
+/* ---------- Indigo restyle: small labels and segmented controls, site-wide ----------
+   The beta's rule: size and the two fonts make the hierarchy, never heavy capitals. Labels, table heads, kickers and buttons go to
+   sentence case without the wide letter spacing. Caps stay only where the beta uses them: the Today eyebrow, the game-card time,
+   and small status tags (Beta, OUT / GTD / Q, B2B, Post, strength chips, ALT / STARTED). */
+.lh-label,
+.lh-navbar .nav-link, .btn-lh-primary, .btn-ghost, .lh-player-page-btn, .lh-slide-link, .lh-tabs .nav-link,
+.table thead th, .lh-top-title, .lh-next-game, .lh-ww-label, .lh-hitlist-head, .lh-zm-head, .lh-zm-pill, .lh-ma-sec,
+.lh-sp-cols, .lh-sp-game, .lh-sp-table th, .lh-mi-label, .lh-mi-toggle, .lh-tc-label, .lh-st-head, .lh-st-sep span, .lh-st-card-head,
+.lh-hunts-date, .lh-hunts-type, .lh-hunts-stake-label, .lh-ptb-hint, .lh-hpill-label, .lh-hadded-label, .lh-top-hint, .lh-hunts-sharebtn,
+.lh-shared-date, .lh-mx-chip, .lh-mx-vs > span, .lh-mx-play.is-head, .lh-mx-pace-label, .lh-hs-pick, .lh-hs-score-label, .lh-hs-heading,
+.lh-today-switch button, .lh-swiss-page [data-lh-kicker]::before, .lh-swiss-card [data-lh-kicker]::before, .lh-ph-of, .lh-ph-step--head,
+.lh-gb-facts dt, .lh-gb-subhead, .lh-bd-kicker, .lh-bd-heads, .lh-gc-ql, .lh-gc-go, .lh-gh-when, .lh-gb-boardlabel, .lh-gb-list dt,
+.lh-gb-pickhead, .lh-gb-label, .lh-gb-trow.is-head, .lh-gb-nums dt, .lh-step-card h3, .lh-slide-headline--split .lh-hit-question,
+.lh-demo-matchup, .lh-demo-meta, .lh-demo-stat-label, .lh-demo-row-value, .lh-demo-button, .lh-demo-tabs, .lh-demo-toggle {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.lh-label { font-size: 0.75rem; font-weight: 500; }
+.lh-swiss-page [data-lh-kicker]::before, .lh-swiss-card [data-lh-kicker]::before { font-size: 0.75rem; font-weight: 500; }
+.table thead th { font-size: 0.75rem; font-weight: 500; color: var(--lh-muted); }
+
+/* Segmented controls (L5 / L10 / Season, Home / Away, stat pills, Minutes / Usage...): the beta's well with inner pills */
+.lh-window-toggle { display: inline-flex; gap: 2px; padding: 3px; background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); }
+.lh-window-toggle .btn-ghost {
+  min-height: 2.1rem; padding: 0 0.7rem; border: 0 !important; border-radius: var(--lh-r-inner) !important; background: none;
+  color: var(--lh-muted); font: 500 0.8125rem var(--lh-font-body);
+}
+.lh-window-toggle .btn-ghost:hover { color: var(--lh-strong); background: none; }
+.lh-window-toggle .btn-ghost.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+
+/* Underline tabs (stat tabs on The Board, Hunt Score, research tables): quiet pills like the beta's chips */
+.lh-tabs.nav-underline { gap: 0.3rem; border-bottom: 0; }
+.lh-tabs.nav-underline .nav-link {
+  min-height: 2.1rem; padding: 0 0.8rem; display: inline-flex; align-items: center;
+  border: 1px solid var(--lh-border); border-radius: var(--lh-r-pill); color: var(--lh-muted); font-size: 0.8125rem; font-weight: 500;
+}
+.lh-tabs.nav-underline .nav-link::after { display: none; }
+.lh-tabs.nav-underline .nav-link:hover { color: var(--lh-strong); }
+.lh-tabs.nav-underline .nav-link.active { background: var(--lh-fill); color: var(--lh-on-fill); border-color: var(--lh-selected-edge); }
+
+/* Homepage headline: sentence case */
+.lh-home-headline { text-transform: none; letter-spacing: -0.01em; }
+
+/* Standings: each conference (and each division card) is a panel; the table fits its half from 1200px (narrower number columns) */
+.lh-st-conf, .lh-st-card { background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: var(--lh-r-panel); padding: 1rem 1.25rem; }
+.lh-st-heading, .lh-st-card-title { font: 600 1.2rem/1.2 var(--lh-font-heading); letter-spacing: 0; text-transform: none; color: var(--lh-strong); }
+.lh-st-sep span { font-size: 0.72rem; font-weight: 500; color: var(--lh-muted); }
+@media (min-width: 576px) {
+  .lh-st-table { width: 100%; min-width: 34rem; }
+  .lh-st-row { grid-template-columns: 1.6rem minmax(9rem, 1fr) 3.6rem 2.9rem 2.4rem 3.3rem 3.3rem 2.9rem 2.9rem; gap: 0 0.4rem; font-size: 0.875rem; }
+}
+/* Panel titles written as <h2 class="lh-label"> (Matchup Analyzer, ...): Clash Display titles like the rest of the site */
+.card h2.lh-label, .card h3.lh-label, .card-header > .lh-label:only-child {
+  font: 600 1.15rem/1.2 var(--lh-font-heading); letter-spacing: 0; text-transform: none; color: var(--lh-strong);
+}
+/* Hit List / Streaks shelf: panel cards, Clash Display card names, a real page title */
+.lh-hitlist-card { background: var(--lh-surface); }
+.lh-hitlist-head { font: 600 1rem/1.2 var(--lh-font-heading); color: var(--lh-strong); padding: 0.7rem 0.85rem; }
+.lh-top-title { font-weight: 600; }
+.lh-shelf-head .lh-top-title, .lh-tool-page h1.lh-top-title { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem); }
+#hitlist .lh-shelf-head .lh-top-title, #streaks .lh-shelf-head .lh-top-title { font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem); }
+#hitlist .lh-top-title-date, #streaks .lh-top-title-date { font-size: 0.6em; }
+
+/* ---------- Indigo restyle: the homepage hero (index.html, js/components/homeReel.js; mockup design/indigo-mockup/home.html) ----------
+   The beta's front page: tagline + buttons on the left; one slanted plane with a stat sheet and two forever-scrolling card columns. */
+:root, [data-bs-theme="dark"] { --lh-hero-glow-a: rgba(109, 102, 240, 0.5); --lh-hero-glow-b: rgba(40, 14, 161, 0.6); --lh-hero-veil: rgba(6, 10, 22, 0.86); }
+[data-bs-theme="light"] { --lh-hero-glow-a: rgba(154, 147, 255, 0.42); --lh-hero-glow-b: rgba(40, 14, 161, 0.2); --lh-hero-veil: rgba(238, 241, 250, 0.84); }
+.lh-hero {
+  --h: min(100vh - 12rem, 37vw, 44rem);
+  --gap: 0.75rem;
+  --bw: calc((var(--h) - var(--gap)) / 2 * 9 / 16);
+  position: relative; isolation: isolate; overflow: hidden; padding: 1.75rem 0 2.5rem;
+  background: radial-gradient(60rem 30rem at 80% 30%, var(--lh-hero-glow-a), transparent 60%), radial-gradient(48rem 26rem at 94% 88%, var(--lh-hero-glow-b), transparent 60%), var(--lh-bg);
+}
+.lh-hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--lh-hero-veil), transparent 55%), linear-gradient(transparent 86%, var(--lh-bg)); }
+.lh-hero-grid { display: grid; grid-template-columns: clamp(19rem, 32vw, 36rem) minmax(0, 1fr); align-items: center; gap: clamp(1.5rem, 3vw, 3rem); min-height: var(--h); }
+.lh-hero-pill { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.5rem; padding: 0 0.9rem; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: var(--lh-r-pill); color: var(--lh-text); font-size: 0.875rem; font-weight: 500; text-decoration: none; }
+.lh-hero-pill:hover { border-color: var(--lh-accent); color: var(--lh-strong); }
+.lh-hero-eyebrow { margin: 1.4rem 0 0; }
+.lh-hero-title { margin: 0.6rem 0 0; font: 600 clamp(2.6rem, 4.3vw, 5rem)/1.04 var(--lh-font-display); color: var(--lh-strong); text-wrap: balance; }
+.lh-hero-accent { color: var(--lh-accent); }
+.lh-hero-sub { margin: 1rem 0 0; max-width: 32rem; font-size: clamp(1rem, 1.25vw, 1.3rem); line-height: 1.45; color: var(--lh-faint); }
+.lh-hero-ctas { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.6rem; }
+.lh-hero-ctas .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 3.25rem; padding: 0 1.5rem; border-radius: var(--lh-r-control); font-size: 1.0625rem; font-weight: 500; }
+.lh-hero-go { background: var(--lh-primary) !important; border-color: var(--lh-primary) !important; color: #fff !important; }
+.lh-hero-go:hover { filter: brightness(1.12); }
+.lh-hero-quiet { background: linear-gradient(105deg, var(--lh-bg) 0%, var(--lh-surface-2) 60%); border: 1px solid var(--lh-push); color: var(--lh-text); }
+.lh-hero-quiet:hover { border-color: var(--lh-strong); color: var(--lh-strong); }
+.lh-hero-tonight { margin: 1.1rem 0 0; font-size: 0.875rem; color: var(--lh-muted); }
+.lh-hero-tonight b { color: var(--lh-text); font-weight: 600; }
+
+.lh-hero-stage { perspective: 1800px; min-width: 0; }
+.lh-hero-plane { display: flex; gap: var(--gap); height: var(--h); transform: rotateY(-13deg) rotateX(5deg) rotateZ(1.5deg); transform-origin: left center; }
+/* The stat sheet */
+.lh-hero-sheet { flex: none; width: calc(var(--h) * 0.86); height: var(--h); display: flex; flex-direction: column; overflow: hidden; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 0.875rem; box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.45); font-size: calc(var(--h) * 0.022); pointer-events: none; }
+.lh-sh-bar { display: flex; align-items: center; gap: 0.8em; padding: 1em 1.2em; border-bottom: 1px solid var(--lh-border); }
+.lh-sh-av { display: grid; place-items: center; flex: none; width: 2.6em; height: 2.6em; border-radius: 50%; color: #fff; font: 600 0.95em var(--lh-font-display); }
+.lh-sh-name { font: 600 1.4em/1.1 var(--lh-font-display); color: var(--lh-strong); min-width: 0; }
+.lh-sh-name small { display: block; margin-top: 0.2em; font: 500 0.6em var(--lh-font-body); color: var(--lh-muted); }
+.lh-sh-tabs { margin-left: auto; display: flex; gap: 0.2em; padding: 0.2em; background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: 0.5em; font-size: 0.8em; }
+.lh-sh-tabs span { padding: 0.35em 0.6em; border-radius: 0.3em; color: var(--lh-muted); }
+.lh-sh-tabs .is-on { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+.lh-sh-verdict { display: grid; grid-template-columns: 1.15fr 1fr; background: var(--lh-surface-2); }
+.lh-sh-left { padding: 1.1em 1.2em; }
+.lh-sh-left b { display: block; font: 600 1.6em/1.1 var(--lh-font-display); color: var(--lh-strong); }
+.lh-sh-left .is-over { color: var(--lh-hr-high); } .lh-sh-left .is-under { color: var(--lh-under-text); }
+.lh-sh-left small { display: block; margin-top: 0.4em; font-size: 0.8em; color: var(--lh-faint); }
+.lh-sh-wedge { margin-left: -1.6em; padding: 1.1em 1.2em 1.1em 2.2em; background: var(--lh-primary); color: #e9e6ff; clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); display: grid; grid-template-columns: repeat(3, auto); gap: 0 1.2em; align-content: center; }
+.lh-sh-wedge small { display: block; font-size: 0.7em; opacity: 0.85; }
+.lh-sh-wedge b { font: 600 1.45em/1.1 var(--lh-font-display); color: #fff; }
+.lh-sh-wedge .is-hi { color: #7fdcc0; }
+.lh-sh-chart { position: relative; flex: 1; display: flex; align-items: flex-end; gap: 0.35em; margin: 1.8em 1.2em 1.6em; }
+.lh-sh-chart i { position: relative; flex: 1; border-radius: 0.15em 0.15em 0 0; }
+.lh-sh-chart i::after { content: attr(data-v); position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 0.25em; text-align: center; font: 600 0.75em var(--lh-font-display); color: var(--lh-text); }
+.lh-sh-line { position: absolute; left: 0; right: 0; border-top: 0.12em dashed var(--lh-strong); }
+.lh-sh-line span { position: absolute; left: 0; top: -0.8em; padding: 0 0.35em; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 0.3em; font-size: 0.7em; color: var(--lh-text); }
+.lh-sh-ladder { display: flex; gap: 0.4em; padding: 0 1.2em 1.1em; }
+.lh-sh-ladder span { flex: 1; padding: 0.4em 0; border: 1px solid transparent; border-radius: 0.45em; text-align: center; font-size: 0.8em; color: var(--lh-muted); }
+.lh-sh-ladder b { display: block; font: 600 1.25em var(--lh-font-display); color: var(--lh-strong); }
+.lh-sh-ladder .is-on { border-color: var(--lh-selected-edge); background: rgba(var(--lh-accent-rgb), 0.08); }
+.lh-sh-chart .is-hit, .lh-rc-bars .is-hit { background: var(--lh-over); }
+.lh-sh-chart .is-miss, .lh-rc-bars .is-miss { background: var(--lh-under); }
+.research-mode .lh-sh-chart i, .research-mode .lh-rc-bars i { background: var(--lh-push); }
+/* The two card columns */
+.lh-reel-col { --bleed: 1.5rem; flex: none; width: calc(var(--bw) + var(--bleed) * 2); height: var(--h); margin-inline: calc(var(--bleed) * -1); overflow: hidden; -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent); mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent); }
+.lh-reel-track { display: flex; flex-direction: column; gap: var(--gap); padding: 0 var(--bleed) var(--gap); will-change: transform; }
+.lh-rc { position: relative; flex: none; display: flex; flex-direction: column; width: var(--bw); aspect-ratio: 9 / 16; padding: 0.9em; overflow: hidden; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 1em; box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.4); color: var(--lh-text); text-decoration: none; font-size: calc(var(--bw) * 0.082); line-height: 1.25; }
+.lh-rc:hover { border-color: var(--lh-accent); color: var(--lh-text); }
+.lh-rc::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 29%; background: var(--team); clip-path: polygon(0 0, 100% 0, 100% 62%, 0 100%); }
+.lh-rc-who { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+.lh-rc-av { position: relative; display: grid; place-items: center; width: 3em; height: 3em; overflow: hidden; background: var(--lh-bg); border-radius: 50%; font: 600 1em/1 var(--lh-font-display); color: var(--lh-strong); }
+.lh-rc-av > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.lh-rc-tag { padding: 0.15em 0.5em; background: var(--lh-bg); border-radius: 0.3em; font-size: 0.78em; font-weight: 600; color: var(--lh-strong); }
+.lh-rc-name { position: relative; margin-top: 2.4em; font: 600 1.22em/1.1 var(--lh-font-display); color: var(--lh-strong); }
+.lh-rc-meta { font-size: 0.86em; color: var(--lh-muted); }
+.lh-rc-avg { margin-top: 0.55em; font: 600 2.6em/1 var(--lh-font-display); color: var(--lh-strong); }
+.lh-rc-label { font-size: 0.86em; color: var(--lh-faint); }
+.lh-rc-prop { margin-top: 0.45em; padding-left: 0.45em; border-left: 0.2em solid var(--lh-over); font-size: 0.92em; font-weight: 600; }
+.lh-rc-prop.is-under { border-left-color: var(--lh-under); }
+.lh-rc-bars { position: relative; flex: 1; display: flex; align-items: flex-end; gap: 2px; min-height: 0; margin-top: 0.7em; }
+.lh-rc-bars i { flex: 1; border-radius: 1px 1px 0 0; }
+.lh-rc-line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--lh-strong); opacity: 0.8; }
+
+/* What's inside */
+.lh-inside { padding-top: 2.5rem; }
+.lh-inside-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem 1rem; margin-bottom: 1rem; }
+.lh-inside-head h2 { margin: 0; font: 600 clamp(1.6rem, 2.4vw, 2.2rem)/1.1 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-inside-head p { margin: 0; color: var(--lh-muted); }
+.lh-inside-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.lh-inside-tool { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.1rem 1.2rem; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: var(--lh-r-panel); color: var(--lh-text); text-decoration: none; transition: border-color 0.15s; }
+.lh-inside-tool:hover { border-color: var(--lh-accent); color: var(--lh-text); }
+.lh-inside-tool > i { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: var(--lh-r-control); background: var(--lh-surface-2); color: var(--lh-accent); font-size: 1.1rem; }
+.lh-inside-tool b { font: 600 1.15rem var(--lh-font-heading); color: var(--lh-strong); }
+.lh-inside-tool span { font-size: 0.875rem; color: var(--lh-muted); }
+.lh-inside-tool small { margin-top: auto; padding-top: 0.4rem; color: var(--lh-accent); font-weight: 600; }
+.lh-home #top-hit-rates { margin-top: 2.5rem; margin-bottom: 3rem; }
+
+@media (max-width: 1099.98px) {
+  .lh-hero { --bw: min((100vw - 2.5rem - var(--gap)) / 2, 13rem); }
+  .lh-hero-grid { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .lh-hero-plane { transform: none; height: auto; justify-content: center; }
+  .lh-hero-sheet { display: none; }
+  .lh-reel-col { height: calc(var(--bw) * 16 / 9 * 1.7); }
+  .lh-inside-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lh-hero::after { background: linear-gradient(var(--lh-hero-veil) 22rem, transparent 40rem), linear-gradient(transparent 90%, var(--lh-bg)); }
+}
+@media (max-width: 719.98px) {
+  .lh-hero-ctas .btn { flex: 1; }
+  .lh-inside-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.lh-hero-title { font-size: clamp(2.4rem, 3.5vw, 4.4rem); }
+.lh-hero-title .lh-hero-accent { display: block; }
+@media (max-width: 519.98px) {
+  .lh-hero-ctas { flex-direction: column; }
+  .lh-hero-ctas .btn { width: 100%; flex: none; }
+}
+
+/* The Board: the stat code next to the line ("Over 6.5 AST") on phones, where the long stat name under the pick is hidden.
+   Desktop and tablets show the long name ("Assists") under the pick instead. */
+.lh-bd-statshort { display: none; font-style: normal; font-weight: 600; color: var(--lh-muted); }
+@media (max-width: 767.98px) { .lh-bd-statshort { display: inline; } }
+
+/* ---------- Player bar on phones (approved mockup design/indigo-mockup/player-mobile.html) ----------
+   One header row (back, photo, name) with one quiet line under it; full-width stat tabs with short codes; the line and Over / Under in
+   one row, each side with its best odds; Add (naming the pick) only after a side is picked, the other books under it; the chart's
+   controls on one swipeable row with Share as an icon. Wider screens keep their layout (the extra bits are hidden there). */
+.lh-tab-short, .lh-pp-pos, .lh-ptb-sideodds, .lh-ptb-also { display: none; }
+@media (max-width: 767.98px) {
+  .lh-pp-bar { padding: 14px; gap: 0; }
+  .lh-pp-who { gap: 10px; align-items: center; }
+  .lh-pp-back { width: 32px; height: 40px; margin-left: -6px; }
+  .lh-pp .lh-avatar--lg { width: 44px; height: 44px; font-size: 0.9rem; }
+  .lh-pp-name { font-size: 1.35rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lh-pp-name small { display: none; }
+  .lh-pp-meta { flex-wrap: wrap; gap: 0 6px; margin-top: 3px; font-size: 0.8125rem; }
+  .lh-pp-pos { display: inline; color: var(--lh-muted); }
+  .lh-pp-pos::after { content: " ·"; }
+  .lh-pp-next .bi-calendar3 { display: none; }
+
+  .lh-swiss-page #playerToolbar.lh-ptb { display: block; margin-top: 14px; }
+  .lh-swiss-page #playerToolbar .lh-ptb-stat { width: 100%; }
+  .lh-pp-ctl #playerPropTabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; overflow: visible; }
+  .lh-pp-ctl #playerPropTabs .nav-link { width: 100%; justify-content: center; min-height: 38px; padding: 0; font-weight: 600; }
+  .lh-pp-ctl #playerPropTabs .lh-tab-long { display: none; }
+  .lh-pp-ctl #playerPropTabs .lh-tab-short { display: inline; }
+
+  .lh-swiss-page #playerToolbar .lh-ptb-controls { display: block; margin-top: 10px; }
+  #playerToolbar .lh-ptb-line { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 8px; }
+  #playerToolbar .lh-ptb-step { height: 56px; border: 1px solid var(--lh-border); border-radius: var(--lh-r-control); background: var(--lh-bg); overflow: hidden; }
+  #playerToolbar .lh-ptb-stepbtn { flex: 0 0 34px; border: 0; background: none; }
+  #playerToolbar .lh-ptb-value { flex: 1; min-width: 0; border: 0; font-size: 1.25rem; }
+  #playerToolbar .lh-ptb-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #playerToolbar .lh-ptb-side {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 56px; padding: 0;
+    background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control);
+  }
+  #playerToolbar .lh-ptb-sideword { font-weight: 700; font-size: 0.9rem; }
+  #playerToolbar .lh-ptb-side--over .lh-ptb-sideword { color: var(--lh-over-text); }
+  #playerToolbar .lh-ptb-side--under .lh-ptb-sideword { color: var(--lh-under-text); }
+  #playerToolbar .lh-ptb-sideodds { display: block; font-size: 0.78rem; font-weight: 400; color: var(--lh-muted); }
+  #playerToolbar .lh-ptb-sideodds b { color: var(--lh-text); font-weight: 600; }
+  #playerToolbar .lh-ptb-side.is-on { color: inherit; }
+  #playerToolbar .lh-ptb-side--over.is-on { background: rgba(var(--lh-over-rgb), 0.16); border-color: var(--lh-over); }
+  #playerToolbar .lh-ptb-side--under.is-on { background: rgba(var(--lh-under-rgb), 0.16); border-color: var(--lh-under); }
+  #playerToolbar .lh-ptb-side.is-on .lh-ptb-sideodds b { color: var(--lh-strong); }
+  #playerToolbar .lh-ptb-odds, #playerToolbar .lh-ptb-hint { display: none !important; }
+  #playerToolbar .lh-ptb-add { width: 100%; margin-top: 10px; }
+  #playerToolbar .lh-ptb-add[hidden] { display: none; }
+  #playerToolbar .lh-add--block { width: 100%; min-height: 46px; justify-content: center; border-radius: var(--lh-r-control); background: var(--lh-primary); border-color: var(--lh-primary); color: #fff; font-weight: 600; text-transform: none; letter-spacing: 0; }
+  #playerToolbar .lh-add--block.is-in, #playerToolbar .lh-add--block[aria-pressed="true"] { background: rgba(var(--lh-over-rgb), 0.18); border-color: var(--lh-over); color: var(--lh-strong); }
+  #playerToolbar .lh-ptb-also { display: block; margin-top: 8px; text-align: center; font-size: 0.75rem; color: var(--lh-muted); }
+
+  .lh-pp-chartctl { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; }
+  .lh-pp-chartctl::-webkit-scrollbar { display: none; }
+  .lh-pp-chartctl > * { flex: none; }
+  .lh-pp-chartctl .lh-share-word { display: none; }
+  .lh-pp-chartctl #playerShare { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
+}
+
+/* ---------- Borrowed from the Swiss design (owner's pick, Nov 8): 1. one left edge, 2. hairlines instead of boxes in boxes ----------
+   1. Inside a section, titles, text, numbers and controls start on the same left edge: no centered rows among left-aligned ones. */
+@media (max-width: 1199.98px) {
+  .lh-swiss-page #playerToolbar.lh-ptb, .lh-swiss-page #playerToolbar .lh-ptb-controls { justify-content: flex-start; }
+}
+.lh-shelf-head { text-align: left; }
+.lh-shelf-head .lh-top-title { justify-content: flex-start; }
+.lh-hitlist-head { justify-content: flex-start; text-align: left; }
+.lh-hitlist-blurb, .lh-hitlist-empty { text-align: left; }
+/* 2. Inside a panel, content is split by thin rules, not drawn as its own box (outlined wells stay for controls only). */
+.lh-ma-flag { background: none; border: 0; border-top: 1px solid var(--lh-border); border-bottom: 1px solid var(--lh-border); border-radius: 0; padding-left: 0; padding-right: 0; }
+.lh-mx-tiles { gap: 0; border-top: 1px solid var(--lh-border); }
+.lh-mx-tile { background: none; border: 0; border-left: 1px solid var(--lh-border); border-radius: 0; padding: 0.6rem 0.75rem; }
+.lh-mx-tile:nth-child(4n + 1) { border-left: 0; padding-left: 0; }
+@media (max-width: 575.98px) { .lh-mx-tile:nth-child(2n + 1) { border-left: 0; padding-left: 0; } .lh-mx-tile:nth-child(4n + 3) { border-left: 0; } }
+@media (min-width: 992px) {
+  .lh-shelf-head { display: flex; justify-content: space-between; align-items: flex-end; }
+  .lh-shelf-head > div:first-child { text-align: left; }
+  .lh-shelf-head .lh-top-title { justify-content: flex-start; }
+}
+
+/* Swiss idea 3: a small muted sentence-case label above each panel title */
+[data-lh-kicker]::before, .lh-pp [data-lh-kicker]::before, .lh-gp [data-lh-kicker]::before, .lh-swiss-card [data-lh-kicker]::before {
+  content: attr(data-lh-kicker); display: block; margin-bottom: 0.2rem;
+  font: 500 0.75rem/1.2 var(--lh-font-body); letter-spacing: 0; text-transform: none; color: var(--lh-muted);
+}
+
+/* ---------- Swiss idea 4: number strips ----------
+   Big numbers in one row split by thin vertical rules, a tiny label above each (the Analyzer's .lh-mx-tile is the model). */
+.lh-strip, #playerSummary, .lh-opp-grid, .lh-bd-avgs {
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0;
+  border-top: 1px solid var(--lh-border); padding: 0.6rem 0 0;
+}
+#playerSummary > div, .lh-opp-grid > div, .lh-bd-avgs > div {
+  min-width: 0; padding: 0 0.75rem !important; border-left: 1px solid var(--lh-border) !important;
+}
+#playerSummary > div:first-child, .lh-opp-grid > div:first-child, .lh-bd-avgs > div:first-child {
+  padding-left: 0 !important; border-left: 0 !important;
+}
+#playerSummary .lh-label, .lh-opp-grid .lh-label, .lh-bd-avgs span { font-size: 0.75rem; font-weight: 500; color: var(--lh-muted); }
+#playerSummary .lh-drawer-stat, .lh-opp-grid .lh-drawer-stat, .lh-bd-avgs b {
+  font: 600 1.5rem/1.15 var(--lh-font-display); letter-spacing: 0; color: var(--lh-strong);
+}
+#playerSummary { display: grid !important; margin-bottom: 1rem !important; }
+@media (max-width: 575.98px) {
+  #playerSummary .lh-drawer-stat, .lh-opp-grid .lh-drawer-stat, .lh-bd-avgs b { font-size: 1.2rem; }
+  #playerSummary > div, .lh-opp-grid > div, .lh-bd-avgs > div { padding: 0 0.5rem !important; }
+}
+/* The beta's how-often colors, on hit-rate numbers only */
+.lh-hr-lo, .lh-hr-lo .text-muted { color: var(--lh-hr-low) !important; }
+.lh-hr-md, .lh-hr-md .text-muted { color: var(--lh-hr-mid) !important; }
+.lh-hr-hi, .lh-hr-hi .text-muted { color: var(--lh-hr-high) !important; }
+
+/* ---------- Swiss idea 5: one spacing step ---------- 12px between panels, 16px inside */
+:root { --lh-gap: 12px; --lh-pad: 16px; }
+.lh-pp, .lh-gp { --lh-pp-gap: var(--lh-gap); }
+.lh-gp .card > .card-header { padding: var(--lh-pad) var(--lh-pad) 0.25rem !important; }
+.lh-gp .card > .card-body { padding: 0.5rem var(--lh-pad) var(--lh-pad); }
+.lh-swiss-page .card > .card-header, .lh-swiss-card > .card-header { padding: var(--lh-pad) var(--lh-pad) 0.25rem !important; }
+.lh-swiss-page .card > .card-body, .lh-swiss-card > .card-body { padding: 0.5rem var(--lh-pad) var(--lh-pad); }
+.lh-ph-headcard, .lh-board, .lh-gh, .lh-gc { padding: var(--lh-pad); }
+
+/* ---------- Swiss idea 6: color only for meaning ----------
+   Teal / rose = over / under. Periwinkle = selected or active. Team color = photo circle and team badge only.
+   Names, labels, links, markers and chips stay neutral. Hit-rate numbers keep the how-often colors. */
+.lh-vd-why li::marker { color: var(--lh-muted); }
+.lh-vd-link, .lh-wgo, .lh-inside-tool small, .lh-gp-picks #gameBreakdownBody > .lh-gb-more { color: var(--lh-text); }
+.lh-inside-tool > i { color: var(--lh-strong); }
+.lh-beta-tag { background: var(--lh-surface-2); color: var(--lh-muted); border: 1px solid var(--lh-border); }
+.lh-ma-badge.is-backup { color: var(--lh-muted); }
+.lh-pp-next .lh-next-game:hover, .lh-gth-name a:hover { color: var(--lh-strong); text-decoration: underline; }
+
+/* The Board's stat pills: one segmented well like L5 / L10 / L20 and the player page's stat tabs, not loose outlined pills */
+.lh-board-tabs.lh-tabs.nav-underline {
+  display: inline-flex; flex-wrap: nowrap; gap: 2px; padding: 3px; max-width: 100%; overflow-x: auto;
+  background: var(--lh-bg); border: 1px solid var(--lh-border); border-radius: var(--lh-r-control);
+}
+.lh-board-tabs.lh-tabs.nav-underline .nav-link { border: 0; border-radius: var(--lh-r-inner); background: none; color: var(--lh-muted); }
+.lh-board-tabs.lh-tabs.nav-underline .nav-link.active { background: var(--lh-fill); color: var(--lh-on-fill); box-shadow: inset 0 0 0 1px var(--lh-selected-edge); }
+
+/* Idea 5 on the tool pages and the homepage card: the same 16px inside, 12px between stacked panels */
+.lh-hs-card > .card-header, #hotPlayers > .card-header, .lh-top-compact > .card-header, main > .card > .card-header { padding: var(--lh-pad) var(--lh-pad) 0.25rem !important; }
+.lh-hs-card > .card-body:not(.p-0), #hotPlayers > .card-body, main > .card > .card-body:not(.p-0) { padding: 0.5rem var(--lh-pad) var(--lh-pad); }
+main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important; }
+
+/* Jump bar (Chart, Matchup, Log...): back to the Swiss underlined links, no oval pills. Active = ink text with a 2px underline. */
+.lh-pp .lh-pj, .lh-gp .lh-pj { border-bottom: 1px solid var(--lh-border); min-height: 44px; }
+.lh-pp .lh-pj-links, .lh-gp .lh-pj-links { gap: 1.5rem; padding-left: 0; }
+.lh-pp .lh-pj-links a, .lh-gp .lh-pj-links a {
+  min-height: 44px; padding: 0; border: 0; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px;
+  background: none; color: var(--lh-muted); font-size: 0.875rem; font-weight: 500;
+}
+.lh-pp .lh-pj-links a:hover, .lh-gp .lh-pj-links a:hover { color: var(--lh-strong); background: none; }
+.lh-pp .lh-pj-links a.is-active, .lh-pp .lh-pj-links a[aria-current],
+.lh-gp .lh-pj-links a.is-active, .lh-gp .lh-pj-links a[aria-current] {
+  background: none; color: var(--lh-strong); font-weight: 600; border-color: transparent; border-bottom-color: var(--lh-strong);
+}
+
+/* Jump bar: a thin vertical rule between the links */
+.lh-pp .lh-pj-links, .lh-gp .lh-pj-links { gap: 0; }
+.lh-pp .lh-pj-links a, .lh-gp .lh-pj-links a { padding: 0 0.9rem; border-left: 1px solid var(--lh-border); }
+.lh-pp .lh-pj-links a:first-of-type, .lh-gp .lh-pj-links a:first-of-type { padding-left: 0; border-left: 0; }
+.lh-pp .lh-pj-links a[hidden], .lh-gp .lh-pj-links a[hidden] { display: none; }
+
+/* Jump bar: the rule is only as tall as the text */
+.lh-pp .lh-pj-links a, .lh-gp .lh-pj-links a { border-left: 0; position: relative; }
+.lh-pp .lh-pj-links a + a::before, .lh-gp .lh-pj-links a + a::before {
+  content: ""; position: absolute; left: 0; top: 50%; height: 1em; transform: translateY(-50%); border-left: 1px solid var(--lh-border);
+}
+
+/* Segmented wells: one well, thin text-height dividers between options, the selected one filled (no divider next to it) */
+.lh-pp .lh-window-toggle, .lh-gp .lh-window-toggle, .lh-board .lh-window-toggle,
+.lh-pp-ctl #playerPropTabs, .lh-board-tabs.lh-tabs.nav-underline { gap: 0; }
+.lh-pp .lh-window-toggle > .btn-ghost, .lh-gp .lh-window-toggle > .btn-ghost, .lh-board .lh-window-toggle > .btn-ghost,
+.lh-pp-ctl #playerPropTabs .nav-link, .lh-board-tabs.lh-tabs.nav-underline .nav-link { position: relative; }
+.lh-pp .lh-window-toggle > .btn-ghost + .btn-ghost::before, .lh-gp .lh-window-toggle > .btn-ghost + .btn-ghost::before,
+.lh-board .lh-window-toggle > .btn-ghost + .btn-ghost::before,
+.lh-pp-ctl #playerPropTabs .nav-item + .nav-item .nav-link::before, .lh-board-tabs.lh-tabs.nav-underline .nav-item + .nav-item .nav-link::before {
+  content: ""; position: absolute; left: 0; top: 50%; height: 1em; transform: translateY(-50%); border-left: 1px solid var(--lh-border);
+}
+.lh-window-toggle > .btn-ghost.active::before, .lh-window-toggle > .btn-ghost.active + .btn-ghost::before,
+.nav-link.active::before, .nav-item:has(> .nav-link.active) + .nav-item .nav-link::before { display: none; }
+
+/* Player bar lives inside the chart card: one seamless card (name, bet controls, chart), a hairline under the bar */
+.lh-pp .card > .lh-pp-bar { background: none; border: 0; border-radius: 0; padding: var(--lh-pad) var(--lh-pad) 0; }
+.lh-pp .lh-pj { margin-top: 0; margin-bottom: var(--lh-pp-gap); }
+.lh-pp-layout { margin-top: 0; }
+
+/* Segmented wells: no outer outline; the darker tint stays and the selected option keeps its inner box */
+.lh-window-toggle, .lh-pp-ctl #playerPropTabs, .lh-board-tabs.lh-tabs.nav-underline,
+.lh-pp .lh-window-toggle, .lh-gp .lh-window-toggle { border-color: transparent; }

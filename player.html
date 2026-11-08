@@ -11,9 +11,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
   <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Fontshare: Clash Display (headlines, big numbers) + Satoshi (everything you read) -->
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -27,79 +29,52 @@
 
   <!-- player.html?id=PLAYER_ID&prop=pts. js/pages/player.js fills in every section.
        placeholder-glow / placeholder = Bootstrap's grey loading bars, shown until the data arrives. -->
-  <main class="container-fluid lh-container px-3 px-lg-4 my-4">
+  <main class="container-fluid lh-container px-3 px-lg-4 my-3 lh-pp">
 
-    <!-- 1. BACK: goes to the previous page (or the schedule if there isn't one) -->
-    <a href="schedule.html" id="playerBack" class="btn btn-sm btn-ghost mb-3">‹ Back</a>
+    <!-- PLAYER BAR (indigo restyle, the beta's header): back, the photo / initials circle (js/components/playerPhoto.js), the name
+         block (js/pages/player.js renderHeader) and, in lines mode, the bet controls (stat tabs, line stepper, Over / Under,
+         odds, Add: js/components/prop-toolbar.js; research mode keeps the stat tabs in the chart card). -->
 
-    <!-- 2. HEADER: name, team, position, jersey, injury badge, next game. Beside it (lines mode): tonight's Hunt Score for the
-         selected stat tab, the pick and its three reasons (js/components/playerHunt.js). -->
-    <div class="row g-4 mb-4">
-      <div class="col-lg-6">
-        <section id="playerHeader">
-          <div class="placeholder-glow" aria-busy="true">
-            <span class="placeholder col-6 col-md-3 rounded lh-skeleton-title"></span>
-            <div class="mt-2"><span class="placeholder col-4 col-md-2 rounded"></span></div>
-            <div class="mt-3"><span class="placeholder col-5 col-md-2 rounded"></span></div>
-          </div>
-        </section>
-      </div>
-      <div class="col-lg-6">
-        <section id="playerHuntHead" class="lh-ph-headcard lines-only" aria-label="Hunt Score" hidden></section>
-      </div>
-    </div>
-
-    <!-- JUMP BAR: one link per [data-lh-jump] section below. It sits under the name and sticks under the navbar once the
-         name scrolls away (then the short name shows in front and the current section is underlined). js/components/playerJump.js -->
-    <nav id="playerJump" class="lh-pj mb-4" aria-label="On this page">
+    <!-- JUMP BAR: one pill per [data-lh-jump] section below; sticks under the navbar (js/components/playerJump.js) -->
+    <nav id="playerJump" class="lh-pj" aria-label="On this page">
       <span id="playerJumpName" class="lh-pj-name" aria-hidden="true"></span>
       <div id="playerJumpLinks" class="lh-pj-links"></div>
     </nav>
 
-    <div class="row g-4">
-    <div class="col-lg-9 lh-player-main">
+    <div class="lh-pp-layout">
+    <div class="lh-pp-main">
 
-    <!-- 3. SEASON AVERAGES: PTS, REB, AST, 3PM, MIN -->
-    <section class="mb-4">
-      <div id="playerAveragesLabel" class="lh-label mb-2">Season averages</div>
-      <div id="playerAverages" class="lh-avg-strip placeholder-glow" aria-busy="true">
-        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
-        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
-        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
-        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
-        <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
-      </div>
-    </section>
-
-    <!-- SCORE BUILD-UP (lines mode): how tonight's Hunt Score (shown in the header) was built, step by step from the
-         season baseline. Hidden when the engine has no scored prop for this player + stat. js/components/playerHunt.js -->
-    <section id="playerHunt" class="card mb-4 lines-only" data-lh-jump="Score" data-lh-collapse="hunt" data-lh-collapse-name="Hunt Score" hidden>
-      <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
-        <span class="lh-label" data-lh-kicker="Score">Score build-up</span>
-      </div>
-      <div class="card-body" id="playerHuntBody"></div>
-    </section>
 
     <!-- 4. PROPS: stat tabs, window + home/away toggles, hit rate, chart with the alt line -->
     <section class="card mb-4" data-lh-jump="Chart" data-lh-collapse="chart" data-lh-collapse-name="Chart">
+    <section class="lh-pp-bar" aria-label="Player">
+      <div class="lh-pp-who">
+        <a href="schedule.html" id="playerBack" class="lh-pp-back" aria-label="Back"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+        <span id="playerAvatar" class="lh-avatar lh-avatar--lg" aria-hidden="true"></span>
+        <section id="playerHeader" class="lh-pp-head">
+          <div class="placeholder-glow" aria-busy="true">
+            <span class="placeholder col-8 rounded lh-skeleton-title"></span>
+            <div class="mt-2"><span class="placeholder col-5 rounded"></span></div>
+          </div>
+        </section>
+      </div>
+      <div id="playerToolbar" class="lh-pp-ctl"></div>
+    </section>
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
         <span class="lh-label" data-lh-kicker="Form"><span class="lines-only">Prop chart</span><span class="research-only">Stat chart</span></span>
       </div>
       <div class="card-body">
-        <!-- PROP TOOLBAR (lines mode): player + matchup, the stat tabs (moved in), the line stepper, Over / Under, the best
-             odds and "Add to My Hunts". js/components/prop-toolbar.js. In research mode the tabs stay right here. -->
-        <div id="playerToolbar"></div>
         <!-- Stat tabs: Points, Rebounds, Assists, 3PM, P+R+A -->
         <ul id="playerPropTabs" class="nav nav-underline lh-tabs mb-3"></ul>
 
-        <div class="d-flex flex-wrap gap-2 mb-3">
+        <div class="d-flex flex-wrap gap-2 mb-3 lh-pp-chartctl">
           <!-- L5 / L10 / L20 / Season -->
           <div id="playerWindows" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="How many games to use"></div>
           <!-- All / Home / Away -->
           <div id="playerSplits" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="Home or away games"></div>
           <!-- Share the chart as a picture (js/components/share.js) -->
           <button type="button" id="playerShare" class="btn btn-sm btn-ghost ms-auto lines-only" aria-label="Share this chart as an image" title="Share as image" disabled>
-            <i class="bi bi-share" aria-hidden="true"></i> Share
+            <i class="bi bi-share" aria-hidden="true"></i><span class="lh-share-word"> Share</span>
           </button>
         </div>
 
@@ -116,13 +91,17 @@
         <div id="playerChart"></div>
 
         <div id="playerMessage" class="text-muted small mt-2" hidden></div>
+
+        <!-- LINE LADDER (lines mode): the chart's line and 3 lines either side, hit rate vs what each line's odds need.
+             js/components/lineLadder.js; click a line to move the chart to it. -->
+        <div id="playerLadder" class="lines-only" hidden></div>
       </div>
     </section>
 
     <!-- MATCHUP ROW: Same Position (players at this position vs the next opponent's last 10 games, vs this player's line
          and their own norm: js/components/samePosition.js) and Matchup Analysis. Stacked on tablets and phones. -->
-    <div class="row g-4 mb-4" data-lh-jump="Matchup">
-      <div class="col-lg-6">
+    <div class="lh-pp-row2" data-lh-jump="Matchup">
+      <div>
         <section class="card h-100" data-lh-collapse="sameposition" data-lh-collapse-name="Same Position">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
@@ -141,7 +120,7 @@
           </div>
         </section>
       </div>
-      <div class="col-lg-6">
+      <div>
         <!-- MATCHUP ANALYSIS: this player next to one player on the next opponent (default: most minutes at the same
              position), season averages, a battle section that follows the prop tab, past meetings. js/components/matchupAnalysis.js -->
         <section class="card h-100" data-lh-collapse="matchupanalysis" data-lh-collapse-name="Matchup Analysis">
@@ -204,8 +183,8 @@
     </section>
 
     <!-- 6. THREE EQUAL CARDS: With / Without, Opportunity, Role. h-100 = same height; stacked on tablets and phones. -->
-    <div class="row g-4 mb-4" data-lh-jump="Lineup">
-      <div class="col-lg-4">
+    <div class="lh-pp-row3" data-lh-jump="Lineup">
+      <div>
     <!-- WITH / WITHOUT: click a teammate chip to cycle neutral -> with -> without. js/pages/player.js fills it in. -->
     <section class="card h-100" data-lh-collapse="withwithout">
       <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head>
@@ -221,7 +200,7 @@
     </section>
       </div>
 
-      <div class="col-lg-4">
+      <div>
         <!-- OPPORTUNITY: three numbers for the selected prop tab, filtered games vs the season. js/pages/player.js fills it in. -->
         <section class="card h-100" data-lh-collapse="opportunity">
           <div class="card-body">
@@ -242,7 +221,7 @@
         </section>
       </div>
 
-      <div class="col-lg-4">
+      <div>
         <!-- ROLE: minutes or usage % per game, for the same games as the chart above (js/components/roleChart.js) -->
         <section class="card h-100" data-lh-collapse="role">
           <div class="card-body">
@@ -258,8 +237,8 @@
     </div>
 
     <!-- 7. SHOT CHART + ZONE MATCHUP: season-level, the window / home-away / teammate filters don't change the Shot Chart. -->
-    <div class="row g-4 mb-5" data-lh-jump="Shooting">
-      <div class="col-lg-6">
+    <div class="lh-pp-row2" data-lh-jump="Shooting">
+      <div>
         <section class="card h-100" data-lh-collapse="shotchart">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" data-lh-collapse-head>
@@ -277,7 +256,7 @@
           </div>
         </section>
       </div>
-      <div class="col-lg-6">
+      <div>
         <!-- ZONE MATCHUP: the player's shot zones against an opponent's defense. js/components/zoneMatchup.js fills it in. -->
         <section class="card h-100" data-lh-collapse="zonematchup">
           <div class="card-body">
@@ -303,7 +282,21 @@
     </div>
 
     <!-- 6. OTHER PLAYERS: this team / the opponent in the next game. Switches player without going back a page. -->
-    <aside class="col-lg-3">
+    <aside class="lh-pp-rail">
+    <!-- 3. SEASON AVERAGES: PTS, REB, AST, 3PM, MIN -->
+      <section class="card lh-pp-avgcard" data-lh-collapse="averages">
+        <div class="card-header py-3" data-lh-collapse-head><span id="playerAveragesLabel" class="lh-label">Season averages</span></div>
+        <div class="card-body">
+        <div id="playerAverages" class="lh-avg-strip placeholder-glow" aria-busy="true">
+          <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+          <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+          <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+          <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+          <div class="lh-avg-box"><span class="placeholder col-8 rounded"></span></div>
+        </div>
+        </div>
+      </section>
+
       <div class="card lh-players-card" data-lh-jump="Players" data-lh-collapse="players">
         <div class="card-header py-3">
           <div class="d-flex justify-content-between align-items-center mb-2" data-lh-collapse-head><span class="lh-label" data-lh-kicker="Roster">Players</span></div>
@@ -315,7 +308,7 @@
       </div>
 
       <!-- INJURY REPORT: who is hurt on this team and the next opponent. Each name opens its description. js/pages/player.js fills it in. -->
-      <div class="card lh-injury-card mt-3" data-lh-jump="Injuries" data-lh-collapse="injuries">
+      <div class="card lh-injury-card" data-lh-jump="Injuries" data-lh-collapse="injuries">
         <div class="card-header d-flex justify-content-between align-items-center py-3" data-lh-collapse-head><span class="lh-label" data-lh-kicker="Status">Injury report</span></div>
         <div id="injuryList" class="lh-injury-list">
           <div class="text-muted small p-3">Loading…</div>
@@ -363,8 +356,8 @@
   <script src="js/components/samePosition.js"></script>
   <script src="js/components/matchupAnalysis.js"></script>
   <script src="js/components/share.js"></script>
-  <script src="js/components/hunt-score.js"></script>
-  <script src="js/components/playerHunt.js"></script>
+  <script src="js/components/playerPhoto.js"></script>
+  <script src="js/components/lineLadder.js"></script>
   <script src="js/components/playerJump.js"></script>
   <script src="js/components/cardCollapse.js"></script>
   <script src="js/pages/player.js"></script>

@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game page mockup · Indigo</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../../assets/img/lh-mark.svg">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!--
+    MOCKUP ONLY (design/indigo-mockup/game.html): the game page, Before (the live page, in a frame: needs the local
+    `netlify dev` server, signed in) and After (the beta's look: full-width team-color header with the slanted seam,
+    a fact strip, Model picks as the verdict wedge, The Board for this game, and a rail with injuries, team ratings and
+    meetings). After uses tonight's real PHI @ CHI numbers (Nov 8, 2026) copied in by hand; nothing is live.
+  -->
+  <style>
+    :root, [data-theme="dark"] {
+      --ink: #060a16; --panel: #0b1229; --navy: #14234c; --rule: #1f2e5a; --slate: #5f6da3; --mist: #93a1cb;
+      --haze: #c3cce9; --ice: #d8dff5; --strong: #d8dff5; --lift: #9a93ff; --indigo: #280ea1;
+      --over: #46a98f; --over-text: #7fdcc0; --under: #bd6570; --under-text: #f2969f;
+      --hr-low: #f2969f; --hr-mid: #ecc86f; --hr-high: #7fdcc0; --out: #f2969f; --q: #ecc86f;
+      color-scheme: dark;
+    }
+    [data-theme="light"] {
+      --ink: #eef1fa; --panel: #ffffff; --navy: #e3e8f6; --rule: #cfd6ec; --slate: #8a96c2; --mist: #4b5784;
+      --haze: #3e4a78; --ice: #1b2850; --strong: #0b1229; --lift: #280ea1; --indigo: #280ea1;
+      --over: #2c7a67; --over-text: #22685a; --under: #ab5763; --under-text: #9a4c58;
+      --hr-low: #a33a4a; --hr-mid: #8a5a00; --hr-high: #22685a; --out: #a33a4a; --q: #8a5a00;
+      color-scheme: light;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--ink); color: var(--ice); font: 400 0.9375rem/1.35 "Satoshi", "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+    h1, h2, h3, p { margin: 0; }
+    a { color: var(--lift); }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--lift); outline-offset: 2px; }
+    .wrap { width: min(100% - 2rem, 1560px); margin-inline: auto; }
+    .muted { color: var(--mist); }
+    .label { font-size: 0.75rem; color: var(--mist); }
+
+    /* Mockup bar: Before / After */
+    .strip { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.5rem 1rem; background: var(--indigo); color: #fff; font-size: 0.8125rem; font-weight: 500; padding: 0.4rem 1rem; }
+    .seg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid rgba(255,255,255,.45); border-radius: 32px; }
+    .seg button { background: none; border: 0; border-radius: 32px; padding: 0.15rem 0.85rem; color: #fff; cursor: pointer; font-weight: 600; }
+    .seg button[aria-pressed="true"] { background: #fff; color: var(--indigo); }
+    .strip .theme { background: none; border: 1px solid rgba(255,255,255,.45); border-radius: 32px; color: #fff; padding: 0.1rem 0.7rem; cursor: pointer; }
+    #before { display: none; }
+    body.show-before #before { display: block; }
+    body.show-before #after { display: none; }
+    #before iframe { display: block; width: 100%; height: calc(100vh - 40px); border: 0; background: #000; }
+    #before .note { padding: 0.5rem 1rem; font-size: 0.8125rem; color: var(--mist); text-align: center; }
+
+    /* Navbar (same as the restyled site) */
+    .nav { border-bottom: 1px solid var(--rule); background: var(--ink); }
+    .nav-in { display: flex; align-items: center; gap: 1rem; min-height: 60px; }
+    .brand { display: flex; align-items: center; gap: 0.5rem; color: var(--strong); text-decoration: none; font: italic 600 1.35rem/1 "Clash Display", sans-serif; }
+    .brand img { width: 30px; height: 30px; }
+    .links { display: flex; gap: 0.25rem; }
+    .links a { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.75rem; border-radius: 8px; color: var(--mist); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+    .links a.on { background: var(--navy); color: var(--ice); }
+    .nav .r { margin-left: auto; display: flex; gap: 0.5rem; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2.5rem; padding: 0 0.85rem; background: none; border: 1px solid var(--slate); border-radius: 8px; color: var(--ice); font-size: 0.875rem; font-weight: 500; text-decoration: none; cursor: pointer; white-space: nowrap; }
+    .btn:hover { background: var(--navy); }
+
+    /* Prev / next */
+    .crumbs { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 12px; font-size: 0.875rem; }
+    .crumbs a { display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; color: var(--mist); text-decoration: none; }
+    .crumbs a:hover { color: var(--ice); }
+    .crumbs .pn { display: flex; gap: 1.25rem; }
+
+    /* Header: the beta's game card at full width */
+    .ghead { margin-top: 6px; overflow: hidden; border-radius: 12px; background: var(--navy); }
+    .ghead-time { padding: 0.55rem 1rem; background: var(--panel); text-align: center; font-size: 0.875rem; color: var(--haze); border: 1px solid var(--rule); border-bottom: 0; border-radius: 12px 12px 0 0; }
+    .ghead-body { position: relative; isolation: isolate; display: flex; justify-content: space-between; align-items: stretch; min-height: clamp(9rem, 16vw, 12.5rem); padding: clamp(1rem, 2.5vw, 1.75rem) clamp(1rem, 3vw, 2.25rem); background: #006bb6; color: #fff; }
+    .ghead-body::before, .ghead-body::after { content: ""; position: absolute; inset: 0; z-index: -1; }
+    .ghead-body::before { background: #ce1141; clip-path: polygon(58% 0, 100% 0, 100% 100%, 42% 100%); }
+    .ghead-body::after { background: #d8dff5; clip-path: polygon(57.8% 0, 58.2% 0, 42.2% 100%, 41.8% 100%); }
+    .gteam { display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem; }
+    .gteam.home { align-items: flex-end; text-align: right; }
+    .gabbr { font: 600 clamp(2.6rem, 7vw, 5.25rem)/0.9 "Clash Display", sans-serif; }
+    .gcity { font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem; }
+    .gml { font: 600 clamp(1.1rem, 2vw, 1.5rem)/1 "Clash Display", sans-serif; }
+    .grec { font-size: 0.875rem; opacity: 0.9; display: flex; align-items: center; gap: 0.45rem; }
+    .home .grec { justify-content: flex-end; }
+    .form { display: inline-flex; gap: 3px; }
+    .form i { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #fff; }
+    .form i.l { background: none; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.75); }
+    .gat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; background: #060a16; color: #d8dff5; font-weight: 600; }
+
+    /* Fact strip under the header */
+    .facts { display: grid; grid-template-columns: repeat(5, minmax(0, auto)); justify-content: space-between; gap: 0.75rem 1.5rem; padding: 0.85rem 1.25rem; background: var(--panel); border: 1px solid var(--rule); border-top: 0; border-radius: 0 0 12px 12px; }
+    .facts div { min-width: 0; }
+    .facts b { display: block; font-weight: 600; color: var(--strong); font-size: 0.9rem; white-space: nowrap; }
+
+    /* Jump pills */
+    .jump { position: sticky; top: 33px; z-index: 15; display: flex; gap: 0.35rem; overflow-x: auto; scrollbar-width: none; margin-top: 12px; padding: 6px 0; background: var(--ink); }
+    .jump a { flex: none; min-height: 2.25rem; display: inline-flex; align-items: center; padding: 0 0.85rem; border: 1px solid var(--rule); border-radius: 32px; color: var(--mist); text-decoration: none; font-size: 0.8125rem; }
+    .jump a:first-child { background: var(--navy); color: var(--ice); border-color: var(--lift); }
+
+    /* Layout */
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 352px; gap: 12px; margin-top: 6px; align-items: start; }
+    .main, .rail { display: grid; gap: 12px; min-width: 0; }
+    .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 1rem 1.25rem; min-width: 0; scroll-margin-top: 90px; }
+    .phead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; margin-bottom: 0.75rem; }
+    .ptitle { font: 600 1.2rem/1.2 "Clash Display", sans-serif; color: var(--strong); }
+    .ptitle .sub { font: 500 0.8125rem "Satoshi"; color: var(--mist); margin-left: 0.4rem; }
+    .linkbtn { background: none; border: 0; padding: 0; color: var(--lift); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; font-size: 0.875rem; }
+    .note { font-size: 0.8125rem; color: var(--mist); margin-top: 0.75rem; }
+
+    /* Model picks: the verdict wedge */
+    .verdict { padding: 0; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); background: var(--navy); } /* navy behind the slanted cut, so no gap shows */
+    .v-left { padding: 1.25rem 1.5rem; background: var(--navy); }
+    .v-score { display: flex; align-items: baseline; gap: 1.25rem; margin-top: 0.4rem; }
+    .v-score div { display: flex; flex-direction: column; }
+    .v-score .t { font-size: 0.8125rem; color: var(--haze); }
+    .v-score .n { font: 600 clamp(2rem, 3.6vw, 2.8rem)/1 "Clash Display"; color: var(--strong); }
+    .v-score .n.dim { color: var(--haze); }
+    .v-score .dash { font: 500 1.75rem "Clash Display"; color: var(--slate); }
+    .v-ctx { margin-top: 0.7rem; font-size: 0.875rem; color: var(--haze); }
+    .v-ctx b { color: var(--ice); }
+    .v-right { padding: 1.1rem 1.5rem 1.1rem 3rem; margin-left: -2.5rem; background: var(--indigo); color: #e9e6ff; clip-path: polygon(9% 0, 100% 0, 100% 100%, 0 100%); display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.5rem; }
+    .pick .k { font-size: 0.75rem; opacity: 0.85; display: flex; align-items: center; gap: 0.5rem; }
+    .str { padding: 0 0.45rem; border-radius: 4.8px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; background: rgba(255,255,255,.14); color: #fff; }
+    .str.strong { background: #7fdcc0; color: #060a16; }
+    .pick .n { font: 600 1.6rem/1.15 "Clash Display"; color: #fff; margin-top: 0.2rem; }
+    .pick dl { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0 1rem; margin: 0.45rem 0 0; font-size: 0.75rem; }
+    .pick dt { opacity: 0.75; font-weight: 400; }
+    .pick dd { margin: 0; color: #fff; font-weight: 600; font-size: 0.875rem; }
+    .v-foot { background: var(--panel); grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; padding: 0.75rem 1.5rem; border-top: 1px solid var(--rule); font-size: 0.8125rem; color: var(--mist); }
+
+    /* The Board for this game */
+    .tabs { display: inline-flex; gap: 2px; padding: 3px; background: var(--ink); border: 1px solid var(--rule); border-radius: 8px; }
+    .tabs button { min-height: 2.1rem; padding: 0 0.7rem; background: none; border: 0; border-radius: 4.8px; color: var(--mist); font-size: 0.8125rem; font-weight: 500; cursor: pointer; }
+    .tabs button small { opacity: 0.7; margin-left: 0.2rem; }
+    .tabs button[aria-pressed="true"] { background: var(--navy); color: var(--ice); box-shadow: inset 0 0 0 1px var(--lift); }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .chip { min-height: 2.1rem; padding: 0 0.8rem; border: 1px solid var(--rule); border-radius: 32px; background: none; color: var(--mist); font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 0.35rem; }
+    .rows { display: grid; }
+    .rowhead, .row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.05fr) minmax(0, 1.25fr) 4.25rem 3rem minmax(0, 0.9fr) 4.75rem 1.5rem; align-items: center; gap: 0.75rem; }
+    .rowhead { padding: 0 0.5rem 0.4rem; font-size: 0.72rem; color: var(--mist); border-bottom: 1px solid var(--rule); }
+    .row { padding: 0.65rem 0.5rem; border-bottom: 1px solid var(--rule); border-radius: 8px; cursor: pointer; }
+    .row:hover { background: rgba(154,147,255,.05); }
+    .who { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+    .av { position: relative; display: grid; place-items: center; flex: none; width: 2.1rem; height: 2.1rem; border-radius: 50%; font: 600 0.72rem "Clash Display"; overflow: hidden; }
+    .av.phi { background: #006bb6; color: #fff; } .av.chi { background: #ce1141; color: #fff; }
+    .nm { min-width: 0; }
+    .nm b { display: block; font: 600 1rem/1.15 "Clash Display"; color: var(--strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nm span { font-size: 0.75rem; color: var(--mist); }
+    .tag { padding: 0 0.35rem; border-radius: 4.8px; font-size: 0.65rem; font-weight: 700; margin-left: 0.3rem; }
+    .tag.q { color: var(--q); box-shadow: inset 0 0 0 1px var(--q); }
+    .pk { padding-left: 0.55rem; border-left: 3px solid var(--over); }
+    .pk.u { border-left-color: var(--under); }
+    .pk b { display: block; font-weight: 600; color: var(--strong); }
+    .pk span { font-size: 0.75rem; color: var(--mist); }
+    .hit { display: flex; align-items: center; gap: 0.5rem; }
+    .hit b { font: 600 1.15rem "Clash Display"; min-width: 3rem; }
+    .hit .rec { font-size: 0.75rem; color: var(--mist); min-width: 2.2rem; }
+    a.row { color: inherit; text-decoration: none; }
+    .mini { display: flex; align-items: flex-end; gap: 2px; height: 22px; }
+    .mini i { width: 5px; background: var(--over); }
+    .mini i.m { background: var(--under); }
+    .hl { text-align: right; }
+    .hl b { display: block; color: var(--strong); }
+    .hl span { font-size: 0.75rem; }
+    .up { color: var(--over-text); } .dn { color: var(--under-text); }
+    .sc { font: 600 1.45rem "Clash Display"; text-align: right; }
+    .odds { display: flex; flex-direction: column; align-items: flex-start; font-size: 0.75rem; color: var(--mist); }
+    .odds b { font-size: 0.9rem; color: var(--over-text); }
+    .add { justify-self: end; min-height: 2rem; padding: 0 0.6rem; border: 1px solid var(--slate); border-radius: 8px; background: none; color: var(--ice); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+    .chev { color: var(--mist); text-align: right; }
+    .hr-low { color: var(--hr-low); } .hr-mid { color: var(--hr-mid); } .hr-high { color: var(--hr-high); }
+    .more { margin-top: 0.85rem; text-align: center; }
+
+    /* Rail */
+    .inj-team { margin-top: 0.5rem; font-size: 0.75rem; font-weight: 700; color: var(--mist); }
+    .inj { display: flex; justify-content: space-between; align-items: center; padding: 0.42rem 0; border-top: 1px solid var(--rule); font-size: 0.875rem; }
+    .st { padding: 0.05rem 0.5rem; border-radius: 4.8px; font-size: 0.7rem; font-weight: 700; border: 1px solid var(--slate); color: var(--haze); }
+    .st.out { color: var(--out); border-color: var(--out); } .st.q { color: var(--q); border-color: var(--q); }
+    .rt-head { display: grid; grid-template-columns: 1fr 3.5rem 1fr; font-size: 0.75rem; color: var(--mist); margin-bottom: 0.25rem; }
+    .rt-head span:last-child { text-align: right; }
+    .rt-head span:nth-child(2) { text-align: center; }
+    .rt { display: grid; grid-template-columns: 3.1rem 1fr 3.5rem 1fr 3.1rem; align-items: center; gap: 0.35rem; padding: 0.32rem 0; font-size: 0.8125rem; }
+    .rt .k { text-align: center; font-size: 0.72rem; color: var(--mist); }
+    .rt .v { font-weight: 600; } .rt .v.r { text-align: right; }
+    .rt small { display: block; font-size: 0.65rem; color: var(--mist); font-weight: 400; }
+    .bar { height: 7px; background: var(--ink); border-radius: 2px; overflow: hidden; display: flex; }
+    .bar.l { justify-content: flex-end; }
+    .bar i { display: block; height: 100%; background: var(--under); }
+    .bar i.w { background: var(--over); }
+    .meet { display: grid; grid-template-columns: 4rem 1fr auto; gap: 0.5rem; padding: 0.45rem 0; border-top: 1px solid var(--rule); font-size: 0.875rem; }
+    .meet:first-of-type { border-top: 0; }
+
+    footer { margin-top: 2rem; padding: 1.5rem 0 3rem; border-top: 1px solid var(--rule); font-size: 0.8125rem; color: var(--mist); }
+
+    @media (max-width: 1199.98px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      .rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .rail > :nth-child(2) { grid-row: span 2; }
+      .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .rowhead, .row { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.1fr) minmax(0, 1.2fr) 3rem minmax(0, 0.9fr) 4.75rem 1.5rem; }
+      .rowhead > :nth-child(4), .row > .hl { display: none; }   /* tablets: the Hunt line moves into the opened row */
+    }
+    @media (max-width: 991.98px) {
+      .verdict { grid-template-columns: 1fr; }
+      .v-right { margin-left: 0; clip-path: polygon(0 10%, 100% 0, 100% 100%, 0 100%); padding: 1.75rem 1.5rem 1.25rem; }
+    }
+    @media (max-width: 767.98px) {
+      .links, .nav .r .btn:not(.keep) { display: none; }
+      /* Phones: one column in this order: Model picks, Injuries, The Board, Ratings, Meetings */
+      .layout, .main, .rail { display: contents; }
+      #after .wrap > .layout { display: grid; grid-template-columns: minmax(0, 1fr); }
+      #picks { order: 1; } #injuries { order: 2; } #board { order: 3; } #ratings { order: 4; } #meetings { order: 5; }
+      .facts { grid-template-columns: 1fr 1fr; }
+      .crumbs .pn a:first-child { display: none; }
+      .v-right { grid-template-columns: 1fr; }
+      .rowhead { display: none; }
+      .row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who who" "pk odds" "hit hit"; gap: 0.4rem 0.75rem; }
+      .row > .who { grid-area: who; } .row > .sc { grid-area: sc; } .row > .pk { grid-area: pk; } .row > .odds { grid-area: odds; align-items: flex-end; }
+      .row > .hit { grid-area: hit; }
+      .row > .hl, .row > .add, .row > .chev { display: none; }
+      .facts b { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <div class="strip">
+    <span>Game page mockup · PHI @ CHI, Nov 8</span>
+    <div class="seg" role="group" aria-label="Show"><button type="button" data-show="before" aria-pressed="false">Before</button><button type="button" data-show="after" aria-pressed="true">After</button></div>
+    <button type="button" class="theme" id="themeBtn">Light mode</button>
+  </div>
+
+  <!-- BEFORE: the live page as it is today -->
+  <section id="before" aria-label="Before: the live game page">
+    <p class="note">The live game page as it is now (local server). It needs the local dev server and the site password.</p>
+    <iframe title="Current game page" loading="lazy" data-src="../../game.html?id=21718059"></iframe>
+  </section>
+
+  <!-- AFTER -->
+  <div id="after">
+    <header class="nav">
+      <div class="wrap nav-in">
+        <a class="brand" href="#"><img src="../../assets/img/lh-mark.svg" alt="">LINEHUNTER</a>
+        <nav class="links" aria-label="Main"><a href="#" class="on">Today</a><a href="#">Tools</a><a href="#">Standings</a></nav>
+        <div class="r"><a class="btn keep" href="#"><i class="bi bi-ticket-perforated"></i> My Hunts</a></div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="crumbs">
+        <a href="#"><i class="bi bi-chevron-left"></i> Today's games</a>
+        <span class="pn"><a href="#"><i class="bi bi-chevron-left"></i> Earlier: none</a><a href="#">Next: LAL @ DET <i class="bi bi-chevron-right"></i></a></span>
+      </div>
+
+      <!-- HEADER: the wheel's front card grown to full width -->
+      <section class="ghead" aria-label="PHI at CHI">
+        <div class="ghead-time">Sunday, Nov 8 · 3:30 PM ET · United Center, Chicago</div>
+        <div class="ghead-body">
+          <div class="gteam">
+            <div><div class="gabbr">PHI</div><div class="gcity">Philadelphia 76ers</div></div>
+            <div><div class="gml">−395</div><div class="grec">8–2 <span class="form" aria-label="Last 5: 4 wins, 1 loss"><i></i><i></i><i></i><i></i><i class="l"></i></span></div></div>
+          </div>
+          <span class="gat" aria-hidden="true">@</span>
+          <div class="gteam home">
+            <div><div class="gabbr">CHI</div><div class="gcity">Chicago Bulls</div></div>
+            <div><div class="gml">+312</div><div class="grec"><span class="form" aria-label="Last 5: 0 wins, 5 losses"><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i><i class="l"></i></span> 1–7</div></div>
+          </div>
+        </div>
+      </section>
+      <div class="facts">
+        <div><span class="label">Spread · Total (DK)</span><b>PHI −9.5 · 237.5</b></div>
+        <div><span class="label">Coaches</span><b>Nick Nurse · Tiago Splitter</b></div>
+        <div><span class="label">PHI road · CHI home</span><b>4-1 · 0-2</b></div>
+        <div><span class="label">Rest</span><b>PHI 2 days · CHI 4 days</b></div>
+        <div><span class="label">Last meeting</span><b>Nov 2 · PHI 126–107</b></div>
+      </div>
+
+      <nav class="jump" aria-label="Sections"><a href="#picks">Model picks</a><a href="#board">Top hit rates</a><a href="#injuries">Injuries</a><a href="#ratings">Ratings</a><a href="#meetings">Meetings</a></nav>
+
+      <div class="layout">
+        <div class="main">
+          <!-- MODEL PICKS: the Game Breakdown teaser as the verdict wedge -->
+          <section class="panel verdict" id="picks" aria-label="Model picks">
+            <div class="v-left">
+              <span class="label" style="color:var(--haze)">Projected score · ratings, pace, rest and injuries</span>
+              <div class="v-score">
+                <div><span class="t">PHI</span><span class="n">121.4</span></div>
+                <span class="dash">–</span>
+                <div><span class="t">CHI</span><span class="n dim">110.0</span></div>
+              </div>
+              <p class="v-ctx">Missing: <b>Barlow, Bona</b> (PHI −0.7) · <b>Powell, Claxton, Awaka</b> GTD (CHI −1.6)</p>
+            </div>
+            <div class="v-right">
+              <div class="pick">
+                <span class="k">Spread pick <span class="str">MODERATE</span></span>
+                <div class="n">PHI −9.5</div>
+                <dl><div><dt>Book · DK</dt><dd>PHI −9.5</dd></div><div><dt>Model</dt><dd>PHI −11.4</dd></div><div><dt>Gap</dt><dd>1.9</dd></div></dl>
+              </div>
+              <div class="pick">
+                <span class="k">Total pick <span class="str strong">STRONG</span></span>
+                <div class="n">Under 237.5</div>
+                <dl><div><dt>Book · DK</dt><dd>237.5</dd></div><div><dt>Model</dt><dd>231.4</dd></div><div><dt>Gap</dt><dd>6.1</dd></div></dl>
+              </div>
+            </div>
+            <div class="v-foot">
+              <span>Strength is the gap to the book: Slight under 1.5, Moderate 1.5–3, Strong over 3. A big gap means take a closer look, not a sure thing.</span>
+              <button class="linkbtn" type="button">Show breakdown details</button>
+            </div>
+          </section>
+
+          <!-- TOP HIT RATES: this game's props with the highest hit rates (The Board itself stays on the Today page) -->
+          <section class="panel" id="board" aria-label="Top hit rates">
+            <div class="phead">
+              <h2 class="ptitle">Top hit rates <span class="sub">this game's props, highest first</span></h2>
+              <div class="tabs" role="group" aria-label="Team"><button aria-pressed="true">All</button><button aria-pressed="false">PHI</button><button aria-pressed="false">CHI</button></div>
+            </div>
+            <div class="controls">
+              <div class="tabs" role="group" aria-label="Stat"><button aria-pressed="true">All</button><button aria-pressed="false">PTS</button><button aria-pressed="false">REB</button><button aria-pressed="false">AST</button><button aria-pressed="false">3PM</button><button aria-pressed="false">PRA</button></div>
+              <div class="tabs" role="group" aria-label="Games"><button aria-pressed="false">L5</button><button aria-pressed="true">L10</button><button aria-pressed="false">L20</button></div>
+            </div>
+            <div class="rows">
+              <div class="rowhead"><span>Player</span><span>Pick</span><span>Hit rate · L10</span><span style="text-align:right">Avg</span><span></span><span>Best odds</span><span></span><span></span></div>
+              <div id="rows"></div>
+            </div>
+            <div class="more"><button class="btn" type="button">Show 8 more</button></div>
+            <p class="note">Every prop for every game, with Hunt Scores, is on The Board: <a href="#">Today ›</a> or <a href="#">Tools › The Board ›</a> · Past results, not a prediction. Gambling problem? Call 1-800-GAMBLER.</p>
+          </section>
+        </div>
+
+        <aside class="rail">
+          <section class="panel" id="injuries" aria-label="Injury report">
+            <div class="phead" style="margin-bottom:.25rem"><h2 class="ptitle">Injury report <span class="sub">PHI 4 · CHI 7</span></h2></div>
+            <div class="inj-team">PHI</div>
+            <div class="inj"><span>D. Barlow</span><span class="st out">OUT</span></div>
+            <div class="inj"><span>A. Hukporti</span><span class="st out">OUT</span></div>
+            <div class="inj"><span>A. Bona</span><span class="st out">OUT</span></div>
+            <div class="inj"><span>J. Embiid</span><span class="st">Probable</span></div>
+            <div class="inj-team">CHI</div>
+            <div class="inj"><span>Z. Collins</span><span class="st out">OUT</span></div>
+            <div class="inj"><span>J. Sellers</span><span class="st out">OUT</span></div>
+            <div class="inj"><span>D. Swain</span><span class="st out">OUT</span></div>
+            <div class="inj"><span>N. Claxton</span><span class="st q">Q</span></div>
+            <div class="inj"><span>T. Awaka</span><span class="st q">Q</span></div>
+            <div class="inj"><span>N. Powell</span><span class="st q">Q</span></div>
+            <div class="inj"><span>J. Smith</span><span class="st">Probable</span></div>
+          </section>
+          <section class="panel" id="ratings" aria-label="Team ratings">
+            <div class="phead"><h2 class="ptitle">Team ratings <span class="sub">PHI better in 8 of 11</span></h2></div>
+            <div class="rt-head"><span>PHI</span><span>2026-27</span><span>CHI</span></div>
+            <div id="ratingRows"></div>
+            <p class="note">Longer bar = better, from the league's worst to best. Teal = the better of the two. #1 = best of 30.</p>
+          </section>
+          <section class="panel" id="meetings" aria-label="Meetings">
+            <div class="phead"><h2 class="ptitle">Meetings <span class="sub">this season</span></h2></div>
+            <div class="meet"><span class="muted">Nov 2</span><span>PHI @ CHI</span><b>PHI 126–107</b></div>
+            <p class="note">Season series: PHI 1–0.</p>
+          </section>
+        </aside>
+      </div>
+
+      <footer>
+        <p>LineHunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+        <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Tonight's real Board rows for PHI @ CHI (copied from the live page, Nov 8). Hits = the L10 hit count for the pick.
+    const ROWS = [
+      ["Jaylen", "Brown", "phi", "o", "Over 21.5", "Points", 4, 22.7, 25.4, "+3.9", 69, "−104", "FD", "+6"],
+      ["LeBron", "James", "phi", "u", "Under 1.5", "Threes made", 6, 1.0, 1.2, "−0.3", 67, "−205", "CZR", "+3"],
+      ["Jaylen", "Brown", "phi", "o", "Over 32.5", "PRA", 6, 33.6, 36.8, "+4.3", 65, "−107", "BR", "+2"],
+      ["Josh", "Giddey", "chi", "u", "Under 1.5", "Threes made", 7, 1.0, 1.3, "−0.2", 63, "−148", "DK", "+5"],
+      ["Jalen", "Smith", "chi", "u", "Under 1.5", "Threes made", 5, 1.4, 1.3, "−0.2", 63, "−114", "FD", "+5"],
+      ["Anfernee", "Simons", "phi", "u", "Under 2.5", "Rebounds", 7, 1.9, 2.3, "−0.2", 62, "−186", "DK", "+1"],
+      ["Josh", "Giddey", "chi", "u", "Under 6.5", "Rebounds", 6, 4.9, 6.0, "−0.5", 62, "−120", "FD", "+6"],
+      ["Tyrese", "Maxey", "phi", "o", "Over 25.5", "Points", 8, 26.9, 28.0, "+2.5", 61, "+100", "FD", "+4"],
+      ["Tyrese", "Maxey", "phi", "o", "Over 34.5", "PRA", 7, 35.9, 38.0, "+3.5", 61, "−115", "FD", "+3"],
+      ["Josh", "Giddey", "chi", "u", "Under 8.5", "Assists", 5, 7.6, 8.0, "−0.5", 60, "−136", "PARX", "+5"],
+    ];
+    const hrClass = (pct) => (pct >= 75 ? "hr-high" : pct >= 50 ? "hr-mid" : "hr-low");
+    // A made-up but consistent L10 bar pattern with the right number of hits (the real mini graph uses the game logs).
+    const mini = (hits, seed) => Array.from({ length: 10 }, (_, i) => {
+      const hit = ((i * 7 + seed) % 10) < hits;
+      const h = 30 + ((i * 37 + seed * 11) % 70);
+      return `<i class="${hit ? "" : "m"}" style="height:${h}%"></i>`;
+    }).join("");
+    // Highest hit rate first (ties: the higher average over the line for Overs / under it for Unders), top 8.
+    const sorted = ROWS.map((row, i) => ({ row, i })).sort((a, b) => b.row[6] - a.row[6] || a.i - b.i).slice(0, 8);
+    document.getElementById("rows").innerHTML = sorted.map(({ row: [first, last, team, side, pick, stat, hits, avg, hl, edge, score, odds, book, more], i }) => `
+      <a class="row" href="#" title="Open ${first} ${last}'s page on this prop">
+        <div class="who"><span class="av ${team}" data-player-id="">${first[0]}${last[0]}</span><div class="nm"><b>${first} ${last}</b><span>${team.toUpperCase()} · ${team === "phi" ? "@ CHI" : "vs PHI"}</span></div></div>
+        <div class="pk ${side}"><b>${pick}</b><span>${stat}</span></div>
+        <div class="hit"><b class="${hrClass(hits * 10)}">${hits * 10}%</b><span class="rec">${hits}/10</span><span class="mini">${mini(hits, i)}</span></div>
+        <div class="hl"><b>${avg.toFixed(1)}</b><span class="muted">avg</span></div>
+        <div></div>
+        <div class="odds"><b>${odds}</b><span>${book} · ${more} more</span></div>
+        <button class="add" type="button" onclick="event.preventDefault()">+ Add</button>
+        <i class="bi bi-chevron-right chev"></i>
+      </a>`).join("");
+
+    // Team ratings (real, 2026-27): [stat, PHI value, PHI rank, CHI value, CHI rank, higher is better?]
+    const RATINGS = [
+      ["PPG", "109.4", 23, "111.6", 18], ["Opp PPG", "106.6", 5, "129.6", 30], ["Pace", "100.3", 17, "105.2", 1],
+      ["Off Rtg", "108.9", 21, "105.9", 28], ["Def Rtg", "106.4", 4, "123.5", 30], ["Net Rtg", "+2.5", 15, "−17.5", 30],
+      ["RPG", "42.3", 22, "43.9", 18], ["APG", "25.5", 21, "24.6", 25], ["3PM", "11.3", 26, "11.6", 24],
+      ["FG%", "44.4%", 24, "41.2%", 29], ["3P%", "33.3%", 20, "27.2%", 30], ["TOV", "13.3", 3, "16.5", 18],
+    ];
+    const len = (rank) => Math.round(((31 - rank) / 30) * 100);
+    document.getElementById("ratingRows").innerHTML = RATINGS.map(([k, a, ar, b, br]) => {
+      const pace = k === "Pace";
+      const aw = !pace && ar < br, bw = !pace && br < ar;
+      return `<div class="rt"><span class="v">${a}<small>#${ar}</small></span><span class="bar l"><i class="${aw ? "w" : ""}" style="width:${len(ar)}%;${pace ? "background:var(--slate)" : ""}"></i></span>` +
+        `<span class="k">${k}</span><span class="bar"><i class="${bw ? "w" : ""}" style="width:${len(br)}%;${pace ? "background:var(--slate)" : ""}"></i></span><span class="v r">${b}<small>#${br}</small></span></div>`;
+    }).join("");
+
+    // Before / After and the theme (mockup only)
+    document.querySelectorAll("[data-show]").forEach((button) => button.addEventListener("click", () => {
+      const before = button.dataset.show === "before";
+      document.body.classList.toggle("show-before", before);
+      document.querySelectorAll("[data-show]").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+      const frame = document.querySelector("#before iframe");
+      if (before && !frame.src) frame.src = frame.dataset.src;
+      window.scrollTo(0, 0);
+    }));
+    document.getElementById("themeBtn").addEventListener("click", (e) => {
+      const light = document.documentElement.dataset.theme !== "light";
+      document.documentElement.dataset.theme = light ? "light" : "dark";
+      e.target.textContent = light ? "Dark mode" : "Light mode";
+    });
+    document.addEventListener("click", (e) => {
+      const b = e.target.closest(".tabs button");
+      if (b) b.parentElement.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    });
+  </script>
+</body>
+</html>
