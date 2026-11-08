@@ -7215,7 +7215,11 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 /* Board opened row: "Show full report" under the tracker; the report column stays shut until it is opened */
 .lh-bd-reportbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1.25rem; margin-top: 0.75rem; }
 .lh-bd-reportbtn { background: none; border: 0; padding: 0; font-size: 0.85rem; color: var(--lh-strong); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
-.lh-bd-reportbar .lh-bd-links { margin: 0; padding: 0; border: 0; font-size: 0.85rem; }
 .lh-bd-match.is-collapsed > .lh-bd-sechead, .lh-bd-match.is-collapsed > .lh-sr { display: none; }
-.lh-bd-reportbar .lh-bd-links a { min-height: 0; padding: 0; border: 0; display: inline; font-size: 0.85rem; font-weight: 600; text-decoration: underline; text-underline-offset: 0.2em; }
 @media (max-width: 991.98px) { .lh-bd-cols:has(.lh-bd-match:not(.is-collapsed)) .lh-bd-match { order: -1; } }
+
+/* "Show full report" in a closed row: phones only, in the empty score space left of the chevron */
+.lh-bd-reportlink { display: none; }
+@media (max-width: 767.98px) {
+  .lh-bd-reportlink { display: block; white-space: nowrap; grid-column: 3 / -1; grid-row: 1 / span 2; justify-self: end; margin-right: 2.6rem; align-self: center; background: none; border: 0; padding: 0; font-size: 0.8rem; color: var(--lh-strong); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+}
