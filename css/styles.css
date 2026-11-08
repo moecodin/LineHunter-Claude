@@ -5859,7 +5859,7 @@ body.lh-hunts-open .lh-hpill, body.lh-hunts-open .lh-hadded { display: none !imp
   }
   .lh-bd-player { grid-area: player; }
   .lh-bd-pick { grid-area: pick; }
-  .lh-bd-pick span { display: none; }
+  .lh-bd-pick > span { display: none; } /* the long stat name; the short code (.lh-bd-statshort) stays in the pick */
   .lh-bd-pick b { font-size: 0.9rem; }
   .lh-bd-hit { grid-area: hit; }
   .lh-bd-hit b { min-width: 0; font-size: 0.85rem; font-weight: 500; color: var(--lh-muted); }
@@ -6906,3 +6906,8 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
   .lh-hero-ctas { flex-direction: column; }
   .lh-hero-ctas .btn { width: 100%; flex: none; }
 }
+
+/* The Board: the stat code next to the line ("Over 6.5 AST") on phones, where the long stat name under the pick is hidden.
+   Desktop and tablets show the long name ("Assists") under the pick instead. */
+.lh-bd-statshort { display: none; font-style: normal; font-weight: 600; color: var(--lh-muted); }
+@media (max-width: 767.98px) { .lh-bd-statshort { display: inline; } }

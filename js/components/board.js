@@ -247,7 +247,7 @@ function boardHeadHtml(item, isOpen) {
         <span class="lh-bd-lastline"><span class="lh-bd-last">${boardEsc(name.last)}</span> ${teamBadgeForMatchup(row.team, row.matchup)}${gtd}</span>
         <span class="lh-bd-meta">${boardEsc(row.matchup)}${time ? ` · ${time}` : ""}</span>
       </div>
-      <div class="lh-bd-pick is-${side}"><b>${sideWord} ${lineText(item.line)}</b><span>${statWord}</span></div>
+      <div class="lh-bd-pick is-${side}"><b>${sideWord} ${lineText(item.line)} <em class="lh-bd-statshort">${BOARD_STAT_SHORT[row.code] || row.code.toUpperCase()}</em></b><span>${statWord}</span></div>
       <div class="lh-bd-hit"><b>${stats.hits}/${stats.totalGames}</b><span class="lh-bd-graph">${miniGraph(stats.games)}</span><span class="lh-bd-window">L${window}</span></div>
       <div class="lh-bd-num lh-bd-avg"><span class="lh-bd-cap">Avg</span>${formatStatValue(stats.average)}</div>
       <div class="lh-bd-num lh-bd-proj"><span class="lh-bd-cap">Hunt line</span>${projection ? projection.mean.toFixed(1) : "–"}${edge !== null ? `<small class="${edgeClass}">${boardSigned(edge)}</small>` : ""}</div>
