@@ -6510,3 +6510,6 @@ h1, h2, h3, .h1, .h2, .h3 { font-family: var(--lh-font-heading); font-weight: 60
   .lh-ladder-labels > span:last-child { font-size: 0; }
   .lh-ladder-labels > span:last-child::after { content: "Dots"; font-size: 0.65rem; }
 }
+/* Verdict: navy behind the wedge's slanted cut (no light gap on narrow screens / light mode); the reasons and foot keep the panel color */
+.lh-vd { background: var(--lh-surface-2); }
+.lh-vd-why, .lh-vd-foot { background: var(--lh-surface); }

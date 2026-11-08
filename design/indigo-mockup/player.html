@@ -122,7 +122,7 @@
     .linkbtn { background: none; border: 0; padding: 0; color: var(--lift); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; font-size: 0.875rem; }
 
     /* Verdict wedge (the beta's) carrying the Hunt Score */
-    .verdict { padding: 0; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+    .verdict { background: var(--navy); padding: 0; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
     .v-left { padding: 1.25rem 1.5rem; background: var(--navy); }
     .v-pick { font: 600 calc(clamp(1.9rem, 3.4vw, 3.1rem) * 0.82)/1.1 "Clash Display", sans-serif; color: var(--strong); }
     .v-pick .over { color: var(--hr-high); }
@@ -136,8 +136,8 @@
     .readout .n.hi { color: #7fdcc0; }
     .readout .s { font-size: 0.75rem; opacity: 0.8; }
     .v-why { margin-top: 0.9rem; font-size: 0.875rem; color: #fff; }
-    .v-foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 1.5rem; border-top: 1px solid var(--rule); font-size: 0.875rem; }
-    .why { display: grid; gap: 0.5rem; padding: 0.9rem 1.5rem 1.1rem; grid-column: 1 / -1; border-top: 1px solid var(--rule); }
+    .v-foot { background: var(--panel); grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 1.5rem; border-top: 1px solid var(--rule); font-size: 0.875rem; }
+    .why { background: var(--panel); display: grid; gap: 0.5rem; padding: 0.9rem 1.5rem 1.1rem; grid-column: 1 / -1; border-top: 1px solid var(--rule); }
     .why p { display: grid; grid-template-columns: 1.25rem 1fr; gap: 0.5rem; font-size: 0.9rem; }
     .why i { color: var(--lift); }
 
