@@ -7278,3 +7278,74 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-sr-note .lh-sr-topic { width: 4.2rem; flex: none; }
 /* The hunts tracker is hidden for now (the markup and code stay; it moves somewhere else later) */
 .lh-bd-trackswitch, .lh-bd-tracker { display: none !important; }
+
+/* Hunts builder (hunts.html, js/pages/hunts.js): The Board as the picker on the left, a sticky ticket on the right. Flat, no shadows. */
+.lh-hunts-builder { display: block; text-align: center; margin-top: 0.5rem; font-weight: 600; font-size: 0.85rem; color: var(--lh-strong); text-decoration: underline; text-underline-offset: 0.2em; }
+.lh-hunts-page .lh-hpill, .lh-hunts-page .lh-hunts-builder { display: none !important; }
+.lh-hb { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.lh-hb > * { min-width: 0; }
+.lh-hb-research { display: none; padding: 2rem 0; max-width: 32rem; }
+.research-mode .lh-hb-research { display: block; }
+.lh-hb-ticket { border: 1px solid var(--lh-border); background: var(--lh-surface); padding: 1rem; }
+.lh-hb-h { font: 600 1.2rem/1.2 var(--lh-font-heading); color: var(--lh-strong); margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.lh-hb-h small { font: 500 0.8rem var(--lh-font-body); color: var(--lh-muted); }
+.lh-hb-empty { margin: 0.75rem 0 0; color: var(--lh-muted); font-size: 0.9rem; }
+.lh-hbl-list { list-style: none; margin: 0; padding: 0; }
+.lh-hbl { border-left: 3px solid var(--lh-over); background: rgba(var(--lh-ink-rgb), 0.05); padding: 0.55rem 0.7rem; margin-top: 0.5rem; display: flex; justify-content: space-between; gap: 0.5rem; }
+.lh-hbl--under { border-left-color: var(--lh-under); }
+.lh-hbl b { display: block; color: var(--lh-strong); font-size: 0.9rem; }
+.lh-hbl span { font-size: 0.75rem; color: var(--lh-muted); }
+.lh-hbl-warn { font-size: 0.75rem; margin-top: 0.25rem; color: var(--lh-warn, var(--lh-muted)); }
+.lh-hbl-r { display: flex; align-items: flex-start; gap: 0.4rem; white-space: nowrap; }
+.lh-hbl-odds { font-weight: 700; color: var(--lh-over-text); font-size: 0.9rem; }
+.lh-hbl--under .lh-hbl-odds { color: var(--lh-under-text); }
+.lh-hbl-x { background: none; border: 0; padding: 0 0.15rem; color: var(--lh-muted); cursor: pointer; }
+.lh-hbs { margin-top: 0.9rem; border-top: 1px solid var(--lh-border); }
+.lh-hbs > div { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid var(--lh-border); }
+.lh-hbs > div > span { color: var(--lh-muted); }
+.lh-hbs b { color: var(--lh-strong); font-weight: 600; }
+.lh-hbs-big b { font: 600 1.5rem/1 var(--lh-font-heading); }
+.lh-hbs-win { color: var(--lh-over-text) !important; }
+.lh-hbs-stake { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--lh-border); padding: 0.15rem 0.5rem; color: var(--lh-muted); }
+.lh-hbs-stake input { width: 2.8rem; background: none; border: 0; padding: 0; text-align: right; font: inherit; font-weight: 600; color: var(--lh-strong); outline: 0; -moz-appearance: textfield; }
+.lh-hbs-stake input::-webkit-outer-spin-button, .lh-hbs-stake input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.lh-hbs-stake:focus-within { border-color: var(--lh-strong); }
+.lh-hbt { margin-top: 0.75rem; padding: 0.65rem; border: 1px solid var(--lh-border); }
+.lh-hbt-t { font-size: 0.75rem; color: var(--lh-muted); }
+.lh-hbt b { font: 600 1.4rem var(--lh-font-heading); color: var(--lh-strong); margin-right: 0.5rem; }
+.lh-hbt p, .lh-hbt-note { margin: 0.25rem 0 0; font-size: 0.78rem; color: var(--lh-muted); }
+.lh-hbt-dots { display: inline-flex; gap: 3px; vertical-align: middle; }
+.lh-hbt-dots i { width: 12px; height: 12px; background: var(--lh-over); }
+.lh-hbt-dots i.is-miss { background: var(--lh-under); }
+.lh-hb-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.9rem; }
+.lh-hb-btns button, .lh-hb-books a { background: none; border: 1px solid var(--lh-border); border-radius: 8px; color: var(--lh-strong); padding: 0.5rem; font-weight: 600; font-size: 0.85rem; text-align: center; text-decoration: none; cursor: pointer; }
+.lh-hb-btns button:hover, .lh-hb-books a:hover { border-color: var(--lh-strong); }
+.lh-hb-btns .is-wide { grid-column: 1 / -1; }
+.lh-hb-books-label { font-size: 0.75rem; color: var(--lh-muted); margin: 0.9rem 0 0.35rem; }
+.lh-hb-books { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.lh-hb-clear { display: block; margin: 0.75rem auto 0; background: none; border: 0; color: var(--lh-muted); font-size: 0.8rem; text-decoration: underline; cursor: pointer; }
+.lh-hb-legal { margin: 0.6rem 0 0; font-size: 0.72rem; color: var(--lh-muted); }
+.lh-hb-bar { display: none; }
+@media (min-width: 992px) {
+  .lh-hb { grid-template-columns: minmax(0, 1fr) 340px; gap: 1.75rem; }
+  .lh-hb-ticket { position: sticky; top: 5.5rem; }
+}
+@media (max-width: 991.98px) {
+  .lh-hb-bar { display: flex; position: fixed; left: 0.75rem; right: 0.75rem; bottom: calc(4.4rem + env(safe-area-inset-bottom)); z-index: 30; justify-content: space-between; background: var(--lh-fill); color: var(--lh-on-fill); border: 0; padding: 0.75rem 0.9rem; font-weight: 700; }
+  .lh-hb-bar[hidden] { display: none; }
+}
+/* The picture (js/pages/hunts.js imageHtml) */
+.lh-hi-title { font: 600 1.9rem/1.05 var(--lh-font-heading); color: var(--lh-strong); margin: 1rem 0 0.25rem; }
+.lh-hi-sub { color: var(--lh-muted); font-size: 0.85rem; }
+.lh-hi-leg { border-left: 4px solid var(--lh-over); background: rgba(var(--lh-ink-rgb), 0.05); padding: 0.6rem 0.8rem; margin-top: 0.6rem; display: flex; justify-content: space-between; align-items: center; }
+.lh-hi-leg--under { border-left-color: var(--lh-under); }
+.lh-hi-leg b { font: 600 1.05rem var(--lh-font-heading); color: var(--lh-strong); }
+.lh-hi-odds { font: 600 1.05rem var(--lh-font-heading); color: var(--lh-over-text); text-align: right; }
+.lh-hi-leg--under .lh-hi-odds { color: var(--lh-under-text); }
+.lh-hi-odds small { display: block; font: 500 0.68rem var(--lh-font-body); color: var(--lh-muted); }
+.lh-hi-total { margin-top: 1rem; border-top: 1px solid var(--lh-border); border-bottom: 1px solid var(--lh-border); padding: 0.6rem 0; display: flex; justify-content: space-between; align-items: baseline; }
+.lh-hi-total span { color: var(--lh-muted); font-size: 0.85rem; }
+.lh-hi-total b { font: 600 2.4rem/1 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-hi-hit { margin-top: 0.9rem; }
+.lh-hi-t { font-size: 0.75rem; color: var(--lh-muted); }
+.lh-hi-hit b { font: 600 1.2rem var(--lh-font-heading); color: var(--lh-strong); margin-right: 0.5rem; }

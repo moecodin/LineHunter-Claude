@@ -69,6 +69,7 @@
         <button type="button" class="lh-hunts-sharebtn" id="lhHuntsPost"><i class="bi bi-twitter-x" aria-hidden="true"></i> Post to @Playbook</button>
       </div>
       <div class="lh-hunts-sharenote">Posts publicly from your X account.</div>
+      <a class="lh-hunts-builder" href="hunts.html">Open full builder ›</a>
       <button type="button" class="lh-hunts-clear" id="lhHuntsClear">Clear all</button>
       <div class="lh-hunts-legal">Bet within your limits · 21+ · 1-800-GAMBLER</div>
     </div>`;
