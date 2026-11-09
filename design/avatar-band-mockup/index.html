@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Board avatar band mockup</title>
+  <meta name="robots" content="noindex">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <!--
+    MOCKUP ONLY: Board row avatars at the real phone size. 1 = today's slanted tile. 2 = a mini "band through the chest" (the story deck's style):
+    team color fills the upper part with a diagonal across the shoulders, the cut-out headshot on top, the bottom fades into the row.
+    3 = the same, a bit bigger. Headshots from cdn.nba.com. Team colors by hand. Nothing is live.
+  -->
+  <style>
+    :root, [data-theme="dark"] { --ink:#060a16; --panel:#0b1229; --rule:#1f2e5a; --mist:#93a1cb; --strong:#d8dff5; --text:#c3cce9; --over:#46a98f; --over-text:#7fdcc0; --under:#bd6570; color-scheme: dark; }
+    [data-theme="light"] { --ink:#eef1fa; --panel:#fff; --rule:#cfd6ec; --mist:#4b5784; --strong:#0b1229; --text:#26325e; --over:#22685a; --over-text:#22685a; --under:#a33a4a; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--ink); color: var(--text); font: 400 14px/1.45 Satoshi, system-ui, sans-serif; }
+    .top { max-width: 1100px; margin: 0 auto 14px; display: flex; justify-content: space-between; align-items: center; }
+    .top button { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 6px 12px; font: inherit; cursor: pointer; }
+    .cols { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; max-width: 1100px; margin: 0 auto; }
+    .col { width: 340px; }
+    .cap { font-size: .78rem; color: var(--mist); margin: 0 0 6px; }
+    .row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 0; border-top: 1px solid var(--rule); }
+    .who small { display: block; font-size: .8rem; color: var(--strong); line-height: 1.1; }
+    .who b { font: 600 1.25rem/1.1 "Clash Display", sans-serif; color: var(--strong); }
+    .who span { display: block; font-size: .75rem; color: var(--mist); }
+    .pick { grid-column: 2 / -1; border-left: 3px solid var(--over); padding-left: 8px; font: 600 .95rem "Clash Display", sans-serif; color: var(--strong); }
+    .pick.u { border-color: var(--under); }
+    .pick span { font: 500 .78rem Satoshi; color: var(--mist); margin-left: 6px; }
+    .odds { border: 1px solid var(--rule); padding: 2px 8px; font-weight: 700; color: var(--over-text); font-size: .85rem; }
+
+    /* 1 · today: slanted tile on the team color */
+    .t1 { width: 2.6rem; height: 2.7rem; position: relative; overflow: hidden; clip-path: polygon(20% 0, 100% 0, 80% 100%, 0 100%); background: var(--team); }
+    .t1 img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 12%; transform: scale(1.18); transform-origin: center top; }
+
+    /* 2 / 3 · mini band through the chest */
+    .t2, .t3 { position: relative; flex: none; overflow: hidden; background: transparent; }
+    .t2 { width: 3rem; height: 3rem; }
+    .t3 { width: 3.6rem; height: 3.6rem; }
+    .t2::before, .t3::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 78%; background: var(--team); clip-path: polygon(0 0, 100% 0, 100% 48%, 0 100%); }
+    .t2 img, .t3 img { position: absolute; left: 50%; bottom: 0; height: 100%; width: auto; transform: translateX(-50%); object-fit: contain; -webkit-mask-image: linear-gradient(#000 76%, transparent 100%); mask-image: linear-gradient(#000 76%, transparent 100%); }
+    .t3 img { height: 108%; }
+    .src { max-width: 1100px; margin: 22px auto 0; font-size: .78rem; color: var(--mist); }
+  </style>
+</head>
+<body>
+  <div class="top"><b style="color:var(--strong)">Board avatars, phone size</b><button id="t">Switch to light</button></div>
+  <div class="cols">
+    <div class="col" data-v="t1"><p class="cap">1 · Today: slanted tile</p></div>
+    <div class="col" data-v="t2"><p class="cap">2 · Mini band through the chest (3rem)</p></div>
+    <div class="col" data-v="t3"><p class="cap">3 · Same, a bit bigger (3.6rem)</p></div>
+  </div>
+  <p class="src">Mockup. Same four players in each column. Pick lines are sample text. Headshots from cdn.nba.com; team colors set by hand.</p>
+  <script>
+    const P = [
+      { f: "Jaden", l: "McDaniels", id: 1630183, c: "#236192", m: "MIN vs UTA", pick: "Over 2.5 AST", s: "9/10", o: "−165" },
+      { f: "Devin", l: "Booker", id: 1626164, c: "#3b1d8f", m: "PHX vs SAS", pick: "Under 3.5 REB", s: "7/10", o: "−138", u: 1 },
+      { f: "Victor", l: "Wembanyama", id: 1641705, c: "#5f6a72", m: "SAS @ PHX", pick: "Over 8.5 REB", s: "8/10", o: "−120" },
+      { f: "Stephon", l: "Castle", id: 1642264, c: "#6b7480", m: "SAS @ PHX", pick: "Over 4.5 REB", s: "8/10", o: "−154" },
+    ];
+    document.querySelectorAll(".col").forEach((col) => {
+      const v = col.dataset.v;
+      col.insertAdjacentHTML("beforeend", P.map((p) => `
+        <div class="row" style="--team:${p.c}">
+          <span class="${v}"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/${p.id}.png" alt="" onerror="this.remove()"></span>
+          <div class="who"><small>${p.f}</small><b>${p.l}</b><span>${p.m}</span></div>
+          <span class="odds">${p.o}</span>
+          <div class="pick${p.u ? " u" : ""}">${p.pick}<span>${p.s} L10</span></div>
+        </div>`).join(""));
+    });
+    document.getElementById("t").onclick = (e) => {
+      const r = document.documentElement, light = r.dataset.theme !== "light";
+      r.dataset.theme = light ? "light" : "dark"; e.target.textContent = light ? "Switch to dark" : "Switch to light";
+    };
+  </script>
+</body>
+</html>
