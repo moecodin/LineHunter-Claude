@@ -4,8 +4,9 @@
 // (the owner's rule from the beta: they never stop, even with reduced motion on).
 //
 // Cards = the next slate's top hit rates (the slate js/components/top-hit-rates.js builds for the homepage and announces with the
-// "lh-top-slate" event, so no extra requests): one per player, L10, the side that hit more often, 8+ games, at most 4 unders.
-// Each card: team-color band, initials (photo slot: js/components/playerPhoto.js when loaded), "9 of 10", the L10 average, the pick,
+// "lh-top-slate" event): one per player, L10, the side that hit more often, 8+ games, at most 4 unders, and only the league's stars
+// (starIds: a season average of 20+ points, 10+ rebounds or 8+ assists, padded to at least 6 players; one season-averages request).
+// Each card: team-color band, the player's headshot (js/components/playerPhoto.js; initials until it loads or if there is none), "9 of 10", the L10 average, the pick,
 // mini bars against the line; it opens the player page on that prop. The sheet shows the best points prop (else the top card):
 // the pick, hit rate, what the best odds need, the odds, the last 10 against the line and four nearby lines.
 // Until the slate arrives (or when there is none) sample cards show, and the line under the buttons says so.
@@ -35,12 +36,36 @@
   const teamColor = (team) => (typeof teamBaseColor === "function" ? teamBaseColor(team) : "#14234c");
   const esc = (text) => String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-  // The slate's rows -> card entries (one per player, best L10 side).
-  function picksFrom(slate) {
+  // "Jaden McDaniels" -> the key playerPhoto.js uses to find the headshot.
+  const nameKey = (name) => {
+    const parts = name.trim().split(/\s+/);
+    return typeof nbaNameKey === "function" ? nbaNameKey(parts[0], parts.slice(1).join(" ")) : "";
+  };
+
+  // The league's stars on the slate: season average of 20+ PTS, 10+ REB or 8+ AST (last season's until he has games this season),
+  // padded to at least 6 players so a thin slate still fills the reel. One request for every player on the slate.
+  const starsBySlate = {};
+  async function starIdsFor(slate) {
+    const key = `${slate.date}|${slate.rows.length}`;
+    if (starsBySlate[key]) return starsBySlate[key];
+    const ids = [...new Set(slate.rows.map((row) => row.playerId))];
+    const averages = typeof loadSeasonAverages === "function" ? await loadSeasonAverages(ids).catch(() => ({})) : {};
+    const scored = ids.map((id) => {
+      const a = averages[id];
+      return { id, score: a ? Math.max((a.pts || 0) / 20, (a.reb || 0) / 10, (a.ast || 0) / 8) : 0 };
+    }).sort((x, y) => y.score - x.score);
+    const stars = new Set(scored.filter((x) => x.score >= 1).map((x) => x.id));
+    scored.forEach((x) => { if (stars.size < 6 && x.score > 0) stars.add(x.id); });
+    return (starsBySlate[key] = stars);
+  }
+
+  // The slate's rows -> card entries (one per player, best L10 side). stars = the Set of player ids allowed (null = everyone).
+  function picksFrom(slate, stars) {
     const injuries = slate.injuries || {};
     const entries = (slate.rows || []).map((row) => {
       const games = (row.w && row.w[10] && row.w[10].games) || [];
       if (games.length < 8 || !WORD[row.code]) return null;
+      if (stars && !stars.has(row.playerId)) return null;
       if (typeof plIsInjuredOut === "function" && plIsInjuredOut(injuries[row.playerId])) return null;
       const overs = games.filter((game) => game.overUnder === "over").length;
       const unders = games.filter((game) => game.overUnder === "under").length;
@@ -69,7 +94,7 @@
     const href = item.sample ? "schedule.html" : `player.html?id=${item.playerId}&prop=${encodeURIComponent(item.code)}&side=${item.side}`;
     return `
       <a class="lh-rc" href="${href}" style="--team:${teamColor(item.team)}" tabindex="-1" aria-hidden="true">
-        <span class="lh-rc-who"><span class="lh-rc-av"${item.playerId ? ` data-player-id="${item.playerId}"` : ""}>${initials(item.name)}</span><span class="lh-rc-tag lines-only">${hits} of ${n}</span></span>
+        <span class="lh-rc-who"><span class="lh-rc-av"${item.playerId ? ` data-player-id="${item.playerId}" data-name-key="${esc(nameKey(item.name))}"` : ""}>${initials(item.name)}</span><span class="lh-rc-tag lines-only">${hits} of ${n}</span></span>
         <span class="lh-rc-name">${esc(item.name)}</span>
         <span class="lh-rc-meta">${item.team} · ${esc(item.matchup)}</span>
         <span class="lh-rc-avg">${avg.toFixed(1)}</span>
@@ -110,7 +135,7 @@
     }).join("");
     sheet.innerHTML = `
       <div class="lh-sh-bar">
-        <span class="lh-sh-av" style="background:${teamColor(item.team)}">${initials(item.name)}</span>
+        <span class="lh-sh-av"${item.playerId ? ` data-player-id="${item.playerId}" data-name-key="${esc(nameKey(item.name))}"` : ""} style="background:${teamColor(item.team)}">${initials(item.name)}</span>
         <span class="lh-sh-name">${esc(item.name)}<small>${item.team} · ${esc(item.matchup)}</small></span>
         <span class="lh-sh-tabs">${["pts", "reb", "ast", "pra"].map((code) => `<span class="${code === item.code ? "is-on" : ""}">${code.toUpperCase()}</span>`).join("")}</span>
       </div>
@@ -124,6 +149,7 @@
       </div>
       <div class="lh-sh-chart">${item.vals.map((v) => `<i class="${hit(v, item.line, item.side) ? "is-hit" : "is-miss"}" data-v="${v}" style="height:${((v / max) * 100).toFixed(1)}%"></i>`).join("")}<span class="lh-sh-line lines-only" style="bottom:${((item.line / max) * 100).toFixed(1)}%"><span>${lt(item.line)}</span></span></div>
       <div class="lh-sh-ladder lines-only">${ladder}</div>`;
+    if (typeof loadPlayerPhoto === "function") sheet.querySelectorAll(".lh-sh-av[data-player-id]").forEach(loadPlayerPhoto);
   }
 
   function dayWord(date) {
@@ -147,10 +173,13 @@
   }
 
   show(SAMPLES, null);
-  document.addEventListener("lh-top-slate", (event) => {
+  document.addEventListener("lh-top-slate", async (event) => {
     const slate = event.detail && event.detail.slate;
     if (!slate || !slate.rows || !slate.rows.length) return;
-    const items = picksFrom(slate);
+    window.lhHomeLastSlate = slate;
+    const stars = await starIdsFor(slate);
+    window.lhHomeStars = stars;
+    const items = picksFrom(slate, stars);
     if (items.length >= 4) show(items, slate);
   });
   document.addEventListener("lh-odds-ready", () => {
@@ -158,10 +187,12 @@
     if (first && !first.getAttribute("href").startsWith("schedule")) {
       // redraw the sheet's odds once the books' prices are in
       const evt = window.lhHomeLastSlate;
-      if (evt) fillSheet(picksFrom(evt).find((item) => item.code === "pts") || picksFrom(evt)[0]);
+      if (evt) {
+        const items = picksFrom(evt, window.lhHomeStars || null);
+        fillSheet(items.find((item) => item.code === "pts") || items[0]);
+      }
     }
   });
-  document.addEventListener("lh-top-slate", (event) => { if (event.detail && event.detail.slate) window.lhHomeLastSlate = event.detail.slate; });
 
   // The two columns scroll forever: left up, right down; moving by half a doubled list loops without a jump.
   (function frame(now) {
