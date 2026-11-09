@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hunt image mockup</title>
+  <meta name="robots" content="noindex">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <!--
+    MOCKUP ONLY: what "Save as image" makes from the Hunts builder (4:5, 1080 x 1350 at 2x; shown scaled). Same placeholders as the
+    builder mockup (REB odds, Hit together 8/10). It follows the page's theme like the other share pictures. Flat, no shadows.
+  -->
+  <style>
+    :root, [data-theme="dark"] { --ink:#060a16; --panel:#0b1229; --panel2:#101a38; --rule:#1f2e5a; --mist:#93a1cb; --strong:#d8dff5; --text:#c3cce9; --over:#46a98f; --over-text:#7fdcc0; --under:#bd6570; color-scheme: dark; }
+    [data-theme="light"] { --ink:#eef1fa; --panel:#fff; --panel2:#f3f5fc; --rule:#cfd6ec; --mist:#4b5784; --strong:#0b1229; --text:#26325e; --over:#22685a; --over-text:#22685a; --under:#a33a4a; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: #000; color: var(--text); font: 400 14px/1.45 Satoshi, system-ui, sans-serif; }
+    .bar { max-width: 400px; margin: 0 auto 12px; }
+    .bar button { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 6px 12px; font: inherit; cursor: pointer; }
+    .img { width: 400px; max-width: 100%; aspect-ratio: 4 / 5; margin: 0 auto; background: var(--ink); padding: 26px 24px; display: flex; flex-direction: column; }
+    .logo { font: 600 1.15rem "Clash Display", sans-serif; color: var(--strong); display: flex; justify-content: space-between; align-items: baseline; }
+    .logo small { font: 500 .75rem Satoshi; color: var(--mist); }
+    h1 { font: 600 1.9rem/1.05 "Clash Display", sans-serif; color: var(--strong); margin: 22px 0 2px; }
+    .sub { color: var(--mist); font-size: .8rem; }
+    .leg { border-left: 4px solid var(--over); background: var(--panel); padding: 10px 12px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .leg b { display: block; font: 600 1.05rem "Clash Display", sans-serif; color: var(--strong); }
+    .leg span { font-size: .72rem; color: var(--mist); }
+    .leg .o { font: 600 1.05rem "Clash Display", sans-serif; color: var(--over-text); text-align: right; }
+    .leg .o small { display: block; font: 500 .68rem Satoshi; color: var(--mist); }
+    .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-top: 16px; padding: 10px 0; }
+    .stats div { padding: 0 10px; border-left: 1px solid var(--rule); }
+    .stats div:first-child { padding-left: 0; border-left: 0; }
+    .stats span { display: block; font-size: .7rem; color: var(--mist); }
+    .stats b { font: 600 1.35rem/1.15 "Clash Display", sans-serif; color: var(--strong); }
+    .stats .win { color: var(--over-text); }
+    .hit { margin-top: 14px; }
+    .hit .t { font-size: .72rem; color: var(--mist); }
+    .hit b { font: 600 1.2rem "Clash Display", sans-serif; color: var(--strong); margin-right: 8px; }
+    .dots { display: inline-flex; gap: 3px; vertical-align: middle; }
+    .dots i { width: 12px; height: 12px; background: var(--over); }
+    .dots i.m { background: var(--under); }
+    .foot { margin-top: auto; border-top: 1px solid var(--rule); padding-top: 10px; font-size: .68rem; color: var(--mist); display: flex; justify-content: space-between; gap: 12px; }
+    .foot b { color: var(--strong); }
+    .src { max-width: 400px; margin: 12px auto 0; font-size: .75rem; color: var(--mist); }
+  </style>
+</head>
+<body>
+  <div class="bar"><button id="t">Switch to light</button></div>
+  <div class="img">
+    <div class="logo">LineHunter <small>Sun Nov 8</small></div>
+    <h1>2-leg hunt</h1>
+    <div class="sub">UTA @ MIN · same game · FanDuel</div>
+    <div class="leg"><div><b>McDaniels Over 2.5 AST</b><span>9 of last 10 over</span></div><div class="o">−165<small>FD</small></div></div>
+    <div class="leg"><div><b>McDaniels Over 5.5 REB</b><span>9 of last 10 over</span></div><div class="o">−150<small>FD</small></div></div>
+    <div class="stats">
+      <div><span>Combined odds</span><b>+168</b></div>
+      <div><span>$10 stake</span><b class="win">wins $16.77</b></div>
+      <div><span>Implied chance</span><b>37.4%</b></div>
+    </div>
+    <div class="hit">
+      <div class="t">Hit together · last 10 games</div>
+      <b>8/10</b><span class="dots"><i></i><i></i><i></i><i class="m"></i><i></i><i></i><i></i><i></i><i class="m"></i><i></i></span>
+    </div>
+    <div class="foot"><span>Past results, not a prediction. Gambling problem? Call <b>1-800-GAMBLER</b>.</span><b>linehunterapp.com</b></div>
+  </div>
+  <p class="src">Mockup. Placeholders: the REB odds and "Hit together 8/10". Real build draws this off-screen and saves it as a PNG, like the Hit List share pictures.</p>
+  <script>
+    document.getElementById("t").onclick = (e) => {
+      const r = document.documentElement, light = r.dataset.theme !== "light";
+      r.dataset.theme = light ? "light" : "dark"; e.target.textContent = light ? "Switch to dark" : "Switch to light";
+    };
+  </script>
+</body>
+</html>
