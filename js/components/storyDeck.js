@@ -335,21 +335,64 @@
   // ---------- sheets (filter and report) ----------
   let sheet = null;
   function openSheet(title, html, onReady) {
-    closeSheet();
+    closeSheet(true);
     sheet = document.createElement("div");
     sheet.className = "lh-sd-sheetwrap";
     sheet.innerHTML = `<div class="lh-sd-backdrop" data-sd="close"></div>
       <div class="lh-sd-sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="lh-sd-grab" aria-hidden="true"></div>${html}</div>`;
     document.body.appendChild(sheet);
+    box.classList.add("is-sheet"); // the deck dims and steps back while a sheet is open
     requestAnimationFrame(() => sheet && sheet.classList.add("is-open"));
+    bindSheetDrag(sheet);
     if (onReady) onReady(sheet);
   }
-  function closeSheet() {
+  function closeSheet(instant) {
     if (!sheet) return;
     const old = sheet;
     sheet = null;
+    box.classList.remove("is-sheet");
+    const panel = old.querySelector(".lh-sd-sheet");
+    if (panel) panel.style.transform = ""; // from a drag: let the class change slide it the rest of the way
+    old.querySelector(".lh-sd-backdrop").style.opacity = "";
     old.classList.remove("is-open");
-    setTimeout(() => old.remove(), REDUCED.matches ? 0 : 200);
+    setTimeout(() => old.remove(), instant || REDUCED.matches ? 0 : 300);
+  }
+
+  // Drag the handle or the title down to close (past 110px or a quick flick), otherwise it springs back.
+  function bindSheetDrag(wrap) {
+    const panel = wrap.querySelector(".lh-sd-sheet");
+    const backdrop = wrap.querySelector(".lh-sd-backdrop");
+    let startY = 0, dy = 0, dragging = false, lastY = 0, lastT = 0, velocity = 0, pid = null;
+    const handles = panel.querySelectorAll(".lh-sd-grab, .lh-sd-sheeth");
+    handles.forEach((handle) => {
+      handle.style.touchAction = "none";
+      handle.addEventListener("pointerdown", (event) => {
+        dragging = true; dy = 0; velocity = 0; pid = event.pointerId;
+        startY = lastY = event.clientY; lastT = event.timeStamp;
+        try { handle.setPointerCapture(pid); } catch (error) { /* fine */ }
+        panel.style.transition = "none";
+        backdrop.style.transition = "none";
+      });
+      handle.addEventListener("pointermove", (event) => {
+        if (!dragging || event.pointerId !== pid) return;
+        dy = Math.max(0, event.clientY - startY);
+        const dt = event.timeStamp - lastT;
+        if (dt > 0) velocity = (event.clientY - lastY) / dt;
+        lastY = event.clientY; lastT = event.timeStamp;
+        panel.style.transform = `translateY(${dy}px)`;
+        backdrop.style.opacity = String(Math.max(0, 1 - dy / (panel.offsetHeight || 400)));
+      });
+      const end = (event) => {
+        if (!dragging || event.pointerId !== pid) return;
+        dragging = false;
+        panel.style.transition = "";
+        backdrop.style.transition = "";
+        if (dy > 110 || velocity > 0.6) closeSheet();
+        else { panel.style.transform = ""; backdrop.style.opacity = ""; }
+      };
+      handle.addEventListener("pointerup", end);
+      handle.addEventListener("pointercancel", end);
+    });
   }
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeSheet(); });
 
@@ -412,8 +455,9 @@
       <h3 class="lh-sd-sheeth">${esc(first)} ${esc(last)} <span>${esc(row.team)} ${esc(row.matchup)}</span></h3>
       <div class="lh-sr lh-sd-report" id="sdReport"></div>
       <div class="lh-sd-reportbtns">
+        ${huntButtonHtml(legFor(c).leg, { labelOut: "Add to hunt", labelIn: "Added", iconFirst: true, className: "lh-sd-add" })}
         <a class="lh-sd-btn" href="player.html?id=${row.playerId}&prop=${row.code}">Player page ›</a>
-        <button type="button" class="lh-sd-btn is-primary" data-sd="close">Done</button>
+        <button type="button" class="lh-sd-btn" data-sd="totop">Back to top picks</button>
       </div>`, () => renderScoutReport(document.getElementById("sdReport"), reportCtx(c)));
   }
 
@@ -433,6 +477,11 @@
   document.addEventListener("click", (event) => {
     if (!sheet) return;
     if (event.target.closest('[data-sd="close"]')) { closeSheet(); return; }
+    if (event.target.closest('[data-sd="totop"]')) {
+      closeSheet();
+      box.scrollIntoView({ behavior: REDUCED.matches ? "auto" : "smooth", block: "start" });
+      return;
+    }
     const prop = event.target.closest("[data-sd-prop]");
     const side = event.target.closest("[data-sd-side]");
     const order = event.target.closest("[data-sd-order]");
