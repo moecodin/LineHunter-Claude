@@ -47,6 +47,11 @@
         <div class="st-sec"><h3><b>1</b>Source</h3><div id="stSources"></div>
           <div id="stPlayerWrap"><div class="st-lbl">Player card</div><select class="st-select" id="stPlayerPick"></select></div>
           <div id="stWinWrap" hidden><div class="st-lbl">Games window</div><div class="st-seg" id="stWin"></div></div>
+          <div id="stPromoWrap" hidden>
+            <div id="stPromoSlots"></div>
+            <div><div class="st-lbl">Background word</div><input class="st-in" id="stPromoWall"></div>
+            <div class="st-lbl">Points (or the closing slide's labels) are the rows below: edit, add, remove or reorder them.</div>
+          </div>
           <div id="stResWrap" hidden>
             <div class="st-lbl">Player</div>
             <div class="st-res-find"><input class="st-in" id="stResSearch" placeholder="Search any NBA player" autocomplete="off" spellcheck="false"><div class="st-res-list" id="stResList" hidden></div></div>
@@ -84,6 +89,7 @@
           </details>
           <div id="stNameWrap"><div class="st-lbl">Player name</div><input class="st-in" id="stF_name"></div>
           <div class="st-lbl">Big text</div><input class="st-in" id="stF_hero">
+          <div class="st-lbl">Small label</div><input class="st-in" id="stF_kicker">
           <div class="st-lbl">Title</div><input class="st-in" id="stF_title">
           <div class="st-lbl">Subtitle</div><input class="st-in" id="stF_subtitle">
           <div class="st-lbl">Footer</div><input class="st-in" id="stF_footer">
@@ -161,6 +167,7 @@
   <script src="studio/designs/player-card.js"></script>
   <script src="studio/designs/big-stat.js"></script>
   <script src="studio/designs/cover.js"></script>
+  <script src="studio/designs/promo.js"></script>
   <script src="studio/studio.js"></script>
 </body>
 </html>

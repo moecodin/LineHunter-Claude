@@ -28,7 +28,7 @@ const FOOT_STREAK = "Find your next streak free on LineHunter", FOOT_RESEARCH = 
 const HEAD_FONTS = ["Clash Display", "General Sans", "Cabinet Grotesk", "Switzer", "Boska", "Zodiak", "Gambetta", "Bebas Neue", "Satoshi"];
 const BODY_FONTS = ["Satoshi", "General Sans", "Switzer", "Cabinet Grotesk", "Zodiak"];
 const LOCKED_ELS = new Set(["credit", "foot"]); // can't be hidden: the photo credit and the disclaimer
-const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", site: "Website", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name", edge: "Edge text" };
+const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", site: "Website", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name", edge: "Edge text", num: "Slide number" };
 const STYLE0 = () => ({ fontHead: "", fontBody: "", fw: "", ls: null, upper: false, hero: 100, title: 100, rows: 100, bg: "", colors: {}, off: {} });
 const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false, fade: null, vignette: false });
 
@@ -180,7 +180,10 @@ function chooseSource(item, keepFields) {
   const prevKind = kindOf();
   S.source = item; S.sel = null; S.openRow = -1;
   const date = dateLabel(S.slate && S.slate.date);
-  if (item.kind === "player") {
+  if (item.kind === "promo") {
+    S.rows = item.points.map((t, i) => ({ id: i, n: t, full: "", t: "", stat: "", rec: "", hideTeam: true, on: true, custom: true }));
+    S.fields = { kicker: item.kicker, title: item.title, hero: item.hero, subtitle: item.num, footer: item.footer, wall: item.wall || "" };
+  } else if (item.kind === "player") {
     const p = playerData(item.row, S.win);
     S.rows = [];
     const fresh = { name: item.row.name, hero: `${p.hits}/${p.total}`, title: `${p.side === "over" ? "Over" : "Under"} ${p.line} ${p.code}`,
@@ -314,6 +317,43 @@ function bindResearch() {
     saveRes(); chooseSource(S.source);
   });
   $("stResHero").onchange = (e) => { S.res.hero = e.target.value; saveRes(); chooseSource(S.source); };
+}
+
+// ---------- App promo: cards that introduce the app (feature cards and a carousel), using the marketing kit's screenshots ----------
+// Every word is a field or a row (the points / the closing strip's labels), and every phone frame has its own screenshot pick.
+// fields: kicker = small label, title = headline line 1, hero = headline line 2 (accent), subtitle = slide number,
+// footer = the call to action ("Swipe →", "Free · no sign-up"), wall = the faint background word (hook).
+const PROMO_SOURCES = [
+  { id: "pr-hook", label: "Hook (slide 1)", layout: "hook", kicker: "Free NBA prop research", title: "Stop guessing.", hero: "Start hunting.", wall: "HUNT", num: "01 / 06", footer: "Swipe →", points: [], shots: ["today-phone.png", "player-phone.png"] },
+  { id: "pr-board", label: "The Board", layout: "feature", kicker: "Tool · The Board", title: "Every prop.", hero: "One list.", num: "02 / 06", footer: "Free at linehunterapp.com",
+    points: ["Every line on tonight's slate, ranked", "Hit rate, average and best odds in one row", "Tap a row for the chart and the matchup"], shots: ["board-open-phone.png"] },
+  { id: "pr-deck", label: "Top picks", layout: "feature", kicker: "Tool · Top picks", title: "Tonight's best,", hero: "one swipe away.", num: "03 / 06", footer: "Free at linehunterapp.com",
+    points: ["The 20 strongest props, one card at a time", "Swipe left to skip, right for the full report", "Add to your hunt in one tap"], shots: ["deck-phone.png"] },
+  { id: "pr-player", label: "Player pages", layout: "feature", kicker: "Tool · Player pages", title: "Every game.", hero: "Every split.", num: "04 / 06", footer: "Free at linehunterapp.com",
+    points: ["Prop chart for L5, L10, L20 or the season", "Home, away and head-to-head splits", "Minutes, usage and shot chart"], shots: ["player-phone.png"] },
+  { id: "pr-hunts", label: "Hunts builder", layout: "feature", kicker: "Tool · Hunts builder", title: "Build the slip.", hero: "Check the odds.", num: "05 / 06", footer: "Free at linehunterapp.com",
+    points: ["Pick props from tonight's games", "Combined odds and how often the legs hit together", "Send it to Pikkit or save the picture"], shots: ["hunts-phone.png"] },
+  { id: "pr-matchup", label: "Matchup Analyzer", layout: "feature", kicker: "Tool · Matchup Analyzer", title: "Know the", hero: "matchup.", num: "05 / 06", footer: "Free at linehunterapp.com",
+    points: ["Play types against the defense", "Tale of the tape, player vs player", "Pace, rest and injuries"], shots: ["matchup-phone.png"] },
+  { id: "pr-hitlist", label: "Hit List", layout: "feature", kicker: "Tool · Hit List", title: "Ready-made", hero: "slips.", num: "05 / 06", footer: "Free at linehunterapp.com",
+    points: ["Perfect Five, Heat Check, Bad Blood and more", "Every leg backed by its record", "Share a card in one tap"], shots: ["hit-list-phone.png"] },
+  { id: "pr-close", label: "Closing (last slide)", layout: "closing", kicker: "Every night, every game", title: "Research the line.", hero: "Then hunt it.", num: "06 / 06", footer: "Free · no sign-up",
+    points: ["The Board", "Top picks", "Players", "Hunts", "Matchups"], shots: ["board-phone.png", "deck-phone.png", "player-phone.png", "hunts-phone.png", "matchup-phone.png"] },
+];
+const promoGroup = () => ({ label: "App promo", items: PROMO_SOURCES.map((p) => ({ ...p, kind: "promo", promo: true })) });
+const appShots = () => (S.localPhotos || []).filter((p) => String(p.file).startsWith("../shots/")).map((p) => ({ file: p.file.slice(9), label: p.player.replace(/^App · /, ""), url: "studio/photos/shots/" + encodeURI(p.file.slice(9)) }));
+function promoSlots() { const src = S.source; if (!src || !src.promo) return []; const saved = (S.promoShots || {})[src.id] || []; return src.shots.map((f, i) => saved[i] || f); }
+function renderPromoUi() {
+  const on = !!(S.source && S.source.promo); $("stPromoWrap").hidden = !on; if (!on) return;
+  const shots = appShots(), slots = promoSlots();
+  $("stPromoWall").parentElement.hidden = S.source.layout !== "hook";
+  if (document.activeElement !== $("stPromoWall")) $("stPromoWall").value = S.fields.wall || "";
+  $("stPromoSlots").innerHTML = !shots.length ? `<div class="st-lbl">No screenshots yet. Run <b>node marketing/shots.js</b>, then reload.</div>`
+    : slots.map((f, i) => `<div class="st-lbl">${slots.length > 1 ? `Screen ${i + 1}` : "Screen"}</div><select class="st-select" data-pslot="${i}">${shots.map((s) => `<option value="${esc(s.file)}"${s.file === f ? " selected" : ""}>${esc(s.label)}</option>`).join("")}${shots.some((s) => s.file === f) ? "" : `<option selected value="${esc(f)}">${esc(f)} (missing)</option>`}</select>`).join("");
+}
+function bindPromo() {
+  $("stPromoSlots").addEventListener("change", (e) => { const i = e.target.dataset.pslot; if (i == null) return; const id = S.source.id; S.promoShots = S.promoShots || {}; const cur = promoSlots(); cur[+i] = e.target.value; S.promoShots[id] = cur; store.set("lh-studio-promo", S.promoShots); schedule(); });
+  $("stPromoWall").addEventListener("input", (e) => { S.fields.wall = e.target.value; schedule(); });
 }
 
 // ---------- Photos ----------
@@ -498,9 +538,10 @@ async function buildCard(design, sizeKey, opts = {}) {
     w: size.w, h: size.h, rows: S.rows.filter((r) => r.on).map((r) => ({ ...r, t: r.hideTeam ? "" : r.t })),
     hero: S.fields.hero, title: S.fields.title, subtitle: S.fields.subtitle, footer: S.fields.footer, kicker: S.fields.kicker, name: S.fields.name,
     note: off.showSite ? STUDIO_NOTE : STUDIO_NOTE.replace(/\s*linehunterapp\.com$/, ""), photo: null, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
-    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite, teamColor: !off.teamColor, sidePhoto: !off.sidePhoto, showEdge: !off.showEdge, naturalPhoto: !off.naturalPhoto },
+    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite, teamColor: !off.teamColor, sidePhoto: !off.sidePhoto, showEdge: !off.showEdge, naturalPhoto: !off.naturalPhoto, tilt: !off.tilt },
   };
   if (kindOf() === "player") data.player = playerData(S.source.row, S.win);
+  if (kindOf() === "promo") data.promo = { layout: S.source.layout, wall: S.fields.wall || "", shots: promoSlots().map((f) => ({ file: f, url: "studio/photos/shots/" + encodeURI(f) })), have: appShots().map((s) => s.file) };
   if (design.teamSwitch) {
     // Team color switch: the team's main color, a little darker so light text reads on it; a picked Background color wins.
     const custom = (S.style.colors[design.id] || {}).bg, tc = teamColorsFor()[0];
@@ -690,6 +731,11 @@ function captionText(plat) {
   const f = S.fields, rows = S.rows.filter((r) => r.on), tags = plat === "x" ? "#NBA #PlayerProps" : "#NBA #NBAProps #PlayerProps #NBAStats #LineHunter";
   const legal = plat === "x" ? "21+ | 1-800-GAMBLER" : "Based on past results, not guarantees. 21+. Gambling problem? Call 1-800-GAMBLER.";
   let lines;
+  if (S.source && S.source.promo) {
+    const ptags = plat === "x" ? "#NBA #NBAProps" : "#NBA #NBAProps #NBAStats #PlayerProps #LineHunter";
+    const body = [`${f.title} ${f.hero}`.trim(), "", ...(S.source.layout === "closing" ? [] : rows.map((r) => `${plat === "x" ? "" : "• "}${r.n}`))];
+    return [...body, "", "Free NBA research: linehunterapp.com", "", legal, "", ptags].join("\n");
+  }
   if (S.source && S.source.research) {
     const rtags = plat === "x" ? "#NBA #NBAStats" : "#NBA #NBAStats #NBATwitter #Basketball #LineHunter";
     const body = [f.title, f.subtitle, "", ...rows.map((r) => `${plat === "x" ? "" : "• "}${r.n}: ${r.rec}${r.stat ? " " + r.stat : ""}`)];
@@ -763,11 +809,11 @@ function renderControls() {
   $("stDelPhoto").hidden = !(sel && sel.mine);
   $("stCapPlat").innerHTML = [["x", "X"], ["ig", "Instagram"]].map(([k, l]) => `<button type="button" class="${S.cap.plat === k ? "on" : ""}" data-plat="${k}">${l}</button>`).join("");
   $("stEditToggle").classList.toggle("on", S.editing); $("stEditToggle").textContent = S.editing ? "Done editing" : "Edit on card";
-  renderResearchUi(); syncFieldsUi(); syncPhotoUi(); syncStyleUi(); syncUndo();
+  renderResearchUi(); renderPromoUi(); syncFieldsUi(); syncPhotoUi(); syncStyleUi(); syncUndo();
 }
 function syncFieldsUi() {
   $("stNameWrap").hidden = kindOf() !== "player";
-  ["name", "hero", "title", "subtitle", "footer"].forEach((k) => { if ($("stF_" + k) !== document.activeElement) $("stF_" + k).value = S.fields[k] || ""; });
+  ["name", "hero", "title", "subtitle", "footer", "kicker"].forEach((k) => { if ($("stF_" + k) !== document.activeElement) $("stF_" + k).value = S.fields[k] || ""; });
 }
 function syncPhotoUi() {
   const has = S.photoId !== "none", a = adjFor(S.photoId), d = curDesign();
@@ -815,7 +861,7 @@ function bind() {
   document.addEventListener("input", (e) => { const ds = e.target.dataset || {}; if (ds.rf) { S.rows[+ds.i][ds.rf] = e.target.value; schedule(); } });
   $("stAddRow").onclick = () => { S.rows.push({ id: Date.now(), n: "Name", full: "", t: "", stat: "Stat", rec: "0/0", on: true, custom: true }); S.openRow = S.rows.length - 1; renderControls(); schedule(); };
   $("stPlayerPick").onchange = (e) => { const r = S.players[+e.target.value]; if (r) chooseSource(playerSource(r)); };
-  ["name", "hero", "title", "subtitle", "footer"].forEach((k) => $("stF_" + k).addEventListener("input", (e) => { S.fields[k] = e.target.value; schedule(); }));
+  ["name", "hero", "title", "subtitle", "footer", "kicker"].forEach((k) => $("stF_" + k).addEventListener("input", (e) => { S.fields[k] = e.target.value; schedule(); }));
   // Photo
   ["zoom", "fx", "fy", "bright", "tint", "fade"].forEach((k) => $("stP_" + k).addEventListener("input", (e) => setAdj(k, +e.target.value)));
   $("stP_mode").onchange = (e) => setAdj("mode", e.target.value); $("stP_flip").onchange = (e) => setAdj("flip", e.target.checked); $("stP_vig").onchange = (e) => setAdj("vignette", e.target.checked);
@@ -843,7 +889,7 @@ function bind() {
   $("stCapText").addEventListener("input", () => { S.cap.dirty = true; countCaption(); });
   $("stCapRewrite").onclick = () => writeCaption(true);
   $("stCapCopy").onclick = async () => { try { await navigator.clipboard.writeText($("stCapText").value); $("stCapCopy").textContent = "Copied"; setTimeout(() => { $("stCapCopy").textContent = "Copy"; }, 1500); } catch (e) { $("stCapText").select(); } };
-  bindCardEditing(); bindResearch();
+  bindCardEditing(); bindResearch(); bindPromo();
   let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderAll, 150); });
 }
 
@@ -852,7 +898,7 @@ function onSlate(event) {
   const slate = event.detail && event.detail.slate;
   if (!slate) { $("stStatus").textContent = (event.detail && event.detail.message ? "No slate yet. " : "") + "Waiting for tonight's games…"; return; }
   if (S.slate === slate) return;
-  S.slate = slate; S.groups = [...buildSources(slate), researchGroup()];
+  S.slate = slate; S.groups = [...buildSources(slate), researchGroup(), promoGroup()];
   addBbqSource(slate);
   $("stStatus").hidden = true; $("stApp").hidden = false;
   const keep = S.source && allSources().find((i) => i.id === S.source.id);
@@ -865,9 +911,9 @@ let started = false;
 async function startStudio() {
   if (started) return; started = true;
   await loadPhotos();
-  S.res = { ...RES0(), ...store.get("lh-studio-res", {}) };
+  S.res = { ...RES0(), ...store.get("lh-studio-res", {}) }; S.promoShots = store.get("lh-studio-promo", {});
   // The Research source works without a slate (a night with no games, or games already started): show it right away.
-  if (!S.slate) { S.groups = [researchGroup()]; $("stStatus").hidden = true; $("stApp").hidden = false; chooseSource(S.groups[0].items[0]); }
+  if (!S.slate) { S.groups = [researchGroup(), promoGroup()]; $("stStatus").hidden = true; $("stApp").hidden = false; chooseSource(S.groups[0].items[0]); }
   if (S.res.id) resLoad({ id: S.res.id, name: S.res.name, team: S.res.team });
   document.addEventListener("lh-top-slate", onSlate);
   if (window.__lhPendingSlate) onSlate(window.__lhPendingSlate);
