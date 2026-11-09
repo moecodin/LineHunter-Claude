@@ -1,0 +1,82 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Studio (mockup)</title>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a16;--panel:#0b1229;--sel:#14234c;--rule:#1f2e5a;--ink:#d8dff5;--mut:#93a1cb;--acc:#9a93ff;--teal:#46a98f;--ttxt:#7fdcc0}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--ink);font:15px Satoshi,sans-serif}
+h2,h3,.cl{font-family:"Clash Display",sans-serif;font-weight:600}
+.top{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--rule)}
+.top img{height:30px}.tag{font-size:12px;font-weight:700;letter-spacing:.08em;padding:4px 10px;border:1px solid var(--rule);border-radius:32px;color:var(--acc)}
+.top .sp{flex:1}.btn{font:600 14px Satoshi;color:var(--ink);background:var(--sel);border:1px solid var(--acc);border-radius:8px;padding:10px 16px;cursor:pointer}
+.btn.pri{background:var(--acc);color:#060a16;border-color:var(--acc)}.btn.ghost{background:none;border-color:var(--rule)}
+.wrap{display:grid;grid-template-columns:380px 1fr;gap:24px;padding:24px;max-width:1280px;margin:auto}
+.rail{display:flex;flex-direction:column;gap:14px}
+.sec{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:16px}
+.sec h3{font-size:17px;display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.sec h3 b{font:700 12px Satoshi;color:var(--acc);border:1px solid var(--rule);border-radius:32px;padding:2px 9px}
+.lbl{font-size:12px;color:var(--mut);margin:10px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{padding:7px 12px;border:1px solid var(--rule);border-radius:32px;font-size:13px;cursor:pointer;color:var(--mut)}
+.chip.on{background:var(--sel);border-color:var(--acc);color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--rule);font-size:14px}
+.row i{font-style:normal;color:var(--mut);cursor:grab}.row input{accent-color:#9a93ff}.row span:last-child{margin-left:auto;color:var(--ttxt);font-weight:700}
+.thumbs{display:flex;gap:10px}.th{border:1px solid var(--rule);border-radius:8px;padding:6px;cursor:pointer;flex:1;text-align:center;font-size:12px;color:var(--mut)}
+.th.on{border-color:var(--acc);background:var(--sel);color:var(--ink)}
+.tw{width:100%;aspect-ratio:4/5;overflow:hidden;position:relative;border-radius:4px;margin-bottom:6px}
+.tw img{width:100%;height:100%;object-fit:cover;display:block}
+.seg{display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}.seg div{flex:1;text-align:center;padding:8px;font-size:13px;color:var(--mut);cursor:pointer}
+.seg .on{background:var(--sel);color:var(--ink)}
+.in{width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:8px;color:var(--ink);padding:10px;font:14px Satoshi}
+.ph{display:flex;gap:12px;align-items:center}.ph img{width:56px;height:70px;object-fit:cover;border-radius:4px}.ph small{color:var(--mut);display:block;font-size:12px;margin-top:3px}
+.stage{display:flex;flex-direction:column;align-items:center;gap:16px}
+.pv{width:560px;aspect-ratio:4/5;overflow:hidden;position:relative;border:1px solid var(--rule);border-radius:12px}
+.pv iframe{border:0;width:1080px;height:1350px;transform-origin:0 0;position:absolute;left:0;top:0;pointer-events:none}
+.acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.meta{color:var(--mut);font-size:13px;text-align:center}
+.lock{position:fixed;inset:0;background:rgba(6,10,22,.94);display:none;align-items:center;justify-content:center;z-index:9}
+body.locked .lock{display:flex}.lk{width:420px;max-width:92vw;background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:28px;text-align:center}
+.lk h2{font-size:26px;margin:14px 0 6px}.lk p{color:var(--mut);margin-bottom:18px}.lk .in{text-align:center;margin-bottom:12px}
+.gen{margin-top:16px;padding-top:16px;border-top:1px solid var(--rule);font-size:13px;color:var(--mut)}
+.pp{font:600 20px "Clash Display";color:var(--ttxt);margin:10px 0}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;padding:14px}.pv{width:100%}.stage{order:-1}}
+</style></head><body class="">
+<div class="top"><img src="lh-lockup-on-dark.svg"><span class="tag">STUDIO</span><span class="sp"></span><button class="btn ghost" onclick="document.body.classList.add('locked')">Lock</button></div>
+<div class="wrap">
+ <div class="rail">
+  <div class="sec"><h3><b>1</b>Source</h3>
+   <div class="lbl">Hit List cards</div><div class="chips"><span class="chip">Perfect Five</span><span class="chip">Under the Weather</span><span class="chip">Home Cookin'</span><span class="chip">Road Warriors</span><span class="chip">Bad Blood</span><span class="chip">Light It Up</span><span class="chip">Heat Check</span><span class="chip">BBQ Chicken</span><span class="chip">Brick City</span></div>
+   <div class="lbl">Streaks</div><div class="chips"><span class="chip on">Points</span><span class="chip">Rebounds</span><span class="chip">Assists</span><span class="chip">3PM</span></div>
+   <div class="lbl">The Board</div><div class="chips"><span class="chip">Top hit rates</span><span class="chip">One game</span></div>
+   <div class="lbl">Date</div><div class="chips"><span class="chip on">Sun, Nov 8</span><span class="chip">Mon, Nov 9</span></div></div>
+  <div class="sec"><h3><b>2</b>Rows <small style="color:var(--mut);font:13px Satoshi">7 of 9 shown</small></h3>
+   <div class="row"><i>⋮⋮</i><input type="checkbox" checked><span>L. Dončić · 30+ PTS</span><span>7/7</span></div>
+   <div class="row"><i>⋮⋮</i><input type="checkbox" checked><span>D. Mitchell · 10+ PTS</span><span>12/12</span></div>
+   <div class="row"><i>⋮⋮</i><input type="checkbox" checked><span>D. Robinson · 12+ PTS</span><span>10/10</span></div>
+   <div class="row"><i>⋮⋮</i><input type="checkbox" checked><span>K. Dunn · 5+ PTS</span><span>9/9</span></div>
+   <div class="row"><i>⋮⋮</i><input type="checkbox"><span>T. Jones · 8+ PTS</span><span>8/8</span></div></div>
+  <div class="sec"><h3><b>3</b>Design</h3>
+   <div class="thumbs"><div class="th on" data-d="a-night-poster.html"><div class="tw"><img src="a-night-poster.png"></div>Night poster</div><div class="th" data-d="b-paper-scoreboard.html"><div class="tw"><img src="b-paper-scoreboard.png"></div>Paper scoreboard</div></div>
+   <div class="lbl">Size</div><div class="seg"><div class="on">Post 4:5</div><div>Square 1:1</div><div>Story 9:16</div></div>
+   <div class="lbl">Theme</div><div class="seg"><div class="on">Design default</div><div>Dark</div><div>Light</div></div></div>
+  <div class="sec"><h3><b>4</b>Photo and text</h3>
+   <div class="ph"><img src="photos/doncic.jpg"><div><b>Luka Dončić</b><small>Erik Drost · CC BY 4.0 · credit on image</small></div></div>
+   <div class="chips" style="margin-top:10px"><span class="chip">Swap photo</span><span class="chip">Upload</span><span class="chip">No photo</span></div>
+   <div class="lbl">Title</div><input class="in" value="100% Points streaks">
+   <div class="lbl">Subtitle</div><input class="in" value="Sunday, Nov 8">
+   <div class="lbl">Footer</div><input class="in" value="Find your next streak free on LineHunter">
+   <div class="lbl" style="color:var(--ttxt)">✓ 1-800-GAMBLER disclaimer is always on</div></div>
+ </div>
+ <div class="stage"><div class="pv" id="pv"><iframe id="pf" src="a-night-poster.html"></iframe></div>
+  <div class="acts"><button class="btn pri">Download PNG</button><button class="btn">Share</button><button class="btn ghost">Copy caption</button></div>
+  <div class="meta">1080 × 1350 · data as of Nov 8, 9:41 PM · mockup uses sample numbers</div></div>
+</div>
+<div class="lock"><div class="lk"><img src="lh-lockup-on-dark.svg" style="height:34px"><h2>Studio</h2><p>Enter your passphrase</p>
+ <input class="in" type="password" value="copper-lantern-drift-42"><button class="btn pri" style="width:100%" onclick="document.body.classList.remove('locked')">Unlock</button>
+ <div class="gen">Rotate it any time. The old one stops working.<div class="pp" id="pp">harbor-velvet-orbit-17</div><button class="btn ghost" onclick="gen()">Generate new passphrase</button> <button class="btn ghost">Copy</button></div></div></div>
+<script>
+function fit(){document.querySelectorAll('.pv iframe').forEach(f=>f.style.transform='scale('+(f.parentElement.clientWidth/1080)+')');document.querySelectorAll('.tw iframe').forEach(f=>f.style.transform='scale('+(f.parentElement.clientWidth/1080)+')')}
+addEventListener('load',()=>{fit();setTimeout(fit,400);setTimeout(fit,1200)});addEventListener('resize',fit);
+document.querySelectorAll('.th').forEach(t=>t.onclick=()=>{document.querySelectorAll('.th').forEach(x=>x.classList.remove('on'));t.classList.add('on');pf.src=t.dataset.d});
+document.querySelectorAll('.chips').forEach(g=>g.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on')}));
+const W=[["copper","harbor","velvet","maple","signal","granite","ember","cobalt"],["lantern","orbit","falcon","meadow","anchor","quartz","thunder","willow"],["drift","spark","trail","summit","echo","bridge","comet","ridge"]];
+function gen(){pp.textContent=W.map(a=>a[Math.random()*a.length|0]).join('-')+'-'+(10+Math.random()*90|0)}
+if(location.hash=='#lock')document.body.classList.add('locked');
+</script></body></html>

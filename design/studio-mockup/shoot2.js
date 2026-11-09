@@ -1,0 +1,11 @@
+const { chromium } = require("playwright");
+(async()=>{const b=await chromium.launch();
+ let p=await b.newPage({viewport:{width:1360,height:1000}});
+ await p.goto("file://"+__dirname+"/studio.html");await p.evaluate(()=>document.fonts.ready);await p.waitForTimeout(1500);
+ await p.screenshot({path:__dirname+"/studio-desktop.png",fullPage:true});
+ await p.goto("file://"+__dirname+"/studio.html#lock");await p.reload();await p.waitForTimeout(1200);
+ await p.screenshot({path:__dirname+"/studio-lock.png"});
+ p=await b.newPage({viewport:{width:390,height:844},deviceScaleFactor:2});
+ await p.goto("file://"+__dirname+"/studio.html");await p.waitForTimeout(1500);await p.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));await p.waitForTimeout(1500);await p.evaluate(()=>window.scrollTo(0,0));await p.waitForTimeout(500);
+ await p.screenshot({path:__dirname+"/studio-phone.png",fullPage:true});
+ await b.close()})();
