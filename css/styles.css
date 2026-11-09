@@ -7271,3 +7271,7 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   .lh-mi2, .lh-gp-facts #gameLineFact, .lh-mi2-meet { order: 0; }
   .lh-gp-facts #gameLineFact, .lh-mi2-meet { border-top: 0; padding-top: 0; }
 }
+
+/* Homepage Top Hit Rates: short samples name their window ("6/8 · L8"), and the "Updated" line */
+.lh-top-lw { font-size: 0.7em; font-weight: 500; color: var(--lh-muted); }
+.lh-top-updated[hidden] { display: none; }

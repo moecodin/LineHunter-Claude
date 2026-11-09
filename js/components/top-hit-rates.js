@@ -32,6 +32,7 @@ const TOP_FILTERS = PL_STAT_TABS;
 // The homepage also saves under "lh-top-hit-rates:next", because it doesn't know the date until it asks.
 const TOP_CACHE_PREFIX = "lh-top-hit-rates:";
 const TOP_CACHE_MINUTES = 10;
+const TOP_MAX_PER_PLAYER = 2; // the homepage card's "All" view shows a player at most twice
 
 let topSlate = null;       // { date: "2026-10-20", rows: [...] } once loaded
 let topFilter = "all";     // which pill is selected
@@ -724,9 +725,13 @@ function renderTopRows() {
     return;
   }
 
+  // "All": at most 2 rows per player (their best two, the list is already sorted), so more different players show.
+  const perPlayer = {};
   const rows = topSlate.rows
     .filter((row) => topFilter === "all" || row.code === topFilter)
+    .filter((row) => topFilter !== "all" || (perPlayer[row.playerId] = (perPlayer[row.playerId] || 0) + 1) <= TOP_MAX_PER_PLAYER)
     .slice(0, TOP_ROW_COUNT);
+  renderTopUpdated();
 
   const list = document.getElementById("topHitRatesList");
   list.removeAttribute("aria-busy");
@@ -750,10 +755,20 @@ function renderTopRows() {
         </div>
         <div class="lh-top-prop">${row.code.toUpperCase()} o${row.line}</div>
         <div class="lh-top-graph">${miniGraph(row.games)}</div>
-        <div class="lh-top-hit ${hitClass}">${row.hits}/${row.totalGames} <span>(${Math.round(row.hitRate)}%)</span></div>
+        <div class="lh-top-hit ${hitClass}">${row.hits}/${row.totalGames}${row.totalGames < TOP_WINDOWS[1] ? ` <small class="lh-top-lw">· L${row.totalGames}</small>` : ""} <span>(${Math.round(row.hitRate)}%)</span></div>
       </a>`;
   }).join("");
   if (typeof limitRowsOnPhones === "function") limitRowsOnPhones(list, ".lh-top-row"); // phones: 3 rows + "Show more" (js/components/moreRows.js)
+}
+
+// "Updated 9:47 AM ET · refreshes through the day": the time the slate was really downloaded (not the page load), in Eastern Time.
+function renderTopUpdated() {
+  const el = document.getElementById("topHitRatesUpdated");
+  if (!el) return;
+  if (!topSlate || !topSlate.fetchedAt) { el.hidden = true; return; }
+  const time = new Date(topSlate.fetchedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
+  el.textContent = `Updated ${time} ET · refreshes through the day`;
+  el.hidden = false;
 }
 
 // The carousel slide's "Coming soon" pill becomes a link to this card once there's data.
@@ -875,6 +890,7 @@ async function loadTopHitRates({ cacheKey, titleDate, getSlate }) {
 
     // A slate with players whose games failed to download (busy API) is shown but not saved: the next visit asks again instead of
     // showing the same gaps for 10 minutes.
+    if (!savedForDate && !result.fetchedAt) result.fetchedAt = Date.now(); // when the data was really downloaded ("Updated 9:47 AM ET")
     if (!result.incomplete) {
       writeTopCache(cacheKey, result);
       if (result.date && result.date !== cacheKey) writeTopCache(result.date, result); // the homepage's slate, saved by date too
