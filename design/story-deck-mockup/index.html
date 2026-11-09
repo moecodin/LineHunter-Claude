@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Story deck mockup</title>
+  <meta name="robots" content="noindex">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <!--
+    MOCKUP ONLY (static): the Today page's mobile "Story" deck above The Board. Left: the card. Middle: the filter sheet. Right: the swipe
+    hints. Real numbers: McDaniels' AST L10 (9/10, avg 3.7, -165 FD, Nov 8 2026). Peeking card behind = Darryn Peterson, placeholder bars.
+    Gestures: swipe left = skip, swipe right = open the full report; buttons do the same. No animations here yet (proposed in chat).
+  -->
+  <style>
+    :root, [data-theme="dark"] { --ink:#060a16; --panel:#0b1229; --panel2:#101a38; --rule:#1f2e5a; --mist:#93a1cb; --strong:#d8dff5; --text:#c3cce9;
+      --over:#46a98f; --over-text:#7fdcc0; --under:#bd6570; --under-text:#f2969f; --sel:#14234c; --selEdge:#9a93ff; --fill:#d8dff5; --onfill:#060a16; color-scheme: dark; }
+    [data-theme="light"] { --ink:#eef1fa; --panel:#fff; --panel2:#f3f5fc; --rule:#cfd6ec; --mist:#4b5784; --strong:#0b1229; --text:#26325e;
+      --over:#22685a; --over-text:#22685a; --under:#a33a4a; --under-text:#a33a4a; --sel:#14234c; --selEdge:#280ea1; --fill:#0b1229; --onfill:#eef1fa; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--ink); color: var(--text); font: 400 14px/1.45 Satoshi, system-ui, sans-serif; }
+    .top { max-width: 1100px; margin: 0 auto 14px; display: flex; justify-content: space-between; align-items: center; }
+    .top button { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 6px 12px; font: inherit; cursor: pointer; }
+    .frames { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; max-width: 1100px; margin: 0 auto; }
+    .frame { width: 340px; }
+    .cap { font-size: .75rem; color: var(--mist); margin: 0 0 8px; }
+
+    .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .head h2 { font: 600 1.2rem "Clash Display", sans-serif; color: var(--strong); margin: 0; }
+    .head small { color: var(--mist); font-size: .8rem; margin-left: 6px; font-family: Satoshi; font-weight: 500; }
+    .filterbtn { background: none; border: 1px solid var(--rule); color: var(--strong); padding: 6px 12px; font: inherit; font-size: .8rem; border-radius: 8px; cursor: pointer; }
+    .prog { display: flex; gap: 3px; margin-bottom: 10px; }
+    .prog i { flex: 1; height: 3px; background: var(--rule); }
+    .prog i.on { background: var(--strong); }
+
+    .deck { position: relative; height: 470px; }
+    .card { position: absolute; inset: 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; padding: 16px; display: flex; flex-direction: column; }
+    .card.back { transform: translateY(10px) scale(.95); opacity: .55; }
+    .card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 120px; background: var(--team, #236192); clip-path: polygon(0 0, 100% 0, 100% 62%, 0 100%); }
+    .who { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+    .av { width: 110px; height: 92px; }
+    .av img { width: 100%; height: 100%; object-fit: contain; object-position: left bottom; }
+    .tag { background: var(--ink); color: var(--strong); font-size: .78rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .name { position: relative; margin-top: 20px; }
+    .name small { display: block; font-size: .85rem; color: var(--strong); }
+    .name b { font: 600 1.6rem/1.05 "Clash Display", sans-serif; color: var(--strong); }
+    .meta { color: var(--mist); font-size: .85rem; margin-top: 2px; }
+    .pick { margin-top: 14px; border-left: 3px solid var(--over); padding-left: 10px; }
+    .pick.u { border-color: var(--under); }
+    .pick b { font: 600 1.35rem "Clash Display", sans-serif; color: var(--strong); }
+    .pick span { display: block; color: var(--mist); font-size: .82rem; }
+    .stats { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 12px; }
+    .rate { font: 600 2.6rem/1 "Clash Display", sans-serif; color: var(--over-text); }
+    .rate small { display: block; font: 500 .75rem Satoshi; color: var(--mist); }
+    .odds { border: 1px solid var(--rule); padding: 4px 10px; font-weight: 700; color: var(--over-text); }
+    .odds small { color: var(--mist); font-weight: 500; }
+    .bars { position: relative; display: flex; align-items: flex-end; gap: 4px; height: 64px; margin-top: 12px; }
+    .bars i { flex: 1; background: var(--over); }
+    .bars i.m { background: var(--under); }
+    .bars .line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--mist); bottom: 40%; }
+    .why { margin-top: 12px; font-size: .85rem; color: var(--text); border-top: 1px solid var(--rule); padding-top: 10px; }
+    .why b { color: var(--strong); }
+    .actions { margin-top: auto; display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
+    .btn { background: none; border: 1px solid var(--rule); color: var(--strong); padding: 10px 12px; font: inherit; font-weight: 700; font-size: .85rem; border-radius: 8px; cursor: pointer; text-align: center; }
+    .btn.primary { background: var(--fill); color: var(--onfill); border-color: var(--fill); }
+    .hint { text-align: center; font-size: .72rem; color: var(--mist); margin-top: 8px; }
+
+    /* filter sheet */
+    .sheet { border: 1px solid var(--rule); background: var(--panel); padding: 16px; border-radius: 14px 14px 0 0; }
+    .sheet h3 { font: 600 1.2rem "Clash Display", sans-serif; color: var(--strong); margin: 0 0 4px; display: flex; justify-content: space-between; }
+    .sheet h3 span { font: 500 .8rem Satoshi; color: var(--mist); }
+    .lab { font-size: .75rem; color: var(--mist); margin: 14px 0 6px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { border: 1px solid var(--rule); background: none; color: var(--text); padding: 6px 12px; border-radius: 8px; font: inherit; font-size: .85rem; }
+    .chip.on { background: var(--sel); border-color: var(--selEdge); color: #d8dff5; }
+    .sheet .btn { width: 100%; margin-top: 16px; }
+
+    /* swipe hint states */
+    .stack { position: relative; height: 470px; }
+    .stack .card { transition: none; }
+    .swr { transform: translateX(46px) rotate(5deg); }
+    .stamp { position: absolute; top: 24px; z-index: 3; font: 600 1.1rem "Clash Display", sans-serif; letter-spacing: .04em; border: 2px solid; padding: 4px 10px; border-radius: 6px; background: var(--panel); }
+    .stamp.r { right: 18px; color: var(--over-text); border-color: var(--over); transform: rotate(8deg); }
+    .stamp.l { left: 18px; color: var(--mist); border-color: var(--mist); transform: rotate(-8deg); }
+    .note { max-width: 1100px; margin: 22px auto 0; font-size: .8rem; color: var(--mist); }
+  </style>
+</head>
+<body>
+  <div class="top"><b style="color:var(--strong)">Story deck · Today (mobile only)</b><button id="t">Switch to light</button></div>
+  <div class="frames">
+
+    <div class="frame">
+      <p class="cap">1 · The card</p>
+      <div class="head"><h2>Top picks <small>3 of 20</small></h2><button class="filterbtn">Filter · All</button></div>
+      <div class="prog"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="deck">
+        <div class="card back" style="--team:#0c2340"></div>
+        <div class="card" style="--team:#236192">
+          <div class="who"><span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span><span class="tag">9 of 10</span></div>
+          <div class="name"><small>Jaden</small><b>McDaniels</b><div class="meta">MIN · vs UTA · 7:00 PM</div></div>
+          <div class="pick"><b>Over 2.5 Assists</b><span>9 straight overs · averaging 3.7</span></div>
+          <div class="stats"><div class="rate">90%<small>last 10</small></div><span class="odds">−165 <small>FD</small></span></div>
+          <div class="bars"><i style="height:14%" class="m"></i><i style="height:43%"></i><i style="height:43%"></i><i style="height:57%"></i><i style="height:57%"></i><i style="height:100%"></i><i style="height:43%"></i><i style="height:43%"></i><i style="height:57%"></i><i style="height:71%"></i><span class="line"></span></div>
+          <div class="why"><b>Minutes are up:</b> 35.0 over his last 5, 33.4 over his last 10.</div>
+          <div class="actions"><span class="btn">‹ Skip</span><span class="btn primary">+ Add to hunt</span><span class="btn">Report ›</span></div>
+        </div>
+      </div>
+      <div class="hint">Swipe left to skip · swipe right for the full report</div>
+    </div>
+
+    <div class="frame">
+      <p class="cap">2 · Filter (a bottom sheet from the Filter button)</p>
+      <div class="sheet">
+        <h3>Filter <span>20 → 6 picks</span></h3>
+        <div class="lab">Prop</div>
+        <div class="chips"><span class="chip">All</span><span class="chip on">PTS</span><span class="chip">REB</span><span class="chip on">AST</span><span class="chip">3PM</span><span class="chip">PRA</span><span class="chip">STL</span><span class="chip">BLK</span></div>
+        <div class="lab">Side</div>
+        <div class="chips"><span class="chip on">Over</span><span class="chip">Under</span><span class="chip">Both</span></div>
+        <div class="lab">Order</div>
+        <div class="chips"><span class="chip on">Mix</span><span class="chip">Hit rate</span><span class="chip">Streak</span></div>
+        <span class="btn primary" style="display:block">Show 6 picks</span>
+      </div>
+    </div>
+
+    <div class="frame">
+      <p class="cap">3 · Mid-swipe (what the user sees while dragging)</p>
+      <div class="stack">
+        <div class="card back" style="--team:#0c2340"></div>
+        <span class="stamp r">FULL REPORT</span>
+        <div class="card swr" style="--team:#236192">
+          <div class="who"><span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span><span class="tag">9 of 10</span></div>
+          <div class="name"><small>Jaden</small><b>McDaniels</b><div class="meta">MIN · vs UTA · 7:00 PM</div></div>
+          <div class="pick"><b>Over 2.5 Assists</b><span>9 straight overs · averaging 3.7</span></div>
+          <div class="stats"><div class="rate">90%<small>last 10</small></div><span class="odds">−165 <small>FD</small></span></div>
+        </div>
+      </div>
+      <div class="hint">Dragging left shows “SKIP”; the card flies off and the next one rises.</div>
+    </div>
+  </div>
+  <p class="note">Mockup, static. Real: McDaniels' AST numbers (Nov 8). The card behind is a placeholder. "Report ›" opens that prop's Board row with the chart and scouting report. "+ Add to hunt" uses the same add as the Board and shows the usual toast.</p>
+  <script>
+    document.getElementById("t").onclick = (e) => {
+      const r = document.documentElement, light = r.dataset.theme !== "light";
+      r.dataset.theme = light ? "light" : "dark"; e.target.textContent = light ? "Switch to dark" : "Switch to light";
+    };
+  </script>
+</body>
+</html>
