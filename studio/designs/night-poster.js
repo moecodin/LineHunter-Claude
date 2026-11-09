@@ -33,12 +33,12 @@
       <div class="sa-list" data-el="list" style="top:${listTop}px;--rs:${rs};--rh:${rowH}px">
         ${rows.map((r, i) => `<div class="sa-row"><span class="sa-rk">${i + 1}</span><span class="sa-nm st-h">${esc(r.n)}${K.tag(r)}</span><span class="sa-st">${esc(r.stat)}</span><span class="sa-pips">${st.showPips === false ? "" : '<span class="sa-pip"></span>'.repeat(K.pipCount(r.rec))}</span><span class="sa-rec st-h">${esc(r.rec)}</span></div>`).join("")}
       </div>
-      <div class="sa-foot" data-el="foot"><strong data-text="footer">${esc(d.footer)}</strong><p>${K.note(d)}</p></div>
+      <div class="sa-foot" data-el="foot">${K.site(d)}<strong data-text="footer">${esc(d.footer)}</strong><p>${K.note(d)}</p></div>
     </div>`;
   }
   (window.STUDIO_DESIGNS = window.STUDIO_DESIGNS || []).push({
     id: "night-poster", name: "Night poster", kinds: ["list"], photo: "duotone", focus: { x: 50, y: 12 }, capacity, render,
     tokens: { bg: "#060a16", ink: "#d8dff5", mut: "#93a1cb", accent: "#9a93ff", good: "#7fdcc0", rule: "#1f2e5a" },
-    toggles: { showLogo: "Logo", showSub: "Date line", showPips: "Streak bars" },
+    toggles: { showLogo: "Logo", showSub: "Date line", showPips: "Streak bars", showSite: "Website" },
   });
 })();

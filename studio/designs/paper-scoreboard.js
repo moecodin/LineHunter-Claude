@@ -39,12 +39,12 @@
           ${rows.map((r) => `<div class="sb-row"><div class="sb-nm st-h">${esc(r.n)}<span>${K.tag(r)}${esc(r.stat)}</span></div><div class="sb-rec st-h" style="font-size:${Math.round((String(r.rec).length > 5 ? 36 : 48) * rs)}px">${esc(r.rec)}</div></div>`).join("")}
         </div>
       </div>
-      <div class="sb-foot" data-el="foot"><p><strong data-text="footer">${esc(d.footer)}</strong><br>${K.note(d)}</p>${st.showLogo === false ? "" : `<img src="${d.logoLight}" alt="LineHunter">`}</div>
+      <div class="sb-foot" data-el="foot"><p><strong data-text="footer">${esc(d.footer)}</strong><br>${K.note(d)}</p><div class="sb-right">${K.site(d)}${st.showLogo === false ? "" : `<img src="${d.logoLight}" alt="LineHunter">`}</div></div>
     </div>`;
   }
   (window.STUDIO_DESIGNS = window.STUDIO_DESIGNS || []).push({
     id: "paper-scoreboard", name: "Paper scoreboard", kinds: ["list"], photo: "plain", focus: { x: 46, y: 15 }, capacity, render,
     tokens: { bg: "#eef1fa", ink: "#052350", mut: "#4c5a85", accent: "#280ea1", rule: "#d8dff5" },
-    toggles: { showLogo: "Logo", showSub: "Date line", showKicker: "Top label" },
+    toggles: { showLogo: "Logo", showSub: "Date line", showKicker: "Top label", showSite: "Website" },
   });
 })();

@@ -30,12 +30,12 @@
           <div class="sp-plot"><div class="sp-line" style="bottom:${linePct}%"><span>${esc(p.line)}</span></div></div>
         </div>
       </div>
-      <div class="sp-foot" data-el="foot"><strong data-text="footer">${esc(d.footer)}</strong><p>${K.note(d)}</p></div>
+      <div class="sp-foot" data-el="foot">${K.site(d)}<strong data-text="footer">${esc(d.footer)}</strong><p>${K.note(d)}</p></div>
     </div>`;
   }
   (window.STUDIO_DESIGNS = window.STUDIO_DESIGNS || []).push({
     id: "player-card", name: "Player card", kinds: ["player"], photo: "plain", focus: { x: 50, y: 20 }, capacity: () => 0, render,
     tokens: { bg: "#060a16", ink: "#f4f6ff", mut: "#93a1cb", accent: "#9a93ff", good: "#46a98f", rule: "#1f2e5a" },
-    toggles: { showLogo: "Logo", showSub: "Matchup line", showValues: "Bar numbers" },
+    toggles: { showLogo: "Logo", showSub: "Matchup line", showValues: "Bar numbers", showSite: "Website" },
   });
 })();

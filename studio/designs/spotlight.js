@@ -28,12 +28,12 @@
       <div class="sc-list" data-el="list" style="top:${listTop}px;--rs:${rs};--rh:${cardH}px">
         ${rows.map((r, i) => `<div class="sc-row"><span class="sc-rk">${i + 1}</span><span class="sc-nm st-h">${esc(r.n)}${K.tag(r)}</span><span class="sc-st">${esc(r.stat)}</span><span class="sc-rec st-h">${esc(r.rec)}</span></div>`).join("")}
       </div>
-      <div class="sc-foot" data-el="foot"><strong data-text="footer">${esc(d.footer)}</strong><p>${K.note(d)}</p></div>
+      <div class="sc-foot" data-el="foot">${K.site(d)}<strong data-text="footer">${esc(d.footer)}</strong><p>${K.note(d)}</p></div>
     </div>`;
   }
   (window.STUDIO_DESIGNS = window.STUDIO_DESIGNS || []).push({
     id: "spotlight", name: "Spotlight", kinds: ["list"], photo: "plain", focus: { x: 50, y: 30 }, capacity, render,
     tokens: { bg: "#060a16", ink: "#f4f6ff", mut: "#b9c3e6", accent: "#9a93ff", good: "#7fdcc0", rule: "#ffffff" },
-    toggles: { showLogo: "Logo", showSub: "Date line" },
+    toggles: { showLogo: "Logo", showSub: "Date line", showSite: "Website" },
   });
 })();

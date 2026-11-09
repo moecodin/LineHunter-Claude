@@ -11,5 +11,7 @@ window.StudioKit = {
   tag: (r) => (r.t ? `<i>${window.StudioKit.esc(r.t)}</i>` : ""),
   // How many streak bars a record earns: "5/5" -> 5, "7 straight" -> 7, anything else -> 0.
   pipCount: (rec) => { const s = String(rec || ""); const m = /^(\d+)\s*\/\s*\d+/.exec(s) || /^(\d+)\s+straight/.exec(s); return m ? Math.min(12, +m[1]) : 0; },
+  // The site address on the right of the footer (Style panel switch "Website", on by default).
+  site: (d) => (d.style && d.style.showSite === false ? "" : `<span class="st-site st-h" data-el="site">linehunterapp.com</span>`),
   note: (d) => window.StudioKit.esc(d.note).replace(/\n/g, "<br>"),
 };

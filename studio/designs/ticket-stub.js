@@ -32,12 +32,12 @@
       <div class="sd-list" data-el="list" style="top:${tH + 50}px;--rs:${rs};--rh:${rowH}px;--gap:${GAP}px">
         ${rows.map((r, i) => `<div class="sd-ticket"><span class="sd-notch l"></span><span class="sd-notch r"></span><span class="sd-no">${i + 1}</span><div class="sd-info"><b class="st-h">${esc(r.n)}</b><span>${K.tag(r)}${esc(r.stat)}</span></div><div class="sd-stub st-h">${esc(r.rec)}</div></div>`).join("")}
       </div>
-      <div class="sd-foot" data-el="foot"><strong data-text="footer">${esc(d.footer)}</strong><p>${K.note(d)}</p></div>
+      <div class="sd-foot" data-el="foot">${K.site(d)}<strong data-text="footer">${esc(d.footer)}</strong><p>${K.note(d)}</p></div>
     </div>`;
   }
   (window.STUDIO_DESIGNS = window.STUDIO_DESIGNS || []).push({
     id: "ticket-stub", name: "Ticket stub", kinds: ["list"], photo: "plain", focus: { x: 50, y: 25 }, capacity, render,
     tokens: { bg: "#9a93ff", ink: "#060a16", mut: "#2a2f66", accent: "#280ea1", rule: "#fbfaff" },
-    toggles: { showLogo: "Logo", showSub: "Date line" },
+    toggles: { showLogo: "Logo", showSub: "Date line", showSite: "Website" },
   });
 })();

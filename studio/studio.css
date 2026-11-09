@@ -197,3 +197,8 @@ html,body{background:var(--st-bg)}
 .st-exp select{background:var(--st-bg);color:var(--st-ink);border:1px solid var(--st-rule);border-radius:8px;padding:9px;font:13px Satoshi}
 
 .st-body [hidden]{display:none!important}
+
+/* Website address in the footer (K.site): right side, on the footer line's baseline */
+.sa-foot .st-site,.sc-foot .st-site,.sd-foot .st-site,.sp-foot .st-site{position:absolute;right:0;top:4px;font-family:var(--f-head),sans-serif;font-size:24px;font-weight:600;color:var(--c-accent)}
+.sb-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex:none}
+.sb-foot .st-site{font-family:var(--f-head),sans-serif;font-size:22px;font-weight:600;color:var(--c-ink)}

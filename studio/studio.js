@@ -28,7 +28,7 @@ const FOOT_STREAK = "Find your next streak free on LineHunter", FOOT_RESEARCH = 
 const HEAD_FONTS = ["Clash Display", "General Sans", "Cabinet Grotesk", "Switzer", "Boska", "Zodiak", "Gambetta", "Bebas Neue", "Satoshi"];
 const BODY_FONTS = ["Satoshi", "General Sans", "Switzer", "Cabinet Grotesk", "Zodiak"];
 const LOCKED_ELS = new Set(["credit", "foot"]); // can't be hidden: the photo credit and the disclaimer
-const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name" };
+const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", site: "Website", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name" };
 const STYLE0 = () => ({ fontHead: "", fontBody: "", fw: "", ls: null, upper: false, hero: 100, title: 100, rows: 100, bg: "", colors: {}, off: {} });
 const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false });
 
@@ -302,8 +302,8 @@ async function buildCard(design, sizeKey, opts = {}) {
   const data = {
     w: size.w, h: size.h, rows: S.rows.filter((r) => r.on).map((r) => ({ ...r, t: r.hideTeam ? "" : r.t })),
     hero: S.fields.hero, title: S.fields.title, subtitle: S.fields.subtitle, footer: S.fields.footer, kicker: S.fields.kicker, name: S.fields.name,
-    note: STUDIO_NOTE, photo: null, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
-    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues },
+    note: off.showSite ? STUDIO_NOTE : STUDIO_NOTE.replace(/\s*linehunterapp\.com$/, ""), photo: null, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
+    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite },
   };
   if (kindOf() === "player") data.player = playerData(S.source.row, S.win);
   data.rows = data.rows.slice(0, design.capacity(data, data));
