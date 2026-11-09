@@ -217,7 +217,7 @@ function scoutBestHtml(ctx, data) {
         const forOver = best.side === "over";
         const tag = (most <= 10) === forOver ? "boost" : "risk";
         const label = most <= 10 ? `${scoutOrd(most)}-most` : `${scoutOrd(fewest)}-fewest`;
-        note = `<p class="lh-sr-note"><span class="lh-sr-tag is-${tag}">${tag === "boost" ? "Boost" : "Risk"}</span><span>${scoutEsc(ctx.opp)} allows the <b>${label} ${word}</b> in the league (${t[field].toFixed(1)} a game).</span></p>`;
+        note = `<p class="lh-sr-note is-${tag}"><span class="lh-sr-topic">Matchup</span><span>${scoutEsc(ctx.opp)} allows the <b>${label} ${word}</b> in the league (${t[field].toFixed(1)} a game).</span></p>`;
       }
     }
   }
@@ -239,13 +239,17 @@ function BOARD_STAT_SHORT_FALLBACK(code) {
   return (typeof BOARD_STAT_SHORT !== "undefined" && BOARD_STAT_SHORT[code]) || code.toUpperCase();
 }
 
-const SCOUT_TAGS = { boost: "Boost", risk: "Risk", ctx: "Context" };
 
 function scoutReportHtml(ctx, data) {
   const { items } = scoutItems(ctx, data);
   const main = items.filter((i) => !i.extra);
   const extra = items.filter((i) => i.extra);
-  const row = (i, hidden) => `<div class="lh-sr-item${hidden ? " lh-sr-extra" : ""}"${hidden ? " hidden" : ""}><span class="lh-sr-tag is-${i.tag}">${SCOUT_TAGS[i.tag]}</span><div><p>${i.text}</p><small>${i.small}</small></div></div>`;
+  // Each line: its topic on the left and a bar on the edge (teal = boost, rose = risk, gray = neutral). "small" is "Topic · detail".
+  const row = (i, hidden) => {
+    const [topic, ...rest] = i.small.split(" · ");
+    const detail = rest.join(" · ");
+    return `<div class="lh-sr-item is-${i.tag}${hidden ? " lh-sr-extra" : ""}"${hidden ? " hidden" : ""}><span class="lh-sr-topic">${topic}</span><div><p>${i.text}</p>${detail ? `<small>${detail}</small>` : ""}</div></div>`;
+  };
   return `
     ${scoutBestHtml(ctx, data)}
     <div class="lh-sr-rep">

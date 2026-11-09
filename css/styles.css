@@ -7212,17 +7212,7 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-sr-pill:hover { border-color: var(--lh-strong); }
 .lh-sr-player { max-width: 40rem; margin-bottom: 1rem; }
 
-/* Board opened row: "Show full report" under the tracker; the report column stays shut until it is opened */
-.lh-bd-reportbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1.25rem; margin-top: 0.75rem; }
-.lh-bd-reportbtn { background: none; border: 0; padding: 0; font-size: 0.85rem; color: var(--lh-strong); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
-.lh-bd-match.is-collapsed > .lh-bd-sechead, .lh-bd-match.is-collapsed > .lh-sr { display: none; }
-@media (max-width: 991.98px) { .lh-bd-cols:has(.lh-bd-match:not(.is-collapsed)) .lh-bd-match { order: -1; } }
 
-/* "Show full report" in a closed row: phones only, in the empty score space left of the chevron */
-.lh-bd-reportlink { display: none; }
-@media (max-width: 767.98px) {
-  .lh-bd-reportlink { display: block; white-space: nowrap; grid-column: 3 / -1; grid-row: 1 / span 2; justify-self: end; margin-right: 2.6rem; align-self: center; background: none; border: 0; padding: 0; font-size: 0.8rem; color: var(--lh-strong); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
-}
 
 /* Games wheel info (js/components/gameWheel.js): records, labeled Spread / Total / Moneyline, dots + View props. Flat, no shadows. */
 .lh-wml small { font-size: 0.6em; letter-spacing: 0.06em; opacity: 0.75; margin-right: 0.15em; }
@@ -7275,3 +7265,16 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 /* Homepage Top Hit Rates: short samples name their window ("6/8 · L8"), and the "Updated" line */
 .lh-top-lw { font-size: 0.7em; font-weight: 500; color: var(--lh-muted); }
 .lh-top-updated[hidden] { display: none; }
+
+/* Scouting report lines: the topic on the left, a bar on the edge says whether it leans (teal boost, rose risk, gray neutral) */
+.lh-sr-item { grid-template-columns: 5.2rem 1fr; border-left: 3px solid var(--lh-border); padding-left: 0.75rem; }
+.lh-sr-item.is-boost { border-left-color: var(--lh-over); }
+.lh-sr-item.is-risk { border-left-color: var(--lh-under); }
+.lh-sr-topic { font-size: 0.78rem; font-weight: 600; color: var(--lh-strong); }
+.lh-sr-item.is-ctx .lh-sr-topic { color: var(--lh-muted); }
+.lh-sr-note { border-left: 3px solid var(--lh-border); }
+.lh-sr-note.is-boost { border-left-color: var(--lh-over); }
+.lh-sr-note.is-risk { border-left-color: var(--lh-under); }
+.lh-sr-note .lh-sr-topic { width: 4.2rem; flex: none; }
+/* The hunts tracker is hidden for now (the markup and code stay; it moves somewhere else later) */
+.lh-bd-trackswitch, .lh-bd-tracker { display: none !important; }

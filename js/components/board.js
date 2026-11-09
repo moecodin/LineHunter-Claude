@@ -52,7 +52,6 @@ let boardShown = BOARD_STEP_ROWS;
 let boardOpen = null;    // the key of the open row, or null
 let boardPanel = null;   // { key, chart, toolbar, window, el } for the open row
 let boardPending = null; // { gameId, playerId, code, side } from boardOpenLinked, applied when the slate arrives
-let boardReportWanted = false; // the row opens with its scouting report shown (the "Show full report" link in the closed row)
 const boardExtras = {};  // playerId -> { season: {...} | null | "loading" }
 
 // ---------- Small helpers ----------
@@ -264,7 +263,6 @@ function boardHeadHtml(item, isOpen) {
       <div class="lh-bd-score is-${side}" title="${hunt ? `Hunt Score ${hunt.score}: ${hunt.chance}% chance` : "No Hunt Score for this line"}">${hunt ? hunt.score : "–"}</div>
       <div class="lh-bd-odds">${odds.chip}</div>
       <div class="lh-bd-add">${add}</div>
-      ${isOpen ? "" : `<button type="button" class="lh-bd-reportlink" data-bd-report-open>Show full report</button>`}
       <button type="button" class="lh-bd-chev" data-bd-toggle aria-expanded="${isOpen}" aria-controls="bdPanel" aria-label="${isOpen ? "Hide" : "Show"} the breakdown for ${boardEsc(label)}">
         <i class="bi bi-chevron-down" aria-hidden="true"></i>
       </button>`;
@@ -302,7 +300,6 @@ function boardPanelShellHtml(item) {
           <span class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" data-bd-tracker${boardTrackerOn() ? " checked" : ""}></span>
         </label>
         <div class="lh-bd-tracker" data-slot="tracker"></div>
-        <div class="lh-bd-reportbar"><button type="button" class="lh-bd-reportbtn" data-bd-report aria-expanded="${boardReportWanted}">${boardReportWanted ? "Hide" : "Show"} full report</button></div>
         <div class="lh-bd-cols">
           <div class="lh-bd-form">
             <div class="lh-bd-sechead">
@@ -312,7 +309,7 @@ function boardPanelShellHtml(item) {
             <div class="lh-bd-chart" data-slot="chart"></div>
             <div class="lh-bd-avgs" data-slot="avgs"></div>
           </div>
-          <div class="lh-bd-match${boardReportWanted ? "" : " is-collapsed"}">
+          <div class="lh-bd-match">
             <div class="lh-bd-sechead"><div><span class="lh-bd-kicker">Matchup</span><h3 class="lh-bd-title">Tonight ${boardEsc(item.row.matchup)}</h3></div></div>
             <div class="lh-sr" data-slot="scout"></div>
             <div class="lh-bd-links">
@@ -453,7 +450,7 @@ function boardPanelFill(item, { chart = true } = {}) {
   const slot = (name) => panel.querySelector(`[data-slot="${name}"]`);
   slot("sum").innerHTML = boardSumHtml(item);
   slot("avgs").innerHTML = boardAvgsHtml(item);
-  if (!panel.querySelector(".lh-bd-match").classList.contains("is-collapsed")) boardScoutFill(item, slot("scout"));
+  boardScoutFill(item, slot("scout"));
   panel.classList.toggle("is-tracker", boardTrackerOn());
 
   boardPanel.toolbar.render({
@@ -621,8 +618,7 @@ function boardApplyPending() {
   return key;
 }
 
-function boardToggle(key, withReport = false) {
-  boardReportWanted = withReport && boardOpen !== key;
+function boardToggle(key) {
   boardOpen = boardOpen === key ? null : key;
   boardPanel = null;
   renderBoard();
@@ -685,10 +681,6 @@ if (BOARD) {
     }
     const head = event.target.closest("[data-bd-head]");
     if (!head) return;
-    if (event.target.closest("[data-bd-report-open]")) {
-      boardToggle(head.closest("[data-bd-row]").dataset.bdRow, true);
-      return;
-    }
     // Buttons and links inside the row (Add, the odds chip) do their own thing; anything else opens / closes the row.
     if (!event.target.closest("[data-bd-toggle]") && event.target.closest("button, a, input, label, [data-hunt-add]")) return;
     boardToggle(head.closest("[data-bd-row]").dataset.bdRow);
@@ -698,23 +690,6 @@ if (BOARD) {
     if (!event.target.matches("[data-bd-tracker]")) return;
     boardSetTracker(event.target.checked);
     if (boardPanel && boardPanel.el) boardPanel.el.classList.toggle("is-tracker", event.target.checked);
-  });
-
-  // "Show full report" inside an open row: shows / hides the scouting report column (the Player page links stay at the bottom).
-  BOARD.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-bd-report]");
-    if (!button || !boardPanel || !boardPanel.el) return;
-    const panel = boardPanel.el;
-    const match = panel.querySelector(".lh-bd-match");
-    const open = match.classList.contains("is-collapsed");
-    boardReportWanted = open;
-    match.classList.toggle("is-collapsed", !open);
-    button.setAttribute("aria-expanded", String(open));
-    button.textContent = open ? "Hide full report" : "Show full report";
-    if (open) {
-      const item = boardFindItem(boardPanel.key);
-      if (item) boardScoutFill(item, panel.querySelector('[data-slot="scout"]'));
-    }
   });
 
   // The slate for the shown day (or a message instead).
