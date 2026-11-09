@@ -238,3 +238,32 @@ html,body{background:var(--st-bg)}
 .sx-fl{background:linear-gradient(90deg,var(--c-bg) 0%,rgba(var(--c-bg-rgb),0) 22%)}
 .sx-fr{background:linear-gradient(270deg,var(--c-bg) 0%,rgba(var(--c-bg-rgb),0) 22%)}
 .sx-ft{background:linear-gradient(180deg,var(--c-bg) 0%,rgba(var(--c-bg-rgb),0) 18%)}
+/* Night edition (studio/designs/night-edition.js) */
+.ne-card{position:relative;overflow:hidden;background:var(--c-bg);color:var(--c-ink);font-family:var(--f-body),sans-serif}
+.ne-photo{position:absolute;right:0;top:0;overflow:hidden}.ne-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.ne-fl{position:absolute;inset:0;background:linear-gradient(90deg,var(--c-bg) 0%,rgba(var(--c-bg-rgb),.6) 28%,rgba(var(--c-bg-rgb),0) 62%)}
+.ne-fb{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--c-bg-rgb),0) 38%,rgba(var(--c-bg-rgb),.55) 62%,var(--c-bg) 92%)}
+.ne-dim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--c-bg-rgb),.45) 0%,rgba(var(--c-bg-rgb),.7) 35%,rgba(var(--c-bg-rgb),.92) 70%,var(--c-bg) 100%)}
+.ne-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 80% 15%,rgba(var(--c-accent-rgb),.35),rgba(var(--c-bg-rgb),0) 60%)}
+.ne-credit{position:absolute;right:30px;top:62px;font-size:15px;color:var(--c-ink);background:rgba(var(--c-bg-rgb),.6);padding:5px 10px}
+.ne-wall{position:absolute;left:50px;top:70px;font-family:'Bebas Neue',sans-serif;line-height:.82;color:var(--c-accent);opacity:.17;white-space:nowrap;letter-spacing:-.005em}
+.ne-logo{position:absolute;left:64px;top:56px;height:42px}
+.ne-head{position:absolute;left:64px;right:300px}
+.ne-title{font-family:var(--f-head),sans-serif;font-weight:700;line-height:1;letter-spacing:-.02em}
+.ne-sub{font-size:24px;letter-spacing:.14em;text-transform:uppercase;color:var(--c-mut);margin-top:16px}
+.ne-list{position:absolute;left:64px;right:84px}
+.ne-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto auto;column-gap:20px;align-items:center;height:var(--rh);border-top:1px solid var(--c-rule)}
+.ne-row:last-child{border-bottom:1px solid var(--c-rule)}
+.ne-rk{font-size:calc(22px*var(--rs,1));color:var(--c-mut)}
+.ne-nm{font-family:var(--f-head),sans-serif;font-weight:700;font-size:calc(33px*var(--rs,1));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ne-nm i{font-style:normal;font-family:var(--f-body);font-weight:700;font-size:calc(17px*var(--rs,1));letter-spacing:.08em;color:var(--c-accent);margin-left:12px}
+.ne-st{font-size:calc(23px*var(--rs,1));color:var(--c-mut);white-space:nowrap}
+.ne-pips{display:flex;gap:4px}.ne-pips b{display:block;width:12px;height:20px;background:var(--c-good)}
+.ne-rec{min-width:92px;text-align:right;font-family:var(--f-head),sans-serif;font-weight:700;font-size:calc(36px*var(--rs,1));color:var(--c-good);white-space:nowrap}
+/* the export tool can't draw vertical writing, so the line is turned with a transform instead */
+.ne-edge{position:absolute;right:26px;width:24px;height:0}
+.ne-edge span{position:absolute;left:0;top:0;transform-origin:0 0;transform:rotate(90deg) translateY(-24px);font-size:18px;letter-spacing:.22em;color:var(--c-mut);opacity:.7;white-space:nowrap}
+.ne-foot{position:absolute;left:64px;right:84px;bottom:44px}
+.ne-foot strong{display:block;font-family:var(--f-head),sans-serif;font-size:30px;font-weight:700;margin-bottom:8px;padding-right:300px}
+.ne-foot p{margin:0;font-size:17px;line-height:1.45;color:var(--c-mut);max-width:740px}
+.ne-foot .st-site{position:absolute;right:0;top:4px;font-family:var(--f-head),sans-serif;font-size:24px;font-weight:600;color:var(--c-accent)}

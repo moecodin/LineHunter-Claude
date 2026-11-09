@@ -28,7 +28,7 @@ const FOOT_STREAK = "Find your next streak free on LineHunter", FOOT_RESEARCH = 
 const HEAD_FONTS = ["Clash Display", "General Sans", "Cabinet Grotesk", "Switzer", "Boska", "Zodiak", "Gambetta", "Bebas Neue", "Satoshi"];
 const BODY_FONTS = ["Satoshi", "General Sans", "Switzer", "Cabinet Grotesk", "Zodiak"];
 const LOCKED_ELS = new Set(["credit", "foot"]); // can't be hidden: the photo credit and the disclaimer
-const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", site: "Website", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name" };
+const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", site: "Website", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name", edge: "Edge text" };
 const STYLE0 = () => ({ fontHead: "", fontBody: "", fw: "", ls: null, upper: false, hero: 100, title: 100, rows: 100, bg: "", colors: {}, off: {} });
 const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false });
 
@@ -363,13 +363,25 @@ async function processPhoto(photo, adj, design, box, maxW) {
     for (let i = 0; i < px.length; i += 4) {
       let r = px[i] * b, gg = px[i + 1] * b, bl = px[i + 2] * b;
       if (mode === "bw") { const l = 0.3 * r + 0.59 * gg + 0.11 * bl; r = gg = bl = l; }
-      else if (mode === "duotone") {
+      else if (mode === "duotone" || mode === "halftone") {
         let l = (0.3 * r + 0.59 * gg + 0.11 * bl) / 255; l = clamp((l - 0.08) * 1.25, 0, 1) * 0.85;
         r += (lo[0] + (hi[0] - lo[0]) * l - r) * s; gg += (lo[1] + (hi[1] - lo[1]) * l - gg) * s; bl += (lo[2] + (hi[2] - lo[2]) * l - bl) * s;
       }
       px[i] = r; px[i + 1] = gg; px[i + 2] = bl;
     }
     g.putImageData(d, 0, 0);
+    // Halftone: the duotone redrawn as a grid of dots on the card color, each dot as big as that spot is bright.
+    if (mode === "halftone") {
+      const cs = Math.max(5, Math.round(w / 140)), bgc = t.bg;
+      g.fillStyle = bgc; g.fillRect(0, 0, w, h);
+      for (let y = cs / 2; y < h; y += cs) for (let x = (Math.floor(y / cs) % 2 ? cs : cs / 2); x < w; x += cs) {
+        const i = (Math.min(h - 1, Math.floor(y)) * w + Math.min(w - 1, Math.floor(x))) * 4;
+        if (px[i + 3] < 40) continue;
+        const l = (0.3 * px[i] + 0.59 * px[i + 1] + 0.11 * px[i + 2]) / 255;
+        const r = cs * 0.62 * Math.sqrt(clamp(l * 1.15, 0, 1)); if (r < 0.4) continue;
+        g.fillStyle = `rgb(${px[i]},${px[i + 1]},${px[i + 2]})`; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+      }
+    }
   }
   // A cut-out (transparent background) shows through at the edges: check a few edge points so a design can place it differently.
   let alpha = false;
@@ -430,7 +442,7 @@ async function buildCard(design, sizeKey, opts = {}) {
     w: size.w, h: size.h, rows: S.rows.filter((r) => r.on).map((r) => ({ ...r, t: r.hideTeam ? "" : r.t })),
     hero: S.fields.hero, title: S.fields.title, subtitle: S.fields.subtitle, footer: S.fields.footer, kicker: S.fields.kicker, name: S.fields.name,
     note: off.showSite ? STUDIO_NOTE : STUDIO_NOTE.replace(/\s*linehunterapp\.com$/, ""), photo: null, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
-    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite, teamColor: !off.teamColor },
+    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite, teamColor: !off.teamColor, sidePhoto: !off.sidePhoto, showEdge: !off.showEdge },
   };
   if (kindOf() === "player") data.player = playerData(S.source.row, S.win);
   if (design.teamSwitch) {
