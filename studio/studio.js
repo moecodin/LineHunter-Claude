@@ -95,8 +95,26 @@ function matchupRows(gameId, n) {
   return (S.slate.rows || []).filter((row) => String(row.gameId) === String(gameId)).map((row) => propPick(row, n)).filter(Boolean)
     .sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 10).map(propRow);
 }
+// Alt lines: for each player + prop, the highest whole line he reached in EVERY game of the window (= his lowest game), kept only
+// when it sits above the book's line ("28+ PTS · 10/10" where the book says 24.5). Best per player = furthest above the line (ratio).
+function altPicks(n, code) {
+  const best = {};
+  (S.slate.rows || []).forEach((row) => {
+    if (code && row.code !== code) return;
+    const w = row.w && row.w[n]; if (!w || w.totalGames < Math.min(MIN_GAMES[n], n)) return;
+    const vals = (w.games || []).slice(0, w.totalGames).map((g) => Number(g.value)).filter((v) => !isNaN(v));
+    if (vals.length < w.totalGames) return;
+    const low = Math.floor(Math.min(...vals));
+    if (low < 1 || low <= row.line) return;
+    const ratio = low / Math.max(0.5, row.line), key = row.playerId;
+    if (!best[key] || ratio > best[key].ratio) best[key] = { row, low, ratio, total: vals.length };
+  });
+  return Object.values(best).sort((a, b) => b.ratio - a.ratio || b.low - a.low).slice(0, 10)
+    .map((p) => ({ full: p.row.name, n: shortName(p.row.name), t: p.row.team, stat: `${p.low}+ ${STAT_CODE(p.row.code)}`, rec: `${p.total}/${p.total}` }));
+}
+const ALT_STATS = [["", "All stats"], ["pts", "PTS"], ["reb", "REB"], ["ast", "AST"], ["3pm", "3PM"], ["pra", "PRA"]];
 function buildSources(slate) {
-  const hit = [], streaks = [], props = [], games = [];
+  const hit = [], streaks = [], props = [], games = [], alts = [];
   HITLIST_CATEGORIES.filter((c) => !c.bbq && !c.brick).forEach((cat) => {
     const slip = buildSlip(cat, slate);
     if (!slip) return;
@@ -115,6 +133,11 @@ function buildSources(slate) {
     if (rows.length) streaks.push({ id: src.id, kind: "list", label: src.label, title: src.title, hero: "100%", footer: FOOT_STREAK, rows });
   });
   if ((slate.rows || []).length) {
+    ALT_STATS.forEach(([code, label]) => {
+      if (!altPicks(10, code).length && !altPicks(5, code).length) return; // nothing to show for this stat tonight
+      alts.push({ id: "alt-" + (code || "all"), kind: "list", label: code ? `Alt ${label}` : "Alt lines", title: code ? `${label} alt lines` : "Alt lines", heroFn: () => "100%",
+        sub: "above the book line, every game", footer: FOOT_STREAK, windowed: true, build: (n) => altPicks(n, code) });
+    });
     props.push({ id: "board", kind: "list", label: "The Board", title: "Top hit rates", heroFn: (n) => `L${n}`, footer: FOOT_RESEARCH, windowed: true, build: (n) => boardRows(n) });
     const seen = new Map();
     slate.rows.forEach((r) => { if (r.gameLabel && !seen.has(r.gameId)) seen.set(r.gameId, r); });
@@ -122,7 +145,7 @@ function buildSources(slate) {
       windowed: true, teams: r.gameLabel.split(" @ "), build: (n) => matchupRows(gameId, n) }));
   }
   S.players = (slate.rows || []).slice().sort((a, b) => a.name.localeCompare(b.name) || String(a.code).localeCompare(b.code));
-  return [{ label: "Hit List cards", items: hit }, { label: "Streaks", items: streaks }, { label: "Props", items: props }, { label: "Matchups", items: games }].filter((g) => g.items.length);
+  return [{ label: "Hit List cards", items: hit }, { label: "Streaks", items: streaks }, { label: "Props", items: props }, { label: "Alt lines", items: alts }, { label: "Matchups", items: games }].filter((g) => g.items.length);
 }
 // BBQ Chicken needs the league's defenses (one cached request), so it joins the Hit List group when that answer is in.
 async function addBbqSource(slate) {
