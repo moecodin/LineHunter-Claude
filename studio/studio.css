@@ -1,0 +1,90 @@
+/* LineHunter Studio: page UI + the card designs. Cards are drawn at full pixel size (1080 wide) and scaled down for the preview. */
+:root{--st-bg:#060a16;--st-panel:#0b1229;--st-sel:#14234c;--st-rule:#1f2e5a;--st-ink:#d8dff5;--st-mut:#93a1cb;--st-acc:#9a93ff;--st-teal:#7fdcc0}
+html,body{background:var(--st-bg)}
+.st-body{margin:0;color:var(--st-ink);font:15px Satoshi,sans-serif}
+.st-top{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--st-rule)}
+.st-top img{height:30px}.st-tag{font-size:12px;font-weight:700;letter-spacing:.08em;padding:4px 10px;border:1px solid var(--st-rule);border-radius:32px;color:var(--st-acc)}.st-sp{flex:1}
+.st-btn{font:600 14px Satoshi,sans-serif;color:var(--st-ink);background:var(--st-sel);border:1px solid var(--st-acc);border-radius:8px;padding:10px 16px;cursor:pointer}
+.st-btn.pri{background:var(--st-acc);color:#060a16}.st-btn.ghost{background:none;border-color:var(--st-rule)}.st-btn:disabled{opacity:.5;cursor:default}
+.st-wrap{display:grid;grid-template-columns:380px 1fr;gap:24px;padding:24px;max-width:1280px;margin:auto}
+.st-rail{display:flex;flex-direction:column;gap:14px;min-width:0}
+.st-sec{background:var(--st-panel);border:1px solid var(--st-rule);border-radius:12px;padding:16px}
+.st-sec h3{font:600 17px "Clash Display",sans-serif;display:flex;gap:10px;align-items:center;margin:0 0 12px;color:var(--st-ink)}
+.st-sec h3 b{font:700 12px Satoshi;color:var(--st-acc);border:1px solid var(--st-rule);border-radius:32px;padding:2px 9px}
+.st-sec h3 small{font:13px Satoshi;color:var(--st-mut)}
+.st-lbl{font-size:12px;color:var(--st-mut);margin:10px 0 6px}
+.st-chips{display:flex;flex-wrap:wrap;gap:6px}
+.st-chip{padding:7px 12px;border:1px solid var(--st-rule);border-radius:32px;font:13px Satoshi;cursor:pointer;color:var(--st-mut);background:none}
+.st-chip.on{background:var(--st-sel);border-color:var(--st-acc);color:var(--st-ink)}.st-chip:disabled{opacity:.4;cursor:default}
+.st-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--st-rule);font-size:14px}
+.st-row input{accent-color:#9a93ff}.st-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-row .rec{color:var(--st-teal);font-weight:700}
+.st-mv{background:none;border:0;color:var(--st-mut);cursor:pointer;padding:2px 4px;font-size:12px}
+.st-thumbs{display:flex;gap:10px}.st-th{border:1px solid var(--st-rule);border-radius:8px;padding:6px;cursor:pointer;flex:1;text-align:center;font-size:12px;color:var(--st-mut);background:none}
+.st-th.on{border-color:var(--st-acc);background:var(--st-sel);color:var(--st-ink)}
+.st-tw{width:100%;overflow:hidden;position:relative;border-radius:4px;margin-bottom:6px;background:#000}
+.st-tw .st-scale{transform-origin:0 0;position:absolute;left:0;top:0}
+.st-seg{display:flex;border:1px solid var(--st-rule);border-radius:8px;overflow:hidden}
+.st-seg button{flex:1;text-align:center;padding:8px;font:13px Satoshi;color:var(--st-mut);cursor:pointer;background:none;border:0}.st-seg .on{background:var(--st-sel);color:var(--st-ink)}
+.st-in{width:100%;box-sizing:border-box;background:var(--st-bg);border:1px solid var(--st-rule);border-radius:8px;color:var(--st-ink);padding:10px;font:14px Satoshi}
+.st-photos{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;max-height:230px;overflow:auto}
+.st-ph{border:1px solid var(--st-rule);border-radius:6px;overflow:hidden;cursor:pointer;background:none;padding:0;text-align:left;color:var(--st-mut);font-size:11px}
+.st-ph.on{border-color:var(--st-acc)}.st-ph img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block}.st-ph span{display:block;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-stage{display:flex;flex-direction:column;align-items:center;gap:16px;min-width:0}
+.st-pv{width:100%;max-width:560px;overflow:hidden;position:relative;border:1px solid var(--st-rule);border-radius:12px;background:#000}
+.st-acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.st-meta{color:var(--st-mut);font-size:13px;text-align:center}
+.st-msg{color:var(--st-mut);padding:20px;text-align:center}
+.st-lock{position:fixed;inset:0;background:rgba(6,10,22,.97);display:flex;align-items:center;justify-content:center;z-index:50}
+.st-lock[hidden]{display:none}.st-lk{width:420px;max-width:92vw;background:var(--st-panel);border:1px solid var(--st-rule);border-radius:12px;padding:28px;text-align:center}
+.st-lk h2{font:600 26px "Clash Display";margin:14px 0 6px}.st-lk p{color:var(--st-mut);margin:0 0 18px}.st-lk .st-in{text-align:center;margin-bottom:12px}
+.st-gen{margin-top:16px;padding-top:16px;border-top:1px solid var(--st-rule);font-size:13px;color:var(--st-mut)}
+.st-pp{font:600 20px "Clash Display";color:var(--st-teal);margin:10px 0;word-break:break-all}.st-code{font:12px monospace;color:var(--st-mut);background:var(--st-bg);border:1px solid var(--st-rule);border-radius:8px;padding:8px;word-break:break-all;text-align:left;margin:8px 0}
+.st-err{color:#f2969f;font-size:13px;min-height:18px;margin-bottom:8px}
+@media(max-width:900px){.st-wrap{grid-template-columns:1fr;padding:14px}.st-stage{order:-1}}
+
+/* ---------- Night poster ---------- */
+.sa-card{position:relative;overflow:hidden;background:#060a16;color:#d8dff5;font-family:Satoshi,sans-serif}
+.sa-photo{position:absolute;right:0;top:0;overflow:hidden}.sa-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.sa-fade-l{position:absolute;inset:0;background:linear-gradient(90deg,#060a16 0%,rgba(6,10,22,.55) 22%,rgba(6,10,22,0) 55%)}
+.sa-fade-b{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,10,22,0) 55%,#060a16 100%)}
+.sa-glow{position:absolute;left:0;right:0;top:0;background:radial-gradient(ellipse at 75% 20%,rgba(58,43,214,.55),rgba(6,10,22,0) 65%)}
+.sa-credit{position:absolute;right:30px;top:62px;font-size:15px;color:#d8dff5;max-width:420px;text-align:right;background:rgba(6,10,22,.6);padding:5px 10px}
+.sa-logo{position:absolute;left:64px;top:56px;height:44px}
+.sa-head{position:absolute;left:64px}
+.sa-hero{font-family:"Clash Display",sans-serif;font-weight:700;line-height:.82;letter-spacing:-.04em;color:#d8dff5}
+.sa-title{font-family:"Clash Display",sans-serif;font-weight:600;font-size:68px;margin-top:26px;letter-spacing:-.01em}
+.sa-sub{font-size:28px;color:#93a1cb;margin-top:6px}
+.sa-list{position:absolute;left:64px;right:64px}
+.sa-row{display:grid;grid-template-columns:44px 1fr 150px 190px 200px;align-items:center;height:56px;border-top:1px solid #1f2e5a}
+.sa-row:last-child{border-bottom:1px solid #1f2e5a}
+.sa-rk{color:#93a1cb;font-size:22px}.sa-nm{font-family:"Clash Display",sans-serif;font-weight:600;font-size:31px;white-space:nowrap}
+.sa-nm i{font-style:normal;font-family:Satoshi;font-weight:700;font-size:16px;margin-left:12px;letter-spacing:.06em;color:#9a93ff}
+.sa-st{color:#93a1cb;font-size:23px;white-space:nowrap}.sa-pips{display:flex;gap:5px}.sa-pip{display:block;width:20px;height:12px;background:#46a98f}
+.sa-rec{text-align:right;font-family:"Clash Display";font-weight:600;font-size:31px;color:#7fdcc0;white-space:nowrap}
+.sa-foot{position:absolute;left:64px;right:64px;bottom:44px}
+.sa-foot strong{display:block;font-family:"Clash Display";font-size:30px;color:#d8dff5;margin-bottom:8px;font-weight:600}
+.sa-foot p{margin:0;font-size:17px;line-height:1.45;color:#93a1cb;max-width:760px}
+
+/* ---------- Paper scoreboard ---------- */
+.sb-card{position:relative;overflow:hidden;background:#eef1fa;color:#0b1229;font-family:Satoshi,sans-serif}
+.sb-block{position:absolute;left:44px;top:64px;width:400px;background:#280ea1}
+.sb-frame{position:absolute;left:76px;top:96px;width:400px;overflow:hidden;background:#d8dff5}
+.sb-frame>img{width:100%;height:100%;object-fit:cover;object-position:46% 0;display:block}
+.sb-nophoto{width:100%;height:100%;background:linear-gradient(160deg,#280ea1,#052350);display:flex;align-items:center;justify-content:center}.sb-nophoto img{width:230px}
+.sb-cap{position:absolute;left:0;right:0;bottom:0;padding:90px 24px 22px;background:linear-gradient(rgba(5,35,80,0),rgba(5,35,80,.92));color:#fff}
+.sb-cap b{display:block;font-family:"Clash Display";font-weight:600;font-size:34px}.sb-cap span{font-size:19px;opacity:.85}
+.sb-credit{position:absolute;left:76px;font-size:15px;color:#4c5a85;width:400px}
+.sb-right{position:absolute;left:520px;right:56px;top:60px}
+.sb-kick{font-weight:700;font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:#280ea1;height:24px}
+.sb-hero,.sb-title{font-family:"Clash Display";font-weight:700;line-height:.9;letter-spacing:-.04em;color:#052350}
+.sb-hero{margin-top:10px;color:#280ea1}.sb-title{color:#052350}
+.sb-date{font-size:26px;color:#4c5a85;margin-top:18px}
+.sb-list{margin-top:34px}
+.sb-row{display:grid;grid-template-columns:1fr auto;align-items:center;height:92px;border-top:2px solid #052350}
+.sb-row:last-child{border-bottom:2px solid #052350}
+.sb-nm{font-family:"Clash Display";font-weight:600;font-size:33px;line-height:1.05}
+.sb-nm span{display:block;font-family:Satoshi;font-weight:500;font-size:20px;color:#4c5a85;margin-top:4px}.sb-nm span i{font-style:normal;font-weight:700;color:#280ea1;margin-right:8px}
+.sb-rec{font-family:"Clash Display";font-weight:700;font-size:48px;color:#280ea1;letter-spacing:-.02em;white-space:nowrap}
+.sb-foot{position:absolute;left:44px;right:44px;bottom:36px;display:flex;justify-content:space-between;align-items:center;gap:40px;border-top:2px solid #052350;padding-top:22px}
+.sb-foot p{margin:0;font-size:17px;line-height:1.45;color:#4c5a85;max-width:660px}.sb-foot strong{color:#052350}.sb-foot img{height:44px}
+
+.st-pv .st-scale{transform-origin:0 0;position:absolute;left:0;top:0}

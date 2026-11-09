@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow"><!-- hidden page: keep it out of search -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Studio · LineHunter</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link href="studio/studio.css" rel="stylesheet">
+</head>
+<body class="st-body">
+  <!-- The lock: a passphrase typed here is hashed and compared with STUDIO_PASS_HASH in studio/config.js -->
+  <div class="st-lock" id="stLock" hidden>
+    <div class="st-lk">
+      <img src="assets/img/lh-lockup-on-dark.svg" alt="LineHunter" style="height:34px">
+      <h2>Studio</h2><p>Enter your passphrase</p>
+      <input class="st-in" id="stPass" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="st-err" id="stErr"></div>
+      <button class="st-btn pri" id="stUnlock" style="width:100%" type="button">Unlock</button>
+      <div class="st-gen">Want a new one? It makes a phrase and the line to paste into <code>studio/config.js</code>.
+        <div><button class="st-btn ghost" id="stGen" type="button" style="margin-top:10px">Generate new passphrase</button></div>
+        <div id="stGenBox" hidden>
+          <div class="st-pp" id="stNewPass"></div>
+          <button class="st-btn ghost" id="stCopyPass" type="button">Copy phrase</button>
+          <div class="st-code" id="stNewHash"></div>
+          <div>Save the phrase now. It isn't stored anywhere. The old one keeps working until the new line is committed and deployed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="st-top"><img src="assets/img/lh-lockup-on-dark.svg" alt="LineHunter"><span class="st-tag">STUDIO</span><span class="st-sp"></span><button class="st-btn ghost" id="stLockBtn" type="button">Lock</button></div>
+  <main data-lh-slate="page">
+    <div class="st-msg" id="stStatus">Loading tonight's games…</div>
+    <div class="st-wrap" id="stApp" hidden>
+      <div class="st-rail">
+        <div class="st-sec"><h3><b>1</b>Source</h3><div id="stSources"></div></div>
+        <div class="st-sec"><h3><b>2</b>Rows <small id="stRowsCount"></small></h3><div id="stRows"></div></div>
+        <div class="st-sec"><h3><b>3</b>Design</h3>
+          <div class="st-thumbs" id="stDesigns"></div>
+          <div class="st-lbl">Size</div><div class="st-seg" id="stSizes"></div></div>
+        <div class="st-sec"><h3><b>4</b>Photo and text</h3>
+          <div id="stPhotoInfo"></div><div class="st-photos" id="stPhotos"></div>
+          <div class="st-chips" style="margin-top:8px"><button class="st-chip" id="stDelPhoto" type="button" hidden>Delete this upload</button></div>
+          <details style="margin-top:10px"><summary class="st-lbl" style="cursor:pointer">Upload your own photo</summary>
+            <input type="file" id="stUpFile" accept="image/*" class="st-in" style="margin:8px 0">
+            <input class="st-in" id="stUpPlayer" placeholder="Player (e.g. Jalen Brunson)" style="margin-bottom:8px">
+            <input class="st-in" id="stUpCredit" placeholder="Photographer / source / license (prints on the image)" style="margin-bottom:8px">
+            <button class="st-btn" id="stUpSave" type="button">Save to my library</button>
+            <div class="st-lbl" id="stUpMsg">Saved on this device only. Use photos you have the rights to.</div>
+          </details>
+          <div class="st-lbl">Hero</div><input class="st-in" id="stF_hero">
+          <div class="st-lbl">Title</div><input class="st-in" id="stF_title">
+          <div class="st-lbl">Subtitle</div><input class="st-in" id="stF_subtitle">
+          <div class="st-lbl">Footer</div><input class="st-in" id="stF_footer">
+          <div class="st-lbl" style="color:var(--st-teal)">✓ The 1-800-GAMBLER disclaimer is always on</div></div>
+      </div>
+      <div class="st-stage"><div class="st-pv" id="stPv"></div>
+        <div class="st-acts"><button class="st-btn pri" id="stDownload" type="button">Download PNG</button><button class="st-btn" id="stShare" type="button">Share</button></div>
+        <div class="st-meta" id="stMeta"></div></div>
+    </div>
+  </main>
+
+  <!-- Same script order as hit-list.html: the slate (top-hit-rates.js) feeds the Hit List code this page reuses. -->
+  <script src="js/core/api.js"></script>
+  <script src="js/core/hunts.js"></script>
+  <script src="js/components/nav.js"></script>
+  <script src="js/data/odds.js"></script>
+  <script src="js/data/teams.js"></script>
+  <script src="js/core/stats.js"></script>
+  <script src="js/core/h2h.js"></script>
+  <script src="js/components/propChart.js"></script>
+  <script src="js/components/prop-toolbar.js"></script>
+  <script src="js/components/shelf.js"></script>
+  <script src="js/components/share.js"></script>
+  <script src="js/components/prop-list.js"></script>
+  <script src="js/core/demo.js"></script><!-- local only: ?demo=1 on localhost -->
+  <script src="js/components/top-hit-rates.js"></script>
+  <script src="js/components/hit-list.js"></script>
+  <script src="studio/config.js"></script>
+  <script src="studio/designs/night-poster.js"></script>
+  <script src="studio/designs/paper-scoreboard.js"></script>
+  <script src="studio/studio.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+[
+ {
+  "player": "Nikola Jokic",
+  "file": "nikola-jokic.jpg",
+  "photographer": "Erik Drost",
+  "license": "CC BY 2.0",
+  "shareAlike": false,
+  "date": "2022-02-20",
+  "source": "https://commons.wikimedia.org/wiki/File:Nikola_Jokic_(51915399117).jpg",
+  "size": "5504x8256"
+ },
+ {
+  "player": "Jayson Tatum",
+  "file": "jayson-tatum.jpg",
+  "photographer": "Erik Drost",
+  "license": "CC BY 2.0",
+  "shareAlike": false,
+  "date": "2022-02-20",
+  "source": "https://commons.wikimedia.org/wiki/File:Jason_Tatum_(51915710378).jpg",
+  "size": "8256x5503"
+ },
+ {
+  "player": "Stephen Curry",
+  "file": "stephen-curry.jpg",
+  "photographer": "Erik Drost",
+  "license": "CC BY 2.0",
+  "shareAlike": false,
+  "date": "2022-02-20",
+  "source": "https://commons.wikimedia.org/wiki/File:Steph_Curry_2022_ASG.jpg",
+  "size": "1864x2590"
+ }
+]
