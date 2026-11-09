@@ -7223,3 +7223,23 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 @media (max-width: 767.98px) {
   .lh-bd-reportlink { display: block; white-space: nowrap; grid-column: 3 / -1; grid-row: 1 / span 2; justify-self: end; margin-right: 2.6rem; align-self: center; background: none; border: 0; padding: 0; font-size: 0.8rem; color: var(--lh-strong); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
 }
+
+/* Games wheel info (js/components/gameWheel.js): records, labeled Spread / Total / Moneyline, dots + View props. Flat, no shadows. */
+.lh-wml small { font-size: 0.6em; letter-spacing: 0.06em; opacity: 0.75; margin-right: 0.15em; }
+.lh-wheel-detail { display: block; width: 100%; max-width: 32rem; }
+.lh-wlabel { display: flex; justify-content: space-between; padding-bottom: 0.5rem; font-size: 0.8rem; color: var(--lh-muted); }
+.lh-wlabel b { color: var(--lh-strong); font-weight: 600; }
+.lh-wcols { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--lh-border); border-bottom: 1px solid var(--lh-border); padding: 0.5rem 0; }
+.lh-wcols > div { padding: 0 0.6rem; border-left: 1px solid var(--lh-border); min-width: 0; }
+.lh-wcols > div:first-child { padding-left: 0; border-left: 0; }
+.lh-wcols span { display: block; font-size: 0.7rem; color: var(--lh-muted); }
+.lh-wcols b { font: 600 1.05rem/1.25 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-wfoot { display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; }
+.lh-wdots { display: none; gap: 6px; }
+.lh-wdots i { width: 6px; height: 6px; border-radius: 50%; background: var(--lh-border); }
+.lh-wdots i.on { background: var(--lh-strong); }
+.lh-wfoot .lh-wgo { margin-left: auto; }
+@media (max-width: 575.98px) {
+  .lh-wdots { display: flex; }
+  .lh-wheel-controls { display: none; }
+}

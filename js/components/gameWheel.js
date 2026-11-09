@@ -90,18 +90,33 @@
     if (nearest !== front) setFront(nearest);
   }
 
+  // The info under the wheel for the front game: both records, then Spread / Total / Moneyline in labeled columns, then the dots
+  // (phones) and View props. Spread and moneyline are written for the favorite, like the Game Breakdown's picks.
   function detailHtml(game) {
     const away = game.visitor_team;
     const home = game.home_team;
-    const rec = (team) => (records[team.id] && records[team.id].overall ? ` <span class="lh-wrec">${records[team.id].overall}</span>` : "");
+    const rec = (team) => (records[team.id] && records[team.id].overall ? ` ${records[team.id].overall}` : "");
     const row = odds[game.id];
-    const line = row
-      ? `${home.abbreviation} ${spread(row.spread_home_value)} · O/U ${Number(row.total_value)}`
-      : "Lines not posted yet";
+    let cols = `<div class="lh-wcols lines-only"><div><span>Lines</span><b>Not posted yet</b></div></div>`;
+    if (row) {
+      const spreadHome = Number(row.spread_home_value);
+      const favSpread = spreadHome === 0 ? "PK" : spreadHome < 0 ? `${home.abbreviation} ${spreadHome}` : `${away.abbreviation} −${spreadHome}`;
+      const mlAway = Number(row.moneyline_away_odds);
+      const mlHome = Number(row.moneyline_home_odds);
+      const hasMl = Number.isFinite(mlAway) && Number.isFinite(mlHome);
+      const favHome = mlHome <= mlAway;
+      const mlText = hasMl ? `${favHome ? home.abbreviation : away.abbreviation} ${fmtOdds(favHome ? mlHome : mlAway).replace("-", "−")}` : "–";
+      cols = `<div class="lh-wcols lines-only">
+        <div><span>Spread</span><b>${favSpread.replace(/ -/, " −")}</b></div>
+        <div><span>Total</span><b>${Number(row.total_value)}</b></div>
+        <div><span>Moneyline</span><b>${mlText}</b></div>
+      </div>`;
+    }
+    const dots = games.map((_, n) => `<i${n === front ? ' class="on"' : ""}></i>`).join("");
     return `
-      <span class="lh-wlabel">${away.city}${rec(away)} @ ${home.city}${rec(home)}</span>
-      <span class="lh-wline lines-only">${line}</span>
-      <a class="lh-wgo" href="game.html?id=${game.id}">View <span class="lines-only">props</span><span class="research-only">stats</span> ›</a>`;
+      <span class="lh-wlabel"><span><b>${away.abbreviation}</b>${rec(away)}</span><span><b>${home.abbreviation}</b>${rec(home)}</span></span>
+      ${cols}
+      <span class="lh-wfoot"><span class="lh-wdots" aria-hidden="true">${dots}</span><a class="lh-wgo" href="game.html?id=${game.id}">View <span class="lines-only">props</span><span class="research-only">stats</span> ›</a></span>`;
   }
 
   function setFront(i) {
@@ -255,8 +270,9 @@
     odds = rowsByGameId || {};
     cards.forEach((card, i) => {
       const row = odds[games[i].id];
-      card.querySelector('[data-ml="away"]').textContent = row ? fmtOdds(row.moneyline_away_odds) : "";
-      card.querySelector('[data-ml="home"]').textContent = row ? fmtOdds(row.moneyline_home_odds) : "";
+      const mlHtml = (value) => (fmtOdds(value) ? `<small>ML</small> ${fmtOdds(value)}` : "");
+      card.querySelector('[data-ml="away"]').innerHTML = row ? mlHtml(row.moneyline_away_odds) : "";
+      card.querySelector('[data-ml="home"]').innerHTML = row ? mlHtml(row.moneyline_home_odds) : "";
     });
     if (front >= 0) detail.innerHTML = detailHtml(games[front]);
   };
