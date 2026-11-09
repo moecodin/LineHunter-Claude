@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hunts page mockup</title>
+  <meta name="robots" content="noindex">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <!--
+    MOCKUP ONLY: the standalone Hunts page (hunts.html), a builder with the picker on the left and a sticky ticket on the right.
+    Real numbers: McDaniels' AST and REB (9/10 each, UTA @ MIN, Nov 8 2026), the AST best odds (-165 FD). PLACEHOLDERS: the REB odds,
+    "Hit together 8/10" and the second leg's graph. Nothing is live. Layout reference only: propedia.app/parlay (not copied).
+  -->
+  <style>
+    :root, [data-theme="dark"] { --ink:#060a16; --panel:#0b1229; --panel2:#101a38; --rule:#1f2e5a; --mist:#93a1cb; --strong:#d8dff5; --text:#c3cce9;
+      --over:#46a98f; --over-text:#7fdcc0; --under:#bd6570; --under-text:#f2969f; --gold:#ecc86f; --sel:#14234c; --selEdge:#9a93ff; --warn:#ecc86f; color-scheme: dark; }
+    [data-theme="light"] { --ink:#eef1fa; --panel:#fff; --panel2:#f3f5fc; --rule:#cfd6ec; --mist:#4b5784; --strong:#0b1229; --text:#26325e;
+      --over:#22685a; --over-text:#22685a; --under:#a33a4a; --under-text:#a33a4a; --gold:#8a5a00; --sel:#14234c; --selEdge:#280ea1; --warn:#8a5a00; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--ink); color: var(--text); font: 400 14px/1.45 Satoshi, system-ui, sans-serif; padding-bottom: 76px; }
+    .top { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--rule); }
+    .top b { font: 600 1.1rem "Clash Display", sans-serif; color: var(--strong); }
+    .top button { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 5px 10px; font: inherit; cursor: pointer; }
+    .page { max-width: 1120px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+    h1 { font: 600 2rem/1.1 "Clash Display", sans-serif; color: var(--strong); margin: 0 0 4px; }
+    .sub { color: var(--mist); margin: 0 0 16px; }
+    .label { font-size: .75rem; font-weight: 500; color: var(--mist); margin: 14px 0 6px; }
+    input.search { width: 100%; background: var(--panel); border: 1px solid var(--rule); color: var(--strong); padding: 9px 12px; font: inherit; border-radius: 8px; }
+
+    .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .chip { flex: none; border: 1px solid var(--rule); background: none; color: var(--text); padding: 6px 12px; font: inherit; font-size: .85rem; border-radius: 8px; cursor: pointer; text-align: left; }
+    .chip small { display: block; font-size: .7rem; color: var(--mist); }
+    .chip.on { background: var(--sel); border-color: var(--selEdge); color: #d8dff5; }
+    .chip.on small { color: #aab4dd; }
+
+    .gamehead { font-size: .75rem; color: var(--mist); margin: 20px 0 6px; }
+    .row { display: grid; grid-template-columns: 2.6rem minmax(0, 1.3fr) minmax(0, 1.1fr) auto auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--rule); }
+    .av { width: 2.4rem; height: 2.5rem; clip-path: polygon(20% 0, 100% 0, 80% 100%, 0 100%); background: color-mix(in srgb, #236192 55%, var(--panel)); overflow: hidden; }
+    .av img { width: 100%; height: 100%; object-fit: cover; object-position: center 12%; transform: scale(1.18); transform-origin: center top; }
+    .who small { display: block; font-size: .75rem; color: var(--strong); line-height: 1.1; }
+    .who b { font: 600 1.15rem/1.1 "Clash Display", sans-serif; color: var(--strong); }
+    .who span { display: block; font-size: .75rem; color: var(--mist); }
+    .pick { border-left: 3px solid var(--over); padding-left: 10px; }
+    .pick.u { border-color: var(--under); }
+    .pick b { font: 600 1rem "Clash Display", sans-serif; color: var(--strong); }
+    .pick span { display: block; font-size: .75rem; color: var(--mist); }
+    .rate { font: 600 1rem "Clash Display", sans-serif; color: var(--over-text); text-align: right; }
+    .rate small { display: block; font: 500 .7rem Satoshi; color: var(--mist); }
+    .odds { border: 1px solid var(--rule); padding: 3px 8px; font-weight: 700; color: var(--over-text); font-size: .85rem; white-space: nowrap; }
+    .odds small { color: var(--mist); font-weight: 500; }
+    .add { background: none; border: 1px solid var(--strong); color: var(--strong); padding: 6px 12px; font: inherit; font-weight: 700; font-size: .8rem; cursor: pointer; border-radius: 8px; }
+    .add.in { background: var(--sel); border-color: var(--selEdge); color: #d8dff5; }
+
+    /* ticket */
+    .ticket { position: sticky; top: 16px; border: 1px solid var(--rule); background: var(--panel); padding: 16px; }
+    .ticket h2 { font: 600 1.2rem "Clash Display", sans-serif; color: var(--strong); margin: 0; display: flex; justify-content: space-between; align-items: baseline; }
+    .ticket h2 small { font: 500 .8rem Satoshi; color: var(--mist); }
+    .leg { border-left: 3px solid var(--over); background: var(--panel2); padding: 8px 10px; margin-top: 8px; display: flex; justify-content: space-between; gap: 8px; }
+    .leg b { color: var(--strong); display: block; }
+    .leg span { font-size: .75rem; color: var(--mist); }
+    .leg .x { background: none; border: 0; color: var(--mist); cursor: pointer; font-size: 1rem; }
+    .leg .o { font-weight: 700; color: var(--over-text); white-space: nowrap; }
+    .warn { font-size: .78rem; color: var(--warn); margin-top: 6px; }
+    .sum { margin-top: 14px; border-top: 1px solid var(--rule); }
+    .sum div { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--rule); }
+    .sum div span { color: var(--mist); }
+    .sum div b { color: var(--strong); font-weight: 600; }
+    .sum .big b { font: 600 1.5rem/1 "Clash Display", sans-serif; }
+    .hit { margin-top: 12px; padding: 10px; border: 1px solid var(--rule); }
+    .hit .t { font-size: .75rem; color: var(--mist); }
+    .hit b { font: 600 1.4rem "Clash Display", sans-serif; color: var(--strong); }
+    .hit p { margin: 4px 0 0; font-size: .78rem; color: var(--mist); }
+    .dots { display: flex; gap: 3px; margin-top: 6px; }
+    .dots i { width: 14px; height: 14px; background: var(--over); }
+    .dots i.m { background: var(--under); }
+    .stake { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+    .stake input { width: 5rem; background: var(--panel2); border: 1px solid var(--rule); color: var(--strong); padding: 5px 8px; font: inherit; text-align: right; }
+    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .btns button, .books a { background: none; border: 1px solid var(--rule); color: var(--strong); padding: 8px; font: inherit; font-weight: 600; font-size: .85rem; cursor: pointer; border-radius: 8px; text-align: center; text-decoration: none; display: block; }
+    .btns .wide { grid-column: 1 / -1; }
+    .books { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .note { font-size: .72rem; color: var(--mist); margin-top: 10px; }
+    .bar { display: none; }
+    @media (max-width: 899px) {
+      .page { grid-template-columns: 1fr; padding: 14px; }
+      .ticket { position: static; }
+      .row { grid-template-columns: 2.4rem minmax(0, 1fr) auto; row-gap: 6px; }
+      .row .pick { grid-column: 2; } .row .rate { display: none; } .row .odds { grid-column: 3; grid-row: 2; justify-self: end; } .row .add { grid-column: 3; grid-row: 1; justify-self: end; }
+      .bar { display: flex; position: fixed; left: 12px; right: 12px; bottom: 12px; background: var(--sel); border: 1px solid var(--selEdge); color: #d8dff5; padding: 12px 14px; justify-content: space-between; font-weight: 700; z-index: 5; }
+    }
+    @media (min-width: 900px) { .src { max-width: 1120px; margin: 0 auto; padding: 0 20px 20px; } }
+    .src { font-size: .75rem; color: var(--mist); padding: 0 14px 20px; }
+  </style>
+</head>
+<body>
+  <div class="top"><b>LineHunter</b><button id="t">Switch to light</button></div>
+  <div class="page">
+    <main>
+      <h1>Hunts</h1>
+      <p class="sub">Build a hunt from any prop on the slate. Odds are from the book you pick.</p>
+      <input class="search" placeholder="Search players or teams">
+      <div class="label">Games</div>
+      <div class="chips">
+        <button class="chip">All games<small>7 games</small></button>
+        <button class="chip on">UTA @ MIN<small>Today 7:00 PM</small></button>
+        <button class="chip">NOP @ LAC<small>Today 9:00 PM</small></button>
+        <button class="chip">BOS @ MIL<small>Today 8:00 PM</small></button>
+        <button class="chip">LAL @ DET<small>Today 6:00 PM</small></button>
+      </div>
+      <div class="label">Prop</div>
+      <div class="chips">
+        <button class="chip on">All</button><button class="chip">PTS</button><button class="chip">REB</button><button class="chip">AST</button>
+        <button class="chip">3PM</button><button class="chip">PRA</button><button class="chip">STL</button><button class="chip">BLK</button>
+      </div>
+      <div class="gamehead">UTAH JAZZ @ MINNESOTA TIMBERWOLVES · TODAY 7:00 PM · SORTED BY HIT RATE</div>
+
+      <div class="row"><span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span>
+        <div class="who"><small>Jaden</small><b>McDaniels</b><span>MIN vs UTA</span></div>
+        <div class="pick"><b>Over 2.5 AST</b><span>9 straight overs</span></div>
+        <div class="rate">9/10<small>L10</small></div>
+        <div style="display:flex;gap:8px;align-items:center"><span class="odds">−165 <small>FD</small></span><button class="add in">Added ✓</button></div></div>
+
+      <div class="row"><span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span>
+        <div class="who"><small>Jaden</small><b>McDaniels</b><span>MIN vs UTA</span></div>
+        <div class="pick"><b>Over 5.5 REB</b><span>3 straight overs</span></div>
+        <div class="rate">9/10<small>L10</small></div>
+        <div style="display:flex;gap:8px;align-items:center"><span class="odds">−150 <small>FD</small></span><button class="add in">Added ✓</button></div></div>
+
+      <div class="row"><span class="av"></span>
+        <div class="who"><small>Darryn</small><b>Peterson</b><span>UTA @ MIN</span></div>
+        <div class="pick u"><b>Under 34.5 PRA</b><span>10 of 10 under</span></div>
+        <div class="rate">10/10<small>L10</small></div>
+        <div style="display:flex;gap:8px;align-items:center"><span class="odds" style="color:var(--under-text)">−132 <small>FD</small></span><button class="add">+ Add</button></div></div>
+    </main>
+
+    <aside class="ticket" id="ticket">
+      <h2>My hunt <small>2 legs · same game</small></h2>
+      <div class="leg"><div><b>McDaniels Over 2.5 AST</b><span>UTA @ MIN · FanDuel</span></div><div><span class="o">−165</span> <button class="x" aria-label="Remove">✕</button></div></div>
+      <div class="leg"><div><b>McDaniels Over 5.5 REB</b><span>UTA @ MIN · FanDuel</span><div class="warn">Same game as leg 1</div></div><div><span class="o">−150</span> <button class="x" aria-label="Remove">✕</button></div></div>
+      <div class="sum">
+        <div class="big"><span>Combined odds</span><b>+168</b></div>
+        <div><span>Implied chance</span><b>37.4%</b></div>
+        <div><span>Stake</span><b><span class="stake" style="display:inline-flex;margin:0">$<input value="10" aria-label="Stake"></span></b></div>
+        <div><span>To win</span><b style="color:var(--over-text)">$16.77</b></div>
+      </div>
+      <div class="hit">
+        <div class="t">Hit together · last 10 games</div>
+        <b>8/10</b>
+        <div class="dots"><i></i><i></i><i></i><i class="m"></i><i></i><i></i><i></i><i></i><i class="m"></i><i></i></div>
+        <p>Both legs hit in 8 of his last 10 games. Odds multiply each leg as if they were unrelated; same-game legs aren't.</p>
+      </div>
+      <div class="btns">
+        <button>Share</button><button>Post to X</button>
+        <button class="wide">Save as image</button>
+      </div>
+      <div class="label" style="margin-bottom:0">Open the book</div>
+      <div class="books"><a href="#">FanDuel ›</a><a href="#">DraftKings ›</a></div>
+      <div class="note">Past results, not a prediction. Gambling problem? Call 1-800-GAMBLER.</div>
+    </aside>
+  </div>
+  <div class="bar"><span>My hunt · 2 legs</span><span>+168 · to win $16.77 ›</span></div>
+  <p class="src">Mockup. Real: McDaniels' AST and REB hit rates and the AST odds (Nov 8). Placeholders: the REB odds, "Hit together 8/10" and its dots. Layout idea from propedia.app/parlay; look and wording are ours.</p>
+  <script>
+    document.getElementById("t").onclick = (e) => {
+      const r = document.documentElement, light = r.dataset.theme !== "light";
+      r.dataset.theme = light ? "light" : "dark"; e.target.textContent = light ? "Switch to dark" : "Switch to light";
+    };
+  </script>
+</body>
+</html>
