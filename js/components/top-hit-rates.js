@@ -857,6 +857,7 @@ function showTopSlate(fullSlate) {
 //   titleDate: the date to show in the header while loading (null if we don't know it yet)
 //   getSlate:  how to find the games: returns { date, games }, or null if there are none
 async function loadTopHitRates({ cacheKey, titleDate, getSlate }) {
+  if (window.LH_DEMO) return; // ?demo=1 on localhost: js/core/demo.js supplies a made-up slate instead
   if (!document.querySelector("#top-hit-rates, [data-lh-slate]")) return;
   const requestNumber = ++topRequestNumber;
 
