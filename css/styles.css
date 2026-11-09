@@ -7378,7 +7378,7 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-sd-deck { position: relative; height: 478px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
 .lh-sd-deck.is-enter { animation: lh-sd-in 350ms ease-out; }
 @keyframes lh-sd-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.lh-sd-back { position: absolute; inset: 0; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 14px; transform: translateY(10px) scale(0.95); opacity: 0.55; }
+.lh-sd-back { position: absolute; inset: 0; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 14px; transform: translateY(10px) scale(0.95); opacity: 0.7; will-change: transform, opacity; }
 .lh-sd-card { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; padding: 1rem; border: 1px solid var(--lh-border); border-radius: 14px;
   background: radial-gradient(circle at 78% 26%, color-mix(in srgb, var(--team) 42%, transparent), transparent 62%), var(--lh-surface); cursor: grab; will-change: transform; }
 .lh-sd-card:active { cursor: grabbing; }
@@ -7418,7 +7418,7 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-sd-add.is-in { background: var(--lh-selected, var(--lh-fill)); }
 .lh-sd-hint { text-align: center; font-size: 0.72rem; color: var(--lh-muted); margin-top: 0.6rem; }
 .lh-sd-stamp { position: absolute; top: 1.4rem; z-index: 6; font: 600 1.1rem var(--lh-font-heading); letter-spacing: 0.04em; border: 2px solid; padding: 0.15rem 0.6rem; border-radius: 6px; background: var(--lh-surface); opacity: 0; pointer-events: none; }
-.lh-sd-stamp.is-r { right: 1.1rem; color: var(--lh-over-text); border-color: var(--lh-over); transform: rotate(8deg); }
+.lh-sd-stamp.is-r { right: 1.1rem; color: var(--lh-strong); border-color: var(--lh-strong); transform: rotate(8deg); }
 .lh-sd-stamp.is-l { left: 1.1rem; color: var(--lh-muted); border-color: var(--lh-muted); transform: rotate(-8deg); }
 .lh-sd-end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; border: 1px solid var(--lh-border); border-radius: 14px; padding: 1.5rem; }
 .lh-sd-end b { font: 600 1.3rem var(--lh-font-heading); color: var(--lh-strong); }
@@ -7426,7 +7426,7 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 /* sheets (filter, full report) */
 .lh-sd-sheetwrap { position: fixed; inset: 0; z-index: 1080; }
 .lh-sd-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); opacity: 0; transition: opacity 200ms; }
-.lh-sd-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86vh; overflow-y: auto; background: var(--lh-surface); border-top: 1px solid var(--lh-border); border-radius: 14px 14px 0 0; padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 220ms ease-out; }
+.lh-sd-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86vh; overflow-y: auto; background: var(--lh-surface); border-top: 1px solid var(--lh-border); border-radius: 14px 14px 0 0; padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
 .lh-sd-sheetwrap.is-open .lh-sd-backdrop { opacity: 1; }
 .lh-sd-sheetwrap.is-open .lh-sd-sheet { transform: none; }
 @media (prefers-reduced-motion: reduce) { .lh-sd-backdrop, .lh-sd-sheet, .lh-sd-deck.is-enter { transition: none; animation: none; } }
@@ -7440,3 +7440,14 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-sd-show { width: 100%; margin-top: 1.1rem; }
 .lh-sd-report { margin-top: 0.5rem; }
 .lh-sd-reportbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem; }
+
+/* Story deck motion: each card's bars grow in and the 80%+ pill pops once (storyDeck.js adds .is-fresh only the first time a card shows) */
+.lh-sd-card.is-fresh .lh-sd-bars i { transform-origin: bottom; animation: lh-sd-grow 350ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(150ms + var(--i, 0) * 30ms); }
+.lh-sd-card.is-fresh .lh-sd-tag.is-pop { animation: lh-sd-pop 400ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both; }
+@keyframes lh-sd-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes lh-sd-pop { from { transform: scale(0.9); } to { transform: scale(1); } }
+.lh-sd-hintlabel { position: absolute; top: 0.6rem; left: 50%; transform: translateX(-50%); z-index: 6; background: var(--lh-bg); color: var(--lh-strong); font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px; pointer-events: none; animation: lh-sd-fadeout 2.4s ease-out forwards; }
+@keyframes lh-sd-fadeout { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .lh-sd-card.is-fresh .lh-sd-bars i, .lh-sd-card.is-fresh .lh-sd-tag.is-pop, .lh-sd-hintlabel { animation: none; }
+}

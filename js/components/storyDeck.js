@@ -37,6 +37,10 @@
   let deck = [];           // [{ row, side, stats, key }]
   let index = 0;
   let built = false;
+  const animated = new Set(); // card keys that already played their count-up / bars / pop (each plays once)
+  const EASE_OUT = "cubic-bezier(0.22, 1, 0.36, 1)";
+  const EASE_BOUNCE = "cubic-bezier(0.34, 1.56, 0.64, 1)";
+  const HINT_KEY = "lh-deck-hint";
 
   // ---------- who is on the deck ----------
   const starCache = {};
@@ -119,7 +123,7 @@
     };
   }
 
-  function cardHtml(c) {
+  function cardHtml(c, fresh) {
     const { row, stats } = c;
     const { first, last } = nameParts(row.name);
     const person = people[row.playerId] || {};
@@ -132,22 +136,22 @@
     const sub = `${stats.streak >= 3 ? `${stats.streak} straight ${c.side === "under" ? "unders" : "overs"}` : `${stats.hits} of ${stats.totalGames} ${c.side}`} · averaging ${formatStatValue(stats.average)}`;
     const vals = [...row.w[10].games].reverse();
     const max = Math.max(...vals.map((g) => g.value), row.line) * 1.15 || 1;
-    const bars = vals.map((g) => {
+    const bars = vals.map((g, i) => {
       const hit = c.side === "under" ? g.value < row.line : g.value > row.line;
-      return `<i class="${hit ? "" : "is-miss"}" style="height:${Math.max((g.value / max) * 100, 4).toFixed(1)}%"></i>`;
+      return `<i class="${hit ? "" : "is-miss"}" style="height:${Math.max((g.value / max) * 100, 4).toFixed(1)}%;--i:${i}"></i>`;
     }).join("");
     const initials = (first[0] || "") + (last[0] || "");
     return `
-      <article class="lh-sd-card" style="--team:${team};--on-team:${onTeam}" data-sd-key="${esc(c.key)}">
+      <article class="lh-sd-card${fresh ? " is-fresh" : ""}" style="--team:${team};--on-team:${onTeam}" data-sd-key="${esc(c.key)}">
         <span class="lh-sd-wm" aria-hidden="true">${esc(row.team)}</span>
         <div class="lh-sd-who">
           <span class="lh-sd-av" data-player-id="${row.playerId}" data-name-key="${esc(typeof nbaNameKey === "function" ? nbaNameKey(first, last) : "")}">${esc(initials)}</span>
-          <span class="lh-sd-tag">${stats.hits} of ${stats.totalGames}</span>
+          <span class="lh-sd-tag${stats.hitRate >= 80 ? " is-pop" : ""}">${stats.hits} of ${stats.totalGames}</span>
         </div>
         <div class="lh-sd-name"><small>${esc(first)}</small><b>${esc(last)}</b></div>
         <div class="lh-sd-meta">${person.jersey_number ? `<span class="lh-sd-jn">#${esc(person.jersey_number)}</span> ` : ""}${esc(meta)}</div>
         <div class="lh-sd-pick is-${c.side}"><b>${sideWord} ${lt(row.line)} ${WORD[row.code]}</b><span>${esc(sub)}</span></div>
-        <div class="lh-sd-stats"><div class="lh-sd-rate is-${stats.hitRate >= 75 ? "hi" : stats.hitRate >= 50 ? "md" : "lo"}">${Math.round(stats.hitRate)}%<small>last ${stats.totalGames}</small></div>
+        <div class="lh-sd-stats"><div class="lh-sd-rate is-${stats.hitRate >= 75 ? "hi" : stats.hitRate >= 50 ? "md" : "lo"}"><span class="visually-hidden">${Math.round(stats.hitRate)}%</span><span aria-hidden="true"><span class="lh-sd-num" data-final="${Math.round(stats.hitRate)}">${Math.round(stats.hitRate)}</span>%</span><small>last ${stats.totalGames}</small></div>
           ${best ? `<span class="lh-sd-odds">${fmtOdds(Number(best.odds))} <small>${esc(lhHunts.bookLabel(best.vendor))}</small></span>` : `<span class="lh-sd-odds is-none">no odds</span>`}</div>
         <div class="lh-sd-bars">${bars}<span class="lh-sd-line" style="bottom:${((row.line / max) * 100).toFixed(1)}%"></span></div>
         <div class="lh-sd-actions">
@@ -179,7 +183,9 @@
       body = `<div class="lh-sd-end"><b>That's all ${n} picks</b><p>Past results, not a prediction. The full list is on The Board below.</p><button type="button" class="lh-sd-btn" data-sd="restart">Start over</button></div>`;
     } else {
       const next = deck[index + 1];
-      body = `${next ? `<div class="lh-sd-back" aria-hidden="true" style="--team:${typeof teamBaseColor === "function" ? teamBaseColor(next.row.team) : "#14234c"}"></div>` : ""}${cardHtml(deck[index])}`;
+      const fresh = !animated.has(deck[index].key);
+      animated.add(deck[index].key);
+      body = `${next ? `<div class="lh-sd-back" aria-hidden="true" style="--team:${typeof teamBaseColor === "function" ? teamBaseColor(next.row.team) : "#14234c"}"></div>` : ""}${cardHtml(deck[index], fresh)}`;
     }
     box.innerHTML = `
       <div class="lh-sd-head">
@@ -192,28 +198,93 @@
     box.hidden = false;
     if (typeof loadPlayerPhoto === "function") box.querySelectorAll(".lh-sd-av[data-player-id]").forEach(loadPlayerPhoto);
     bindSwipe();
+    countUp();
+    hintOnce();
+  }
+
+  // The hit rate counts up from 0 once per card (the screen-reader text already has the final number).
+  function countUp() {
+    const card = box.querySelector(".lh-sd-card.is-fresh");
+    const num = card && card.querySelector(".lh-sd-num");
+    if (!num || REDUCED.matches) return;
+    const final = Number(num.dataset.final);
+    const start = performance.now();
+    num.textContent = "0";
+    (function tick(now) {
+      const t = Math.min((now - start) / 500, 1);
+      num.textContent = String(Math.round(final * (1 - Math.pow(1 - t, 3))));
+      if (t < 1 && num.isConnected) requestAnimationFrame(tick);
+      else num.textContent = String(final);
+    })(start);
+  }
+
+  // First visit only: nudge the top card left then right and say so once.
+  function hintOnce() {
+    if (REDUCED.matches || !PHONE.matches) return;
+    try { if (localStorage.getItem(HINT_KEY)) return; } catch (error) { return; }
+    const card = box.querySelector(".lh-sd-card");
+    if (!card || !card.classList.contains("is-fresh")) return;
+    try { localStorage.setItem(HINT_KEY, "1"); } catch (error) { return; }
+    setTimeout(() => {
+      if (!card.isConnected || card._touched) return;
+      const label = document.createElement("span");
+      label.className = "lh-sd-hintlabel";
+      label.textContent = "Swipe left or right";
+      box.querySelector("#sdDeck").appendChild(label);
+      card.animate([{ transform: "none" }, { transform: "translateX(-10px) rotate(-0.5deg)" }, { transform: "translateX(10px) rotate(0.5deg)" }, { transform: "none" }],
+        { duration: 900, easing: EASE_OUT });
+      setTimeout(() => label.remove(), 2400);
+    }, 800);
   }
 
   // ---------- swipe ----------
   function bindSwipe() {
     const card = box.querySelector(".lh-sd-card");
     if (!card) return;
-    let startX = 0, startY = 0, dx = 0, dragging = false, decided = false, pid = null;
+    const back = box.querySelector(".lh-sd-back");
+    const deckEl = box.querySelector("#sdDeck");
     const stampL = document.createElement("span");
     const stampR = document.createElement("span");
     stampL.className = "lh-sd-stamp is-l"; stampL.textContent = "SKIP";
     stampR.className = "lh-sd-stamp is-r"; stampR.textContent = "FULL REPORT";
-    const deckEl = box.querySelector("#sdDeck");
     deckEl.append(stampL, stampR);
-    const set = (x, animated) => {
-      card.style.transition = animated && !REDUCED.matches ? "transform 250ms ease-out" : "none";
-      card.style.transform = `translateX(${x}px) rotate(${(x * 0.05).toFixed(2)}deg)`;
-      stampL.style.opacity = Math.min(Math.max(-x / 110, 0), 1);
-      stampR.style.opacity = Math.min(Math.max(x / 110, 0), 1);
+    let startX = 0, startY = 0, dx = 0, dragging = false, decided = false, pid = null, lastX = 0, lastT = 0, velocity = 0;
+    const clampTilt = (x) => Math.max(-8, Math.min(8, x / 20));
+
+    // Position the card (and the card behind it) for a horizontal offset. animated = a transition of that length.
+    function set(x, { ms = 0, ease = EASE_OUT, rotate = clampTilt(x), held = false } = {}) {
+      const width = card.offsetWidth || 1;
+      const p = Math.min(Math.abs(x) / (width * 0.3), 1);
+      const dur = REDUCED.matches ? 0 : ms;
+      card.style.transition = dur ? `transform ${dur}ms ${ease}` : "none";
+      card.style.transform = `translateX(${x}px) rotate(${rotate}deg) scale(${held ? 1.02 : 1})`;
+      stampL.style.opacity = Math.min(Math.max(-x / (width * 0.3), 0), 1);
+      stampR.style.opacity = Math.min(Math.max(x / (width * 0.3), 0), 1);
+      if (back) {
+        back.style.transition = dur ? `transform ${dur}ms ${ease}, opacity ${dur}ms ${ease}` : "none";
+        back.style.transform = `translateY(${(10 * (1 - p)).toFixed(1)}px) scale(${(0.95 + 0.05 * p).toFixed(3)})`;
+        back.style.opacity = (0.7 + 0.3 * p).toFixed(2);
+      }
+    }
+    const buzz = () => { try { if (navigator.vibrate) navigator.vibrate(10); } catch (error) { /* unsupported */ } };
+
+    function fling(dir, done) {
+      const width = card.offsetWidth;
+      set(dir * width * 1.3, { ms: 250, rotate: dir * 22 });
+      if (back) { back.style.transform = "translateY(0) scale(1)"; back.style.opacity = "1"; }
+      buzz();
+      REDUCED.matches ? done() : setTimeout(done, 250);
+    }
+    card._fling = () => fling(-1, () => skip());
+    card._nudge = (done) => { // the Report button: a small push to the right, then the sheet
+      set(26, { ms: 150 });
+      REDUCED.matches ? done() : setTimeout(() => { set(0, { ms: 300, ease: EASE_BOUNCE }); done(); }, 150);
     };
+
     card.addEventListener("pointerdown", (event) => {
       if (event.target.closest("button, a")) return;
-      dragging = true; decided = false; dx = 0; startX = event.clientX; startY = event.clientY; pid = event.pointerId;
+      dragging = true; decided = false; dx = 0; velocity = 0; card._touched = true;
+      startX = lastX = event.clientX; startY = event.clientY; lastT = event.timeStamp; pid = event.pointerId;
     });
     card.addEventListener("pointermove", (event) => {
       if (!dragging || event.pointerId !== pid) return;
@@ -224,26 +295,39 @@
         if (Math.abs(mx) > 8) { decided = true; try { card.setPointerCapture(pid); } catch (error) { /* fine */ } }
         else return;
       }
+      const dt = event.timeStamp - lastT;
+      if (dt > 0) velocity = (event.clientX - lastX) / dt; // px per ms
+      lastX = event.clientX; lastT = event.timeStamp;
       dx = mx;
-      set(dx, false);
+      set(dx, { held: true });
     });
     const end = (event) => {
       if (!dragging || (event && event.pointerId !== pid)) return;
       dragging = false;
       const width = card.offsetWidth;
-      if (dx <= -90) { fling(-width * 1.3, () => skip()); }
-      else if (dx >= 90) { set(0, true); openReport(deck[index]); }
-      else set(0, true);
+      const far = Math.abs(dx) >= width * 0.3;
+      const flick = Math.abs(velocity) > 0.5 && Math.sign(velocity) === Math.sign(dx) && Math.abs(dx) > 20;
+      if ((far || flick) && dx < 0) fling(-1, () => skip());
+      else if ((far || flick) && dx > 0) { set(0, { ms: 350, ease: EASE_BOUNCE }); buzz(); openReport(deck[index]); }
+      else set(0, { ms: 350, ease: EASE_BOUNCE });
       dx = 0;
     };
     card.addEventListener("pointerup", end);
     card.addEventListener("pointercancel", end);
-    function fling(x, done) {
-      set(x, true);
-      if (REDUCED.matches) { done(); return; }
-      setTimeout(done, 240);
-    }
-    card._fling = () => fling(-card.offsetWidth * 1.3, () => skip());
+  }
+
+  // Late data (jersey numbers, odds) changes only these parts of the top card, so its animations and the photo are left alone.
+  function patchTop() {
+    const c = deck[index];
+    const card = box.querySelector(".lh-sd-card");
+    if (!c || !card) return;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = cardHtml(c, false);
+    [".lh-sd-meta", ".lh-sd-odds", ".lh-sd-actions"].forEach((selector) => {
+      const old = card.querySelector(selector);
+      const next = tmp.querySelector(selector);
+      if (old && next) old.replaceWith(next);
+    });
   }
 
   function skip() { index += 1; render(false); }
@@ -339,7 +423,7 @@
     if (!el) return;
     const act = el.dataset.sd;
     if (act === "skip") { const card = box.querySelector(".lh-sd-card"); if (card && card._fling) card._fling(); else skip(); }
-    else if (act === "report") openReport(deck[index]);
+    else if (act === "report") { const card = box.querySelector(".lh-sd-card"); if (card && card._nudge) card._nudge(() => openReport(deck[index])); else openReport(deck[index]); }
     else if (act === "back") { index = Math.max(0, index - 1); render(false); }
     else if (act === "restart") { index = 0; render(true); }
     else if (act === "reset") { filter = { props: [], side: "both", order: "mix" }; saveFilter(); deck = buildDeck(); index = 0; render(false); }
@@ -378,12 +462,12 @@
     // jersey numbers and positions for the deck's players (one request), then redraw the card
     const ids = [...new Set(deck.map((c) => c.row.playerId))].filter((id) => !people[id]);
     if (ids.length && typeof fetchPlayers === "function") {
-      fetchPlayers(ids).then((found) => { Object.assign(people, found); if (slate === newSlate) render(false); }).catch(() => {});
+      fetchPlayers(ids).then((found) => { Object.assign(people, found); if (slate === newSlate) patchTop(); }).catch(() => {});
     }
   }
 
   document.addEventListener("lh-top-slate", (event) => { const s = event.detail && event.detail.slate; if (s) load(s); else if (event.detail && event.detail.message) box.hidden = true; });
-  document.addEventListener("lh-odds-ready", () => { if (slate && deck.length) render(false); });
+  document.addEventListener("lh-odds-ready", () => { if (slate && deck.length) patchTop(); });
   document.addEventListener("lh-hunts-change", () => { /* huntButtonState updates the Add button itself */ });
   PHONE.addEventListener("change", () => { if (PHONE.matches && slate) load(slate); });
 })();
