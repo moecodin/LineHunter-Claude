@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matchup info mockup</title>
+  <meta name="robots" content="noindex">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <!--
+    MOCKUP ONLY (NOP @ GSW, the numbers from the screenshot). A = today (two-column grid). B = team headers, one comparison per row,
+    lines in their own labeled strip, last meeting as one line.
+  -->
+  <style>
+    :root, [data-theme="dark"] { --ink:#060a16; --panel:#0b1229; --rule:#1f2e5a; --mist:#93a1cb; --strong:#d8dff5; --text:#c3cce9; color-scheme: dark; }
+    [data-theme="light"] { --ink:#eef1fa; --panel:#fff; --rule:#cfd6ec; --mist:#4b5784; --strong:#0b1229; --text:#26325e; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--ink); color: var(--text); font: 400 14px/1.45 Satoshi, system-ui, sans-serif; }
+    .wrap { max-width: 360px; margin: 0 auto; }
+    h2 { font: 600 .8rem Satoshi; color: var(--mist); margin: 22px 0 8px; }
+    button.t { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 6px 12px; font: inherit; cursor: pointer; }
+    .card { background: var(--panel); border: 1px solid var(--rule); padding: 16px; }
+    .title { font: 600 1.2rem/1.2 "Clash Display", sans-serif; color: var(--strong); margin: 0 0 10px; }
+    .muted { color: var(--mist); }
+
+    /* A: today */
+    .a { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .a .l { font-size: .78rem; color: var(--strong); }
+    .a .v { text-align: right; font: 600 1.05rem/1.25 "Clash Display", sans-serif; color: var(--strong); }
+    .a small { display: block; font-size: .65rem; color: var(--mist); text-align: left; }
+
+    /* B: proposed */
+    .heads, .row { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; }
+    .heads { padding-bottom: 6px; }
+    .heads b { font: 600 1.7rem/1 "Clash Display", sans-serif; color: var(--strong); }
+    .heads b:last-child, .row .v:last-child { text-align: right; }
+    .row { padding: 9px 0; border-top: 1px solid var(--rule); }
+    .row .lab { grid-column: 1 / -1; font-size: .72rem; color: var(--mist); margin-bottom: 2px; }
+    .row .v { font: 600 1.05rem/1.25 "Clash Display", sans-serif; color: var(--strong); }
+    .row .v small { font: 400 .72rem Satoshi; color: var(--mist); margin-left: 4px; }
+    .cols { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--rule); padding: 9px 0; }
+    .cols div { padding: 0 .6rem; border-left: 1px solid var(--rule); min-width: 0; }
+    .cols div:first-child { padding-left: 0; border-left: 0; }
+    .cols span { display: block; font-size: .72rem; color: var(--mist); }
+    .cols b { font: 600 1.05rem/1.25 "Clash Display", sans-serif; color: var(--strong); }
+    .note { font-size: .72rem; color: var(--mist); margin: -2px 0 8px; }
+    .meet { border-top: 1px solid var(--rule); padding-top: 9px; }
+    .meet span { display: block; font-size: .72rem; color: var(--mist); margin-bottom: 2px; }
+    .meet b { font: 600 1.05rem/1.3 "Clash Display", sans-serif; color: var(--strong); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <button class="t" id="t">Switch to light</button>
+
+    <h2>A · Today</h2>
+    <div class="card a">
+      <div><div class="l">Spread · Total</div><div class="v">GSW −10.5 · 216.5</div><small>POLY</small></div>
+      <div><div class="l">Coaches</div><div class="v">Jamahl Mosley · Steve Kerr</div></div>
+      <div><div class="l">NOP on the road · GSW at home</div><div class="v">1-2 · 5-1</div></div>
+      <div><div class="l">Rest</div><div class="v">NOP 3 days · GSW 2 days</div></div>
+      <div><div class="l">Last meeting</div><div class="v">Feb 24, 2026 · NOP 113—109 GSW</div><small>Last season</small></div>
+    </div>
+
+    <h2>B · Proposed</h2>
+    <div class="card">
+      <div class="title">Chase Center</div>
+      <div class="heads"><b>NOP</b><b>GSW</b></div>
+      <div class="row"><span class="lab">Coach</span><span class="v">Mosley</span><span class="v">Kerr</span></div>
+      <div class="row"><span class="lab">Record</span><span class="v">1–2<small>road</small></span><span class="v">5–1<small>home</small></span></div>
+      <div class="row"><span class="lab">Rest</span><span class="v">3 days</span><span class="v">2 days</span></div>
+      <div class="cols">
+        <div><span>Spread</span><b>GSW −10.5</b></div>
+        <div><span>Total</span><b>216.5</b></div>
+      </div>
+      <div class="note">Lines from Polymarket</div>
+      <div class="meet"><span>Last meeting · last season</span><b>Feb 24, 2026 · NOP 113–109 GSW</b></div>
+    </div>
+  </div>
+  <script>
+    document.getElementById("t").onclick = (e) => {
+      const r = document.documentElement, light = r.dataset.theme !== "light";
+      r.dataset.theme = light ? "light" : "dark"; e.target.textContent = light ? "Switch to dark" : "Switch to light";
+    };
+  </script>
+</body>
+</html>
