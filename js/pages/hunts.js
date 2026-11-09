@@ -87,12 +87,8 @@
   function togetherHtml(group) {
     const t = together[signature(group)];
     const label = `<div class="lh-hbt-t">Hit together · same game · last 10 games</div>`;
-    if (!t || t.state === "loading") return `<div class="lh-hbt">${label}<div class="lh-hbt-note">Counting...</div></div>`;
-    if (t.state === "failed") return `<div class="lh-hbt">${label}<div class="lh-hbt-note">Couldn't load the games.</div></div>`;
-    if (!t.cells.length) {
-      const teams = new Set(group.map(({ leg }) => leg.team));
-      return `<div class="lh-hbt">${label}<div class="lh-hbt-note">${teams.size > 1 ? "These players are on opposite teams, so they have no past games together to count." : "No shared games yet."}</div></div>`;
-    }
+    // Only a real count is shown: nothing while it loads, if it fails, or when the legs have no games together (opposite teams).
+    if (!t || t.state !== "done" || !t.cells.length) return "";
     const hits = t.cells.filter(Boolean).length;
     const names = [...new Set(group.map(({ leg }) => lastName(leg.player)))].join(" and ");
     return `<div class="lh-hbt">${label}
