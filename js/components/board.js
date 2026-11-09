@@ -655,6 +655,18 @@ if (boardUi) {
   boardUi.state.side = ["over", "under", "both"].includes(savedSide) ? savedSide : "over";
   boardSideReady = true;
   boardUi.render();
+  // Phones: Over | Under | Both joins the controls bar so it sits beside L5 / L10 / L20 (Sort and Filter go on the row under).
+  const sidePhone = window.matchMedia("(max-width: 767.98px)");
+  const placeSide = () => {
+    const side = document.getElementById("boardSide");
+    const bar = document.getElementById("boardControls");
+    const row = document.querySelector(".lh-board-tabrow");
+    if (!side || !bar || !row) return;
+    if (sidePhone.matches) { if (side.parentNode !== bar) bar.insertBefore(side, bar.firstChild); }
+    else if (side.parentNode !== row) row.appendChild(side);
+  };
+  placeSide();
+  sidePhone.addEventListener("change", placeSide);
 }
 
 // ---------- Events ----------

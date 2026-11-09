@@ -7469,3 +7469,14 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   .lh-sd .lh-sd-deck { transition: none; }
   .lh-sd-sheet .lh-sd-sheeth, .lh-sd-report > *, .lh-sd-reportbtns { animation: none; }
 }
+
+/* Board controls on phones: Over | Under | Both and L5 / L10 / L20 side by side, Filter and Sort on the row under (the Board bar only) */
+@media (max-width: 767.98px) {
+  #boardControls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.5rem; align-items: stretch; }
+  #boardControls #boardSide, #boardControls .lh-window-toggle { display: flex; width: 100%; margin: 0; }
+  #boardControls #boardSide[hidden] { display: none; }
+  #boardControls #boardSide > .btn, #boardControls .lh-window-toggle > .btn { flex: 1 1 0; }
+  #boardControls .dropdown { min-width: 0; }
+  #boardControls .dropdown .lh-top-ctl { width: 100%; justify-content: center; white-space: nowrap; }
+  #boardControls .lh-top-bookpill { grid-column: 1 / -1; }
+}
