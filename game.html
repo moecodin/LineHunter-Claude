@@ -123,13 +123,16 @@
 
     </div>
 
-    <!-- RAIL: the injury report and the team ratings, both open. -->
+    <!-- RAIL: the injury report (closed until you press Show) and the team ratings (open). -->
     <aside class="lh-pp-rail">
       <section class="card" id="gameInjuries" data-lh-jump="Injuries">
-        <div class="card-header py-3">
+        <div class="card-header py-3 lh-sec-head">
           <h2 class="lh-label mb-0" data-lh-kicker="Status">Injury report <span class="lh-gp-sub" id="gameInjurySummary">Loading…</span></h2>
+          <button type="button" class="lh-sec-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#gameInjuryBody" aria-expanded="false" aria-controls="gameInjuryBody">
+            <span class="lh-when-closed">Show</span><span class="lh-when-open">Hide</span> <i class="bi bi-chevron-down lh-mi-chevron" aria-hidden="true"></i>
+          </button>
         </div>
-        <div class="collapse show" id="gameInjuryBody">
+        <div class="collapse" id="gameInjuryBody">
           <div id="gameInjuryList" class="lh-injury-list lh-game-injury-list">
             <div class="text-muted small p-3">Loading…</div>
           </div>
