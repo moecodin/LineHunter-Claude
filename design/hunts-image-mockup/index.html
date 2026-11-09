@@ -28,6 +28,9 @@
     .leg span { font-size: .72rem; color: var(--mist); }
     .leg .o { font: 600 1.05rem "Clash Display", sans-serif; color: var(--over-text); text-align: right; }
     .leg .o small { display: block; font: 500 .68rem Satoshi; color: var(--mist); }
+    .odds { margin-top: 16px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 10px 0; display: flex; justify-content: space-between; align-items: baseline; }
+    .odds span { font-size: .8rem; color: var(--mist); }
+    .odds b { font: 600 2.4rem/1 "Clash Display", sans-serif; color: var(--strong); }
     .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-top: 16px; padding: 10px 0; }
     .stats div { padding: 0 10px; border-left: 1px solid var(--rule); }
     .stats div:first-child { padding-left: 0; border-left: 0; }
@@ -53,18 +56,14 @@
     <div class="sub">UTA @ MIN · same game · FanDuel</div>
     <div class="leg"><div><b>McDaniels Over 2.5 AST</b><span>9 of last 10 over</span></div><div class="o">−165<small>FD</small></div></div>
     <div class="leg"><div><b>McDaniels Over 5.5 REB</b><span>9 of last 10 over</span></div><div class="o">−150<small>FD</small></div></div>
-    <div class="stats">
-      <div><span>Combined odds</span><b>+168</b></div>
-      <div><span>To win on $10</span><b class="win">$16.77</b></div>
-      <div><span>Implied chance</span><b>37.4%</b></div>
-    </div>
+    <div class="odds"><span>Combined odds</span><b>+168</b></div>
     <div class="hit">
-      <div class="t">Hit together · last 10 games</div>
+      <div class="t">Hit together · same game · last 10 games</div>
       <b>8/10</b><span class="dots"><i></i><i></i><i></i><i class="m"></i><i></i><i></i><i></i><i></i><i class="m"></i><i></i></span>
     </div>
     <div class="foot"><span>Past results, not a prediction. Gambling problem? Call <b>1-800-GAMBLER</b>.</span><b>linehunterapp.com</b></div>
   </div>
-  <p class="src">Mockup. Placeholders: the REB odds and "Hit together 8/10". Real build draws this off-screen and saves it as a PNG, like the Hit List share pictures.</p>
+  <p class="src">Mockup. Placeholders: the REB odds and "Hit together 8/10". The Hit together row only appears when legs share a game. Real build draws this off-screen and saves it as a PNG, like the Hit List share pictures.</p>
   <script>
     document.getElementById("t").onclick = (e) => {
       const r = document.documentElement, light = r.dataset.theme !== "light";
