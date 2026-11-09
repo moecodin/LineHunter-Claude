@@ -82,6 +82,24 @@
     .stamp { position: absolute; top: 24px; z-index: 3; font: 600 1.1rem "Clash Display", sans-serif; letter-spacing: .04em; border: 2px solid; padding: 4px 10px; border-radius: 6px; background: var(--panel); }
     .stamp.r { right: 18px; color: var(--over-text); border-color: var(--over); transform: rotate(8deg); }
     .stamp.l { left: 18px; color: var(--mist); border-color: var(--mist); transform: rotate(-8deg); }
+
+    /* card options */
+    .card.va::before { height: 150px; clip-path: polygon(0 0, 100% 0, 100% 55%, 0 100%); }
+    .card.va .av { position: absolute; top: -16px; right: -16px; width: 210px; height: 166px; z-index: 2; }
+    .card.va .av img { object-position: right bottom; }
+    .card.va .tag { position: absolute; top: 0; left: 0; z-index: 3; }
+    .card.va .name { margin-top: 112px; }
+    .card.vb::before { height: 112px; clip-path: polygon(0 0, 100% 0, 100% 70%, 0 100%); }
+    .card.vb .who { display: block; }
+    .card.vb .tag { position: absolute; right: 0; top: 0; }
+    .card.vb .bandname { position: relative; color: #fff; padding-top: 4px; }
+    .card.vb .bandname small { display: block; font-size: .85rem; opacity: .9; }
+    .card.vb .bandname b { font: 600 1.7rem/1.05 "Clash Display", sans-serif; }
+    .card.vb .bandname div { font-size: .82rem; opacity: .9; margin-top: 4px; }
+    .card.vb .pickrow { position: relative; display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; }
+    .card.vb .pickrow .av { width: 120px; height: 98px; flex: none; margin-right: -6px; }
+    .card.vb .pickrow .av img { object-position: right bottom; }
+    .optlab { max-width: 1100px; margin: 26px auto 8px; font-size: .8rem; color: var(--strong); }
     .note { max-width: 1100px; margin: 22px auto 0; font-size: .8rem; color: var(--mist); }
   </style>
 </head>
@@ -135,6 +153,38 @@
         </div>
       </div>
       <div class="hint">Dragging left shows “SKIP”; the card flies off and the next one rises.</div>
+    </div>
+  </div>
+
+  <div class="optlab">Card options for the avatar</div>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · Big avatar, the slant cuts across his chest and shoulders</p>
+      <div class="deck">
+        <div class="card va" style="--team:#236192">
+          <div class="who"><span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span><span class="tag">9 of 10</span></div>
+          <div class="name"><small>Jaden</small><b>McDaniels</b><div class="meta">MIN · vs UTA · 7:00 PM</div></div>
+          <div class="pick"><b>Over 2.5 Assists</b><span>9 straight overs · averaging 3.7</span></div>
+          <div class="stats"><div class="rate">90%<small>last 10</small></div><span class="odds">−165 <small>FD</small></span></div>
+          <div class="bars"><i style="height:14%" class="m"></i><i style="height:43%"></i><i style="height:43%"></i><i style="height:57%"></i><i style="height:57%"></i><i style="height:100%"></i><i style="height:43%"></i><i style="height:43%"></i><i style="height:57%"></i><i style="height:71%"></i><span class="line"></span></div>
+          <div class="actions"><span class="btn">‹ Skip</span><span class="btn primary">+ Add to hunt</span><span class="btn">Report ›</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame">
+      <p class="cap">B · Name in the filled band, avatar beside the pick</p>
+      <div class="deck">
+        <div class="card vb" style="--team:#236192">
+          <div class="who"><div class="bandname"><small>Jaden</small><b>McDaniels</b><div>MIN · vs UTA · 7:00 PM</div></div><span class="tag">9 of 10</span></div>
+          <div class="pickrow">
+            <div class="pick" style="margin-top:0"><b>Over 2.5 Assists</b><span>9 straight overs<br>averaging 3.7</span></div>
+            <span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span>
+          </div>
+          <div class="stats"><div class="rate">90%<small>last 10</small></div><span class="odds">−165 <small>FD</small></span></div>
+          <div class="bars"><i style="height:14%" class="m"></i><i style="height:43%"></i><i style="height:43%"></i><i style="height:57%"></i><i style="height:57%"></i><i style="height:100%"></i><i style="height:43%"></i><i style="height:43%"></i><i style="height:57%"></i><i style="height:71%"></i><span class="line"></span></div>
+          <div class="actions"><span class="btn">‹ Skip</span><span class="btn primary">+ Add to hunt</span><span class="btn">Report ›</span></div>
+        </div>
+      </div>
     </div>
   </div>
   <p class="note">Mockup, static. Real: McDaniels' AST numbers (Nov 8). The card behind is a placeholder. "Report ›" opens that prop's Board row with the chart and scouting report. "+ Add to hunt" uses the same add as the Board and shows the usual toast.</p>
