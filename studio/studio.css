@@ -139,7 +139,7 @@ html,body{background:var(--st-bg)}
 /* ---------- Player card ---------- */
 .sp-card{position:relative;overflow:hidden;background:var(--c-bg);color:var(--c-ink);font-family:var(--f-body),sans-serif}
 .sp-photo{position:absolute;left:0;right:0;top:0;overflow:hidden}.sp-photo>img{width:100%;height:100%;object-fit:cover;display:block}
-.sp-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--c-bg-rgb),.55) 0%,rgba(var(--c-bg-rgb),0) 22%,rgba(var(--c-bg-rgb),0) 50%,var(--c-bg) 100%)}
+.sp-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--c-bg-rgb),.55) 0%,rgba(var(--c-bg-rgb),0) 22%)}
 .sp-glow{position:absolute;left:0;right:0;top:0;background:radial-gradient(ellipse at 70% 20%,rgba(var(--c-accent-rgb),.5),rgba(var(--c-bg-rgb),0) 65%)}
 .sp-logo{position:absolute;left:64px;top:56px;height:44px}
 .sp-credit{position:absolute;right:30px;top:62px;font-size:15px;color:var(--c-ink);background:rgba(var(--c-bg-rgb),.6);padding:5px 10px}

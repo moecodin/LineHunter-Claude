@@ -30,7 +30,7 @@ const BODY_FONTS = ["Satoshi", "General Sans", "Switzer", "Cabinet Grotesk", "Zo
 const LOCKED_ELS = new Set(["credit", "foot"]); // can't be hidden: the photo credit and the disclaimer
 const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", site: "Website", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name", edge: "Edge text" };
 const STYLE0 = () => ({ fontHead: "", fontBody: "", fw: "", ls: null, upper: false, hero: 100, title: 100, rows: 100, bg: "", colors: {}, off: {} });
-const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false });
+const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false, fade: null });
 
 const S = {
   slate: null, groups: [], res: null, localPhotos: [], source: null, rows: [], win: 10, players: [],
@@ -330,6 +330,8 @@ async function saveUpload() {
   $("stUpMsg").textContent = "Saved on this device."; $("stUpFile").value = ""; renderControls(); renderAll();
 }
 const adjFor = (id) => ({ ...ADJ0(), ...(S.photoAdj[id] || {}) });
+// How much of the photo's bottom fades out (0-100 %): the slider's value, else the design's own (designs without `fade` keep 0).
+const fadeOf = (design, adj) => (adj.fade != null ? adj.fade : design.fade || 0);
 function setAdj(key, value) { if (S.photoId === "none") return; S.photoAdj[S.photoId] = { ...adjFor(S.photoId), [key]: value }; store.set("lh-studio-photoadj", S.photoAdj); syncPhotoUi(); schedule(); }
 
 const imgCache = {}, outCache = {};
@@ -347,7 +349,7 @@ async function processPhoto(photo, adj, design, box, maxW) {
   const mode = adj.mode || (design.photoModeFor ? design.photoModeFor(off) : design.photo === "duotone" ? "duotone" : "color");
   const fx = adj.fx == null ? design.focus.x : adj.fx, fy = adj.fy == null ? design.focus.y : adj.fy;
   const a = box.w / box.h, ow = Math.round(Math.min(maxW, box.w * S.scale));
-  const key = [photo.url, a.toFixed(3), ow, adj.zoom, fx, fy, adj.bright, mode, adj.tint, adj.flip, t.bg, t.accent, design.alpha ? "a" : ""].join("|");
+  const key = [photo.url, a.toFixed(3), ow, adj.zoom, fx, fy, adj.bright, mode, adj.tint, adj.flip, t.bg, t.accent, design.alpha ? "a" : "", fadeOf(design, adj)].join("|");
   if (outCache[key]) return outCache[key];
   const img = await loadImg(photo.url), W = img.naturalWidth, H = img.naturalHeight;
   let cw = W / H > a ? H * a : W, ch = cw / a;
@@ -383,10 +385,17 @@ async function processPhoto(photo, adj, design, box, maxW) {
       }
     }
   }
+  // Fade: the bottom part of the photo turns see-through (not painted in the card color), so it blends into any background.
+  const fade = fadeOf(design, adj);
+  if (fade > 0) {
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "destination-out";
+    const gr = g.createLinearGradient(0, h * (1 - fade / 100), 0, h); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(0.55, "rgba(0,0,0,.6)"); gr.addColorStop(1, "rgba(0,0,0,1)");
+    g.fillStyle = gr; g.fillRect(0, 0, w, h); g.restore();
+  }
   // A cut-out (transparent background) shows through at the edges: check a few edge points so a design can place it differently.
   let alpha = false;
   if (design.alpha) { const pts = [[0, 0], [w - 1, 0], [0, h >> 1], [w - 1, h >> 1], [w >> 1, 0], [w >> 2, 0], [(3 * w) >> 2, 0]]; alpha = pts.some(([x, y]) => g.getImageData(x, y, 1, 1).data[3] < 200); }
-  const out = { alpha, url: design.alpha ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.92), src: { W, H, cw, ch } };
+  const out = { alpha, url: design.alpha || fade > 0 ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.92), src: { W, H, cw, ch } };
   return (outCache[key] = out);
 }
 
@@ -716,7 +725,7 @@ function syncFieldsUi() {
 function syncPhotoUi() {
   const has = S.photoId !== "none", a = adjFor(S.photoId), d = curDesign();
   $("stPhotoAdj").hidden = !has; $("stPhotoReset").hidden = !has; if (!has) return;
-  const vals = { zoom: a.zoom, fx: a.fx == null ? d.focus.x : a.fx, fy: a.fy == null ? d.focus.y : a.fy, bright: a.bright, tint: a.tint };
+  const vals = { zoom: a.zoom, fx: a.fx == null ? d.focus.x : a.fx, fy: a.fy == null ? d.focus.y : a.fy, bright: a.bright, tint: a.tint, fade: fadeOf(d, a) };
   Object.entries(vals).forEach(([k, v]) => { $("stP_" + k).value = v; $("stPO_" + k).textContent = k === "fx" || k === "fy" ? v : v + "%"; });
   $("stP_mode").value = a.mode; $("stP_flip").checked = !!a.flip;
 }
@@ -761,7 +770,7 @@ function bind() {
   $("stPlayerPick").onchange = (e) => { const r = S.players[+e.target.value]; if (r) chooseSource(playerSource(r)); };
   ["name", "hero", "title", "subtitle", "footer"].forEach((k) => $("stF_" + k).addEventListener("input", (e) => { S.fields[k] = e.target.value; schedule(); }));
   // Photo
-  ["zoom", "fx", "fy", "bright", "tint"].forEach((k) => $("stP_" + k).addEventListener("input", (e) => setAdj(k, +e.target.value)));
+  ["zoom", "fx", "fy", "bright", "tint", "fade"].forEach((k) => $("stP_" + k).addEventListener("input", (e) => setAdj(k, +e.target.value)));
   $("stP_mode").onchange = (e) => setAdj("mode", e.target.value); $("stP_flip").onchange = (e) => setAdj("flip", e.target.checked);
   $("stPhotoReset").onclick = () => { delete S.photoAdj[S.photoId]; store.set("lh-studio-photoadj", S.photoAdj); syncPhotoUi(); schedule(); };
   $("stUpSave").onclick = saveUpload;

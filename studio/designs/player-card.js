@@ -34,7 +34,7 @@
     </div>`;
   }
   (window.STUDIO_DESIGNS = window.STUDIO_DESIGNS || []).push({
-    id: "player-card", name: "Player card", kinds: ["player"], photo: "plain",
+    id: "player-card", name: "Player card", kinds: ["player"], photo: "plain", fade: 45,
     // "Natural photo" off = the Night poster look: the photo in duotone (card color to purple) plus a soft purple wash on top.
     photoModeFor: (off) => (off.naturalPhoto ? "duotone" : "color"), focus: { x: 50, y: 20 }, capacity: () => 0, render,
     tokens: { bg: "#060a16", ink: "#f4f6ff", mut: "#93a1cb", accent: "#9a93ff", good: "#46a98f", rule: "#1f2e5a" },
