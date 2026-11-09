@@ -107,6 +107,11 @@
     .card.fade .av img { -webkit-mask-image: linear-gradient(#000 62%, transparent 98%); mask-image: linear-gradient(#000 62%, transparent 98%); }
     .card.stripe::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 190px; background: var(--team); opacity: .55; z-index: 1;
       clip-path: polygon(0 calc(150px + 12px), 100% calc(82px + 12px), 100% calc(82px + 17px), 0 calc(150px + 17px)); }
+
+    /* A3: anchored. A soft team-color glow behind him, and the last name sits in front of his faded chest (like a poster). */
+    .card.glow { background: radial-gradient(circle at 78% 26%, color-mix(in srgb, var(--team) 42%, transparent), transparent 62%), var(--panel); }
+    .card.over .name { position: relative; z-index: 3; margin-top: 96px; }
+    .card.over .name b { font-size: 2rem; }
     .optlab { max-width: 1100px; margin: 26px auto 8px; font-size: .8rem; color: var(--strong); }
     .note { max-width: 1100px; margin: 22px auto 0; font-size: .8rem; color: var(--mist); }
   </style>
@@ -170,6 +175,19 @@
       <p class="cap">A1 · Same, the photo fades out at the bottom</p>
       <div class="deck">
         <div class="card va fade" style="--team:#236192">
+          <div class="who"><span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span><span class="tag">9 of 10</span></div>
+          <div class="name"><small>Jaden</small><b>McDaniels</b><div class="meta">MIN · vs UTA · 7:00 PM</div></div>
+          <div class="pick"><b>Over 2.5 Assists</b><span>9 straight overs · averaging 3.7</span></div>
+          <div class="stats"><div class="rate">90%<small>last 10</small></div><span class="odds">−165 <small>FD</small></span></div>
+          <div class="bars"><i style="height:14%" class="m"></i><i style="height:43%"></i><i style="height:43%"></i><i style="height:57%"></i><i style="height:57%"></i><i style="height:100%"></i><i style="height:43%"></i><i style="height:43%"></i><i style="height:57%"></i><i style="height:71%"></i><span class="line"></span></div>
+          <div class="actions"><span class="btn">‹ Skip</span><span class="btn primary">+ Add to hunt</span><span class="btn">Report ›</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame">
+      <p class="cap">A3 · Glow behind him, name in front of the faded chest</p>
+      <div class="deck">
+        <div class="card va fade glow over" style="--team:#236192">
           <div class="who"><span class="av"><img src="https://cdn.nba.com/headshots/nba/latest/1040x760/1630183.png" alt="" onerror="this.remove()"></span><span class="tag">9 of 10</span></div>
           <div class="name"><small>Jaden</small><b>McDaniels</b><div class="meta">MIN · vs UTA · 7:00 PM</div></div>
           <div class="pick"><b>Over 2.5 Assists</b><span>9 straight overs · averaging 3.7</span></div>
