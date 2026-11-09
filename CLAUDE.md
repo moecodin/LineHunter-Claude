@@ -240,3 +240,7 @@
 - Hunt Score Role step: compare the whole lineup then vs now, not only tonight's missing players (Reaves' "without Luka" games last February still had LeBron, who has left).
 - Hunt Score: a position matchup step ("centers vs MIL: +3.1 PTS vs their avg") from the Same Position card's data.
 - The Board after a game is final: show each prop's real result next to the model's pick (hit / miss, final stat vs the line), like the Game Breakdown's "Final" marker does for the total.
+
+## Marketing kit (local only, `marketing/`, Nov 2026)
+- `node marketing/shots.js` (`--demo` = the ?demo=1 slate where a page has it, `--light`, `--only=board,player`): screenshot kit. Starts `marketing/serve.js` on 127.0.0.1:8910 (serves the repo and calls `netlify/functions/bdl.js` / `hunt.js` with the key from `.env`, like `netlify dev` but with no password gate; local only), opens every main page in Playwright at phone (390x844 @3x) and desktop (1440x900 @2x), dark theme unless `--light`, lines mode (one research-mode shot), and saves `studio/photos/shots/<name>-<phone|desktop>.png` + `shots.json` (gitignored). Shots: home, today, deck, board, board-open (first row opened; the player / game / matchup links for the next shots come from there), player, game, matchup, hit-list, hunts (3 legs added, then the slip is cleared), standings, research-board. The Studio lists them in its photo picker on localhost ("App · The Board (phone)"). Playwright lives in `marketing/package.json` (`cd marketing && npm i`; `marketing/node_modules` gitignored).
+

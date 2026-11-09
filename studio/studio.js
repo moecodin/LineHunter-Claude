@@ -323,13 +323,15 @@ async function loadPhotos() {
   S.localPhotos = [];
   if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) {
     try { const res = await fetch("studio/photos/local/local.json", { cache: "no-cache" }); if (res.ok) S.localPhotos = await res.json(); } catch (e) { /* none */ }
+    // App screenshots from the marketing kit (node marketing/shots.js): same picker, under studio/photos/shots/.
+    try { const res = await fetch("studio/photos/shots/shots.json", { cache: "no-cache" }); if (res.ok) S.localPhotos = S.localPhotos.concat((await res.json()).map((x) => ({ ...x, file: "../shots/" + x.file }))); } catch (e) { /* none */ }
   }
   S.uploads = await idbAll();
 }
 let uploadUrls = {};
 function allPhotos() {
   return [...S.photos.map((p) => ({ id: "lib:" + p.file, player: p.player, url: "studio/photos/" + p.file, credit: `Photo: ${p.photographer} / ${p.license}`, sa: p.shareAlike })),
-    ...(S.localPhotos || []).map((p) => ({ id: "loc:" + p.file, player: p.player, url: "studio/photos/local/" + encodeURIComponent(p.file), credit: p.credit ? `Photo: ${p.credit}` : "", local: true })),
+    ...(S.localPhotos || []).map((p) => ({ id: "loc:" + p.file, player: p.player, url: "studio/photos/local/" + encodeURI(p.file), credit: p.credit ? `Photo: ${p.credit}` : "", local: true })),
     ...S.uploads.map((u) => ({ id: "up:" + u.id, player: u.player, url: uploadUrls[u.id] || (uploadUrls[u.id] = URL.createObjectURL(u.blob)), credit: u.credit ? `Photo: ${u.credit}` : "", mine: true }))];
 }
 function leadName() { if (kindOf() === "player") return S.source.row.name; const lead = S.rows.find((r) => r.on); return lead ? lead.full || lead.n : ""; }
