@@ -102,7 +102,7 @@ async function idbPut(rec) { const db = await idbOpen(); return new Promise((res
 async function idbDelete(id) { const db = await idbOpen(); return new Promise((res) => { const t = db.transaction("photos", "readwrite"); t.objectStore("photos").delete(id); t.oncomplete = res; }); }
 async function saveUpload() {
   const file = $("stUpFile").files[0], player = $("stUpPlayer").value.trim(), credit = $("stUpCredit").value.trim();
-  if (!file || !player || !credit) { $("stUpMsg").textContent = "Pick a file and fill in the player and the photographer / source (it prints on the image)."; return; }
+  if (!file || !player) { $("stUpMsg").textContent = "Pick a file and type the player's name (the credit is optional)."; return; }
   const bmp = await createImageBitmap(file); const k = Math.min(1, 2400 / Math.max(bmp.width, bmp.height));
   const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
   const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.9));
