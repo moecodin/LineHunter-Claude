@@ -1,0 +1,11 @@
+[
+  { "card": "title", "kicker": "Player spotlight", "title": "{first}", "hero": "{last}", "wall": "{STAT}", "sub": "Next game, by the numbers", "sec": 2.2 },
+  { "url": "player.html?id={playerId}&prop={stat}", "caption": ["Last 10,", "game by game"],
+    "actions": [ { "do": "wait", "ms": 500 }, { "do": "scroll", "by": 380, "ms": 1100 }, { "do": "tap", "sel": "#playerWindow button, [data-window='20'], button", "text": "L20" }, { "do": "wait", "ms": 1100 } ] },
+  { "url": "player.html?id={playerId}&prop={stat}", "caption": ["Home, away,", "head-to-head"], "captionAt": "top",
+    "before": [ { "do": "scroll", "by": 380, "ms": 10 } ],
+    "actions": [ { "do": "wait", "ms": 400 }, { "do": "tap", "sel": "#playerSplits button", "text": "Away" }, { "do": "wait", "ms": 1000 }, { "do": "tap", "sel": "#playerSplits button", "text": "H2H" }, { "do": "wait", "ms": 1500 } ] },
+  { "url": "matchup.html?player={playerId}&opp={oppId}&stat={stat}", "caption": ["Know the", "matchup"],
+    "actions": [ { "do": "wait", "ms": 600 }, { "do": "scroll", "by": 700, "ms": 2000 }, { "do": "wait", "ms": 500 } ] },
+  { "card": "end", "sec": 3 }
+]

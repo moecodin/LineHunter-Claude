@@ -1,0 +1,11 @@
+[
+  { "card": "title", "kicker": "{date}", "title": "Tonight's", "hero": "Board.", "wall": "L10", "sub": "Every prop on the slate, ranked", "sec": 2.2 },
+  { "url": "top-hit-rates.html", "caption": ["Hit rate, average,", "best odds"],
+    "actions": [ { "do": "wait", "ms": 500 }, { "do": "scroll", "by": 520, "ms": 1600 }, { "do": "wait", "ms": 400 } ] },
+  { "url": "top-hit-rates.html", "caption": ["Open a row for", "the full picture"],
+    "before": [ { "do": "scrollTo", "sel": "[data-bd-head]", "offset": 90 } ],
+    "actions": [ { "do": "wait", "ms": 400 }, { "do": "tap", "sel": "[data-bd-head]", "nth": 0 }, { "do": "wait", "ms": 1200 }, { "do": "scroll", "by": 650, "ms": 1800 }, { "do": "wait", "ms": 500 } ] },
+  { "url": "top-hit-rates.html", "caption": ["Pick a stat.", "Points, boards, dimes."], "captionAt": "top",
+    "actions": [ { "do": "wait", "ms": 400 }, { "do": "tap", "sel": "#boardTabs [data-bd-tab='reb']" }, { "do": "wait", "ms": 1200 }, { "do": "tap", "sel": "#boardTabs [data-bd-tab='ast']" }, { "do": "wait", "ms": 1200 }, { "do": "scroll", "by": 400, "ms": 1200 } ] },
+  { "card": "end", "title": "Find tonight's", "hero": "best props free.", "sec": 3 }
+]

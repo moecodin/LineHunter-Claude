@@ -1,0 +1,6 @@
+[
+  { "card": "title", "kicker": "Hunts builder", "title": "Build a slip", "hero": "in 10 seconds.", "wall": "SLIP", "sec": 2.2 },
+  { "url": "hunts.html", "caption": ["Pick tonight's", "props"], "cleanup": "hunts",
+    "actions": [ { "do": "wait", "ms": 500 }, { "do": "tap", "sel": "#hbpProps button", "text": "PTS" }, { "do": "wait", "ms": 700 }, { "do": "hunt", "n": 3, "pause": 800 }, { "do": "wait", "ms": 1200 } ] },
+  { "card": "end", "title": "Build yours", "hero": "free.", "sec": 3 }
+]

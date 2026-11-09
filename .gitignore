@@ -23,3 +23,4 @@ studio/photos/local/
 # Marketing screenshot kit output and its local packages
 studio/photos/shots/
 marketing/node_modules/
+marketing/out/

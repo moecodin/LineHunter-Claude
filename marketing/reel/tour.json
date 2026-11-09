@@ -1,0 +1,165 @@
+[
+  {
+    "card": "title",
+    "kicker": "Free NBA prop research",
+    "title": "Stop guessing.",
+    "hero": "Start hunting.",
+    "wall": "HUNT",
+    "sec": 2.2
+  },
+  {
+    "url": "schedule.html",
+    "caption": [
+      "Tonight's slate,",
+      "at a glance"
+    ],
+    "actions": [
+      {
+        "do": "wait",
+        "ms": 400
+      },
+      {
+        "do": "swipe",
+        "sel": "#gameWheel",
+        "dx": -170,
+        "times": 2,
+        "pause": 650
+      }
+    ]
+  },
+  {
+    "url": "schedule.html",
+    "caption": [
+      "The best props,",
+      "one swipe each"
+    ],
+    "captionAt": "top",
+    "before": [
+      {
+        "do": "eval",
+        "js": "(() => { const d = document.getElementById('storyDeck'); if (d) scrollTo(0, d.getBoundingClientRect().top + scrollY - 175); })()"
+      }
+    ],
+    "actions": [
+      {
+        "do": "wait",
+        "ms": 300
+      },
+      {
+        "do": "swipe",
+        "sel": "#storyDeck .lh-sd-card",
+        "dx": -320,
+        "times": 2,
+        "pause": 550
+      }
+    ],
+    "speed": 1.5,
+    "hold": 500
+  },
+  {
+    "url": "top-hit-rates.html",
+    "caption": [
+      "Every prop.",
+      "One list."
+    ],
+    "actions": [
+      {
+        "do": "wait",
+        "ms": 400
+      },
+      {
+        "do": "scroll",
+        "by": 420,
+        "ms": 1100
+      },
+      {
+        "do": "tap",
+        "sel": "[data-bd-head]",
+        "text": "{last}"
+      },
+      {
+        "do": "wait",
+        "ms": 900
+      },
+      {
+        "do": "scrollTo",
+        "sel": ".lh-bd-row.is-open",
+        "offset": 60
+      },
+      {
+        "do": "wait",
+        "ms": 600
+      },
+      {
+        "do": "scroll",
+        "by": 520,
+        "ms": 1400
+      }
+    ],
+    "speed": 1.15
+  },
+  {
+    "url": "player.html?id={playerId}&prop={stat}",
+    "caption": [
+      "Every game.",
+      "Every split."
+    ],
+    "actions": [
+      {
+        "do": "wait",
+        "ms": 500
+      },
+      {
+        "do": "scroll",
+        "by": 380,
+        "ms": 1100
+      },
+      {
+        "do": "tap",
+        "sel": "#playerSplits button",
+        "text": "Home"
+      },
+      {
+        "do": "wait",
+        "ms": 900
+      },
+      {
+        "do": "tap",
+        "sel": "#playerSplits button",
+        "text": "All"
+      },
+      {
+        "do": "wait",
+        "ms": 600
+      }
+    ]
+  },
+  {
+    "url": "hunts.html",
+    "caption": [
+      "Build the slip.",
+      "Check the odds."
+    ],
+    "captionAt": "top",
+    "cleanup": "hunts",
+    "actions": [
+      {
+        "do": "wait",
+        "ms": 400
+      },
+      {
+        "do": "hunt",
+        "n": 3,
+        "pause": 750
+      },
+      {
+        "do": "wait",
+        "ms": 900
+      }
+    ]
+  },
+  {
+    "card": "end",
+    "sec": 3
+  }
+]
