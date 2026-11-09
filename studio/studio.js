@@ -230,7 +230,7 @@ function resFields() {
     const result = mine && theirs ? ` · ${mine > theirs ? "W" : "L"} ${mine}-${theirs}` : "";
     sub = `${h.label} ${home ? "vs" : "@"} ${g.opponent} · ${dateLabel(String(g.game.date).slice(0, 10))}${result}`;
   } else sub = `${h.label}${h.pct || h.made ? "" : " per game"} · ${label}`;
-  return { ...base, hero: resValue(h, games), title: S.res.name, subtitle: sub };
+  return { ...base, kicker: h.label, hero: resValue(h, games), title: S.res.name, subtitle: sub };
 }
 function researchSource() {
   return { id: "research", kind: "list", label: "Player stats", research: true, footer: FOOT_RESEARCH, get teams() { return S.res.team ? [S.res.team] : []; }, build: () => resRows() };
@@ -343,10 +343,11 @@ async function rasterLogo(url) {
 // The photo, cut to exactly the design's box (so nothing else crops it), zoomed around the focus point, flipped,
 // brightened and given its look (color, black and white, or a duotone from the background to the accent color).
 async function processPhoto(photo, adj, design, box, maxW) {
-  const t = tokensFor(design), mode = adj.mode || (design.photo === "duotone" ? "duotone" : "color");
+  const t = tokensFor(design), off = S.style.off[design.id] || {};
+  const mode = adj.mode || (design.photoModeFor ? design.photoModeFor(off) : design.photo === "duotone" ? "duotone" : "color");
   const fx = adj.fx == null ? design.focus.x : adj.fx, fy = adj.fy == null ? design.focus.y : adj.fy;
   const a = box.w / box.h, ow = Math.round(Math.min(maxW, box.w * S.scale));
-  const key = [photo.url, a.toFixed(3), ow, adj.zoom, fx, fy, adj.bright, mode, adj.tint, adj.flip, t.bg, t.accent].join("|");
+  const key = [photo.url, a.toFixed(3), ow, adj.zoom, fx, fy, adj.bright, mode, adj.tint, adj.flip, t.bg, t.accent, design.alpha ? "a" : ""].join("|");
   if (outCache[key]) return outCache[key];
   const img = await loadImg(photo.url), W = img.naturalWidth, H = img.naturalHeight;
   let cw = W / H > a ? H * a : W, ch = cw / a;
@@ -370,7 +371,10 @@ async function processPhoto(photo, adj, design, box, maxW) {
     }
     g.putImageData(d, 0, 0);
   }
-  const out = { url: c.toDataURL("image/jpeg", 0.92), src: { W, H, cw, ch } };
+  // A cut-out (transparent background) shows through at the edges: check a few edge points so a design can place it differently.
+  let alpha = false;
+  if (design.alpha) { const pts = [[0, 0], [w - 1, 0], [0, h >> 1], [w - 1, h >> 1], [w >> 1, 0], [w >> 2, 0], [(3 * w) >> 2, 0]]; alpha = pts.some(([x, y]) => g.getImageData(x, y, 1, 1).data[3] < 200); }
+  const out = { alpha, url: design.alpha ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.92), src: { W, H, cw, ch } };
   return (outCache[key] = out);
 }
 
@@ -395,9 +399,9 @@ function teamColorsFor() {
   const team = kindOf() === "player" ? S.source.row.team : (S.rows.find((r) => r.on) || {}).t;
   return [info(team)].filter(Boolean);
 }
-function backgroundImage(design, w, h) {
+function backgroundImage(design, w, h, cardBg) {
   const mode = S.style.bg; if (!mode) return null;
-  const t = tokensFor(design), bg = hexRgb(t.bg), ink = hexRgb(t.ink), ac = hexRgb(t.accent), team = teamColorsFor();
+  const t = { ...tokensFor(design), ...(cardBg ? { bg: cardBg } : {}) }, bg = hexRgb(t.bg), ink = hexRgb(t.ink), ac = hexRgb(t.accent), team = teamColorsFor();
   const key = ["bg", mode, w, h, t.bg, t.ink, t.accent, team.join(",")].join("|"); if (outCache[key]) return outCache[key];
   const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d");
   g.fillStyle = t.bg; g.fillRect(0, 0, w, h);
@@ -426,21 +430,26 @@ async function buildCard(design, sizeKey, opts = {}) {
     w: size.w, h: size.h, rows: S.rows.filter((r) => r.on).map((r) => ({ ...r, t: r.hideTeam ? "" : r.t })),
     hero: S.fields.hero, title: S.fields.title, subtitle: S.fields.subtitle, footer: S.fields.footer, kicker: S.fields.kicker, name: S.fields.name,
     note: off.showSite ? STUDIO_NOTE : STUDIO_NOTE.replace(/\s*linehunterapp\.com$/, ""), photo: null, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
-    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite },
+    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite, teamColor: !off.teamColor },
   };
   if (kindOf() === "player") data.player = playerData(S.source.row, S.win);
+  if (design.teamSwitch) {
+    // Team color switch: the team's main color, a little darker so light text reads on it; a picked Background color wins.
+    const custom = (S.style.colors[design.id] || {}).bg, tc = teamColorsFor()[0];
+    data.cardBg = custom || (data.style.teamColor ? (tc ? rgbHex(mix(hexRgb(tc), [0, 0, 0], 0.22)) : "#1d2a52") : tokensFor(design).bg);
+  }
   data.rows = data.rows.slice(0, design.capacity(data, data));
   const sel = allPhotos().find((p) => p.id === S.photoId);
   if (sel) {
     data.photo = { url: sel.url, credit: sel.credit, player: sel.player };
     design.render(data); // first pass: the design reports its photo box
-    try { const out = await processPhoto(sel, adjFor(sel.id), design, data.photoBox, opts.thumb ? 420 : 2400); data.photo.url = out.url; data.photoSrc = out.src; }
+    try { const out = await processPhoto(sel, adjFor(sel.id), design, data.photoBox, opts.thumb ? 420 : 2400); data.photo.url = out.url; data.photo.cutout = out.alpha; data.photoSrc = out.src; }
     catch (e) { data.photo = null; }
   }
   const wrap = document.createElement("div");
   wrap.innerHTML = `<div ${themeAttrs(design, data)}>${design.render(data)}</div>`;
   const theme = wrap.firstElementChild, card = theme.firstElementChild;
-  const bg = backgroundImage(design, data.w, data.h);
+  const bg = backgroundImage(design, data.w, data.h, data.cardBg);
   if (bg) card.insertAdjacentHTML("afterbegin", `<img class="st-bgimg" src="${bg}" alt="">`);
   applyEdits(theme, design);
   return { el: theme, data, design };
