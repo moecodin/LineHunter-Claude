@@ -14,7 +14,7 @@
     const bars = p.games.map((g) => `<div class="sp-col"><div class="sp-slot"><div class="sp-bar${g.hit ? " hit" : ""}" style="height:${Math.max(2, (g.v / max) * 100)}%">${st.showValues === false ? "" : `<span class="sp-val">${esc(g.v)}</span>`}</div></div><span class="sp-opp">${esc(g.opp)}</span></div>`).join("");
     return `
     <div class="sp-card" style="width:${d.w}px;height:${d.h}px">
-      ${d.photo ? `<div class="sp-photo" data-el="photo" style="height:${ph}px"><img src="${d.photo.url}" alt=""><div class="sp-fade"></div></div>` : `<div class="sp-glow" style="height:${ph}px"></div>`}
+      ${d.photo ? `<div class="sp-photo" data-el="photo" style="height:${ph}px"><img src="${d.photo.url}" alt="">${st.naturalPhoto === false ? '<div class="sp-night"></div>' : ""}<div class="sp-fade"></div></div>` : `<div class="sp-glow" style="height:${ph}px"></div>`}
       ${st.showLogo === false ? "" : `<img class="sp-logo" data-el="logo" src="${d.logo}" alt="LineHunter">`}
       ${d.photo && d.photo.credit ? `<div class="sp-credit" data-el="credit">${esc(d.photo.credit)}</div>` : ""}
       <div class="sp-body" style="top:${ph - 170}px;--rs:${rs}">
@@ -34,8 +34,10 @@
     </div>`;
   }
   (window.STUDIO_DESIGNS = window.STUDIO_DESIGNS || []).push({
-    id: "player-card", name: "Player card", kinds: ["player"], photo: "plain", focus: { x: 50, y: 20 }, capacity: () => 0, render,
+    id: "player-card", name: "Player card", kinds: ["player"], photo: "plain",
+    // "Natural photo" off = the Night poster look: the photo in duotone (card color to purple) plus a soft purple wash on top.
+    photoModeFor: (off) => (off.naturalPhoto ? "duotone" : "color"), focus: { x: 50, y: 20 }, capacity: () => 0, render,
     tokens: { bg: "#060a16", ink: "#f4f6ff", mut: "#93a1cb", accent: "#9a93ff", good: "#46a98f", rule: "#1f2e5a" },
-    toggles: { showLogo: "Logo", showSub: "Matchup line", showValues: "Bar numbers", showSite: "Website" },
+    toggles: { naturalPhoto: "Natural photo", showLogo: "Logo", showSub: "Matchup line", showValues: "Bar numbers", showSite: "Website" },
   });
 })();

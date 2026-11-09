@@ -267,3 +267,4 @@ html,body{background:var(--st-bg)}
 .ne-foot strong{display:block;font-family:var(--f-head),sans-serif;font-size:30px;font-weight:700;margin-bottom:8px;padding-right:300px}
 .ne-foot p{margin:0;font-size:17px;line-height:1.45;color:var(--c-mut);max-width:740px}
 .ne-foot .st-site{position:absolute;right:0;top:4px;font-family:var(--f-head),sans-serif;font-size:24px;font-weight:600;color:var(--c-accent)}
+.sp-night{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--c-bg-rgb),.6) 0%,rgba(var(--c-bg-rgb),.4) 45%,rgba(var(--c-bg-rgb),.3) 100%)}

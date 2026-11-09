@@ -442,7 +442,7 @@ async function buildCard(design, sizeKey, opts = {}) {
     w: size.w, h: size.h, rows: S.rows.filter((r) => r.on).map((r) => ({ ...r, t: r.hideTeam ? "" : r.t })),
     hero: S.fields.hero, title: S.fields.title, subtitle: S.fields.subtitle, footer: S.fields.footer, kicker: S.fields.kicker, name: S.fields.name,
     note: off.showSite ? STUDIO_NOTE : STUDIO_NOTE.replace(/\s*linehunterapp\.com$/, ""), photo: null, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
-    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite, teamColor: !off.teamColor, sidePhoto: !off.sidePhoto, showEdge: !off.showEdge },
+    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues, showSite: !off.showSite, teamColor: !off.teamColor, sidePhoto: !off.sidePhoto, showEdge: !off.showEdge, naturalPhoto: !off.naturalPhoto },
   };
   if (kindOf() === "player") data.player = playerData(S.source.row, S.win);
   if (design.teamSwitch) {
