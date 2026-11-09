@@ -7349,3 +7349,6 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-hi-hit { margin-top: 0.9rem; }
 .lh-hi-t { font-size: 0.75rem; color: var(--lh-muted); }
 .lh-hi-hit b { font: 600 1.2rem var(--lh-font-heading); color: var(--lh-strong); margin-right: 0.5rem; }
+
+/* Homepage "What's inside": five cards in lines mode (Hunts builder was added), so five across on wide screens */
+@media (min-width: 1100px) { body:not(.research-mode) .lh-inside-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }

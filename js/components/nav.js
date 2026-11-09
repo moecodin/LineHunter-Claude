@@ -37,6 +37,7 @@ const LH_TOOLS = [
   // Part of the Hunt Score beta: listed (with the Beta tag) exactly when Hunt Score is.
   { key: "huntmodel", href: "hunt-model.html", icon: "bi-journal-text", name: "Hunt Model", beta: true, sub: "How the Hunt Score works", mode: "lines" },
   { key: "top", href: "top-hit-rates.html", icon: "bi-list-columns-reverse", name: "The Board", sub: "Every prop: hit rate, average and odds", mode: "lines" },
+  { key: "builder", href: "hunts.html", icon: "bi-ticket-perforated", name: "Hunts builder", sub: "Combine props: odds and how often they hit together", mode: "lines" },
   { key: "hitlist", href: "hit-list.html", icon: "bi-bullseye", name: "Hit List", sub: "Ready-made slips from past results", mode: "lines" },
   { key: "hot", href: "top-hit-rates.html", icon: "bi-fire", name: "Hot Players", sub: "Last 5 games vs their season", mode: "research" },
   { key: "streaks", href: "hit-list.html", icon: "bi-graph-up-arrow", name: "Streaks", sub: "Players on a run", mode: "research" },
