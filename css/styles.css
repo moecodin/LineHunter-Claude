@@ -7514,3 +7514,19 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   .lh-hbp-add { grid-column: 3; grid-row: 1; justify-self: end; }
 }
 .lh-hbp-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Hunts builder ticket as a bottom sheet on phones and tablets (js/pages/hunts.js openTicket); desktop keeps it sticky */
+.lh-hb-grab, .lh-hb-close, .lh-hb-backdrop { display: none; }
+@media (max-width: 991.98px) {
+  .lh-hb-ticket { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1085; max-height: 88vh; overflow-y: auto; border-radius: 14px 14px 0 0; border-bottom: 0;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom)); transform: translateY(105%); visibility: hidden;
+    transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 300ms; background: var(--lh-surface); }
+  .lh-hb-ticket.is-open { transform: none; visibility: visible; transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s; }
+  .lh-hb-grab { display: block; width: 2.5rem; height: 4px; background: var(--lh-border); border-radius: 2px; margin: 0 auto 0.75rem; touch-action: none; }
+  .lh-hb-ticket .lh-hb-h { touch-action: none; padding-right: 2rem; }
+  .lh-hb-close { display: block; position: absolute; top: 0.9rem; right: 0.9rem; background: none; border: 0; color: var(--lh-muted); font-size: 1rem; padding: 0.25rem; cursor: pointer; }
+  .lh-hb-backdrop { display: block; position: fixed; inset: 0; z-index: 1084; background: rgba(0, 0, 0, 0.5); opacity: 0; pointer-events: none; transition: opacity 250ms; }
+  .lh-hb-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  body.lh-hb-sheet-open .lh-hb-bar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .lh-hb-ticket, .lh-hb-backdrop { transition: none !important; } }

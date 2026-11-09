@@ -128,6 +128,58 @@
       </li>`;
   }
 
+  // Phones and tablets: the ticket is a bottom sheet (the bar opens it). Desktop keeps it sticky on the right.
+  const sheetTop = () => `<div class="lh-hb-grab" aria-hidden="true"></div><button type="button" class="lh-hb-close" data-hb="close" aria-label="Close"><i class="bi bi-x-lg" aria-hidden="true"></i></button>`;
+  const SHEET = window.matchMedia("(max-width: 991.98px)");
+  const backdrop = document.createElement("div");
+  backdrop.className = "lh-hb-backdrop";
+  backdrop.setAttribute("data-hb", "close");
+  document.body.appendChild(backdrop);
+  function openTicket() {
+    if (!SHEET.matches) { box.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    box.classList.add("is-open");
+    backdrop.classList.add("is-open");
+    document.body.classList.add("lh-hb-sheet-open");
+  }
+  function closeTicket() {
+    box.classList.remove("is-open");
+    box.style.transform = "";
+    backdrop.classList.remove("is-open");
+    backdrop.style.opacity = "";
+    document.body.classList.remove("lh-hb-sheet-open");
+  }
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeTicket(); });
+  backdrop.addEventListener("click", closeTicket);
+  SHEET.addEventListener("change", () => { if (!SHEET.matches) closeTicket(); });
+  // Drag the handle down to close (past 110px or a quick flick), otherwise it springs back.
+  (function () {
+    let startY = 0, dy = 0, dragging = false, lastY = 0, lastT = 0, velocity = 0, pid = null;
+    box.addEventListener("pointerdown", (event) => {
+      if (!event.target.closest(".lh-hb-grab, .lh-hb-h") || !SHEET.matches) return;
+      dragging = true; dy = 0; velocity = 0; pid = event.pointerId; startY = lastY = event.clientY; lastT = event.timeStamp;
+      box.style.transition = "none"; backdrop.style.transition = "none";
+      try { box.setPointerCapture(pid); } catch (error) { /* fine */ }
+    });
+    box.addEventListener("pointermove", (event) => {
+      if (!dragging || event.pointerId !== pid) return;
+      dy = Math.max(0, event.clientY - startY);
+      const dt = event.timeStamp - lastT;
+      if (dt > 0) velocity = (event.clientY - lastY) / dt;
+      lastY = event.clientY; lastT = event.timeStamp;
+      box.style.transform = `translateY(${dy}px)`;
+      backdrop.style.opacity = String(Math.max(0, 1 - dy / (box.offsetHeight || 400)));
+    });
+    const end = (event) => {
+      if (!dragging || event.pointerId !== pid) return;
+      dragging = false;
+      box.style.transition = ""; backdrop.style.transition = "";
+      if (dy > 110 || velocity > 0.6) closeTicket();
+      else { box.style.transform = ""; backdrop.style.opacity = ""; }
+    };
+    box.addEventListener("pointerup", end);
+    box.addEventListener("pointercancel", end);
+  })();
+
   function render() {
     const legs = lhHunts.getAll();
     const bar = document.getElementById("huntsBar");
@@ -137,7 +189,7 @@
       bar.innerHTML = `<span>My hunt · ${legs.length} leg${legs.length === 1 ? "" : "s"}</span><span>${t ? `${fmt(t.american)} · to win ${money(Math.round(stake * (t.decimal - 1) * 100) / 100)}` : ""} ›</span>`;
     }
     if (!legs.length) {
-      box.innerHTML = `<h2 class="lh-hb-h">My hunt</h2><p class="lh-hb-empty">No legs yet. Tap + ADD on any prop to start a hunt.</p>`;
+      box.innerHTML = `${sheetTop()}<h2 class="lh-hb-h">My hunt</h2><p class="lh-hb-empty">No legs yet. Tap + ADD on any prop to start a hunt.</p>`;
       return;
     }
     loadGames(legs);
@@ -149,6 +201,7 @@
     const win = t && stake > 0 ? money(Math.round(stake * (t.decimal - 1) * 100) / 100) : "–";
     const hadFocus = document.activeElement && document.activeElement.id === "huntsStake";
     box.innerHTML = `
+      ${sheetTop()}
       <h2 class="lh-hb-h">My hunt <small>${legs.length} leg${legs.length === 1 ? "" : "s"}${same}</small></h2>
       <ul class="lh-hbl-list">${legs.map((leg, i) => legHtml(leg, i, firstOfGame[leg.gameId])).join("")}</ul>
       <div class="lh-hbs">
@@ -206,6 +259,7 @@
     if (!action) return;
     const legs = lhHunts.getAll();
     const kind = action.dataset.hb;
+    if (kind === "close") { closeTicket(); return; }
     if (kind === "share") document.getElementById("lhHuntsShare").click();
     else if (kind === "post") document.getElementById("lhHuntsPost").click();
     else if (kind === "clear") { if (window.confirm("Clear every leg from My Hunts?")) lhHunts.clear(); }
@@ -225,7 +279,7 @@
   });
 
   const bar = document.getElementById("huntsBar");
-  if (bar) bar.addEventListener("click", () => box.scrollIntoView({ behavior: "smooth", block: "start" }));
+  if (bar) bar.addEventListener("click", openTicket);
 
   document.addEventListener("lh-hunts-change", render);
   render();
