@@ -44,14 +44,26 @@
     <div class="st-msg" id="stStatus">Loading tonight's games…</div>
     <div class="st-wrap" id="stApp" hidden>
       <div class="st-rail">
-        <div class="st-sec"><h3><b>1</b>Source</h3><div id="stSources"></div></div>
-        <div class="st-sec"><h3><b>2</b>Rows <small id="stRowsCount"></small></h3><div id="stRows"></div></div>
+        <div class="st-sec"><h3><b>1</b>Source</h3><div id="stSources"></div>
+          <div id="stPlayerWrap"><div class="st-lbl">Player card</div><select class="st-select" id="stPlayerPick"></select></div>
+          <div id="stWinWrap" hidden><div class="st-lbl">Games window</div><div class="st-seg" id="stWin"></div></div></div>
+        <div class="st-sec" id="stRowsSec"><h3><b>2</b>Rows <small id="stRowsCount"></small></h3><div id="stRows"></div>
+          <div class="st-chips" style="margin-top:10px"><button class="st-chip" id="stAddRow" type="button">+ Add a row</button></div></div>
         <div class="st-sec"><h3><b>3</b>Design</h3>
           <div class="st-thumbs" id="stDesigns"></div>
           <div class="st-lbl">Size</div><div class="st-seg" id="stSizes"></div></div>
         <div class="st-sec"><h3><b>4</b>Photo and text</h3>
           <div id="stPhotoInfo"></div><div class="st-photos" id="stPhotos"></div>
-          <div class="st-chips" style="margin-top:8px"><button class="st-chip" id="stDelPhoto" type="button" hidden>Delete this upload</button></div>
+          <div id="stPhotoAdj" class="st-ctl">
+            <span>Zoom</span><span><input type="range" id="stP_zoom" min="100" max="300" step="5"><output id="stPO_zoom"></output></span>
+            <span>Left / right</span><span><input type="range" id="stP_fx" min="0" max="100"><output id="stPO_fx"></output></span>
+            <span>Up / down</span><span><input type="range" id="stP_fy" min="0" max="100"><output id="stPO_fy"></output></span>
+            <span>Brightness</span><span><input type="range" id="stP_bright" min="50" max="150" step="5"><output id="stPO_bright"></output></span>
+            <span>Look</span><select id="stP_mode"><option value="">Design default</option><option value="color">Color</option><option value="bw">Black and white</option><option value="duotone">Duotone</option></select>
+            <span>Tint strength</span><span><input type="range" id="stP_tint" min="0" max="100" step="5"><output id="stPO_tint"></output></span>
+            <span>Flip</span><input type="checkbox" id="stP_flip">
+          </div>
+          <div class="st-chips" style="margin-top:8px"><button class="st-chip" id="stPhotoReset" type="button">Reset photo</button><button class="st-chip" id="stDelPhoto" type="button" hidden>Delete this upload</button></div>
           <details style="margin-top:10px"><summary class="st-lbl" style="cursor:pointer">Upload your own photo</summary>
             <input type="file" id="stUpFile" accept="image/*" class="st-in" style="margin:8px 0">
             <input class="st-in" id="stUpPlayer" placeholder="Player (e.g. Jalen Brunson)" style="margin-bottom:8px">
@@ -59,18 +71,26 @@
             <button class="st-btn" id="stUpSave" type="button">Save to my library</button>
             <div class="st-lbl" id="stUpMsg">Saved on this device only. With no credit, nothing prints on the image.</div>
           </details>
-          <div class="st-lbl">Hero</div><input class="st-in" id="stF_hero">
+          <div id="stNameWrap"><div class="st-lbl">Player name</div><input class="st-in" id="stF_name"></div>
+          <div class="st-lbl">Big text</div><input class="st-in" id="stF_hero">
           <div class="st-lbl">Title</div><input class="st-in" id="stF_title">
           <div class="st-lbl">Subtitle</div><input class="st-in" id="stF_subtitle">
           <div class="st-lbl">Footer</div><input class="st-in" id="stF_footer">
           <div class="st-lbl" style="color:var(--st-teal)">✓ The 1-800-GAMBLER disclaimer is always on</div></div>
         <div class="st-sec"><h3><b>5</b>Style <small>fonts, sizes, colors</small></h3>
+          <div class="st-lbl">Presets</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap"><select class="st-select" id="stPreset" style="flex:1;min-width:140px"></select>
+            <button class="st-chip" id="stPresetApply" type="button">Apply</button><button class="st-chip" id="stPresetSave" type="button">Save current</button><button class="st-chip" id="stPresetDel" type="button">Delete</button></div>
           <div class="st-ctl"><span>Heading font</span><select id="stS_fontHead"></select>
             <span>Body font</span><select id="stS_fontBody"></select>
-            <span>Big number size</span><span><input type="range" id="stS_hero" min="50" max="140" step="5"><output id="stO_hero"></output></span>
+            <span>Heading weight</span><select id="stS_fw"><option value="">Design default</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option></select>
+            <span>Letter spacing</span><span><input type="range" id="stS_ls" min="-8" max="20"><output id="stO_ls"></output></span>
+            <span>Uppercase headings</span><input type="checkbox" id="stS_up">
+            <span>Big text size</span><span><input type="range" id="stS_hero" min="50" max="140" step="5"><output id="stO_hero"></output></span>
             <span>Title size</span><span><input type="range" id="stS_title" min="50" max="150" step="5"><output id="stO_title"></output></span>
             <span>Row size</span><span><input type="range" id="stS_rows" min="70" max="130" step="5"><output id="stO_rows"></output></span>
-            <span>Background</span><input type="color" id="stC_bg">
+            <span>Background</span><select id="stS_bg"><option value="">Design default</option><option value="gradient">Gradient</option><option value="dots">Dots</option><option value="lines">Diagonal lines</option><option value="grid">Grid</option><option value="team">Team colors</option></select>
+            <span>Background color</span><input type="color" id="stC_bg">
             <span>Text</span><input type="color" id="stC_ink">
             <span>Accent</span><input type="color" id="stC_accent">
             <span id="stC_goodLbl">Highlight</span><input type="color" id="stC_good"></div>
@@ -78,9 +98,27 @@
           <div class="st-chips" style="margin-top:12px"><button class="st-chip" id="stStyleReset" type="button">Reset style</button></div>
           <div class="st-lbl">Your style is remembered on this device. The photo credit and the disclaimer can't be switched off.</div></div>
       </div>
-      <div class="st-stage"><div class="st-pv" id="stPv"></div>
-        <div class="st-acts"><button class="st-btn pri" id="stDownload" type="button">Download PNG</button><button class="st-btn" id="stShare" type="button">Share</button></div>
-        <div class="st-meta" id="stMeta"></div></div>
+      <div class="st-stage">
+        <div class="st-tools">
+          <button class="st-btn ghost st-toggle-edit" id="stEditToggle" type="button">Edit on card</button>
+          <button class="st-btn ghost" id="stUndo" type="button" title="Undo (Ctrl/Cmd+Z)">Undo</button>
+          <button class="st-btn ghost" id="stRedo" type="button" title="Redo (Ctrl/Cmd+Shift+Z)">Redo</button>
+          <button class="st-btn ghost" id="stEditReset" type="button">Reset layout</button>
+        </div>
+        <div class="st-editbar" id="stEditBar" hidden></div>
+        <div class="st-pv" id="stPv"></div>
+        <div class="st-exp">
+          <select id="stFmt" title="File type"><option value="png">PNG</option><option value="jpg">JPG</option><option value="webp">WebP</option></select>
+          <select id="stScaleSel" title="Resolution"><option value="1">1x (1080 wide)</option><option value="2">2x (2160 wide)</option></select>
+          <button class="st-btn pri" id="stDownload" type="button">Download</button>
+          <button class="st-btn" id="stShare" type="button">Share</button>
+          <button class="st-btn ghost" id="stAllSizes" type="button">All 3 sizes</button>
+        </div>
+        <div class="st-meta" id="stMeta"></div>
+        <div class="st-cap"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap"><b style="font:600 16px 'Clash Display'">Caption</b><div class="st-seg" id="stCapPlat" style="min-width:200px"></div></div>
+          <textarea id="stCapText" spellcheck="true"></textarea>
+          <div class="st-capfoot"><span id="stCapCount"></span><span style="display:flex;gap:6px"><button class="st-chip" id="stCapRewrite" type="button">Rewrite from card</button><button class="st-btn" id="stCapCopy" type="button">Copy</button></span></div></div>
+      </div>
     </div>
   </main>
 
@@ -100,11 +138,15 @@
   <script src="js/core/demo.js"></script><!-- local only: ?demo=1 on localhost -->
   <script src="js/components/top-hit-rates.js"></script>
   <script src="js/components/hit-list.js"></script>
+  <script src="js/components/bbq.js"></script>
+  <script src="js/components/brickCity.js"></script>
   <script src="studio/config.js"></script>
+  <script src="studio/designs/_shared.js"></script>
   <script src="studio/designs/night-poster.js"></script>
   <script src="studio/designs/paper-scoreboard.js"></script>
   <script src="studio/designs/spotlight.js"></script>
   <script src="studio/designs/ticket-stub.js"></script>
+  <script src="studio/designs/player-card.js"></script>
   <script src="studio/studio.js"></script>
 </body>
 </html>

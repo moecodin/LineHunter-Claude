@@ -1,7 +1,17 @@
-// LineHunter Studio (hidden page, studio.html): pick a source (Hit List card or Streaks), tick the rows, pick a design,
-// size and photo, then download a post-ready PNG. The data is the slate js/components/top-hit-rates.js already builds
-// (event "lh-top-slate"); the designs live in studio/designs/, the photo library in studio/photos/ (+ uploads kept in this browser).
-// Needs: js/components/hit-list.js (HITLIST_CATEGORIES, buildSlip, shortName), js/components/share.js (loadHtml2Canvas).
+// LineHunter Studio (hidden page, studio.html): turn tonight's slate into post-ready images.
+//   1 Source  (Hit List cards, BBQ Chicken, Brick City, Streaks, The Board, one game's matchup, a single player card)
+//   2 Rows    (tick, reorder, edit any text, add your own)
+//   3 Design + size, 4 Photo (library / uploads, zoom, reframe, brightness, look, flip) + text, 5 Style (presets, fonts,
+//   heading format, sizes, background, colors, show / hide), then on-card editing (select, drag, resize, recolor, hide,
+//   double-click to retype), undo / redo, export (PNG / JPG / WebP, 1x / 2x, all 3 sizes) and a caption writer.
+// The data is the slate js/components/top-hit-rates.js already builds (event "lh-top-slate"): no extra requests except
+// BBQ Chicken's defenses (bbq.js). The designs live in studio/designs/ (see _shared.js), photos in studio/photos/.
+// html2canvas can't draw blend modes, masks, object-position, flips or patterned backgrounds, so the photo (crop, flip,
+// tint) and the background are drawn on canvases first; preview and export use the same pictures.
+
+(function () {
+"use strict";
+// Everything lives inside this function so no name can collide with the site's shared scripts (WINDOWS, mix, esc ... exist there).
 
 const SIZES = { post: { w: 1080, h: 1350, label: "Post 4:5" }, square: { w: 1080, h: 1080, label: "Square 1:1" }, story: { w: 1080, h: 1920, label: "Story 9:16" } };
 const STUDIO_NOTE = "Based on past results, not guarantees. Please gamble responsibly. 21+.\nProblem gambling? Call 1-800-GAMBLER. linehunterapp.com";
@@ -12,31 +22,41 @@ const STREAK_SOURCES = [
   { id: "s-ast", label: "Assists", title: "Assists streaks", stat: "8+ AST", pick: (p) => p.streaks.ast },
   { id: "s-3pm", label: "3PM", title: "Threes streaks", stat: "3+ 3PM", pick: (p) => p.streaks.fg3m },
 ];
-
-const S = { slate: null, groups: [], source: null, rows: [], design: "night-poster", size: "post", photoId: "none", fields: {}, photos: [], uploads: [],
-  style: { fontHead: "", fontBody: "", hero: 100, title: 100, rows: 100, colors: {}, off: {} } };
+const WINDOWS = [5, 10, 20];
+const MIN_GAMES = { 5: 5, 10: 8, 20: 12 };
+const FOOT_STREAK = "Find your next streak free on LineHunter", FOOT_RESEARCH = "Free research every night on LineHunter";
 const HEAD_FONTS = ["Clash Display", "General Sans", "Cabinet Grotesk", "Switzer", "Boska", "Zodiak", "Gambetta", "Bebas Neue", "Satoshi"];
 const BODY_FONTS = ["Satoshi", "General Sans", "Switzer", "Cabinet Grotesk", "Zodiak"];
-const hexRgb = (hex) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ""); const n = m ? parseInt(m[1], 16) : 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
-function loadStyle() { try { const v = JSON.parse(localStorage.getItem("lh-studio-style") || "null"); if (v) S.style = { ...S.style, ...v, colors: v.colors || {}, off: v.off || {} }; } catch (e) { /* ok */ } }
-function saveStyle() { try { localStorage.setItem("lh-studio-style", JSON.stringify(S.style)); } catch (e) { /* ok */ } }
-function tokensFor(design) { return { ...design.tokens, ...(S.style.colors[design.id] || {}) }; }
-// The CSS variables the designs read: colors, fonts. Set on a wrapper around the card (preview, thumbnails and export all use it).
-function themeVars(design) {
-  const t = tokensFor(design), st = S.style, bg = hexRgb(t.bg), ac = hexRgb(t.accent), ink = hexRgb(t.ink);
-  const q = (f) => `'${f}'`;
-  return `--c-bg:${t.bg};--c-ink:${t.ink};--c-mut:${t.mut};--c-accent:${t.accent};--c-good:${t.good || t.accent};--c-rule:${t.rule};--c-bg-rgb:${bg};--c-accent-rgb:${ac};--c-ink-rgb:${ink};--f-head:${q(st.fontHead || (design.id === "night-poster" ? "Clash Display" : "Clash Display"))};--f-body:${q(st.fontBody || "Satoshi")}`;
-}
-function themed(design, html, data) { return `<div class="st-theme" style="${themeVars(design)};width:${data.w}px;height:${data.h}px">${html}</div>`; }
-async function ensureFonts(design) {
-  if (!document.fonts) return;
-  const heads = [S.style.fontHead || "Clash Display", S.style.fontBody || "Satoshi"];
-  await Promise.all(heads.flatMap((f) => ["400", "500", "600", "700", "800"].map((w) => document.fonts.load(`${w} 40px "${f}"`).catch(() => null))));
-}
+const LOCKED_ELS = new Set(["credit", "foot"]); // can't be hidden: the photo credit and the disclaimer
+const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name" };
+const STYLE0 = () => ({ fontHead: "", fontBody: "", fw: "", ls: null, upper: false, hero: 100, title: 100, rows: 100, bg: "", colors: {}, off: {} });
+const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false });
+
+const S = {
+  slate: null, groups: [], source: null, rows: [], win: 10, players: [],
+  design: "night-poster", designByKind: { list: "night-poster", player: "player-card" }, size: "post",
+  photoId: "none", fields: {}, photos: [], uploads: [],
+  style: STYLE0(), edits: {}, photoAdj: {},
+  editing: false, sel: null, openRow: -1, fmt: "png", scale: 1, cap: { plat: "x", dirty: false },
+};
+
+// ---------- Small helpers ----------
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const norm = (s) => String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const slug = (s) => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const hexRgb = (hex) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ""); const n = m ? parseInt(m[1], 16) : 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+const rgbHex = (c) => "#" + c.map((x) => clamp(Math.round(x), 0, 255).toString(16).padStart(2, "0")).join("");
+const mix = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
+const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* full or blocked */ } } };
+const designById = (id) => STUDIO_DESIGNS.find((d) => d.id === id);
+const kindOf = () => (S.source && S.source.kind) || "list";
+const designsForKind = (kind) => STUDIO_DESIGNS.filter((d) => (d.kinds || ["list"]).includes(kind));
+const curDesign = () => designById(S.design);
+function dateLabel(iso) { if (!iso) return ""; return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }); }
+function tipLabel(tip) { if (!tip || !/T\d/.test(tip)) return ""; const d = new Date(tip); return isNaN(d) ? "" : d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); }
+const STAT_CODE = (code) => String(code || "").toUpperCase();
 
 // ---------- Lock ----------
 async function sha(text) { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)); return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join(""); }
@@ -46,7 +66,7 @@ function setLocked(locked) { $("stLock").hidden = !locked; document.body.style.o
 async function unlock() {
   const typed = $("stPass").value.trim().toLowerCase();
   if (!typed) return;
-  if ((await sha(typed)) === window.STUDIO_PASS_HASH) { try { localStorage.setItem("lh-studio-ok", window.STUDIO_PASS_HASH); } catch (e) { /* ok */ } $("stErr").textContent = ""; setLocked(false); startStudio(); }
+  if ((await sha(typed)) === window.STUDIO_PASS_HASH) { try { localStorage.setItem("lh-studio-ok", window.STUDIO_PASS_HASH); } catch (e) { /* blocked */ } $("stErr").textContent = ""; setLocked(false); startStudio(); }
   else $("stErr").textContent = "That passphrase doesn't match.";
 }
 async function generatePass() {
@@ -55,44 +75,120 @@ async function generatePass() {
 }
 
 // ---------- Sources ----------
-function dateLabel(iso) { if (!iso) return ""; return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }); }
+// The slate's prop rows, at a window: the side that hit more often, with its record. null when the sample is too small.
+function propPick(row, n) {
+  const w = row.w && row.w[n];
+  if (!w || w.totalGames < Math.min(MIN_GAMES[n], n)) return null;
+  const side = w.over.hits >= w.under.hits ? "over" : "under";
+  return { row, side, hits: w[side].hits, total: w.totalGames, rate: w[side].hits / w.totalGames };
+}
+function propRow(p) {
+  const r = p.row;
+  return { full: r.name, n: shortName(r.name), t: r.team, stat: `${p.side === "over" ? "Over" : "Under"} ${r.line} ${STAT_CODE(r.code)}`, rec: `${p.hits}/${p.total}` };
+}
+function boardRows(n) {
+  const best = {};
+  (S.slate.rows || []).forEach((row) => { const p = propPick(row, n); if (p && (!best[row.playerId] || p.rate > best[row.playerId].rate || (p.rate === best[row.playerId].rate && p.total > best[row.playerId].total))) best[row.playerId] = p; });
+  return Object.values(best).sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 10).map(propRow);
+}
+function matchupRows(gameId, n) {
+  return (S.slate.rows || []).filter((row) => String(row.gameId) === String(gameId)).map((row) => propPick(row, n)).filter(Boolean)
+    .sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 10).map(propRow);
+}
 function buildSources(slate) {
-  const hit = [], streaks = [];
+  const hit = [], streaks = [], props = [], games = [];
   HITLIST_CATEGORIES.filter((c) => !c.bbq && !c.brick).forEach((cat) => {
     const slip = buildSlip(cat, slate);
     if (!slip) return;
-    hit.push({ id: "h-" + cat.key, label: cat.label, title: cat.label, rows: slip.map((p) => ({
-      full: p.hunt ? p.hunt.player : p.name, n: p.hunt ? shortName(p.hunt.player) : p.name,
-      t: p.hunt ? p.hunt.team : "", stat: p.text, rec: p.proof })) });
+    hit.push({ id: "h-" + cat.key, kind: "list", label: cat.label, title: cat.label, hero: "100%", footer: FOOT_STREAK, rows: slip.map((p) => ({
+      full: p.hunt ? p.hunt.player : p.name, n: p.hunt ? shortName(p.hunt.player) : p.name, t: p.hunt ? p.hunt.team : "", stat: p.text, rec: p.proof })) });
   });
+  if (typeof brickPicks === "function") {
+    const bricks = brickPicks(slate);
+    if (bricks.length) hit.push({ id: "h-brick", kind: "list", label: "Brick City", title: "Brick City", hero: "Cold", sub: "cold shooters", footer: FOOT_RESEARCH,
+      rows: bricks.map((b) => ({ full: b.player.name, n: shortName(b.player.name), t: b.player.team, stat: `${b.l5.toFixed(1)}% FG L5`, rec: `−${b.drop.toFixed(1)} FG%` })) });
+  }
   const fan = slate.fan || [];
   STREAK_SOURCES.forEach((src) => {
     const rows = fan.map((p) => ({ p, n: src.pick(p) })).filter((x) => x.n >= 2).sort((a, b) => b.n - a.n).slice(0, 10)
       .map((x) => ({ full: x.p.name, n: shortName(x.p.name), t: x.p.team, stat: src.stat, rec: `${x.n} straight` }));
-    if (rows.length) streaks.push({ id: src.id, label: src.label, title: src.title, rows });
+    if (rows.length) streaks.push({ id: src.id, kind: "list", label: src.label, title: src.title, hero: "100%", footer: FOOT_STREAK, rows });
   });
-  return [{ label: "Hit List cards", items: hit }, { label: "Streaks", items: streaks }].filter((g) => g.items.length);
+  if ((slate.rows || []).length) {
+    props.push({ id: "board", kind: "list", label: "The Board", title: "Top hit rates", heroFn: (n) => `L${n}`, footer: FOOT_RESEARCH, windowed: true, build: (n) => boardRows(n) });
+    const seen = new Map();
+    slate.rows.forEach((r) => { if (r.gameLabel && !seen.has(r.gameId)) seen.set(r.gameId, r); });
+    seen.forEach((r, gameId) => games.push({ id: "g-" + gameId, kind: "list", label: r.gameLabel, title: "Matchup trends", hero: r.gameLabel, sub: tipLabel(r.tip), footer: FOOT_RESEARCH,
+      windowed: true, teams: r.gameLabel.split(" @ "), build: (n) => matchupRows(gameId, n) }));
+  }
+  S.players = (slate.rows || []).slice().sort((a, b) => a.name.localeCompare(b.name) || String(a.code).localeCompare(b.code));
+  return [{ label: "Hit List cards", items: hit }, { label: "Streaks", items: streaks }, { label: "Props", items: props }, { label: "Matchups", items: games }].filter((g) => g.items.length);
 }
-function chooseSource(item) {
-  S.source = item;
-  S.rows = item.rows.map((r, i) => ({ ...r, id: i, on: i < 7 }));
-  S.fields = { hero: "100%", title: item.title, subtitle: dateLabel(S.slate && S.slate.date), footer: "Find your next streak free on LineHunter", kicker: "Tonight's research" };
+// BBQ Chicken needs the league's defenses (one cached request), so it joins the Hit List group when that answer is in.
+async function addBbqSource(slate) {
+  if (typeof bbqPicksFor !== "function") return;
+  let picks = [];
+  try { picks = await bbqPicksFor(slate); } catch (e) { picks = []; }
+  if (!picks.length || S.slate !== slate) return;
+  const item = { id: "h-bbq", kind: "list", label: "BBQ Chicken", title: "BBQ Chicken", hero: "Easy", sub: "easiest matchups", footer: FOOT_RESEARCH,
+    rows: picks.map((p) => ({ full: p.player.name, n: shortName(p.player.name), t: p.player.team, stat: `${p.player.matchup} · ${bbqOrdinal(p.rank)} most`, rec: `${formatStatValue(p.average)} ${p.stat.label}` })) };
+  let group = S.groups.find((g) => g.label === "Hit List cards");
+  if (!group) { group = { label: "Hit List cards", items: [] }; S.groups.unshift(group); }
+  if (!group.items.some((i) => i.id === item.id)) group.items.push(item);
+  renderControls();
+}
+// A single player + prop: the side that hit more often in the window, the games oldest first.
+function playerSource(row) {
+  return { id: `p-${row.gameId}-${row.playerId}-${row.code}-${row.line}`, kind: "player", label: row.name, row, windowed: true, footer: FOOT_RESEARCH };
+}
+function playerData(row, n) {
+  const w = row.w && row.w[n] ? row.w[n] : { games: row.games || [], totalGames: (row.games || []).length, over: { hits: row.hits || 0 }, under: { hits: 0 } };
+  const side = w.over.hits >= w.under.hits ? "over" : "under";
+  const games = (w.games || []).slice().reverse().map((g) => ({ v: g.value, hit: g.overUnder === side, opp: `${g.homeAway === "away" ? "@" : ""}${g.opponent || ""}`, date: g.date }));
+  const total = games.length, hits = games.filter((g) => g.hit).length, avg = total ? games.reduce((s, g) => s + g.v, 0) / total : 0;
+  const parts = row.name.split(" ");
+  return { first: parts[0], last: parts.slice(1).join(" "), team: row.team, code: STAT_CODE(row.code), line: row.line, side, games, hits, total, avg, win: n, matchup: row.matchup, tip: row.tip };
+}
+function sourceRows(item) { return item.build ? item.build(S.win) : item.rows || []; }
+function chooseSource(item, keepFields) {
+  const prevKind = kindOf();
+  S.source = item; S.sel = null; S.openRow = -1;
+  const date = dateLabel(S.slate && S.slate.date);
+  if (item.kind === "player") {
+    const p = playerData(item.row, S.win);
+    S.rows = [];
+    const fresh = { name: item.row.name, hero: `${p.hits}/${p.total}`, title: `${p.side === "over" ? "Over" : "Under"} ${p.line} ${p.code}`,
+      subtitle: [item.row.matchup, date, tipLabel(item.row.tip)].filter(Boolean).join(" · "), footer: item.footer, kicker: "Tonight's research" };
+    S.fields = keepFields ? { ...fresh, ...pick(S.fields, ["name", "subtitle", "footer"]) } : fresh;
+  } else {
+    S.rows = sourceRows(item).map((r, i) => ({ ...r, id: i, on: i < 7 }));
+    const fresh = { hero: item.heroFn ? item.heroFn(S.win) : item.hero || "100%", title: item.title, subtitle: [date, item.sub].filter(Boolean).join(" · "), footer: item.footer || FOOT_STREAK, kicker: "Tonight's research" };
+    S.fields = keepFields ? { ...fresh, ...pick(S.fields, ["title", "subtitle", "footer", "kicker"]) } : fresh;
+  }
+  if (kindOf() !== prevKind || !designsForKind(kindOf()).some((d) => d.id === S.design)) {
+    const want = S.designByKind[kindOf()];
+    S.design = designsForKind(kindOf()).some((d) => d.id === want) ? want : designsForKind(kindOf())[0].id;
+  }
   autoPhoto();
+  S.cap.dirty = false;
   renderControls(); renderAll();
 }
+const pick = (o, keys) => keys.reduce((a, k) => { if (o && o[k] != null) a[k] = o[k]; return a; }, {});
 
 // ---------- Photos ----------
 async function loadPhotos() {
   try { const res = await fetch("studio/photos/credits.json", { cache: "no-cache" }); S.photos = res.ok ? await res.json() : []; } catch (e) { S.photos = []; }
   S.uploads = await idbAll();
 }
+let uploadUrls = {};
 function allPhotos() {
-  return [...S.photos.map((p) => ({ id: "lib:" + p.file, player: p.player, url: "studio/photos/" + p.file, credit: `Photo: ${p.photographer} / ${p.license}`, lic: p.license, sa: p.shareAlike })),
-          ...S.uploads.map((u) => ({ id: "up:" + u.id, player: u.player, url: URL.createObjectURL(u.blob), credit: u.credit ? `Photo: ${u.credit}` : "", lic: "upload", mine: true }))];
+  return [...S.photos.map((p) => ({ id: "lib:" + p.file, player: p.player, url: "studio/photos/" + p.file, credit: `Photo: ${p.photographer} / ${p.license}`, sa: p.shareAlike })),
+    ...S.uploads.map((u) => ({ id: "up:" + u.id, player: u.player, url: uploadUrls[u.id] || (uploadUrls[u.id] = URL.createObjectURL(u.blob)), credit: u.credit ? `Photo: ${u.credit}` : "", mine: true }))];
 }
+function leadName() { if (kindOf() === "player") return S.source.row.name; const lead = S.rows.find((r) => r.on); return lead ? lead.full || lead.n : ""; }
 function autoPhoto() {
-  const lead = S.rows.find((r) => r.on); if (!lead) { S.photoId = "none"; return; }
-  const last = norm(lead.full).split(" ").pop(), first = norm(lead.full)[0];
+  const name = norm(leadName()); if (!name) { S.photoId = "none"; return; }
+  const last = name.split(" ").pop(), first = name[0];
   const m = allPhotos().find((p) => norm(p.player).split(" ").pop() === last && norm(p.player)[0] === first);
   S.photoId = m ? m.id : "none";
 }
@@ -106,162 +202,472 @@ async function saveUpload() {
   const bmp = await createImageBitmap(file); const k = Math.min(1, 2400 / Math.max(bmp.width, bmp.height));
   const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
   const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.9));
-  const id = "u" + Date.now(); await idbPut({ id, player, credit: credit, blob });
+  const id = "u" + Date.now(); await idbPut({ id, player, credit, blob });
   S.uploads = await idbAll(); S.photoId = "up:" + id;
   $("stUpMsg").textContent = "Saved on this device."; $("stUpFile").value = ""; renderControls(); renderAll();
 }
-const photoCache = {};
-// html2canvas draws the lockup SVG clipped, so both logos are turned into PNGs on a canvas first.
+const adjFor = (id) => ({ ...ADJ0(), ...(S.photoAdj[id] || {}) });
+function setAdj(key, value) { if (S.photoId === "none") return; S.photoAdj[S.photoId] = { ...adjFor(S.photoId), [key]: value }; store.set("lh-studio-photoadj", S.photoAdj); syncPhotoUi(); schedule(); }
+
+const imgCache = {}, outCache = {};
+function loadImg(url) { if (!imgCache[url]) imgCache[url] = new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; }); return imgCache[url]; }
+// html2canvas draws the lockup SVG clipped, so both logos are turned into PNGs first.
 async function rasterLogo(url) {
-  const key = "logo|" + url; if (photoCache[key]) return photoCache[key];
+  const key = "logo|" + url; if (outCache[key]) return outCache[key];
   const img = await loadImg(url); const c = document.createElement("canvas"); c.width = 924; c.height = 160; c.getContext("2d").drawImage(img, 0, 0, 924, 160);
-  return (photoCache[key] = c.toDataURL("image/png"));
+  return (outCache[key] = c.toDataURL("image/png"));
 }
-function loadImg(url) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; }); }
-// "duotone": grayscale mapped from the page color to indigo, drawn on a canvas (html2canvas can't blend, so it is baked in here).
-async function processPhoto(url, mode, tint) {
-  const key = url + "|" + mode + "|" + (tint ? tint.join(",") : ""); if (photoCache[key]) return photoCache[key];
-  if (mode !== "duotone") return (photoCache[key] = url);
-  const img = await loadImg(url); const k = Math.min(1, 1600 / Math.max(img.width, img.height));
-  const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-  const g = c.getContext("2d"); g.drawImage(img, 0, 0, c.width, c.height);
-  const d = g.getImageData(0, 0, c.width, c.height), px = d.data, lo = tint ? [Math.round(tint[0][0] * 1.4 + 4), Math.round(tint[0][1] * 1.4 + 4), Math.round(tint[0][2] * 1.8 + 18)] : [10, 14, 40], hi = tint ? tint[1] : [154, 147, 255];
-  for (let i = 0; i < px.length; i += 4) {
-    let l = (0.3 * px[i] + 0.59 * px[i + 1] + 0.11 * px[i + 2]) / 255; l = Math.min(1, Math.max(0, (l - 0.08) * 1.25));
-    px[i] = lo[0] + (hi[0] - lo[0]) * l * 0.85; px[i + 1] = lo[1] + (hi[1] - lo[1]) * l * 0.85; px[i + 2] = lo[2] + (hi[2] - lo[2]) * l * 0.85;
+// The photo, cut to exactly the design's box (so nothing else crops it), zoomed around the focus point, flipped,
+// brightened and given its look (color, black and white, or a duotone from the background to the accent color).
+async function processPhoto(photo, adj, design, box, maxW) {
+  const t = tokensFor(design), mode = adj.mode || (design.photo === "duotone" ? "duotone" : "color");
+  const fx = adj.fx == null ? design.focus.x : adj.fx, fy = adj.fy == null ? design.focus.y : adj.fy;
+  const a = box.w / box.h, ow = Math.round(Math.min(maxW, box.w * S.scale));
+  const key = [photo.url, a.toFixed(3), ow, adj.zoom, fx, fy, adj.bright, mode, adj.tint, adj.flip, t.bg, t.accent].join("|");
+  if (outCache[key]) return outCache[key];
+  const img = await loadImg(photo.url), W = img.naturalWidth, H = img.naturalHeight;
+  let cw = W / H > a ? H * a : W, ch = cw / a;
+  cw /= adj.zoom / 100; ch /= adj.zoom / 100;
+  const sx = clamp((fx / 100) * W - cw / 2, 0, W - cw), sy = clamp((fy / 100) * H - ch / 2, 0, H - ch);
+  const w = Math.min(ow, Math.round(cw * 1.5)), h = Math.round(w / a);
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d");
+  if (adj.flip) { g.translate(w, 0); g.scale(-1, 1); }
+  g.drawImage(img, sx, sy, cw, ch, 0, 0, w, h);
+  if (adj.bright !== 100 || mode !== "color") {
+    const d = g.getImageData(0, 0, w, h), px = d.data, b = adj.bright / 100, s = adj.tint / 100;
+    const bg = hexRgb(t.bg), lo = [bg[0] * 1.4 + 4, bg[1] * 1.4 + 4, bg[2] * 1.8 + 18], hi = hexRgb(t.accent);
+    for (let i = 0; i < px.length; i += 4) {
+      let r = px[i] * b, gg = px[i + 1] * b, bl = px[i + 2] * b;
+      if (mode === "bw") { const l = 0.3 * r + 0.59 * gg + 0.11 * bl; r = gg = bl = l; }
+      else if (mode === "duotone") {
+        let l = (0.3 * r + 0.59 * gg + 0.11 * bl) / 255; l = clamp((l - 0.08) * 1.25, 0, 1) * 0.85;
+        r += (lo[0] + (hi[0] - lo[0]) * l - r) * s; gg += (lo[1] + (hi[1] - lo[1]) * l - gg) * s; bl += (lo[2] + (hi[2] - lo[2]) * l - bl) * s;
+      }
+      px[i] = r; px[i + 1] = gg; px[i + 2] = bl;
+    }
+    g.putImageData(d, 0, 0);
   }
-  g.putImageData(d, 0, 0); return (photoCache[key] = c.toDataURL("image/jpeg", 0.92));
+  const out = { url: c.toDataURL("image/jpeg", 0.92), src: { W, H, cw, ch } };
+  return (outCache[key] = out);
 }
 
-// ---------- Cards ----------
-async function cardData() {
-  const design = STUDIO_DESIGNS.find((d) => d.id === S.design), size = SIZES[S.size];
-  const sel = allPhotos().find((p) => p.id === S.photoId);
-  let photo = null;
-  if (sel) { try { photo = { url: await processPhoto(sel.url, design.photo, tintFor(design)), credit: sel.credit, player: sel.player }; } catch (e) { photo = null; } }
-  const f = S.fields; await ensureFonts(design);
-  const off = S.style.off[design.id] || {};
-  return { design, data: { w: size.w, h: size.h, rows: S.rows.filter((r) => r.on), hero: f.hero, title: f.title, subtitle: f.subtitle, footer: f.footer, kicker: f.kicker, note: STUDIO_NOTE, photo, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
-    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: off.showLogo !== true, showSub: off.showSub !== true, showPips: off.showPips !== true, showKicker: off.showKicker !== true } } };
+// ---------- Style ----------
+function tokensFor(design) { return { ...design.tokens, ...(S.style.colors[design.id] || {}) }; }
+function saveStyle() { store.set("lh-studio-style", S.style); }
+// The CSS variables the designs read (colors, fonts, heading format), on a wrapper around the card.
+function themeAttrs(design, data) {
+  const t = tokensFor(design), st = S.style, q = (f) => `'${f}'`;
+  const vars = `--c-bg:${t.bg};--c-ink:${t.ink};--c-mut:${t.mut};--c-accent:${t.accent};--c-good:${t.good || t.accent};--c-rule:${t.rule};--c-bg-rgb:${hexRgb(t.bg)};--c-accent-rgb:${hexRgb(t.accent)};--c-ink-rgb:${hexRgb(t.ink)};--f-head:${q(st.fontHead || "Clash Display")};--f-body:${q(st.fontBody || "Satoshi")};--h-ls:${(st.ls || 0) / 100}em;--h-fw:${st.fw || 700};width:${data.w}px;height:${data.h}px`;
+  return `class="st-theme" style="${vars}"${st.ls != null ? " data-ls" : ""}${st.upper ? " data-up" : ""}${st.fw ? " data-fw" : ""}`;
 }
-const tintFor = (design) => { const t = tokensFor(design); return [hexRgb(t.bg), hexRgb(t.accent)]; };
-function fitInto(el, host, w, h) { const k = host.clientWidth / w; host.style.height = Math.round(h * k) + "px"; el.style.transform = `scale(${k})`; }
-let renderToken = 0;
-async function renderAll() {
-  if (!S.source) return; const token = ++renderToken;
-  const { design, data } = await cardData(); if (token !== renderToken) return;
+async function ensureFonts() {
+  if (!document.fonts) return;
+  const fams = [S.style.fontHead || "Clash Display", S.style.fontBody || "Satoshi"];
+  await Promise.all(fams.flatMap((f) => ["400", "500", "600", "700", "800"].map((w) => document.fonts.load(`${w} 40px "${f}"`).catch(() => null))));
+}
+// Background layer (gradient, dots, lines, grid, team colors), drawn on a canvas so the export matches the preview.
+function teamColorsFor() {
+  const info = (abbr) => (typeof TEAM_INFO !== "undefined" && TEAM_INFO[abbr] ? TEAM_INFO[abbr].colors.primary : null);
+  if (S.source && S.source.teams) return S.source.teams.map(info).filter(Boolean);
+  const team = kindOf() === "player" ? S.source.row.team : (S.rows.find((r) => r.on) || {}).t;
+  return [info(team)].filter(Boolean);
+}
+function backgroundImage(design, w, h) {
+  const mode = S.style.bg; if (!mode) return null;
+  const t = tokensFor(design), bg = hexRgb(t.bg), ink = hexRgb(t.ink), ac = hexRgb(t.accent), team = teamColorsFor();
+  const key = ["bg", mode, w, h, t.bg, t.ink, t.accent, team.join(",")].join("|"); if (outCache[key]) return outCache[key];
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d");
+  g.fillStyle = t.bg; g.fillRect(0, 0, w, h);
+  const rgba = (rgb, a) => `rgba(${rgb.map(Math.round).join(",")},${a})`;
+  if (mode === "gradient") { const gr = g.createLinearGradient(0, 0, w * 0.6, h); gr.addColorStop(0, rgbHex(mix(bg, ac, 0.55))); gr.addColorStop(0.7, t.bg); gr.addColorStop(1, t.bg); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+  if (mode === "team") {
+    const cols = team.length ? team.map(hexRgb) : [ac];
+    const gr = g.createLinearGradient(0, 0, w, h * 0.8);
+    gr.addColorStop(0, rgbHex(mix(cols[0], bg, 0.25))); if (cols[1]) gr.addColorStop(0.5, rgbHex(mix(cols[1], bg, 0.35))); gr.addColorStop(cols[1] ? 1 : 0.75, t.bg); if (!cols[1]) gr.addColorStop(1, t.bg);
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.strokeStyle = rgba(ink, 0.05); g.lineWidth = 10; for (let x = -h; x < w; x += 46) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + h, 0); g.stroke(); }
+  }
+  if (mode === "dots") { g.fillStyle = rgba(ink, 0.11); for (let y = 13; y < h; y += 26) for (let x = 13; x < w; x += 26) { g.beginPath(); g.arc(x, y, 2.4, 0, Math.PI * 2); g.fill(); } }
+  if (mode === "lines") { g.strokeStyle = rgba(ink, 0.06); g.lineWidth = 7; for (let x = -h; x < w; x += 24) { g.beginPath(); g.moveTo(x, h); g.lineTo(x + h, 0); g.stroke(); } }
+  if (mode === "grid") { g.strokeStyle = rgba(ink, 0.07); g.lineWidth = 2; for (let x = 0; x <= w; x += 54) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y <= h; y += 54) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } }
+  return (outCache[key] = c.toDataURL("image/png"));
+}
+
+// ---------- Building a card ----------
+// The data for a design at a size, the photo processed for that design's photo box, the background and the on-card edits.
+// Returns a detached element (the .st-theme wrapper with the card in it).
+async function buildCard(design, sizeKey, opts = {}) {
+  const size = SIZES[sizeKey], off = S.style.off[design.id] || {};
+  await ensureFonts();
+  const data = {
+    w: size.w, h: size.h, rows: S.rows.filter((r) => r.on).map((r) => ({ ...r, t: r.hideTeam ? "" : r.t })),
+    hero: S.fields.hero, title: S.fields.title, subtitle: S.fields.subtitle, footer: S.fields.footer, kicker: S.fields.kicker, name: S.fields.name,
+    note: STUDIO_NOTE, photo: null, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
+    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: !off.showLogo, showSub: !off.showSub, showPips: !off.showPips, showKicker: !off.showKicker, showValues: !off.showValues },
+  };
+  if (kindOf() === "player") data.player = playerData(S.source.row, S.win);
   data.rows = data.rows.slice(0, design.capacity(data, data));
-  const host = $("stPv"); host.innerHTML = `<div class="st-scale" id="stScale">${themed(design, design.render(data), data)}</div>`; fitInto($("stScale"), host, data.w, data.h);
-  $("stScale").style.position = "absolute";
-  $("stMeta").textContent = `${data.w} × ${data.h} · ${data.rows.length} rows (this design fits ${design.capacity(data, data)} at this size) · data for ${dateLabel(S.slate.date)}`;
-  renderThumbs();
+  const sel = allPhotos().find((p) => p.id === S.photoId);
+  if (sel) {
+    data.photo = { url: sel.url, credit: sel.credit, player: sel.player };
+    design.render(data); // first pass: the design reports its photo box
+    try { const out = await processPhoto(sel, adjFor(sel.id), design, data.photoBox, opts.thumb ? 420 : 2400); data.photo.url = out.url; data.photoSrc = out.src; }
+    catch (e) { data.photo = null; }
+  }
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `<div ${themeAttrs(design, data)}>${design.render(data)}</div>`;
+  const theme = wrap.firstElementChild, card = theme.firstElementChild;
+  const bg = backgroundImage(design, data.w, data.h);
+  if (bg) card.insertAdjacentHTML("afterbegin", `<img class="st-bgimg" src="${bg}" alt="">`);
+  applyEdits(theme, design);
+  return { el: theme, data, design };
+}
+function applyEdits(root, design) {
+  const edits = S.edits[design.id] || {};
+  root.querySelectorAll("[data-el]").forEach((el) => {
+    const e = edits[el.dataset.el]; if (!e) return;
+    if (e.dx || e.dy || (e.s && e.s !== 1)) { el.style.transform = `translate(${e.dx || 0}px,${e.dy || 0}px) scale(${e.s || 1})`; el.style.transformOrigin = "0 0"; }
+    if (e.color) el.style.color = e.color;
+    if (e.hide && !LOCKED_ELS.has(el.dataset.el)) el.style.visibility = "hidden";
+  });
+}
+
+// ---------- Preview, thumbnails ----------
+let renderToken = 0, previewK = 1, previewData = null, raf = 0, thumbTimer = 0;
+function schedule() { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => renderAll()); }
+async function renderAll() {
+  if (!S.source) return;
+  const token = ++renderToken, design = curDesign();
+  const { el, data } = await buildCard(design, S.size);
+  if (token !== renderToken) return;
+  const host = $("stPv"); host.innerHTML = "";
+  const scaler = document.createElement("div"); scaler.className = "st-scale"; scaler.id = "stScale"; scaler.appendChild(el); host.appendChild(scaler);
+  previewK = host.clientWidth / data.w; host.style.height = Math.round(data.h * previewK) + "px"; scaler.style.transform = `scale(${previewK})`;
+  previewData = data;
+  host.classList.toggle("st-editing", S.editing);
+  if (S.sel) { const s = host.querySelector(`[data-el="${S.sel}"]`); if (s) s.classList.add("st-sel"); else S.sel = null; }
+  const cap = design.capacity(data, data);
+  $("stMeta").textContent = kindOf() === "player"
+    ? `${data.w} × ${data.h} · last ${S.win} games · data for ${dateLabel(S.slate.date)}`
+    : `${data.w} × ${data.h} · ${data.rows.length} rows (this design fits ${cap} at this size) · data for ${dateLabel(S.slate.date)}`;
+  renderEditBar(); writeCaption(); pushHistory();
+  clearTimeout(thumbTimer); thumbTimer = setTimeout(renderThumbs, 350);
 }
 async function renderThumbs() {
   const size = SIZES[S.size];
-  for (const d of STUDIO_DESIGNS) {
+  for (const d of designsForKind(kindOf())) {
     const box = document.querySelector(`[data-thumb="${d.id}"]`); if (!box) continue;
-    const { data } = await cardData(); const dd = { ...data }; dd.photo = data.photo && (d.photo === "duotone" ? data.photo : data.photo);
-    const sel = allPhotos().find((p) => p.id === S.photoId); if (sel) { try { dd.photo = { url: await processPhoto(sel.url, d.photo, tintFor(d)), credit: sel.credit, player: sel.player }; } catch (e) { /* none */ } }
-    dd.rows = dd.rows.slice(0, d.capacity(dd, dd)); box.innerHTML = `<div class="st-scale">${themed(d, d.render(dd), dd)}</div>`;
-    const k = box.clientWidth / size.w; box.style.height = Math.round(size.h * k) + "px"; box.firstChild.style.transform = `scale(${k})`;
+    const { el } = await buildCard(d, S.size, { thumb: true });
+    const k = box.clientWidth / size.w; box.style.height = Math.round(size.h * k) + "px";
+    box.innerHTML = ""; const s = document.createElement("div"); s.className = "st-scale"; s.style.transform = `scale(${k})`; s.appendChild(el); box.appendChild(s);
   }
 }
-async function exportPng(share) {
-  const btn = $(share ? "stShare" : "stDownload"); btn.disabled = true; const old = btn.textContent; btn.textContent = "Drawing…";
+
+// ---------- On-card editing ----------
+function editsOf(design) { return (S.edits[design.id] = S.edits[design.id] || {}); }
+function saveEdits() { store.set("lh-studio-edits", S.edits); }
+function setEdit(key, patch) { const e = editsOf(curDesign()); e[key] = { ...(e[key] || {}), ...patch }; saveEdits(); schedule(); }
+function renderEditBar() {
+  const bar = $("stEditBar");
+  if (!S.editing) { bar.hidden = true; return; }
+  bar.hidden = false;
+  if (!S.sel) { bar.innerHTML = `<span>Click anything on the card to select it. Drag to move it, double-click text to retype it, arrow keys nudge (Shift = bigger steps). Drag the photo to reframe it.</span>`; return; }
+  const e = editsOf(curDesign())[S.sel] || {}, isPhoto = S.sel === "photo", textish = !["photo", "logo", "list", "block"].includes(S.sel);
+  const adj = adjFor(S.photoId);
+  bar.innerHTML = `<b>${esc(EL_NAMES[S.sel] || S.sel)}</b>
+    ${isPhoto ? `<label>Zoom <input type="range" id="stE_zoom" min="100" max="300" step="5" value="${adj.zoom}"></label><span>Drag to reframe</span>`
+      : `<label>Size <input type="range" id="stE_s" min="40" max="250" step="5" value="${Math.round((e.s || 1) * 100)}"></label>`}
+    ${textish ? `<label>Color <input type="color" id="stE_color" value="${e.color || "#ffffff"}"></label>` : ""}
+    ${LOCKED_ELS.has(S.sel) ? `<span>Always shown</span>` : `<label><input type="checkbox" id="stE_hide" ${e.hide ? "checked" : ""}> Hide</label>`}
+    <span class="st-sp"></span><button class="st-chip" id="stE_reset" type="button">Reset this</button>`;
+  const on = (id, ev, fn) => { const n = $(id); if (n) n.addEventListener(ev, fn); };
+  on("stE_s", "input", (ev) => setEdit(S.sel, { s: +ev.target.value / 100 }));
+  on("stE_zoom", "input", (ev) => setAdj("zoom", +ev.target.value));
+  on("stE_color", "input", (ev) => setEdit(S.sel, { color: ev.target.value }));
+  on("stE_hide", "change", (ev) => setEdit(S.sel, { hide: ev.target.checked }));
+  on("stE_reset", "click", () => { if (isPhoto && S.photoId !== "none") { delete S.photoAdj[S.photoId]; store.set("lh-studio-photoadj", S.photoAdj); syncPhotoUi(); } delete editsOf(curDesign())[S.sel]; saveEdits(); schedule(); });
+}
+function bindCardEditing() {
+  const host = $("stPv"); let drag = null;
+  host.addEventListener("pointerdown", (ev) => {
+    if (!S.editing || ev.target.closest('[contenteditable="true"]')) return;
+    const el = ev.target.closest("[data-el]");
+    host.querySelectorAll(".st-sel").forEach((n) => n.classList.remove("st-sel"));
+    if (!el) { S.sel = null; renderEditBar(); return; }
+    S.sel = el.dataset.el; el.classList.add("st-sel"); renderEditBar();
+    const e = editsOf(curDesign())[S.sel] || {};
+    drag = { el, x: ev.clientX, y: ev.clientY, moved: false, dx: e.dx || 0, dy: e.dy || 0, s: e.s || 1, adj: adjFor(S.photoId) };
+    host.setPointerCapture(ev.pointerId); ev.preventDefault();
+  });
+  host.addEventListener("pointermove", (ev) => {
+    if (!drag) return;
+    const mx = (ev.clientX - drag.x) / previewK, my = (ev.clientY - drag.y) / previewK;
+    if (!drag.moved && Math.abs(mx) + Math.abs(my) < 4) return;
+    drag.moved = true; drag.mx = mx; drag.my = my;
+    if (drag.el.dataset.el === "photo") { const img = drag.el.tagName === "IMG" ? drag.el : drag.el.querySelector("img"); if (img) img.style.transform = `translate(${mx}px,${my}px)`; }
+    else { drag.el.style.transform = `translate(${drag.dx + mx}px,${drag.dy + my}px) scale(${drag.s})`; drag.el.style.transformOrigin = "0 0"; }
+  });
+  const end = () => {
+    if (!drag) return; const d = drag; drag = null;
+    if (!d.moved) return;
+    if (d.el.dataset.el === "photo" && previewData && previewData.photoSrc && S.photoId !== "none") {
+      // Moving the picture right shows more of its left side: the focus point moves the other way, in source pixels.
+      const src = previewData.photoSrc, box = previewData.photoBox, a = d.adj;
+      const fx = (a.fx == null ? curDesign().focus.x : a.fx) - (d.mx / box.w) * (src.cw / src.W) * 100 * (a.flip ? -1 : 1);
+      const fy = (a.fy == null ? curDesign().focus.y : a.fy) - (d.my / box.h) * (src.ch / src.H) * 100;
+      S.photoAdj[S.photoId] = { ...a, fx: Math.round(clamp(fx, 0, 100)), fy: Math.round(clamp(fy, 0, 100)) };
+      store.set("lh-studio-photoadj", S.photoAdj); syncPhotoUi(); schedule();
+    } else setEdit(d.el.dataset.el, { dx: Math.round(d.dx + d.mx), dy: Math.round(d.dy + d.my) });
+  };
+  host.addEventListener("pointerup", end); host.addEventListener("pointercancel", end);
+  host.addEventListener("dblclick", (ev) => {
+    if (!S.editing) return;
+    // The drag code captures the pointer, so the event's target is the preview box: find the text under the pointer instead.
+    const hit = document.elementFromPoint(ev.clientX, ev.clientY), el = hit && hit.closest("[data-text]"); if (!el || !host.contains(el)) return;
+    el.contentEditable = "true"; el.focus();
+    const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    const done = () => { el.removeEventListener("blur", done); const key = el.dataset.text; S.fields[key] = el.innerText.replace(/\s*\n\s*/g, " ").trim(); syncFieldsUi(); schedule(); };
+    el.addEventListener("blur", done);
+    el.addEventListener("keydown", (k) => { if (k.key === "Enter") { k.preventDefault(); el.blur(); } });
+  });
+  document.addEventListener("keydown", (ev) => {
+    const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.activeElement.isContentEditable;
+    if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === "z" && !typing) { ev.preventDefault(); ev.shiftKey ? redo() : undo(); return; }
+    if (!S.editing || !S.sel || typing || S.sel === "photo") return;
+    const step = ev.shiftKey ? 20 : 2, mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[ev.key];
+    if (!mv) return; ev.preventDefault();
+    const e = editsOf(curDesign())[S.sel] || {}; setEdit(S.sel, { dx: (e.dx || 0) + mv[0], dy: (e.dy || 0) + mv[1] });
+  });
+}
+
+// ---------- Undo / redo ----------
+const hist = { list: [], i: -1, restoring: false };
+function snapshot() { return JSON.stringify({ src: S.source && S.source.id, win: S.win, rows: S.rows, fields: S.fields, design: S.design, size: S.size, photoId: S.photoId, style: S.style, edits: S.edits, photoAdj: S.photoAdj }); }
+function pushHistory() {
+  if (hist.restoring) { hist.restoring = false; return; }
+  const s = snapshot(); if (hist.list[hist.i] === s) return;
+  hist.list = hist.list.slice(0, hist.i + 1); hist.list.push(s); if (hist.list.length > 80) hist.list.shift(); hist.i = hist.list.length - 1; syncUndo();
+}
+function restore(s) {
+  const v = JSON.parse(s), item = allSources().find((i) => i.id === v.src) || S.source;
+  hist.restoring = true;
+  Object.assign(S, { source: item, win: v.win, rows: v.rows, fields: v.fields, design: v.design, size: v.size, photoId: v.photoId, style: v.style, edits: v.edits, photoAdj: v.photoAdj });
+  saveStyle(); saveEdits(); store.set("lh-studio-photoadj", S.photoAdj); renderControls(); renderAll();
+}
+function undo() { if (hist.i > 0) { hist.i--; restore(hist.list[hist.i]); syncUndo(); } }
+function redo() { if (hist.i < hist.list.length - 1) { hist.i++; restore(hist.list[hist.i]); syncUndo(); } }
+function syncUndo() { $("stUndo").disabled = hist.i <= 0; $("stRedo").disabled = hist.i >= hist.list.length - 1; }
+
+// ---------- Export ----------
+const MIME = { png: "image/png", jpg: "image/jpeg", webp: "image/webp" };
+async function drawFile(sizeKey) {
+  const { el, data } = await buildCard(curDesign(), sizeKey);
+  const stage = document.createElement("div"); stage.style.cssText = `position:fixed;left:-30000px;top:0;width:${data.w}px;height:${data.h}px`; stage.appendChild(el); document.body.appendChild(stage);
   try {
-    const { design, data } = await cardData(); data.rows = data.rows.slice(0, design.capacity(data, data));
-    const stage = document.createElement("div"); stage.style.cssText = `position:fixed;left:-20000px;top:0;width:${data.w}px;height:${data.h}px`; stage.innerHTML = themed(design, design.render(data), data); document.body.appendChild(stage);
     const [h2c] = await Promise.all([loadHtml2Canvas(), document.fonts ? document.fonts.ready : null]);
-    await Promise.all([...stage.querySelectorAll("img")].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })));
-    const canvas = await h2c(stage.firstElementChild, { width: data.w, height: data.h, scale: 1, useCORS: true, backgroundColor: null, logging: false });
-    stage.remove();
-    const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
-    const name = `linehunter-${slug(S.fields.title)}-${S.size}.png`;
-    const file = new File([blob], name, { type: "image/png" });
-    if (share && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: S.fields.title });
-    else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
-  } catch (e) { console.error(e); alert("Couldn't draw the image: " + e.message); }
+    await Promise.all([...stage.querySelectorAll("img")].map((i) => (i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; }))));
+    const canvas = await h2c(el, { width: data.w, height: data.h, scale: S.scale, useCORS: true, backgroundColor: S.fmt === "png" ? null : tokensFor(curDesign()).bg, logging: false });
+    const blob = await new Promise((r) => canvas.toBlob(r, MIME[S.fmt], 0.92));
+    const name = `linehunter-${slug(kindOf() === "player" ? S.fields.name + "-" + S.fields.title : S.fields.title)}-${sizeKey}${S.scale > 1 ? "@2x" : ""}.${S.fmt}`;
+    return new File([blob], name, { type: MIME[S.fmt] });
+  } finally { stage.remove(); }
+}
+function download(file) { const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+async function exportImages(mode) {
+  const btn = $({ one: "stDownload", share: "stShare", all: "stAllSizes" }[mode]); const old = btn.textContent; btn.disabled = true; btn.textContent = "Drawing…";
+  try {
+    const keys = mode === "all" ? Object.keys(SIZES) : [S.size], files = [];
+    for (const k of keys) files.push(await drawFile(k));
+    const canShare = navigator.canShare && navigator.canShare({ files });
+    if ((mode === "share" || (mode === "all" && matchMedia("(pointer:coarse)").matches)) && canShare) await navigator.share({ files, title: S.fields.title });
+    else for (const f of files) { download(f); await new Promise((r) => setTimeout(r, 400)); }
+  } catch (e) { if (e.name !== "AbortError") { console.error(e); alert("Couldn't draw the image: " + e.message); } }
   btn.disabled = false; btn.textContent = old;
 }
 
+// ---------- Caption writer ----------
+function captionText(plat) {
+  const f = S.fields, rows = S.rows.filter((r) => r.on), tags = plat === "x" ? "#NBA #PlayerProps" : "#NBA #NBAProps #PlayerProps #NBAStats #LineHunter";
+  const legal = plat === "x" ? "21+ | 1-800-GAMBLER" : "Based on past results, not guarantees. 21+. Gambling problem? Call 1-800-GAMBLER.";
+  let lines;
+  if (kindOf() === "player") {
+    const p = playerData(S.source.row, S.win);
+    lines = [`${f.name}: ${f.title} in ${f.hero} of his last ${p.total} (avg ${p.avg.toFixed(1)} ${p.code}).`, f.subtitle];
+  } else {
+    const head = `${f.hero && f.hero !== f.title ? f.hero + " " : ""}${f.title}${f.subtitle ? " · " + f.subtitle : ""}`;
+    lines = [head, "", ...rows.map((r) => `${plat === "x" ? "" : "• "}${r.n}${r.t && !r.hideTeam ? ` (${r.t})` : ""}: ${r.stat} · ${r.rec}`)];
+  }
+  const tail = plat === "x" ? ["", "Free research: linehunterapp.com", legal, tags] : ["", "Which one are you riding? 👇", "", "Free research every night at linehunterapp.com", "", legal, "", tags];
+  let text = [...lines, ...tail].join("\n");
+  // X: drop rows from the bottom until it fits in 280 characters.
+  while (plat === "x" && text.length > 280 && lines.length > 3) { lines.pop(); text = [...lines, ...tail].join("\n"); }
+  return text;
+}
+function writeCaption(force) {
+  if (S.cap.dirty && !force) return countCaption();
+  $("stCapText").value = captionText(S.cap.plat); S.cap.dirty = false; countCaption();
+}
+function countCaption() { const n = $("stCapText").value.length; $("stCapCount").textContent = S.cap.plat === "x" ? `${n} / 280${n > 280 ? " · too long for X" : ""}` : `${n} characters`; }
+
+// ---------- Presets ----------
+function presets() { return store.get("lh-studio-presets", []); }
+function renderPresets() { const list = presets(); $("stPreset").innerHTML = list.length ? list.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join("") : `<option value="">No presets yet</option>`; }
+function savePreset() {
+  const name = (prompt("Name this preset (fonts, colors, sizes, background, design, size and on-card layout):", "My style") || "").trim(); if (!name) return;
+  const list = presets().filter((p) => p.name !== name);
+  list.push({ name, design: S.design, size: S.size, style: S.style, edits: S.edits[S.design] || {} }); store.set("lh-studio-presets", list); renderPresets();
+  $("stPreset").value = String(list.length - 1);
+}
+function applyPreset() {
+  const p = presets()[+$("stPreset").value]; if (!p) return;
+  S.style = { ...STYLE0(), ...JSON.parse(JSON.stringify(p.style)) };
+  if (designsForKind(kindOf()).some((d) => d.id === p.design)) { S.design = p.design; S.designByKind[kindOf()] = p.design; }
+  S.size = p.size || S.size; S.edits[p.design] = JSON.parse(JSON.stringify(p.edits || {}));
+  saveStyle(); saveEdits(); renderControls(); renderAll();
+}
+function deletePreset() { const i = +$("stPreset").value; const list = presets(); if (!list[i] || !confirm(`Delete the preset "${list[i].name}"?`)) return; list.splice(i, 1); store.set("lh-studio-presets", list); renderPresets(); }
+
 // ---------- Controls ----------
+const allSources = () => S.groups.flatMap((g) => g.items);
 function chip(label, on, attrs) { return `<button type="button" class="st-chip${on ? " on" : ""}" ${attrs}>${esc(label)}</button>`; }
 function renderControls() {
+  const kind = kindOf();
   $("stSources").innerHTML = S.groups.map((g) => `<div class="st-lbl">${esc(g.label)}</div><div class="st-chips">${g.items.map((i) => chip(i.label, S.source && S.source.id === i.id, `data-src="${i.id}"`)).join("")}</div>`).join("");
-  $("stRows").innerHTML = S.rows.map((r, i) => `<div class="st-row"><input type="checkbox" data-row="${i}" ${r.on ? "checked" : ""}><span class="nm">${esc(r.n)} · ${esc(r.stat)}</span><span class="rec">${esc(r.rec)}</span><button class="st-mv" data-up="${i}" title="Move up">▲</button><button class="st-mv" data-down="${i}" title="Move down">▼</button></div>`).join("");
+  $("stPlayerWrap").hidden = !S.players.length;
+  const pp = $("stPlayerPick");
+  pp.innerHTML = `<option value="">Pick a player and prop…</option>` + S.players.map((r, i) => `<option value="${i}">${esc(r.name)} · ${STAT_CODE(r.code)} ${r.line}</option>`).join("");
+  pp.value = kind === "player" ? String(S.players.indexOf(S.source.row)) : "";
+  $("stWinWrap").hidden = !(S.source && S.source.windowed);
+  $("stWin").innerHTML = WINDOWS.map((n) => `<button type="button" class="${S.win === n ? "on" : ""}" data-win="${n}">L${n}</button>`).join("");
+  $("stRowsSec").hidden = kind === "player";
+  $("stRows").innerHTML = S.rows.map((r, i) => `<div class="st-row"><input type="checkbox" data-row="${i}" ${r.on ? "checked" : ""}><span class="nm">${esc(r.n)} · ${esc(r.stat)}</span><span class="rec">${esc(r.rec)}</span><button class="st-ed${S.openRow === i ? " on" : ""}" data-edit="${i}" title="Edit this row">✎</button><button class="st-mv" data-up="${i}" title="Move up">▲</button><button class="st-mv" data-down="${i}" title="Move down">▼</button></div>` +
+    (S.openRow === i ? `<div class="st-rowedit"><input class="st-in" data-rf="n" data-i="${i}" value="${esc(r.n)}" placeholder="Name"><input class="st-in" data-rf="rec" data-i="${i}" value="${esc(r.rec)}" placeholder="Record (5/5)">
+      <input class="st-in" data-rf="stat" data-i="${i}" value="${esc(r.stat)}" placeholder="Stat (Over 24.5 PTS)" style="grid-column:1/-1"><input class="st-in" data-rf="t" data-i="${i}" value="${esc(r.t)}" placeholder="Team (LAL)">
+      <label><input type="checkbox" data-rteam="${i}" ${r.hideTeam ? "" : "checked"}> Show team tag</label>${r.custom ? `<button class="st-chip" data-rdel="${i}" type="button">Delete this row</button>` : ""}</div>` : "")).join("");
   $("stRowsCount").textContent = S.rows.filter((r) => r.on).length + " of " + S.rows.length + " shown";
   $("stSizes").innerHTML = Object.entries(SIZES).map(([k, v]) => `<button type="button" class="${S.size === k ? "on" : ""}" data-size="${k}">${v.label}</button>`).join("");
-  $("stDesigns").innerHTML = STUDIO_DESIGNS.map((d) => `<button type="button" class="st-th${S.design === d.id ? " on" : ""}" data-design="${d.id}"><div class="st-tw" data-thumb="${d.id}"></div>${esc(d.name)}</button>`).join("");
+  $("stDesigns").innerHTML = designsForKind(kind).map((d) => `<button type="button" class="st-th${S.design === d.id ? " on" : ""}" data-design="${d.id}"><div class="st-tw" data-thumb="${d.id}"></div>${esc(d.name)}</button>`).join("");
   const ph = allPhotos();
   $("stPhotos").innerHTML = `<button type="button" class="st-ph${S.photoId === "none" ? " on" : ""}" data-photo="none"><span style="padding:30px 5px;text-align:center">No photo</span></button>` +
-    ph.map((p) => `<button type="button" class="st-ph${S.photoId === p.id ? " on" : ""}" data-photo="${esc(p.id)}" title="${esc(p.player)} — ${esc(p.credit)}"><img src="${p.url}" alt=""><span>${esc(p.player)}${p.sa ? " · SA" : ""}${p.mine ? " · mine" : ""}</span></button>`).join("");
+    ph.map((p) => `<button type="button" class="st-ph${S.photoId === p.id ? " on" : ""}" data-photo="${esc(p.id)}" title="${esc(p.player)} — ${esc(p.credit || "no credit")}"><img src="${p.url}" alt=""><span>${esc(p.player)}${p.sa ? " · SA" : ""}${p.mine ? " · mine" : ""}</span></button>`).join("");
   const sel = ph.find((p) => p.id === S.photoId);
-  $("stPhotoInfo").innerHTML = sel ? `<b>${esc(sel.player)}</b><br><span style="color:var(--st-mut)">${esc(sel.credit)}${sel.sa ? " · share-alike: the edited image has to carry the same license" : ""}</span>` : `<span style="color:var(--st-mut)">No photo on the card.</span>`;
+  $("stPhotoInfo").innerHTML = sel ? `<b>${esc(sel.player)}</b><br><span style="color:var(--st-mut)">${esc(sel.credit || "No credit")}${sel.sa ? " · share-alike: the edited image has to carry the same license" : ""}</span>` : `<span style="color:var(--st-mut)">No photo on the card.</span>`;
   $("stDelPhoto").hidden = !(sel && sel.mine);
-  ["hero", "title", "subtitle", "footer"].forEach((k) => { if ($("stF_" + k) !== document.activeElement) $("stF_" + k).value = S.fields[k] || ""; });
-  syncStyleUi();
+  $("stCapPlat").innerHTML = [["x", "X"], ["ig", "Instagram"]].map(([k, l]) => `<button type="button" class="${S.cap.plat === k ? "on" : ""}" data-plat="${k}">${l}</button>`).join("");
+  $("stEditToggle").classList.toggle("on", S.editing); $("stEditToggle").textContent = S.editing ? "Done editing" : "Edit on card";
+  syncFieldsUi(); syncPhotoUi(); syncStyleUi(); syncUndo();
+}
+function syncFieldsUi() {
+  $("stNameWrap").hidden = kindOf() !== "player";
+  ["name", "hero", "title", "subtitle", "footer"].forEach((k) => { if ($("stF_" + k) !== document.activeElement) $("stF_" + k).value = S.fields[k] || ""; });
+}
+function syncPhotoUi() {
+  const has = S.photoId !== "none", a = adjFor(S.photoId), d = curDesign();
+  $("stPhotoAdj").hidden = !has; $("stPhotoReset").hidden = !has; if (!has) return;
+  const vals = { zoom: a.zoom, fx: a.fx == null ? d.focus.x : a.fx, fy: a.fy == null ? d.focus.y : a.fy, bright: a.bright, tint: a.tint };
+  Object.entries(vals).forEach(([k, v]) => { $("stP_" + k).value = v; $("stPO_" + k).textContent = k === "fx" || k === "fy" ? v : v + "%"; });
+  $("stP_mode").value = a.mode; $("stP_flip").checked = !!a.flip;
 }
 function syncStyleUi() {
-  const design = STUDIO_DESIGNS.find((d) => d.id === S.design), st = S.style, t = tokensFor(design);
+  const design = curDesign(), st = S.style, t = tokensFor(design);
   const fill = (id, list, cur, def) => { const el = $(id); if (!el.options.length) el.innerHTML = `<option value="">${def} (design)</option>` + list.map((f) => `<option>${f}</option>`).join(""); el.value = cur || ""; };
   fill("stS_fontHead", HEAD_FONTS, st.fontHead, "Clash Display"); fill("stS_fontBody", BODY_FONTS, st.fontBody, "Satoshi");
   ["hero", "title", "rows"].forEach((k) => { $("stS_" + k).value = st[k]; $("stO_" + k).textContent = st[k] + "%"; });
+  $("stS_ls").value = st.ls == null ? 0 : st.ls; $("stO_ls").textContent = st.ls == null ? "design" : (st.ls / 100).toFixed(2) + "em";
+  $("stS_up").checked = !!st.upper; $("stS_fw").value = st.fw || ""; $("stS_bg").value = st.bg || "";
   ["bg", "ink", "accent", "good"].forEach((k) => { if ($("stC_" + k) !== document.activeElement) $("stC_" + k).value = t[k] || t.accent; });
   const hasGood = !!design.tokens.good; $("stC_good").hidden = !hasGood; $("stC_goodLbl").hidden = !hasGood;
   const off = st.off[design.id] || {};
   $("stToggles").innerHTML = Object.entries(design.toggles || {}).map(([k, label]) => `<label class="st-chip${off[k] ? "" : " on"}" style="cursor:pointer"><input type="checkbox" data-tog="${k}" ${off[k] ? "" : "checked"} hidden>${esc(label)}</label>`).join("");
 }
-let styleRaf = 0;
-function styleChanged() { saveStyle(); cancelAnimationFrame(styleRaf); styleRaf = requestAnimationFrame(() => { syncStyleUi(); renderAll(); }); }
+function styleChanged() { saveStyle(); syncStyleUi(); schedule(); }
 function bind() {
   $("stUnlock").onclick = unlock; $("stPass").onkeydown = (e) => { if (e.key === "Enter") unlock(); };
   $("stGen").onclick = generatePass; $("stLockBtn").onclick = () => { try { localStorage.removeItem("lh-studio-ok"); } catch (e) { /* ok */ } setLocked(true); };
   $("stCopyPass").onclick = () => navigator.clipboard && navigator.clipboard.writeText($("stNewPass").textContent);
   document.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-src],[data-row],[data-up],[data-down],[data-size],[data-design],[data-photo]"); if (!t) return;
-    if (t.dataset.src) { chooseSource(S.groups.flatMap((g) => g.items).find((i) => i.id === t.dataset.src)); return; }
-    if (t.dataset.up != null || t.dataset.down != null) { const i = +(t.dataset.up ?? t.dataset.down), j = t.dataset.up != null ? i - 1 : i + 1; if (j < 0 || j >= S.rows.length) return; [S.rows[i], S.rows[j]] = [S.rows[j], S.rows[i]]; renderControls(); renderAll(); return; }
-    if (t.dataset.size) S.size = t.dataset.size;
-    if (t.dataset.design) S.design = t.dataset.design;
-    if (t.dataset.photo) S.photoId = t.dataset.photo;
+    const t = e.target.closest("[data-src],[data-up],[data-down],[data-edit],[data-rdel],[data-size],[data-design],[data-photo],[data-win],[data-plat]"); if (!t || t.closest("#stPv")) return;
+    const ds = t.dataset;
+    if (ds.src) return chooseSource(allSources().find((i) => i.id === ds.src));
+    if (ds.win) { S.win = +ds.win; return chooseSource(S.source, true); }
+    if (ds.plat) { S.cap.plat = ds.plat; S.cap.dirty = false; renderControls(); return writeCaption(true); }
+    if (ds.edit != null) { S.openRow = S.openRow === +ds.edit ? -1 : +ds.edit; return renderControls(); }
+    if (ds.rdel != null) { S.rows.splice(+ds.rdel, 1); S.openRow = -1; renderControls(); return schedule(); }
+    if (ds.up != null || ds.down != null) { const i = +(ds.up ?? ds.down), j = ds.up != null ? i - 1 : i + 1; if (j < 0 || j >= S.rows.length) return; [S.rows[i], S.rows[j]] = [S.rows[j], S.rows[i]]; S.openRow = -1; renderControls(); return schedule(); }
+    if (ds.size) S.size = ds.size;
+    if (ds.design) { S.design = ds.design; S.designByKind[kindOf()] = ds.design; S.sel = null; }
+    if (ds.photo) S.photoId = ds.photo;
     renderControls(); renderAll();
   });
-  document.addEventListener("change", (e) => { if (e.target.dataset && e.target.dataset.row != null) { S.rows[+e.target.dataset.row].on = e.target.checked; autoPhotoIfNone(); renderControls(); renderAll(); } });
-  ["hero", "title", "subtitle", "footer"].forEach((k) => $("stF_" + k).addEventListener("input", (e) => { S.fields[k] = e.target.value; renderAll(); }));
+  document.addEventListener("change", (e) => {
+    const ds = e.target.dataset || {};
+    if (ds.row != null) { S.rows[+ds.row].on = e.target.checked; if (S.photoId === "none" || S.photoId.startsWith("lib:")) autoPhoto(); renderControls(); renderAll(); }
+    if (ds.rteam != null) { S.rows[+ds.rteam].hideTeam = !e.target.checked; schedule(); }
+  });
+  document.addEventListener("input", (e) => { const ds = e.target.dataset || {}; if (ds.rf) { S.rows[+ds.i][ds.rf] = e.target.value; schedule(); } });
+  $("stAddRow").onclick = () => { S.rows.push({ id: Date.now(), n: "Name", full: "", t: "", stat: "Stat", rec: "0/0", on: true, custom: true }); S.openRow = S.rows.length - 1; renderControls(); schedule(); };
+  $("stPlayerPick").onchange = (e) => { const r = S.players[+e.target.value]; if (r) chooseSource(playerSource(r)); };
+  ["name", "hero", "title", "subtitle", "footer"].forEach((k) => $("stF_" + k).addEventListener("input", (e) => { S.fields[k] = e.target.value; schedule(); }));
+  // Photo
+  ["zoom", "fx", "fy", "bright", "tint"].forEach((k) => $("stP_" + k).addEventListener("input", (e) => setAdj(k, +e.target.value)));
+  $("stP_mode").onchange = (e) => setAdj("mode", e.target.value); $("stP_flip").onchange = (e) => setAdj("flip", e.target.checked);
+  $("stPhotoReset").onclick = () => { delete S.photoAdj[S.photoId]; store.set("lh-studio-photoadj", S.photoAdj); syncPhotoUi(); schedule(); };
+  $("stUpSave").onclick = saveUpload;
+  $("stDelPhoto").onclick = async () => { if (S.photoId.startsWith("up:") && confirm("Delete this uploaded photo from this device?")) { await idbDelete(S.photoId.slice(3)); S.uploads = await idbAll(); S.photoId = "none"; renderControls(); renderAll(); } };
+  // Style
   $("stS_fontHead").onchange = (e) => { S.style.fontHead = e.target.value; styleChanged(); };
   $("stS_fontBody").onchange = (e) => { S.style.fontBody = e.target.value; styleChanged(); };
+  $("stS_fw").onchange = (e) => { S.style.fw = e.target.value; styleChanged(); };
+  $("stS_ls").addEventListener("input", (e) => { S.style.ls = +e.target.value; styleChanged(); });
+  $("stS_up").onchange = (e) => { S.style.upper = e.target.checked; styleChanged(); };
+  $("stS_bg").onchange = (e) => { S.style.bg = e.target.value; styleChanged(); };
   ["hero", "title", "rows"].forEach((k) => $("stS_" + k).addEventListener("input", (e) => { S.style[k] = +e.target.value; styleChanged(); }));
   ["bg", "ink", "accent", "good"].forEach((k) => $("stC_" + k).addEventListener("input", (e) => { (S.style.colors[S.design] = S.style.colors[S.design] || {})[k] = e.target.value; styleChanged(); }));
   $("stToggles").addEventListener("change", (e) => { const k = e.target.dataset.tog; if (!k) return; (S.style.off[S.design] = S.style.off[S.design] || {})[k] = !e.target.checked; styleChanged(); });
-  $("stStyleReset").onclick = () => { S.style = { fontHead: "", fontBody: "", hero: 100, title: 100, rows: 100, colors: {}, off: {} }; styleChanged(); };
-  $("stDownload").onclick = () => exportPng(false); $("stShare").onclick = () => exportPng(true);
-  $("stUpSave").onclick = saveUpload;
-  $("stDelPhoto").onclick = async () => { if (S.photoId.startsWith("up:") && confirm("Delete this uploaded photo from this device?")) { await idbDelete(S.photoId.slice(3)); S.uploads = await idbAll(); S.photoId = "none"; renderControls(); renderAll(); } };
-  addEventListener("resize", () => renderAll());
+  $("stStyleReset").onclick = () => { S.style = STYLE0(); styleChanged(); };
+  $("stPresetSave").onclick = savePreset; $("stPresetApply").onclick = applyPreset; $("stPresetDel").onclick = deletePreset;
+  // Stage
+  $("stEditToggle").onclick = () => { S.editing = !S.editing; if (!S.editing) S.sel = null; renderControls(); renderAll(); };
+  $("stEditReset").onclick = () => { if (!confirm(`Put every moved, resized or hidden piece of "${curDesign().name}" back where the design has it?`)) return; delete S.edits[S.design]; S.sel = null; saveEdits(); schedule(); };
+  $("stUndo").onclick = undo; $("stRedo").onclick = redo;
+  $("stFmt").onchange = (e) => { S.fmt = e.target.value; }; $("stScaleSel").onchange = (e) => { S.scale = +e.target.value; };
+  $("stDownload").onclick = () => exportImages("one"); $("stShare").onclick = () => exportImages("share"); $("stAllSizes").onclick = () => exportImages("all");
+  $("stCapText").addEventListener("input", () => { S.cap.dirty = true; countCaption(); });
+  $("stCapRewrite").onclick = () => writeCaption(true);
+  $("stCapCopy").onclick = async () => { try { await navigator.clipboard.writeText($("stCapText").value); $("stCapCopy").textContent = "Copied"; setTimeout(() => { $("stCapCopy").textContent = "Copy"; }, 1500); } catch (e) { $("stCapText").select(); } };
+  bindCardEditing();
+  let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderAll, 150); });
 }
-function autoPhotoIfNone() { if (S.photoId === "none" || S.photoId.startsWith("lib:")) autoPhoto(); }
 
 // ---------- Start ----------
 function onSlate(event) {
   const slate = event.detail && event.detail.slate;
   if (!slate) { $("stStatus").textContent = (event.detail && event.detail.message ? "No slate yet. " : "") + "Waiting for tonight's games…"; return; }
+  if (S.slate === slate) return;
   S.slate = slate; S.groups = buildSources(slate);
-  if (!S.groups.length) { $("stStatus").textContent = "No cards have enough qualifying props for this slate yet."; return; }
+  addBbqSource(slate);
+  if (!S.groups.length && !S.players.length) { $("stStatus").textContent = "No cards have enough qualifying props for this slate yet."; return; }
   $("stStatus").hidden = true; $("stApp").hidden = false;
-  const keep = S.source && S.groups.flatMap((g) => g.items).find((i) => i.id === S.source.id);
-  if (!keep) chooseSource(S.groups[0].items[0]); else { renderControls(); renderAll(); }
+  const keep = S.source && allSources().find((i) => i.id === S.source.id);
+  if (keep) chooseSource(keep, true);
+  else if (S.groups.length) chooseSource(S.groups[0].items[0]);
+  else chooseSource(playerSource(S.players[0]));
 }
 let started = false;
 async function startStudio() {
-  if (started) return; started = true; bind2();
+  if (started) return; started = true;
   await loadPhotos();
   document.addEventListener("lh-top-slate", onSlate);
   if (window.__lhPendingSlate) onSlate(window.__lhPendingSlate);
 }
-function bind2() { /* controls are bound once at load */ }
 document.addEventListener("lh-top-slate", (e) => { window.__lhPendingSlate = e; });
-addEventListener("DOMContentLoaded", async () => {
-  loadStyle(); bind();
-  let ok = false; try { ok = localStorage.getItem("lh-studio-ok") === window.STUDIO_PASS_HASH; } catch (e) { /* ok */ }
+addEventListener("DOMContentLoaded", () => {
+  S.style = { ...STYLE0(), ...store.get("lh-studio-style", {}) };
+  S.edits = store.get("lh-studio-edits", {}); S.photoAdj = store.get("lh-studio-photoadj", {});
+  renderPresets(); bind();
+  let ok = false; try { ok = localStorage.getItem("lh-studio-ok") === window.STUDIO_PASS_HASH; } catch (e) { /* blocked */ }
   if (ok) { setLocked(false); startStudio(); } else setLocked(true);
 });
+
+window.StudioDebug = { S, hist }; // for the console and the tests
+})();
