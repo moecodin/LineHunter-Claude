@@ -92,8 +92,21 @@ const lhHunts = (() => {
     return decimal >= 2 ? Math.round((decimal - 1) * 100) : Math.round(-100 / (decimal - 1));
   }
 
+  // The text for Pikkit's Quick Pick (https://quickpick.pikkit.com/): one "Full Name Over 17.5 Points" per leg, joined with ", ". No odds,
+  // hit rates, matchups or emojis. Spelled-out stat names; the line is whatever is on the ticket (alt lines included). Add new stats
+  // and sports here only.
+  const PIKKIT_STAT = { points: "Points", rebounds: "Rebounds", assists: "Assists", threes: "Threes Made", steals: "Steals", blocks: "Blocks", turnovers: "Turnovers" };
+  function pikkitText(list) {
+    return (list || []).map((leg) => {
+      const words = String(leg.stat || "").split("_");
+      const stat = words.length === 1 ? (PIKKIT_STAT[words[0]] || words[0]) : words.map((w) => PIKKIT_STAT[w] || w).join(" + ");
+      return `${leg.player} ${leg.side === "under" ? "Under" : "Over"} ${leg.line} ${stat}`;
+    }).join(", ");
+  }
+
   return {
     bookLabel,
+    pikkitText,
     shareLink,
     parseShare,
     combinedOdds,

@@ -69,6 +69,8 @@
         <button type="button" class="lh-hunts-sharebtn" id="lhHuntsPost"><i class="bi bi-twitter-x" aria-hidden="true"></i> Post to @Playbook</button>
       </div>
       <div class="lh-hunts-sharenote">Posts publicly from your X account.</div>
+      <button type="button" class="lh-hunts-pikkit" id="lhHuntsPikkit">Make slip on Pikkit <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></button>
+      <div class="lh-hunts-sharenote">Opens Pikkit Quick Pick (free, not affiliated with LineHunter).</div>
       <a class="lh-hunts-builder" href="hunts.html">Open full builder ›</a>
       <button type="button" class="lh-hunts-clear" id="lhHuntsClear">Clear all</button>
       <div class="lh-hunts-legal">Bet within your limits · 21+ · 1-800-GAMBLER</div>
@@ -240,11 +242,11 @@
   toast.hidden = true;
   document.body.appendChild(toast);
   let toastTimer = null;
-  window.lhToast = (message) => {
+  window.lhToast = (message, ms = 2500) => {
     toast.textContent = message;
     toast.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { toast.hidden = true; }, 2500);
+    toastTimer = setTimeout(() => { toast.hidden = true; }, ms);
   };
 
   // ---------- Share hunt / Post to @Playbook ----------
@@ -265,6 +267,51 @@
       done ? resolve() : reject(new Error("copy failed"));
     });
   }
+
+  // ---------- Make slip on Pikkit ----------
+  // Pikkit's Quick Pick takes plain text and makes a slip link. It can't be filled by URL, so: open the page (inside the click, before
+  // anything async, so iOS Safari doesn't block it), copy the text, tell the user to paste it. If copying is blocked, a small window shows
+  // the text to copy by hand. Nothing here calls Pikkit's API or touches their site.
+  const PIKKIT_URL = "https://quickpick.pikkit.com/";
+  function pikkitFallback(text) {
+    const modal = document.createElement("div");
+    modal.className = "lh-pk-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-label", "Copy your slip");
+    modal.innerHTML = `
+      <div class="lh-pk-back" data-pk="close"></div>
+      <div class="lh-pk-box">
+        <h3>Copy your slip</h3>
+        <p>Copying was blocked. Select the text, copy it, then paste it into Pikkit Quick Pick.</p>
+        <textarea class="lh-pk-text" readonly rows="4"></textarea>
+        <div class="lh-pk-btns">
+          <button type="button" class="lh-hunts-sharebtn" data-pk="copy">Copy</button>
+          <a class="lh-hunts-sharebtn" href="${PIKKIT_URL}" target="_blank" rel="noopener noreferrer">Open Pikkit</a>
+          <button type="button" class="lh-hunts-sharebtn" data-pk="close">Close</button>
+        </div>
+      </div>`;
+    modal.querySelector("textarea").value = text;
+    modal.addEventListener("click", async (event) => {
+      const el = event.target.closest("[data-pk]");
+      if (!el) return;
+      if (el.dataset.pk === "close") { modal.remove(); return; }
+      const area = modal.querySelector("textarea");
+      area.focus(); area.select();
+      try { await copyText(text); window.lhToast("Copied"); } catch (error) { /* the text stays selected for a manual copy */ }
+    });
+    document.body.appendChild(modal);
+    const area = modal.querySelector("textarea");
+    area.focus(); area.select();
+  }
+  window.lhOpenPikkit = function (legs) {
+    const text = lhHunts.pikkitText(legs || lhHunts.getAll());
+    if (!text) return;
+    window.open(PIKKIT_URL, "_blank", "noopener,noreferrer"); // first, inside the click
+    copyText(text).then(() => window.lhToast("Slip copied. Paste it into Pikkit and tap Generate Betslip.", 4000))
+      .catch(() => pikkitFallback(text));
+  };
+  drawer.querySelector("#lhHuntsPikkit").addEventListener("click", () => window.lhOpenPikkit(lhHunts.getAll()));
 
   drawer.querySelector("#lhHuntsShare").addEventListener("click", async () => {
     const legs = lhHunts.getAll();

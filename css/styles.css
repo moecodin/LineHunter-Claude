@@ -7555,3 +7555,18 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   body.lh-hb-sheet-open .lh-hp { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .lh-hp.is-enter, .lh-hp.is-pop { animation: none; } }
+
+/* Make slip on Pikkit (js/components/my-hunts.js lhOpenPikkit; the drawer and the Hunts builder): a secondary outline button, never the main action */
+.lh-hunts-pikkit, .lh-hb-pikkit { display: flex; align-items: center; justify-content: center; gap: 0.4rem; width: 100%; background: none; border: 1px solid var(--lh-strong); border-radius: 8px;
+  color: var(--lh-strong); padding: 0.55rem; font-weight: 700; font-size: 0.85rem; min-height: 2.5rem; cursor: pointer; margin-top: 0.6rem; }
+.lh-hunts-pikkit:hover, .lh-hb-pikkit:hover:not(:disabled) { background: rgba(var(--lh-ink-rgb), 0.06); }
+.lh-hb-pikkit:disabled { opacity: 0.4; cursor: not-allowed; }
+.lh-hb-pikkitnote { margin-top: 0.35rem; font-size: 0.72rem; color: var(--lh-muted); text-align: center; }
+.lh-pk-modal { position: fixed; inset: 0; z-index: 2100; display: grid; place-items: center; padding: 1rem; }
+.lh-pk-back { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55); }
+.lh-pk-box { position: relative; width: min(28rem, 100%); background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 14px; padding: 1rem; }
+.lh-pk-box h3 { font: 600 1.2rem var(--lh-font-heading); color: var(--lh-strong); margin: 0 0 0.35rem; }
+.lh-pk-box p { font-size: 0.85rem; color: var(--lh-muted); margin: 0 0 0.6rem; }
+.lh-pk-text { width: 100%; background: rgba(var(--lh-ink-rgb), 0.05); border: 1px solid var(--lh-border); color: var(--lh-strong); padding: 0.5rem; font: inherit; font-size: 0.9rem; border-radius: 8px; resize: none; }
+.lh-pk-btns { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+.lh-pk-btns > * { flex: 1 1 0; text-align: center; text-decoration: none; }

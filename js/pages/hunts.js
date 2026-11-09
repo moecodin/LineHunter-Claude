@@ -216,7 +216,8 @@
     const t = totals(legs);
     fillPeek(legs, t);
     if (!legs.length) {
-      box.innerHTML = `${sheetTop()}<h2 class="lh-hb-h">My hunt</h2><p class="lh-hb-empty">No legs yet. Tap + ADD on any prop to start a hunt.</p>`;
+      box.innerHTML = `${sheetTop()}<h2 class="lh-hb-h">My hunt</h2><p class="lh-hb-empty">No legs yet. Tap Add to builder on any prop to start a hunt.</p>
+        <button type="button" class="lh-hb-pikkit" disabled title="Add a prop first">Make slip on Pikkit <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></button>`;
       return;
     }
     loadGames(legs);
@@ -243,11 +244,8 @@
         <button type="button" data-hb="post">Post to X</button>
         <button type="button" data-hb="image" class="is-wide"><i class="bi bi-image" aria-hidden="true"></i> Save as image</button>
       </div>
-      <div class="lh-hb-books-label">Open the book</div>
-      <div class="lh-hb-books">
-        <a href="https://sportsbook.fanduel.com/" target="_blank" rel="noopener">FanDuel ›</a>
-        <a href="https://sportsbook.draftkings.com/" target="_blank" rel="noopener">DraftKings ›</a>
-      </div>
+      <button type="button" class="lh-hb-pikkit" data-hb="pikkit">Make slip on Pikkit <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></button>
+      <div class="lh-hb-pikkitnote">Opens Pikkit Quick Pick (free, not affiliated with LineHunter).</div>
       <button type="button" class="lh-hb-clear" data-hb="clear">Clear all</button>
       <p class="lh-hb-legal">Past results, not a prediction. Bet within your limits · 21+ · 1-800-GAMBLER.</p>`;
     if (hadFocus) { const input = document.getElementById("huntsStake"); input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
@@ -289,6 +287,7 @@
     if (kind === "close") { closeTicket(); return; }
     if (kind === "share") document.getElementById("lhHuntsShare").click();
     else if (kind === "post") document.getElementById("lhHuntsPost").click();
+    else if (kind === "pikkit") window.lhOpenPikkit(legs);
     else if (kind === "clear") { if (window.confirm("Clear every leg from My Hunts?")) lhHunts.clear(); }
     else if (kind === "image" && legs.length) {
       shareNodeAsImage(imageHtml(legs), { filename: "linehunter-hunt.png", title: "My hunt", text: "My hunt on LineHunter.", button: action });
