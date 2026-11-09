@@ -182,7 +182,7 @@ function renderGameHeader(game) {
   const arena = info.arena ? ` · ${info.arena}, ${info.city || home.city}` : "";
   const team = (t, side) => `
       <div class="lh-gp-team${side === "home" ? " is-home" : ""}">
-        <div><span class="lh-gp-abbr">${t.abbreviation}</span><span class="lh-gp-name">${t.full_name}</span></div>
+        <div><span class="lh-gp-abbr">${t.abbreviation}</span><span class="lh-gp-name">${t.name || t.full_name}</span></div>
         <div>
           <span class="lh-gp-ml lines-only" id="ml${side === "home" ? "Home" : "Away"}"></span>
           <span class="lh-gp-rec"><span id="record${side === "home" ? "Home" : "Away"}"></span> <span class="lh-hdr-form" id="form${side === "home" ? "Home" : "Away"}"></span></span>
