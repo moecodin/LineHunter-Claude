@@ -308,9 +308,11 @@ function allPhotos() {
 }
 function leadName() { if (kindOf() === "player") return S.source.row.name; const lead = S.rows.find((r) => r.on); return lead ? lead.full || lead.n : ""; }
 function autoPhoto() {
-  const name = norm(leadName()); if (!name) { S.photoId = "none"; return; }
+  const key = (t) => norm(t).replace(/\b(jr|sr|ii|iii|iv)\b/g, "").replace(/[^a-z]+/g, " ").trim();
+  const name = key(leadName()); if (!name) { S.photoId = "none"; return; }
   const last = name.split(" ").pop(), first = name[0];
-  const m = allPhotos().find((p) => norm(p.player).split(" ").pop() === last && norm(p.player)[0] === first);
+  const all = allPhotos(), same = (p) => key(p.player) === name;
+  const m = all.find(same) || all.find((p) => key(p.player).split(" ").pop() === last && key(p.player)[0] === first);
   S.photoId = m ? m.id : "none";
 }
 function idbOpen() { return new Promise((res, rej) => { const r = indexedDB.open("lh-studio", 1); r.onupgradeneeded = () => r.result.createObjectStore("photos", { keyPath: "id" }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
