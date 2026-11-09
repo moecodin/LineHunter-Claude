@@ -251,31 +251,17 @@
     if (hadFocus) { const input = document.getElementById("huntsStake"); input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
   }
 
-  // ---------- Save as image (the picture follows the page's theme, like the other share pictures) ----------
-  function imageHtml(legs) {
-    const t = totals(legs);
-    const info = gameFor(legs[0].gameId);
-    const sub = legs.length === 1 && info && info !== "loading" ? `${info.away} @ ${info.home}` : "";
-    const when = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-    const groups = groupsOf(legs);
-    const best = groups.map((g) => ({ g, t: together[signature(g)] })).find((x) => x.t && x.t.state === "done" && x.t.cells.length);
-    return `
-      ${shareBrandHtml(when)}
-      <div class="lh-hi">
-        <h2 class="lh-hi-title">${legs.length}-leg hunt</h2>
-        ${sub ? `<div class="lh-hi-sub">${esc(sub)}</div>` : ""}
-        ${legs.map((leg) => `
-          <div class="lh-hi-leg lh-hi-leg--${leg.side}">
-            <div><b>${esc(lastName(leg.player))} ${sideWord(leg)} ${leg.line} ${esc(huntStatName(leg.stat))}</b></div>
-            <div class="lh-hi-odds">${fmt(leg.odds)}<small>${esc(lhHunts.bookLabel(leg.book) || "")}</small></div>
-          </div>`).join("")}
-        <div class="lh-hi-total"><span>Combined odds</span><b>${t ? fmt(t.american) : "–"}</b></div>
-        ${best ? `<div class="lh-hi-hit"><div class="lh-hi-t">Hit together · same game · last ${best.t.cells.length} games</div>
-          <b>${best.t.cells.filter(Boolean).length}/${best.t.cells.length}</b>
-          <span class="lh-hbt-dots">${best.t.cells.map((hit) => `<i class="${hit ? "" : "is-miss"}"></i>`).join("")}</span></div>` : ""}
-      </div>
-      ${SHARE_NOTE_HTML}`;
-  }
+  // ---------- Save as image ----------
+  // The picture is built by window.lhSaveHuntImage (js/components/my-hunts.js, shared with Make slip on Pikkit). This page adds its
+  // "Hit together" row, but only when a same-game group has a real count.
+  window.lhHuntImageExtra = () => {
+    const legs = lhHunts.getAll();
+    const best = groupsOf(legs).map((g) => ({ g, t: together[signature(g)] })).find((x) => x.t && x.t.state === "done" && x.t.cells.length);
+    if (!best) return "";
+    return `<div class="lh-hi-hit"><div class="lh-hi-t">Hit together · same game · last ${best.t.cells.length} games</div>
+      <b>${best.t.cells.filter(Boolean).length}/${best.t.cells.length}</b>
+      <span class="lh-hbt-dots">${best.t.cells.map((hit) => `<i class="${hit ? "" : "is-miss"}"></i>`).join("")}</span></div>`;
+  };
 
   box.addEventListener("click", (event) => {
     const remove = event.target.closest("[data-hb-remove]");
@@ -289,9 +275,7 @@
     else if (kind === "post") document.getElementById("lhHuntsPost").click();
     else if (kind === "pikkit") window.lhOpenPikkit(legs);
     else if (kind === "clear") { if (window.confirm("Clear every leg from My Hunts?")) lhHunts.clear(); }
-    else if (kind === "image" && legs.length) {
-      shareNodeAsImage(imageHtml(legs), { filename: "linehunter-hunt.png", title: "My hunt", text: "My hunt on LineHunter.", button: action });
-    }
+    else if (kind === "image" && legs.length) window.lhSaveHuntImage(legs, action);
   });
 
   box.addEventListener("input", (event) => {

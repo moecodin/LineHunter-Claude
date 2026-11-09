@@ -268,48 +268,87 @@
     });
   }
 
+  // ---------- Save the hunt as a branded picture (used by Make slip on Pikkit and the Hunts builder) ----------
+  // The picture is the same as the Hunts builder's "Save as image": logo, legs, combined odds, optional "Hit together", the site's address
+  // and the usual notes, so it works as a watermarked image in someone's gallery. share.js (the drawing code) is loaded the first time.
+  const sideOf = (leg) => (leg.side === "under" ? "Under" : "Over");
+  const lastOf = (name) => name.trim().split(/\s+/).slice(1).join(" ") || name;
+  const oddsText = (odds) => (odds === null || odds === undefined ? "–" : odds > 0 ? `+${odds}` : `−${Math.abs(odds)}`);
+  function ensureShareCode() {
+    if (typeof shareNodeAsImage === "function") return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "js/components/share.js";
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+  window.lhHuntImageExtra = window.lhHuntImageExtra || (() => "");
+  window.lhSaveHuntImage = async function (legs, button) {
+    legs = legs || lhHunts.getAll();
+    if (!legs.length) return;
+    try { await ensureShareCode(); } catch (error) { window.lhToast("Couldn't make the image"); return; }
+    const priced = legs.filter((leg) => leg.odds !== null && leg.odds !== undefined);
+    const total = priced.length === legs.length ? lhHunts.combinedOdds(priced.map((leg) => leg.odds)) : null;
+    const when = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    shareNodeAsImage(`
+      ${shareBrandHtml(when)}
+      <div class="lh-hi">
+        <h2 class="lh-hi-title">${legs.length}-leg hunt</h2>
+        ${legs.map((leg) => `
+          <div class="lh-hi-leg lh-hi-leg--${leg.side}">
+            <div><b>${escapeText(lastOf(leg.player))} ${sideOf(leg)} ${leg.line} ${escapeText(huntStatName(leg.stat))}</b></div>
+            <div class="lh-hi-odds">${oddsText(leg.odds)}<small>${escapeText(bookShort(leg.book) || "")}</small></div>
+          </div>`).join("")}
+        <div class="lh-hi-total"><span>Combined odds</span><b>${total === null ? "–" : oddsText(total)}</b></div>
+        ${window.lhHuntImageExtra()}
+      </div>
+      ${SHARE_NOTE_HTML}`, { filename: "linehunter-hunt.png", title: "My hunt", text: "My hunt on LineHunter.", button });
+  };
+
   // ---------- Make slip on Pikkit ----------
   // Pikkit's Quick Pick takes plain text and makes a slip link. It can't be filled by URL, so: open the page (inside the click, before
   // anything async, so iOS Safari doesn't block it), copy the text, tell the user to paste it. If copying is blocked, a small window shows
   // the text to copy by hand. Nothing here calls Pikkit's API or touches their site.
   const PIKKIT_URL = "https://quickpick.pikkit.com/";
-  function pikkitFallback(text) {
+  function pikkitModal({ text, copied }) {
+    document.querySelectorAll(".lh-pk-modal").forEach((el) => el.remove());
     const modal = document.createElement("div");
-    modal.className = "lh-pk-modal";
+    modal.className = `lh-pk-modal${copied ? " is-pop" : ""}`;
     modal.setAttribute("role", "dialog");
-    modal.setAttribute("aria-modal", "true");
-    modal.setAttribute("aria-label", "Copy your slip");
+    modal.setAttribute("aria-label", copied ? "Slip copied" : "Copy your slip");
     modal.innerHTML = `
-      <div class="lh-pk-back" data-pk="close"></div>
+      ${copied ? "" : `<div class="lh-pk-back" data-pk="close"></div>`}
       <div class="lh-pk-box">
-        <h3>Copy your slip</h3>
-        <p>Copying was blocked. Select the text, copy it, then paste it into Pikkit Quick Pick.</p>
-        <textarea class="lh-pk-text" readonly rows="4"></textarea>
+        <button type="button" class="lh-pk-x" data-pk="close" aria-label="Close"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        <h3>${copied ? "Slip copied" : "Copy your slip"}</h3>
+        <p>${copied ? "Paste it into Pikkit and tap Generate Betslip. Or upload a picture of your hunt instead." : "Copying was blocked. Select the text, copy it, then paste it into Pikkit Quick Pick, or save a picture instead."}</p>
+        ${copied ? "" : `<textarea class="lh-pk-text" readonly rows="4"></textarea>`}
         <div class="lh-pk-btns">
-          <button type="button" class="lh-hunts-sharebtn" data-pk="copy">Copy</button>
-          <a class="lh-hunts-sharebtn" href="${PIKKIT_URL}" target="_blank" rel="noopener noreferrer">Open Pikkit</a>
-          <button type="button" class="lh-hunts-sharebtn" data-pk="close">Close</button>
+          ${copied ? "" : `<button type="button" class="lh-hunts-sharebtn" data-pk="copy">Copy</button>`}
+          <button type="button" class="lh-hunts-sharebtn" data-pk="image"><i class="bi bi-image" aria-hidden="true"></i> Save image</button>
+          ${copied ? "" : `<a class="lh-hunts-sharebtn" href="${PIKKIT_URL}" target="_blank" rel="noopener noreferrer">Open Pikkit</a>`}
         </div>
       </div>`;
-    modal.querySelector("textarea").value = text;
+    const area = modal.querySelector("textarea");
+    if (area) area.value = text;
     modal.addEventListener("click", async (event) => {
       const el = event.target.closest("[data-pk]");
       if (!el) return;
       if (el.dataset.pk === "close") { modal.remove(); return; }
-      const area = modal.querySelector("textarea");
-      area.focus(); area.select();
+      if (el.dataset.pk === "image") { window.lhSaveHuntImage(lhHunts.getAll(), el); return; }
+      if (area) { area.focus(); area.select(); }
       try { await copyText(text); window.lhToast("Copied"); } catch (error) { /* the text stays selected for a manual copy */ }
     });
     document.body.appendChild(modal);
-    const area = modal.querySelector("textarea");
-    area.focus(); area.select();
+    if (area) { area.focus(); area.select(); }
   }
   window.lhOpenPikkit = function (legs) {
     const text = lhHunts.pikkitText(legs || lhHunts.getAll());
     if (!text) return;
     window.open(PIKKIT_URL, "_blank", "noopener,noreferrer"); // first, inside the click
-    copyText(text).then(() => window.lhToast("Slip copied. Paste it into Pikkit and tap Generate Betslip.", 4000))
-      .catch(() => pikkitFallback(text));
+    copyText(text).then(() => pikkitModal({ text, copied: true })).catch(() => pikkitModal({ text, copied: false }));
   };
   drawer.querySelector("#lhHuntsPikkit").addEventListener("click", () => window.lhOpenPikkit(lhHunts.getAll()));
 

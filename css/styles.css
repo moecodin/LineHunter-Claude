@@ -7570,3 +7570,10 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-pk-text { width: 100%; background: rgba(var(--lh-ink-rgb), 0.05); border: 1px solid var(--lh-border); color: var(--lh-strong); padding: 0.5rem; font: inherit; font-size: 0.9rem; border-radius: 8px; resize: none; }
 .lh-pk-btns { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
 .lh-pk-btns > * { flex: 1 1 0; text-align: center; text-decoration: none; }
+
+/* The Pikkit pop up after the copy: a small card over the page (not a blocker); the fallback keeps its dimmed backdrop */
+.lh-pk-modal.is-pop { inset: auto 0.5rem calc(4.4rem + env(safe-area-inset-bottom)) 0.5rem; display: block; padding: 0; z-index: 2100; pointer-events: none; }
+.lh-pk-modal.is-pop .lh-pk-box { pointer-events: auto; width: auto; margin: 0 auto; max-width: 28rem; animation: lh-sd-rise 300ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.lh-pk-x { position: absolute; top: 0.6rem; right: 0.6rem; background: none; border: 0; color: var(--lh-muted); padding: 0.25rem; cursor: pointer; }
+.lh-pk-box h3 { padding-right: 1.5rem; }
+@media (prefers-reduced-motion: reduce) { .lh-pk-modal.is-pop .lh-pk-box { animation: none; } }
