@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hunts page mockup</title>
+  <title>Hunts builder mockup</title>
   <meta name="robots" content="noindex">
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
   <!--
-    MOCKUP ONLY: the standalone Hunts page (hunts.html), a builder with the picker on the left and a sticky ticket on the right.
+    MOCKUP ONLY: the standalone Hunts builder page (hunts.html), a builder with the picker on the left and a sticky ticket on the right.
     Real numbers: McDaniels' AST and REB (9/10 each, UTA @ MIN, Nov 8 2026), the AST best odds (-165 FD). PLACEHOLDERS: the REB odds,
     "Hit together 8/10" and the second leg's graph. Nothing is live. Layout reference only: propedia.app/parlay (not copied).
   -->
@@ -23,6 +23,7 @@
     .top b { font: 600 1.1rem "Clash Display", sans-serif; color: var(--strong); }
     .top button { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 5px 10px; font: inherit; cursor: pointer; }
     .page { max-width: 1120px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+    .page > * { min-width: 0; }
     h1 { font: 600 2rem/1.1 "Clash Display", sans-serif; color: var(--strong); margin: 0 0 4px; }
     .sub { color: var(--mist); margin: 0 0 16px; }
     .label { font-size: .75rem; font-weight: 500; color: var(--mist); margin: 14px 0 6px; }
@@ -83,7 +84,7 @@
     .note { font-size: .72rem; color: var(--mist); margin-top: 10px; }
     .bar { display: none; }
     @media (max-width: 899px) {
-      .page { grid-template-columns: 1fr; padding: 14px; }
+      .page { grid-template-columns: minmax(0, 1fr); padding: 14px; }
       .ticket { position: static; }
       .row { grid-template-columns: 2.4rem minmax(0, 1fr) auto; row-gap: 6px; }
       .row .pick { grid-column: 2; } .row .rate { display: none; } .row .odds { grid-column: 3; grid-row: 2; justify-self: end; } .row .add { grid-column: 3; grid-row: 1; justify-self: end; }
@@ -97,7 +98,7 @@
   <div class="top"><b>LineHunter</b><button id="t">Switch to light</button></div>
   <div class="page">
     <main>
-      <h1>Hunts</h1>
+      <h1>Hunts builder</h1>
       <p class="sub">Build a hunt from any prop on the slate. Odds are from the book you pick.</p>
       <input class="search" placeholder="Search players or teams">
       <div class="label">Games</div>
