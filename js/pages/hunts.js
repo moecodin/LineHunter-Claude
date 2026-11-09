@@ -180,14 +180,45 @@
     box.addEventListener("pointercancel", end);
   })();
 
+  // The peek drawer: docks at the bottom after an add. Legs count, combined odds, to win, the latest leg (with a remove) and the button
+  // that opens the full ticket. Nothing blocks the page. It bounces in when a leg is added.
+  const peek = document.getElementById("huntsPeek");
+  let peekCount = 0;
+  function fillPeek(legs, t) {
+    if (!peek) return;
+    document.body.classList.toggle("lh-hp-on", legs.length > 0);
+    if (!legs.length) { peek.hidden = true; peekCount = 0; return; }
+    const last = legs[legs.length - 1];
+    const win = t && stake > 0 ? money(Math.round(stake * (t.decimal - 1) * 100) / 100) : "";
+    const added = legs.length > peekCount;
+    const wasHidden = peek.hidden;
+    peek.innerHTML = `
+      <div class="lh-hp-top"><span class="lh-hp-title">My hunt <small>${legs.length} leg${legs.length === 1 ? "" : "s"}</small></span>
+        <span class="lh-hp-odds">${t ? fmt(t.american) : "–"}${win ? ` <small>to win ${win}</small>` : ""}</span></div>
+      <div class="lh-hp-last"><span class="lh-hp-leg"><b>${esc(lastName(last.player))}</b> ${sideWord(last)} ${last.line} ${esc(huntStatName(last.stat))}</span>
+        <span class="lh-hp-legodds">${fmt(last.odds)}</span>
+        <button type="button" class="lh-hp-x" data-hp="remove" data-id="${esc(last.id)}" aria-label="Remove ${esc(last.player)}"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+      <button type="button" class="lh-hp-open" data-hp="open">Open full hunt</button>`;
+    peek.hidden = false;
+    if (added && !REDUCED_MOTION.matches) {
+      peek.classList.remove("is-pop", "is-enter");
+      void peek.offsetWidth; // restart the animation
+      peek.classList.add(wasHidden ? "is-enter" : "is-pop");
+    }
+    peekCount = legs.length;
+  }
+  const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (peek) peek.addEventListener("click", (event) => {
+    const el = event.target.closest("[data-hp]");
+    if (!el) return;
+    if (el.dataset.hp === "open") openTicket();
+    else if (el.dataset.hp === "remove") lhHunts.remove(el.dataset.id);
+  });
+
   function render() {
     const legs = lhHunts.getAll();
-    const bar = document.getElementById("huntsBar");
     const t = totals(legs);
-    if (bar) {
-      bar.hidden = legs.length === 0;
-      bar.innerHTML = `<span>My hunt · ${legs.length} leg${legs.length === 1 ? "" : "s"}</span><span>${t ? `${fmt(t.american)} · to win ${money(Math.round(stake * (t.decimal - 1) * 100) / 100)}` : ""} ›</span>`;
-    }
+    fillPeek(legs, t);
     if (!legs.length) {
       box.innerHTML = `${sheetTop()}<h2 class="lh-hb-h">My hunt</h2><p class="lh-hb-empty">No legs yet. Tap + ADD on any prop to start a hunt.</p>`;
       return;
@@ -278,8 +309,6 @@
     if (win) win.textContent = t && stake > 0 ? money(Math.round(stake * (t.decimal - 1) * 100) / 100) : "–";
   });
 
-  const bar = document.getElementById("huntsBar");
-  if (bar) bar.addEventListener("click", openTicket);
 
   document.addEventListener("lh-hunts-change", render);
   render();

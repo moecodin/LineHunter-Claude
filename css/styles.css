@@ -7530,3 +7530,28 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   body.lh-hb-sheet-open .lh-hb-bar { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .lh-hb-ticket, .lh-hb-backdrop { transition: none !important; } }
+
+/* Hunts builder peek drawer (js/pages/hunts.js fillPeek): phones and tablets. Docks above the tab bar after an add; the page stays scrollable. */
+.lh-hp { display: none; }
+.lh-hunts-page .lh-hadded { display: none !important; }
+@media (max-width: 991.98px) {
+  .lh-hp { display: block; position: fixed; left: 0.5rem; right: 0.5rem; bottom: calc(4.3rem + env(safe-area-inset-bottom)); z-index: 40; background: var(--lh-fill); color: var(--lh-on-fill);
+    border-radius: 14px; padding: 0.7rem 0.85rem 0.8rem; }
+  .lh-hp[hidden] { display: none; }
+  .lh-hp-top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+  .lh-hp-title { font: 600 1rem var(--lh-font-heading); }
+  .lh-hp-title small, .lh-hp-odds small { font: 500 0.75rem var(--lh-font-body); opacity: 0.75; margin-left: 0.25rem; }
+  .lh-hp-odds { font: 600 1.25rem var(--lh-font-heading); }
+  .lh-hp-last { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem; font-size: 0.85rem; }
+  .lh-hp-leg { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lh-hp-legodds { font-weight: 700; }
+  .lh-hp-x { background: none; border: 0; color: inherit; opacity: 0.7; padding: 0.15rem 0.25rem; cursor: pointer; }
+  .lh-hp-open { width: 100%; margin-top: 0.55rem; background: var(--lh-on-fill); color: var(--lh-fill); border: 0; border-radius: 8px; padding: 0.55rem; font-weight: 700; font-size: 0.85rem; min-height: 2.5rem; cursor: pointer; }
+  .lh-hp.is-enter { animation: lh-hp-enter 320ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .lh-hp.is-pop { animation: lh-hp-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes lh-hp-enter { from { transform: translateY(120%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes lh-hp-pop { 0% { transform: translateY(8px); } 100% { transform: none; } }
+  body.lh-hp-on .lh-hb-page { padding-bottom: 11rem; }
+  body.lh-hb-sheet-open .lh-hp { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .lh-hp.is-enter, .lh-hp.is-pop { animation: none; } }
