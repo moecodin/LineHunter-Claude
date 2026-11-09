@@ -125,6 +125,7 @@
     const person = people[row.playerId] || {};
     const { best, leg } = legFor(c);
     const team = typeof teamBaseColor === "function" ? teamBaseColor(row.team) : "#14234c";
+    const onTeam = typeof readableTextOn === "function" ? readableTextOn(team) : "#fff"; // white or dark, whichever reads on the team color
     const time = row.tip ? new Date(row.tip).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "";
     const meta = [person.position, row.team, row.matchup, time].filter(Boolean).join(" · ");
     const sideWord = c.side === "under" ? "Under" : "Over";
@@ -137,14 +138,14 @@
     }).join("");
     const initials = (first[0] || "") + (last[0] || "");
     return `
-      <article class="lh-sd-card" style="--team:${team}" data-sd-key="${esc(c.key)}">
+      <article class="lh-sd-card" style="--team:${team};--on-team:${onTeam}" data-sd-key="${esc(c.key)}">
         <span class="lh-sd-wm" aria-hidden="true">${esc(row.team)}</span>
         <div class="lh-sd-who">
           <span class="lh-sd-av" data-player-id="${row.playerId}" data-name-key="${esc(typeof nbaNameKey === "function" ? nbaNameKey(first, last) : "")}">${esc(initials)}</span>
           <span class="lh-sd-tag">${stats.hits} of ${stats.totalGames}</span>
         </div>
-        <div class="lh-sd-name"><small>${esc(first)}</small><b>${esc(last)}</b>
-          <div class="lh-sd-meta">${person.jersey_number ? `<span class="lh-sd-jn">#${esc(person.jersey_number)}</span> ` : ""}${esc(meta)}</div></div>
+        <div class="lh-sd-name"><small>${esc(first)}</small><b>${esc(last)}</b></div>
+        <div class="lh-sd-meta">${person.jersey_number ? `<span class="lh-sd-jn">#${esc(person.jersey_number)}</span> ` : ""}${esc(meta)}</div>
         <div class="lh-sd-pick is-${c.side}"><b>${sideWord} ${lt(row.line)} ${WORD[row.code]}</b><span>${esc(sub)}</span></div>
         <div class="lh-sd-stats"><div class="lh-sd-rate is-${stats.hitRate >= 75 ? "hi" : stats.hitRate >= 50 ? "md" : "lo"}">${Math.round(stats.hitRate)}%<small>last ${stats.totalGames}</small></div>
           ${best ? `<span class="lh-sd-odds">${fmtOdds(Number(best.odds))} <small>${esc(lhHunts.bookLabel(best.vendor))}</small></span>` : `<span class="lh-sd-odds is-none">no odds</span>`}</div>
