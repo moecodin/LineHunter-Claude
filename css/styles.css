@@ -7361,3 +7361,82 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
 .lh-rc-av > img { object-fit: contain; object-position: left bottom; transform: none; }
 .lh-sh-av { position: relative; overflow: hidden; }
 .lh-sh-av > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 12%; transform: scale(1.18); transform-origin: center top; }
+
+/* Story deck (js/components/storyDeck.js): phones only. Cards = the approved A4 mockup (design/story-deck-mockup). Flat, no shadows. */
+.lh-sd { margin: 0 0 1.75rem; }
+@media (min-width: 768px) { .lh-sd { display: none !important; } }
+.lh-sd[hidden] { display: none; }
+.lh-sd-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.lh-sd-head h2 { font: 600 1.2rem/1.2 var(--lh-font-heading); color: var(--lh-strong); margin: 0; }
+.lh-sd-head h2 small { font: 500 0.8rem var(--lh-font-body); color: var(--lh-muted); margin-left: 0.35rem; }
+.lh-sd-headr { display: flex; align-items: center; gap: 0.6rem; }
+.lh-sd-link { background: none; border: 0; padding: 0; font-size: 0.8rem; color: var(--lh-muted); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+.lh-sd-filterbtn { background: none; border: 1px solid var(--lh-border); color: var(--lh-strong); padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 8px; cursor: pointer; max-width: 11rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lh-sd-prog { display: flex; gap: 2px; margin-bottom: 0.65rem; }
+.lh-sd-prog i { flex: 1; height: 3px; background: var(--lh-border); }
+.lh-sd-prog i.on { background: var(--lh-strong); }
+.lh-sd-deck { position: relative; height: 478px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.lh-sd-deck.is-enter { animation: lh-sd-in 350ms ease-out; }
+@keyframes lh-sd-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.lh-sd-back { position: absolute; inset: 0; background: var(--lh-surface); border: 1px solid var(--lh-border); border-radius: 14px; transform: translateY(10px) scale(0.95); opacity: 0.55; }
+.lh-sd-card { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; padding: 1rem; border: 1px solid var(--lh-border); border-radius: 14px;
+  background: radial-gradient(circle at 78% 26%, color-mix(in srgb, var(--team) 42%, transparent), transparent 62%), var(--lh-surface); cursor: grab; will-change: transform; }
+.lh-sd-card:active { cursor: grabbing; }
+.lh-sd-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 150px; background: var(--team); clip-path: polygon(0 0, 100% 0, 100% 55%, 0 100%); }
+.lh-sd-wm { position: absolute; left: 14px; top: 34px; font: 600 3.9rem/1 var(--lh-font-heading); color: rgba(255, 255, 255, 0.17); letter-spacing: -0.02em; pointer-events: none; }
+.lh-sd-who { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
+.lh-sd-av { position: absolute; top: -26px; right: -28px; width: 190px; height: 150px; z-index: 2; display: block; font-size: 0; color: transparent; }
+.lh-sd-av > img { width: 100%; height: 100%; object-fit: contain; object-position: right bottom; -webkit-mask-image: linear-gradient(#000 62%, transparent 98%); mask-image: linear-gradient(#000 62%, transparent 98%); pointer-events: none; }
+.lh-sd-tag { position: absolute; top: 0; left: 0; z-index: 3; background: var(--lh-bg); color: var(--lh-strong); font-size: 0.78rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px; }
+.lh-sd-name { position: relative; z-index: 3; margin-top: 96px; }
+.lh-sd-name small { display: block; font-size: 1.1rem; font-weight: 500; color: #fff; line-height: 1.1; }
+.lh-sd-name b { font: 600 2rem/1.05 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-sd-meta { font-size: 0.82rem; color: var(--lh-muted); margin-top: 0.15rem; }
+.lh-sd-jn { font: 600 0.9rem var(--lh-font-heading); color: var(--lh-strong); }
+.lh-sd-pick { position: relative; margin-top: 0.65rem; border-left: 3px solid var(--lh-over); padding-left: 0.65rem; }
+.lh-sd-pick.is-under { border-left-color: var(--lh-under); }
+.lh-sd-pick b { font: 600 1.3rem var(--lh-font-heading); color: var(--lh-strong); }
+.lh-sd-pick span { display: block; font-size: 0.8rem; color: var(--lh-muted); }
+.lh-sd-stats { position: relative; display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem; }
+.lh-sd-rate { font: 600 2.5rem/1 var(--lh-font-heading); }
+.lh-sd-rate.is-hi { color: var(--lh-hr-high, var(--lh-over-text)); }
+.lh-sd-rate.is-md { color: var(--lh-hr-mid, var(--lh-strong)); }
+.lh-sd-rate.is-lo { color: var(--lh-hr-low, var(--lh-under-text)); }
+.lh-sd-rate small { display: block; font: 500 0.72rem var(--lh-font-body); color: var(--lh-muted); margin-top: 0.15rem; }
+.lh-sd-odds { border: 1px solid var(--lh-border); padding: 0.25rem 0.65rem; font-weight: 700; color: var(--lh-over-text); }
+.lh-sd-odds small { color: var(--lh-muted); font-weight: 500; }
+.lh-sd-odds.is-none { color: var(--lh-muted); font-weight: 500; font-size: 0.8rem; }
+.lh-sd-bars { flex: none; position: relative; display: flex; align-items: flex-end; gap: 4px; height: 46px; margin-top: 0.6rem; }
+.lh-sd-bars i { flex: 1; background: var(--lh-over); }
+.lh-sd-bars i.is-miss { background: var(--lh-under); }
+.lh-sd-line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--lh-muted); }
+.lh-sd-actions { position: relative; z-index: 4; margin-top: auto; display: grid; grid-template-columns: auto 1fr auto; gap: 0.5rem; align-items: center; }
+.lh-sd-btn { display: inline-flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--lh-border); color: var(--lh-strong); padding: 0.6rem 0.75rem; font-weight: 700; font-size: 0.85rem; border-radius: 8px; cursor: pointer; text-decoration: none; min-height: 2.75rem; }
+.lh-sd-btn.is-primary, .lh-sd-add { background: var(--lh-fill); color: var(--lh-on-fill); border: 1px solid var(--lh-fill); }
+.lh-sd-add { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; min-height: 2.75rem; padding: 0.6rem 0.75rem; font-weight: 700; font-size: 0.85rem; border-radius: 8px; width: 100%; }
+.lh-sd-add .lh-add-icon { order: 0; }
+.lh-sd-add.is-in { background: var(--lh-selected, var(--lh-fill)); }
+.lh-sd-hint { text-align: center; font-size: 0.72rem; color: var(--lh-muted); margin-top: 0.6rem; }
+.lh-sd-stamp { position: absolute; top: 1.4rem; z-index: 6; font: 600 1.1rem var(--lh-font-heading); letter-spacing: 0.04em; border: 2px solid; padding: 0.15rem 0.6rem; border-radius: 6px; background: var(--lh-surface); opacity: 0; pointer-events: none; }
+.lh-sd-stamp.is-r { right: 1.1rem; color: var(--lh-over-text); border-color: var(--lh-over); transform: rotate(8deg); }
+.lh-sd-stamp.is-l { left: 1.1rem; color: var(--lh-muted); border-color: var(--lh-muted); transform: rotate(-8deg); }
+.lh-sd-end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; border: 1px solid var(--lh-border); border-radius: 14px; padding: 1.5rem; }
+.lh-sd-end b { font: 600 1.3rem var(--lh-font-heading); color: var(--lh-strong); }
+.lh-sd-end p { color: var(--lh-muted); font-size: 0.85rem; margin: 0 0 0.5rem; }
+/* sheets (filter, full report) */
+.lh-sd-sheetwrap { position: fixed; inset: 0; z-index: 1080; }
+.lh-sd-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); opacity: 0; transition: opacity 200ms; }
+.lh-sd-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86vh; overflow-y: auto; background: var(--lh-surface); border-top: 1px solid var(--lh-border); border-radius: 14px 14px 0 0; padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 220ms ease-out; }
+.lh-sd-sheetwrap.is-open .lh-sd-backdrop { opacity: 1; }
+.lh-sd-sheetwrap.is-open .lh-sd-sheet { transform: none; }
+@media (prefers-reduced-motion: reduce) { .lh-sd-backdrop, .lh-sd-sheet, .lh-sd-deck.is-enter { transition: none; animation: none; } }
+.lh-sd-grab { width: 2.5rem; height: 4px; background: var(--lh-border); border-radius: 2px; margin: 0.35rem auto 0.75rem; }
+.lh-sd-sheeth { font: 600 1.2rem var(--lh-font-heading); color: var(--lh-strong); margin: 0 0 0.25rem; display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.lh-sd-sheeth span { font: 500 0.8rem var(--lh-font-body); color: var(--lh-muted); }
+.lh-sd-lab { font-size: 0.75rem; color: var(--lh-muted); margin: 0.9rem 0 0.4rem; }
+.lh-sd-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.lh-sd-chip { background: none; border: 1px solid var(--lh-border); color: var(--lh-text); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.85rem; min-height: 2.5rem; cursor: pointer; }
+.lh-sd-chip.is-on { background: var(--lh-selected, var(--lh-fill)); border-color: var(--lh-selected-edge, var(--lh-strong)); color: var(--lh-on-selected, var(--lh-on-fill)); }
+.lh-sd-show { width: 100%; margin-top: 1.1rem; }
+.lh-sd-report { margin-top: 0.5rem; }
+.lh-sd-reportbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem; }
