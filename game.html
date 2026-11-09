@@ -42,7 +42,10 @@
       <div class="text-muted py-5 text-center">Loading game...</div>
     </section>
     <section id="matchup-info" class="lh-gp-facts" aria-label="Matchup facts">
-      <div class="lh-gp-fact" id="gameLineFact"><span class="lh-gp-k">Spread · Total</span><b class="lines-only" id="gameLineText">…</b><b class="research-only">–</b></div>
+      <div class="lh-gp-fact lines-only" id="gameLineFact">
+        <div class="lh-gp-lines"><div><span class="lh-gp-k">Spread</span><b id="gameSpread">…</b></div><div><span class="lh-gp-k">Total</span><b id="gameTotal">…</b></div></div>
+        <small id="gameBook" class="lh-gp-bookline"></small>
+      </div>
       <h2 class="visually-hidden" id="matchupArena">Arena</h2>
       <div id="matchup-info-body" class="lh-gp-factlist"><span class="text-muted">Loading matchup info...</span></div>
     </section>

@@ -180,15 +180,29 @@ function renderMatchupInfo(game, data) {
   const title = document.getElementById("matchupArena");
   if (title) title.textContent = homeInfo.arena || game.home_team.city;
   const rest = (results) => restHtml(results === undefined ? null : results, game.date.slice(0, 10));
-  const row = (label, value) => `<div><dt>${label}</dt><dd>${value}</dd></div>`;
+  // Team headers, one comparison per row (coach, record, rest), then the last meeting as one line. The spread / total strip is
+  // static in game.html (filled by js/pages/game.js); CSS orders it between the two. Surnames only for the coaches.
+  const surname = (name) => (name ? name.trim().split(/\s+/).slice(1).join(" ") || name : "–");
+  const pair = (label, awayHtml, homeHtml) => `<div class="lh-mi2-row"><span class="lh-mi2-lab">${label}</span><span class="lh-mi2-v">${awayHtml}</span><span class="lh-mi2-v">${homeHtml}</span></div>`;
+  const small = (text) => `<small>${text}</small>`;
+  const recLabel = `Record${data.recordSeasonLabel ? ` · ${String(data.recordSeasonLabel).toLowerCase()}` : ""}`;
+  const meetingLabel = `Last meeting${data.meeting && data.meeting.olderSeason ? " · last season" : ""}`;
+  let meetingLine = meeting;
+  if (data.meeting) {
+    const m = data.meeting;
+    const homeWon = m.homeScore > m.awayScore;
+    const [winner, loser] = homeWon ? [m.homeAbbr, m.awayAbbr] : [m.awayAbbr, m.homeAbbr];
+    const [high, low] = homeWon ? [m.homeScore, m.awayScore] : [m.awayScore, m.homeScore];
+    meetingLine = `${shortGameDate(m.date, m.olderSeason)} · ${winner} ${high}–${low} ${loser}`;
+  }
   document.getElementById("matchup-info-body").innerHTML = `
-    <div class="lh-mi-city">${homeInfo.city || game.home_team.city}</div>
-    <dl class="lh-mi-list">
-      ${row("Coaches", `${awayInfo.coach || "–"} · ${homeInfo.coach || "–"}`)}
-      ${row(`${away} on the road · ${home} at home${data.recordSeasonLabel ? ` <span class="lh-mi-note">${data.recordSeasonLabel}</span>` : ""}`, `${awayRecord} · ${homeRecord}`)}
-      ${row("Rest", `${away} ${rest(data.awayResults)} · ${home} ${rest(data.homeResults)}`)}
-      ${row("Last meeting", meeting)}
-    </dl>`;
+    <div class="lh-mi2">
+      <div class="lh-mi2-heads"><b>${away}</b><b>${home}</b></div>
+      ${pair("Coach", surname(awayInfo.coach), surname(homeInfo.coach))}
+      ${pair(recLabel, `${awayRecord}${small("road")}`, `${homeRecord}${small("home")}`)}
+      ${pair("Rest", rest(data.awayResults), rest(data.homeResults))}
+    </div>
+    <div class="lh-mi2-meet"><span>${meetingLabel}</span><b>${meetingLine}</b></div>`;
 }
 
 // ---------- Loading ----------

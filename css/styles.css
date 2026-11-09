@@ -7243,3 +7243,31 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   .lh-wdots { display: flex; }
   .lh-wheel-controls { display: none; }
 }
+
+/* Game page fact strip, redone (js/components/matchupInfo.js): team headers over one comparison per row, the spread / total strip, the last meeting */
+.lh-gp-facts { display: flex; flex-direction: column; gap: 0.9rem; padding: 1rem 1.25rem; }
+.lh-gp-facts #matchup-info-body { display: contents; }
+.lh-mi2 { order: 1; }
+.lh-gp-facts #gameLineFact { order: 2; }
+.lh-mi2-meet { order: 3; }
+.lh-mi2-heads, .lh-mi2-row { display: grid; grid-template-columns: 1fr 1fr; column-gap: 0.75rem; }
+.lh-mi2-heads { padding-bottom: 0.4rem; }
+.lh-mi2-heads b { font: 600 1.7rem/1 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-mi2-heads b:last-child, .lh-mi2-row .lh-mi2-v:last-child { text-align: right; }
+.lh-mi2-row { padding: 0.55rem 0; border-top: 1px solid var(--lh-border); }
+.lh-mi2-lab { grid-column: 1 / -1; font-size: 0.72rem; color: var(--lh-muted); margin-bottom: 0.1rem; }
+.lh-mi2-v { font: 600 1.05rem/1.25 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-mi2-v small { font: 400 0.72rem var(--lh-font-body); color: var(--lh-muted); margin-left: 0.3rem; }
+.lh-gp-facts #gameLineFact { display: block; border-top: 1px solid var(--lh-border); padding-top: 0.55rem; }
+.lh-gp-lines { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+.lh-gp-lines > div { padding: 0 0.6rem; border-left: 1px solid var(--lh-border); min-width: 0; }
+.lh-gp-lines > div:first-child { padding-left: 0; border-left: 0; }
+.lh-gp-bookline { display: block; margin-top: 0.3rem; font-size: 0.72rem; color: var(--lh-muted); }
+.lh-mi2-meet { border-top: 1px solid var(--lh-border); padding-top: 0.55rem; }
+.lh-mi2-meet span { display: block; font-size: 0.72rem; color: var(--lh-muted); margin-bottom: 0.1rem; }
+.lh-mi2-meet b { font: 600 1.05rem/1.3 var(--lh-font-heading); color: var(--lh-strong); }
+@media (min-width: 768px) {
+  .lh-gp-facts { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 2rem; align-items: start; }
+  .lh-mi2, .lh-gp-facts #gameLineFact, .lh-mi2-meet { order: 0; }
+  .lh-gp-facts #gameLineFact, .lh-mi2-meet { border-top: 0; padding-top: 0; }
+}

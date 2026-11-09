@@ -202,7 +202,10 @@ function renderGameHeader(game) {
 // Moneylines in the header and the spread / total in the fact strip: one odds request for this game; the Sportsbook filter's book,
 // else DraftKings, else the first book posting a moneyline.
 async function loadGameLines(game) {
-  const text = document.getElementById("gameLineText");
+  const spreadEl = document.getElementById("gameSpread");
+  const totalEl = document.getElementById("gameTotal");
+  const bookEl = document.getElementById("gameBook");
+  const lineMsg = (message) => { if (spreadEl) spreadEl.textContent = message; if (totalEl) totalEl.textContent = ""; if (bookEl) bookEl.textContent = ""; };
   try {
     const json = await bdlGet(`/api/bdl/nba/v2/odds?game_ids[]=${game.id}`);
     const rows = (json.data || []).filter((row) => row.game_id === game.id);
@@ -213,17 +216,17 @@ async function loadGameLines(game) {
     const fmt = (n) => (n == null || n === "" ? "" : Number(n) > 0 ? `+${Number(n)}` : `−${Math.abs(Number(n))}`);
     const mlAway = document.getElementById("mlAway");
     const mlHome = document.getElementById("mlHome");
-    if (!row) { if (text) text.textContent = "Lines not posted yet"; return; }
+    if (!row) { lineMsg("Not posted yet"); return; }
     if (mlAway) mlAway.textContent = fmt(row.moneyline_away_odds);
     if (mlHome) mlHome.textContent = fmt(row.moneyline_home_odds);
-    if (text) {
-      const spread = Number(row.spread_home_value);
-      const fav = spread <= 0 ? game.home_team.abbreviation : game.visitor_team.abbreviation;
-      const book = typeof lhHunts !== "undefined" ? lhHunts.bookLabel(row.vendor) : row.vendor;
-      text.innerHTML = `${Number.isFinite(spread) ? `${fav} ${spread === 0 ? "PK" : `−${Math.abs(spread)}`}` : "–"} · ${row.total_value != null ? Number(row.total_value) : "–"} <span class="lh-gp-book">${book}</span>`;
-    }
+    const spread = Number(row.spread_home_value);
+    const fav = spread <= 0 ? game.home_team.abbreviation : game.visitor_team.abbreviation;
+    const book = typeof lhHunts !== "undefined" ? lhHunts.bookLabel(row.vendor) : row.vendor;
+    if (spreadEl) spreadEl.textContent = Number.isFinite(spread) ? `${fav} ${spread === 0 ? "PK" : `−${Math.abs(spread)}`}` : "–";
+    if (totalEl) totalEl.textContent = row.total_value != null ? Number(row.total_value) : "–";
+    if (bookEl) bookEl.textContent = `Lines from ${book}`;
   } catch (error) {
-    if (text) text.textContent = "Lines unavailable";
+    lineMsg("Unavailable");
   }
 }
 
