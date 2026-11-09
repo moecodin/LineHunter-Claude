@@ -95,22 +95,25 @@ function matchupRows(gameId, n) {
   return (S.slate.rows || []).filter((row) => String(row.gameId) === String(gameId)).map((row) => propPick(row, n)).filter(Boolean)
     .sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 10).map(propRow);
 }
-// Alt lines: for each player + prop, the highest whole line he reached in EVERY game of the window (= his lowest game), kept only
-// when it sits above the book's line ("28+ PTS · 10/10" where the book says 24.5). Best per player = furthest above the line (ratio).
-function altPicks(n, code) {
+// Alt lines: the alt-line steps books post for each stat; per player + prop, the highest step he has reached in each of his last
+// ALT_MIN_STREAK+ games in a row (above or below his book line), e.g. "2+ 3PM · 6 straight". Longest streaks first, one row per player.
+const ALT_LADDERS = { pts: [10, 15, 20, 25, 30, 35, 40], reb: [4, 6, 8, 10, 12, 14], ast: [2, 4, 6, 8, 10, 12], "3pm": [2, 3, 4, 5], pra: [15, 20, 25, 30, 35, 40, 45, 50] };
+const ALT_MIN_STREAK = 4;
+function altPicks(code) {
   const best = {};
   (S.slate.rows || []).forEach((row) => {
-    if (code && row.code !== code) return;
-    const w = row.w && row.w[n]; if (!w || w.totalGames < Math.min(MIN_GAMES[n], n)) return;
-    const vals = (w.games || []).slice(0, w.totalGames).map((g) => Number(g.value)).filter((v) => !isNaN(v));
-    if (vals.length < w.totalGames) return;
-    const low = Math.floor(Math.min(...vals));
-    if (low < 1 || low <= row.line) return;
-    const ratio = low / Math.max(0.5, row.line), key = row.playerId;
-    if (!best[key] || ratio > best[key].ratio) best[key] = { row, low, ratio, total: vals.length };
+    const ladder = ALT_LADDERS[row.code]; if (!ladder || (code && row.code !== code)) return;
+    const games = (row.w && row.w[20] && row.w[20].games) || row.games || [];
+    const vals = games.map((g) => Number(g.value)).filter((v) => !isNaN(v)); // newest first
+    let pick = null;
+    ladder.forEach((step) => { let run = 0; while (run < vals.length && vals[run] >= step) run++; if (run >= ALT_MIN_STREAK) pick = { step, run }; });
+    if (!pick) return;
+    // Rank by how close the step is to his book line (near-line alts first, capped so far-above ones don't jump the queue).
+    const cand = { row, ...pick, full: pick.run >= vals.length, score: Math.min(1.3, pick.step / Math.max(0.5, row.line)) };
+    if (!best[row.playerId] || cand.score > best[row.playerId].score) best[row.playerId] = cand;
   });
-  return Object.values(best).sort((a, b) => b.ratio - a.ratio || b.low - a.low).slice(0, 10)
-    .map((p) => ({ full: p.row.name, n: shortName(p.row.name), t: p.row.team, stat: `${p.low}+ ${STAT_CODE(p.row.code)}`, rec: `${p.total}/${p.total}` }));
+  return Object.values(best).sort((a, b) => b.score - a.score || b.run - a.run).slice(0, 10)
+    .map((p) => ({ full: p.row.name, n: shortName(p.row.name), t: p.row.team, stat: `${p.step}+ ${STAT_CODE(p.row.code)}`, rec: `${p.run}${p.full ? "+" : ""} straight` }));
 }
 const ALT_STATS = [["", "All stats"], ["pts", "PTS"], ["reb", "REB"], ["ast", "AST"], ["3pm", "3PM"], ["pra", "PRA"]];
 function buildSources(slate) {
@@ -134,9 +137,9 @@ function buildSources(slate) {
   });
   if ((slate.rows || []).length) {
     ALT_STATS.forEach(([code, label]) => {
-      if (!altPicks(10, code).length && !altPicks(5, code).length) return; // nothing to show for this stat tonight
-      alts.push({ id: "alt-" + (code || "all"), kind: "list", label: code ? `Alt ${label}` : "Alt lines", title: code ? `${label} alt lines` : "Alt lines", heroFn: () => "100%",
-        sub: "above the book line, every game", footer: FOOT_STREAK, windowed: true, build: (n) => altPicks(n, code) });
+      if (!altPicks(code).length) return; // nothing to show for this stat tonight
+      alts.push({ id: "alt-" + (code || "all"), kind: "list", label: code ? `Alt ${label}` : "Alt lines", title: code ? `${label} alt line streaks` : "Alt line streaks", hero: "100%",
+        sub: `${ALT_MIN_STREAK}+ straight`, footer: FOOT_STREAK, build: () => altPicks(code) });
     });
     props.push({ id: "board", kind: "list", label: "The Board", title: "Top hit rates", heroFn: (n) => `L${n}`, footer: FOOT_RESEARCH, windowed: true, build: (n) => boardRows(n) });
     const seen = new Map();
