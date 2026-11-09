@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game card info mockup</title>
+  <meta name="robots" content="noindex">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <!--
+    MOCKUP ONLY (UTA @ MIN, real numbers from the Today card, Nov 8 2026). The card itself stays as it is; only the text under it changes:
+    A = today (loose strip). B = records, then labeled Spread / Total columns, one "View props" link. Moneyline gets an "ML" label on the card.
+  -->
+  <style>
+    :root, [data-theme="dark"] { --ink:#060a16; --panel:#0b1229; --rule:#1f2e5a; --mist:#93a1cb; --strong:#d8dff5; --text:#c3cce9; --link:#d8dff5; color-scheme: dark; }
+    [data-theme="light"] { --ink:#eef1fa; --panel:#fff; --rule:#cfd6ec; --mist:#4b5784; --strong:#0b1229; --text:#26325e; --link:#0b1229; color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--ink); color: var(--text); font: 400 14px/1.45 Satoshi, system-ui, sans-serif; }
+    .wrap { max-width: 360px; margin: 0 auto; }
+    h2 { font: 600 .8rem Satoshi; color: var(--mist); margin: 22px 0 8px; }
+    button.t { background: var(--panel); color: var(--strong); border: 1px solid var(--rule); padding: 6px 12px; font: inherit; cursor: pointer; }
+
+    /* the card (stand-in for the real one) */
+    .card { height: 130px; display: grid; grid-template-columns: 1fr 1fr; position: relative; color: #fff; overflow: hidden; background: linear-gradient(100deg, #4b2e83 49.5%, #0c2340 50.5%); }
+    .card .tip { position: absolute; top: 8px; left: 0; right: 0; text-align: center; font-size: .72rem; font-weight: 700; letter-spacing: .04em; opacity: .9; }
+    .side { padding: 34px 16px 0; }
+    .side.h { text-align: right; }
+    .abbr { font: 600 2.1rem/1 "Clash Display", sans-serif; }
+    .ml { font-size: .82rem; opacity: .85; margin-top: 6px; }
+    .ml small { font-size: .62rem; letter-spacing: .06em; opacity: .75; margin-right: 4px; }
+    .at { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 50%; background: #0b1229; display: grid; place-items: center; font-size: .7rem; }
+
+    /* A: today */
+    .a { margin-top: 10px; }
+    .a .rec { font-size: .78rem; color: var(--mist); }
+    .a .line { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; }
+    .a .line b { font-weight: 500; font-size: 1rem; color: var(--strong); }
+    .a .line a { font-weight: 700; color: var(--strong); text-decoration: underline; text-underline-offset: .2em; }
+
+    /* B: proposed */
+    .b { margin-top: 10px; }
+    .b .rec { display: flex; justify-content: space-between; font-size: .8rem; color: var(--mist); padding-bottom: 8px; }
+    .b .rec b { color: var(--strong); font-weight: 600; }
+    .cols { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 8px 0; }
+    .cols div { padding: 0 .6rem; border-left: 1px solid var(--rule); min-width: 0; }
+    .cols div:first-child { padding-left: 0; border-left: 0; }
+    .cols span { display: block; font-size: .7rem; color: var(--mist); }
+    .cols b { font: 600 1.05rem/1.25 "Clash Display", sans-serif; color: var(--strong); }
+    .foot { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; }
+    .foot a { font-weight: 700; color: var(--link); text-decoration: underline; text-underline-offset: .2em; }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--rule); }
+    .dots i.on { background: var(--strong); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <button class="t" id="t">Switch to light</button>
+
+    <h2>A · Today</h2>
+    <div class="card"><div class="tip">7:00 PM</div>
+      <div class="side"><div class="abbr">UTA</div><div class="ml">+506</div></div>
+      <div class="side h"><div class="abbr">MIN</div><div class="ml">−506</div></div><span class="at">@</span></div>
+    <div class="a">
+      <div class="rec">Utah 1–8 @ Minnesota 7–3</div>
+      <div class="line"><b>MIN −11.5 · O/U 222.5</b><a href="#">View props ›</a></div>
+    </div>
+
+    <h2>B · Proposed</h2>
+    <div class="card"><div class="tip">7:00 PM</div>
+      <div class="side"><div class="abbr">UTA</div><div class="ml"><small>ML</small>+506</div></div>
+      <div class="side h"><div class="abbr">MIN</div><div class="ml"><small>ML</small>−506</div></div><span class="at">@</span></div>
+    <div class="b">
+      <div class="rec"><span><b>UTA</b> 1–8</span><span><b>MIN</b> 7–3</span></div>
+      <div class="cols">
+        <div><span>Spread</span><b>MIN −11.5</b></div>
+        <div><span>Total</span><b>222.5</b></div>
+        <div><span>Moneyline</span><b>MIN −506</b></div>
+      </div>
+      <div class="foot"><span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i></span><a href="#">View props ›</a></div>
+    </div>
+  </div>
+  <script>
+    document.getElementById("t").onclick = (e) => {
+      const r = document.documentElement, light = r.dataset.theme !== "light";
+      r.dataset.theme = light ? "light" : "dark"; e.target.textContent = light ? "Switch to dark" : "Switch to light";
+    };
+  </script>
+</body>
+</html>
