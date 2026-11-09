@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset="utf-8"><title>100% Streaks A</title>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000}
+#card{width:1080px;height:1350px;position:relative;overflow:hidden;background:#060a16;color:#d8dff5;font-family:Satoshi,sans-serif}
+.photo{position:absolute;right:0;top:0;width:820px;height:860px;
+ -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 38%),linear-gradient(180deg,#000 55%,transparent 100%);
+ -webkit-mask-composite:source-in;mask-composite:intersect}
+.photo img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;transform:scale(1.45);transform-origin:52% 14%;filter:grayscale(1) contrast(1.15) brightness(1.05)}
+.photo:after{content:"";position:absolute;inset:0;background:#3a2bd6;mix-blend-mode:multiply}
+.photo:before{content:"";position:absolute;inset:0;background:linear-gradient(200deg,rgba(154,147,255,.55),transparent 55%);mix-blend-mode:screen;z-index:2}
+.credit{position:absolute;right:26px;top:60px;writing-mode:vertical-rl;font-size:15px;letter-spacing:.04em;color:#93a1cb}
+.logo{position:absolute;left:64px;top:56px;height:44px}
+.head{position:absolute;left:64px;top:340px}
+.big{font-family:"Clash Display",sans-serif;font-weight:700;font-size:330px;line-height:.82;letter-spacing:-.04em;color:#d8dff5;
+ text-shadow:0 0 60px rgba(6,10,22,.6)}
+.big small{font-size:.5em;color:#9a93ff;letter-spacing:-.02em}
+.title{font-family:"Clash Display",sans-serif;font-weight:600;font-size:68px;margin-top:26px;letter-spacing:-.01em}
+.sub{font-size:28px;color:#93a1cb;margin-top:6px}
+.list{position:absolute;left:64px;right:64px;top:800px}
+.row{display:grid;grid-template-columns:44px 1fr 150px 250px 110px;align-items:center;height:56px;border-top:1px solid #1f2e5a}
+.row:last-child{border-bottom:1px solid #1f2e5a}
+.rk{color:#93a1cb;font-size:22px}
+.nm{font-family:"Clash Display",sans-serif;font-weight:600;font-size:31px}
+.nm i{font-style:normal;font-family:Satoshi;font-weight:700;font-size:16px;margin-left:12px;letter-spacing:.06em}
+.st{color:#93a1cb;font-size:23px}
+.pips{display:flex;gap:5px}.pips b{width:20px;height:12px;background:#46a98f}
+.rec{text-align:right;font-family:"Clash Display";font-weight:600;font-size:31px;color:#7fdcc0}
+.foot{position:absolute;left:64px;right:64px;bottom:44px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px}
+.foot p{font-size:17px;line-height:1.45;color:#93a1cb;max-width:640px}
+.foot strong{display:block;font-family:"Clash Display";font-size:30px;color:#d8dff5;margin-bottom:8px;font-weight:600}
+.foot img{height:40px}
+</style></head><body><div id="card">
+<div class="photo"><img id="ph"></div><div class="credit" id="cr"></div>
+<img class="logo" src="lh-lockup-on-dark.svg">
+<div class="head"><div class="big">100<small>%</small></div><div class="title" id="t"></div><div class="sub" id="d"></div></div>
+<div class="list" id="l"></div>
+<div class="foot"><div><strong>Find your next streak free on LineHunter</strong><p id="n"></p></div><img src="lh-lockup-on-dark.svg" style="display:none"></div>
+</div>
+<script src="data.js"></script><script>
+const S=STREAKS;ph.src=S.photo.src;cr.textContent=S.photo.credit;t.textContent=S.title+" streaks";d.textContent=S.date;n.textContent=S.note+"  linehunterapp.com";
+l.innerHTML=S.rows.slice(0,7).map((r,i)=>`<div class="row"><span class="rk">${i+1}</span><span class="nm">${r.n}<i style="color:${r.c}">${r.t}</i></span><span class="st">${r.stat}</span><span class="pips">${'<b></b>'.repeat(Math.min(r.hit,12))}</span><span class="rec">${r.hit}/${r.of}</span></div>`).join("");
+</script></body></html>

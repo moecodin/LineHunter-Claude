@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8"><title>100% Streaks B</title>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000}
+#card{width:1080px;height:1350px;position:relative;overflow:hidden;background:#eef1fa;color:#0b1229;font-family:Satoshi,sans-serif}
+.block{position:absolute;left:44px;top:64px;width:400px;height:1010px;background:#280ea1}
+.frame{position:absolute;left:76px;top:96px;width:400px;height:1010px;overflow:hidden;background:#d8dff5}
+.frame img{width:100%;height:100%;object-fit:cover;object-position:46% 0}
+.cap{position:absolute;left:0;right:0;bottom:0;padding:90px 24px 22px;background:linear-gradient(transparent,rgba(5,35,80,.92));color:#fff}
+.cap b{display:block;font-family:"Clash Display";font-weight:600;font-size:34px}
+.cap span{font-size:19px;opacity:.85}
+.credit{position:absolute;left:76px;top:1116px;font-size:15px;color:#4c5a85}
+.right{position:absolute;left:520px;right:56px;top:60px}
+.kick{font-weight:700;font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:#280ea1}
+.big{font-family:"Clash Display";font-weight:700;font-size:150px;line-height:.9;letter-spacing:-.04em;margin-top:10px;color:#052350}
+.big em{font-style:normal;color:#280ea1}
+.date{font-size:26px;color:#4c5a85;margin-top:18px}
+.list{margin-top:34px}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;height:92px;border-top:2px solid #052350}
+.row:last-child{border-bottom:2px solid #052350}
+.nm{font-family:"Clash Display";font-weight:600;font-size:33px;line-height:1.05}
+.nm span{display:block;font-family:Satoshi;font-weight:500;font-size:20px;color:#4c5a85;margin-top:4px}
+.nm span i{font-style:normal;font-weight:700;color:#280ea1;margin-right:8px}
+.rec{font-family:"Clash Display";font-weight:700;font-size:52px;color:#280ea1;letter-spacing:-.02em}
+.foot{position:absolute;left:44px;right:44px;bottom:36px;display:flex;justify-content:space-between;align-items:center;gap:40px;border-top:2px solid #052350;padding-top:22px}
+.foot p{font-size:17px;line-height:1.45;color:#4c5a85;max-width:640px}
+.foot img{height:44px}
+</style></head><body><div id="card">
+<div class="block"></div><div class="frame"><img id="ph"><div class="cap"><b id="pn"></b><span id="ps"></span></div></div>
+<div class="credit" id="cr"></div>
+<div class="right"><div class="kick">Tonight's research</div><div class="big">100<em>%</em><br><span id="t"></span></div><div class="date" id="d"></div><div class="list" id="l"></div></div>
+<div class="foot"><p id="n"></p><img src="lh-lockup-on-light.svg"></div>
+</div>
+<script src="data.js"></script><script>
+const S=STREAKS,lead=S.rows[0];ph.src=S.photo.src;cr.textContent=S.photo.credit;pn.textContent=S.photo.player;ps.textContent=`${lead.stat} · ${lead.hit} of ${lead.of} games`;
+t.textContent=S.title;d.textContent=S.date+" · every game, no misses";n.textContent=S.note+"  linehunterapp.com";
+l.innerHTML=S.rows.slice(0,7).map(r=>`<div class="row"><div class="nm">${r.n}<span><i>${r.t}</i>${r.stat}</span></div><div class="rec">${r.hit}/${r.of}</div></div>`).join("");
+</script></body></html>
