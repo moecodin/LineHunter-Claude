@@ -30,7 +30,7 @@ const BODY_FONTS = ["Satoshi", "General Sans", "Switzer", "Cabinet Grotesk", "Zo
 const LOCKED_ELS = new Set(["credit", "foot"]); // can't be hidden: the photo credit and the disclaimer
 const EL_NAMES = { hero: "Big text", title: "Title", sub: "Subtitle", list: "Rows", foot: "Footer", logo: "Logo", site: "Website", photo: "Photo", credit: "Photo credit", kicker: "Top label", block: "Color block", name: "Player name", edge: "Edge text" };
 const STYLE0 = () => ({ fontHead: "", fontBody: "", fw: "", ls: null, upper: false, hero: 100, title: 100, rows: 100, bg: "", colors: {}, off: {} });
-const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false, fade: null });
+const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false, fade: null, vignette: false });
 
 const S = {
   slate: null, groups: [], res: null, localPhotos: [], source: null, rows: [], win: 10, players: [],
@@ -349,7 +349,7 @@ async function processPhoto(photo, adj, design, box, maxW) {
   const mode = adj.mode || (design.photoModeFor ? design.photoModeFor(off) : design.photo === "duotone" ? "duotone" : "color");
   const fx = adj.fx == null ? design.focus.x : adj.fx, fy = adj.fy == null ? design.focus.y : adj.fy;
   const a = box.w / box.h, ow = Math.round(Math.min(maxW, box.w * S.scale));
-  const key = [photo.url, a.toFixed(3), ow, adj.zoom, fx, fy, adj.bright, mode, adj.tint, adj.flip, t.bg, t.accent, design.alpha ? "a" : "", fadeOf(design, adj)].join("|");
+  const key = [photo.url, a.toFixed(3), ow, adj.zoom, fx, fy, adj.bright, mode, adj.tint, adj.flip, t.bg, t.accent, design.alpha ? "a" : "", fadeOf(design, adj), adj.vignette ? "v" : "", mode === "teamduo" ? teamColorsFor().join() : ""].join("|");
   if (outCache[key]) return outCache[key];
   const img = await loadImg(photo.url), W = img.naturalWidth, H = img.naturalHeight;
   let cw = W / H > a ? H * a : W, ch = cw / a;
@@ -361,10 +361,23 @@ async function processPhoto(photo, adj, design, box, maxW) {
   g.drawImage(img, sx, sy, cw, ch, 0, 0, w, h);
   if (adj.bright !== 100 || mode !== "color") {
     const d = g.getImageData(0, 0, w, h), px = d.data, b = adj.bright / 100, s = adj.tint / 100;
-    const bg = hexRgb(t.bg), lo = [bg[0] * 1.4 + 4, bg[1] * 1.4 + 4, bg[2] * 1.8 + 18], hi = hexRgb(t.accent);
+    const bg = hexRgb(t.bg), lo = [bg[0] * 1.4 + 4, bg[1] * 1.4 + 4, bg[2] * 1.8 + 18];
+    // Team duotone: from near-black to the player's team color (lifted a bit so dark team colors still show); else the accent.
+    const tc = mode === "teamduo" ? teamColorsFor()[0] : null;
+    const hi = tc ? mix(hexRgb(tc), [255, 255, 255], 0.18) : hexRgb(t.accent), tlo = [12, 12, 16];
+    let seed = 1337; const noise = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff) - 0.5; // same grain every render
     for (let i = 0; i < px.length; i += 4) {
       let r = px[i] * b, gg = px[i + 1] * b, bl = px[i + 2] * b;
       if (mode === "bw") { const l = 0.3 * r + 0.59 * gg + 0.11 * bl; r = gg = bl = l; }
+      else if (mode === "press") { // high-contrast black and white: crushed blacks, bright whites
+        const l = (0.3 * r + 0.59 * gg + 0.11 * bl) / 255, c = clamp((l - 0.5) * 2.1 + 0.44, 0, 1); r = gg = bl = Math.pow(c, 1.2) * 215; // whites stop at light gray so text on top stays readable
+      } else if (mode === "grain") { // film: a little washed, lifted blacks, soft grain
+        const l = 0.3 * r + 0.59 * gg + 0.11 * bl, k = 0.55, n = noise() * 34;
+        r = (r + (l - r) * k) * 0.9 + 16 + n; gg = (gg + (l - gg) * k) * 0.9 + 15 + n; bl = (bl + (l - bl) * k) * 0.9 + 14 + n;
+      } else if (mode === "teamduo") {
+        let l = (0.3 * r + 0.59 * gg + 0.11 * bl) / 255; l = clamp((l - 0.06) * 1.2, 0, 1);
+        r += (tlo[0] + (hi[0] - tlo[0]) * l - r) * s; gg += (tlo[1] + (hi[1] - tlo[1]) * l - gg) * s; bl += (tlo[2] + (hi[2] - tlo[2]) * l - bl) * s;
+      }
       else if (mode === "duotone" || mode === "halftone") {
         let l = (0.3 * r + 0.59 * gg + 0.11 * bl) / 255; l = clamp((l - 0.08) * 1.25, 0, 1) * 0.85;
         r += (lo[0] + (hi[0] - lo[0]) * l - r) * s; gg += (lo[1] + (hi[1] - lo[1]) * l - gg) * s; bl += (lo[2] + (hi[2] - lo[2]) * l - bl) * s;
@@ -384,6 +397,12 @@ async function processPhoto(photo, adj, design, box, maxW) {
         g.fillStyle = `rgb(${px[i]},${px[i + 1]},${px[i + 2]})`; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
       }
     }
+  }
+  // Vignette: darker edges on top of any look (keeps a cut-out's transparency).
+  if (adj.vignette) {
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-atop";
+    const vg = g.createRadialGradient(w / 2, h * 0.42, Math.min(w, h) * 0.25, w / 2, h * 0.42, Math.max(w, h) * 0.75);
+    vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.62)"); g.fillStyle = vg; g.fillRect(0, 0, w, h); g.restore();
   }
   // Fade: the bottom part of the photo turns see-through (not painted in the card color), so it blends into any background.
   const fade = fadeOf(design, adj);
@@ -727,7 +746,7 @@ function syncPhotoUi() {
   $("stPhotoAdj").hidden = !has; $("stPhotoReset").hidden = !has; if (!has) return;
   const vals = { zoom: a.zoom, fx: a.fx == null ? d.focus.x : a.fx, fy: a.fy == null ? d.focus.y : a.fy, bright: a.bright, tint: a.tint, fade: fadeOf(d, a) };
   Object.entries(vals).forEach(([k, v]) => { $("stP_" + k).value = v; $("stPO_" + k).textContent = k === "fx" || k === "fy" ? v : v + "%"; });
-  $("stP_mode").value = a.mode; $("stP_flip").checked = !!a.flip;
+  $("stP_mode").value = a.mode; $("stP_flip").checked = !!a.flip; $("stP_vig").checked = !!a.vignette;
 }
 function syncStyleUi() {
   const design = curDesign(), st = S.style, t = tokensFor(design);
@@ -771,7 +790,7 @@ function bind() {
   ["name", "hero", "title", "subtitle", "footer"].forEach((k) => $("stF_" + k).addEventListener("input", (e) => { S.fields[k] = e.target.value; schedule(); }));
   // Photo
   ["zoom", "fx", "fy", "bright", "tint", "fade"].forEach((k) => $("stP_" + k).addEventListener("input", (e) => setAdj(k, +e.target.value)));
-  $("stP_mode").onchange = (e) => setAdj("mode", e.target.value); $("stP_flip").onchange = (e) => setAdj("flip", e.target.checked);
+  $("stP_mode").onchange = (e) => setAdj("mode", e.target.value); $("stP_flip").onchange = (e) => setAdj("flip", e.target.checked); $("stP_vig").onchange = (e) => setAdj("vignette", e.target.checked);
   $("stPhotoReset").onclick = () => { delete S.photoAdj[S.photoId]; store.set("lh-studio-photoadj", S.photoAdj); syncPhotoUi(); schedule(); };
   $("stUpSave").onclick = saveUpload;
   $("stDelPhoto").onclick = async () => { if (S.photoId.startsWith("up:") && confirm("Delete this uploaded photo from this device?")) { await idbDelete(S.photoId.slice(3)); S.uploads = await idbAll(); S.photoId = "none"; renderControls(); renderAll(); } };
