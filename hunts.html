@@ -35,26 +35,28 @@
   <main class="container-fluid lh-container px-3 px-lg-4 lh-schedule-page lh-tool-page lh-hb-page" data-lh-slate="page">
     <a class="lh-back-link" href="schedule.html"><i class="bi bi-chevron-left" aria-hidden="true"></i> Today</a>
 
-    <!-- HUNTS BUILDER (lines mode): the picker is The Board (js/components/board.js; every + ADD goes to My Hunts) on the left and the
+    <!-- HUNTS BUILDER (lines mode): the picker (simple prop rows, js/pages/hunts.js; every "Add to builder" goes to My Hunts) on the left and the
          ticket (js/pages/hunts.js: legs, combined odds, hit together, share) is sticky on the right. Research mode shows a message. -->
     <div class="lh-hb lines-only">
       <div class="lh-hb-picker">
-        <section id="theBoard" class="lh-board mb-5" data-rows="25" aria-labelledby="boardTitle">
+        <section id="huntsPicker" class="lh-hbp" aria-labelledby="hbpTitle">
           <div class="lh-board-head">
             <span class="lh-bd-kicker">Hunts builder</span>
-            <h1 class="lh-board-title" id="boardTitle">Build a hunt <span class="lh-board-date" id="boardDate"></span></h1>
-            <p class="lh-board-sub">Pick props from the slate. Each + ADD goes on your ticket. Odds are the best price from the books.</p>
+            <h1 class="lh-board-title" id="hbpTitle">Build a hunt <span class="lh-board-date" id="hbpDate"></span></h1>
+            <p class="lh-board-sub">Pick props from the slate and add them to your ticket. Odds are the best price from the books.</p>
           </div>
-          <div class="lh-board-tabrow">
-            <ul id="boardTabs" class="nav nav-underline lh-tabs lh-board-tabs" hidden></ul>
-            <div id="boardSide" class="btn-group btn-group-sm lh-window-toggle lh-board-side" role="group" aria-label="Over or under" hidden></div>
+          <input type="search" id="hbpSearch" class="lh-hbp-search" placeholder="Search players" aria-label="Search players" autocomplete="off">
+          <div class="lh-hbp-lab">Game</div>
+          <div class="lh-hbp-chips" id="hbpGames" role="group" aria-label="Game"></div>
+          <div class="lh-hbp-lab">Prop</div>
+          <ul id="hbpProps" class="nav nav-underline lh-tabs lh-board-tabs lh-hbp-props" aria-label="Prop"></ul>
+          <div class="lh-hbp-sidewrap">
+            <div id="hbpSide" class="btn-group btn-group-sm lh-window-toggle" role="group" aria-label="Over or under"></div>
+            <span class="lh-hbp-count" id="hbpCount"></span>
           </div>
-          <div id="boardHeads" class="lh-bd-heads" hidden aria-hidden="true">
-            <span>Player</span><span>Pick</span><span>Hit rate</span><span>Avg</span><span>Hunt line</span><span>Score</span><span>Best odds</span><span></span><span></span>
-          </div>
-          <div id="boardList" aria-busy="true"></div>
-          <button type="button" id="boardMore" class="btn btn-sm btn-outline-secondary lh-board-more w-100 mt-3" hidden>Show more</button>
-          <p class="lh-board-note">Based on past results, not a guarantee. Gambling problem? Call 1-800-GAMBLER.</p>
+          <div id="hbpList" aria-busy="true"><div class="lh-top-message text-muted">Loading the slate...</div></div>
+          <button type="button" id="hbpMore" class="btn btn-sm btn-outline-secondary w-100 mt-3" hidden>Show more</button>
+          <p class="lh-board-note">Past results, not a guarantee. Gambling problem? Call 1-800-GAMBLER.</p>
         </section>
       </div>
 
@@ -103,7 +105,6 @@
   <script src="js/components/fanCards.js"></script>
   <script src="js/components/hunt-score.js"></script>
   <script src="js/components/scoutReport.js"></script>
-  <script src="js/components/board.js"></script>
   <script src="js/pages/hunts.js"></script>
 </body>
 </html>

@@ -7480,3 +7480,37 @@ main > .card.mb-5, main > section.mb-5 { margin-bottom: var(--lh-gap) !important
   #boardControls .dropdown .lh-top-ctl { width: 100%; justify-content: center; white-space: nowrap; }
   #boardControls .lh-top-bookpill { grid-column: 1 / -1; }
 }
+
+/* Hunts builder picker: simple prop rows (js/pages/hunts.js). Flat, no shadows. */
+.lh-hbp-search { width: 100%; background: var(--lh-surface); border: 1px solid var(--lh-border); color: var(--lh-strong); padding: 0.55rem 0.75rem; border-radius: 8px; font: inherit; margin-top: 0.5rem; }
+.lh-hbp-lab { font-size: 0.75rem; color: var(--lh-muted); margin: 0.9rem 0 0.35rem; }
+.lh-hbp-chips { display: flex; gap: 0.4rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.lh-hbp-chip { flex: none; background: none; border: 1px solid var(--lh-border); color: var(--lh-text); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.85rem; text-align: left; cursor: pointer; }
+.lh-hbp-chip small { display: block; font-size: 0.7rem; color: var(--lh-muted); }
+.lh-hbp-chip.is-on { background: var(--lh-fill); border-color: var(--lh-fill); color: var(--lh-on-fill); }
+.lh-hbp-chip.is-on small { color: inherit; opacity: 0.75; }
+.lh-hbp-props { margin: 0; }
+.lh-hbp-sidewrap { display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0 0.25rem; gap: 0.5rem; }
+.lh-hbp-count { font-size: 0.8rem; color: var(--lh-muted); }
+.lh-hbp-game { margin: 1.25rem 0 0.25rem; font-size: 0.75rem; letter-spacing: 0.02em; color: var(--lh-muted); font-weight: 600; }
+.lh-hbp-row { display: grid; grid-template-columns: auto minmax(0, 1.2fr) minmax(0, 1.2fr) auto auto; gap: 0.75rem; align-items: center; padding: 0.7rem 0; border-top: 1px solid var(--lh-border); }
+.lh-hbp-who small { display: block; font-size: 0.8rem; color: var(--lh-strong); line-height: 1.1; }
+.lh-hbp-who b { font: 600 1.15rem/1.1 var(--lh-font-heading); color: var(--lh-strong); }
+.lh-hbp-who span { display: block; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-hbp-pick { border-left: 3px solid var(--lh-over); padding-left: 0.6rem; }
+.lh-hbp-pick.is-under { border-left-color: var(--lh-under); }
+.lh-hbp-pick b { font: 600 1rem var(--lh-font-heading); color: var(--lh-strong); }
+.lh-hbp-pick span { display: block; font-size: 0.75rem; color: var(--lh-muted); }
+.lh-hbp-pick i { font-style: normal; font-weight: 700; }
+.lh-hbp-odds { border: 1px solid var(--lh-border); padding: 0.15rem 0.5rem; font-weight: 700; font-size: 0.85rem; color: var(--lh-over-text); white-space: nowrap; }
+.lh-hbp-odds small { color: var(--lh-muted); font-weight: 500; }
+.lh-hbp-odds.is-none { color: var(--lh-muted); font-weight: 500; }
+.lh-hbp-add { display: inline-flex; align-items: center; gap: 0.3rem; background: none; border: 1px solid var(--lh-strong); color: var(--lh-strong); padding: 0.4rem 0.7rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; white-space: nowrap; cursor: pointer; }
+.lh-hbp-add.is-in { background: var(--lh-fill); color: var(--lh-on-fill); }
+@media (max-width: 767.98px) {
+  .lh-hbp-row { grid-template-columns: auto minmax(0, 1fr) auto; row-gap: 0.4rem; }
+  .lh-hbp-pick { grid-column: 2; grid-row: 2; }
+  .lh-hbp-odds { grid-column: 3; grid-row: 2; justify-self: end; }
+  .lh-hbp-add { grid-column: 3; grid-row: 1; justify-self: end; }
+}
+.lh-hbp-add:disabled { opacity: 0.4; cursor: not-allowed; }

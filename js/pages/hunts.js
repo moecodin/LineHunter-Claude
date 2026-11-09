@@ -230,3 +230,126 @@
   document.addEventListener("lh-hunts-change", render);
   render();
 })();
+
+// ---------- The picker: simple prop rows from the slate (js/components/top-hit-rates.js builds and announces it) ----------
+(function () {
+  const list = document.getElementById("hbpList");
+  if (!list) return;
+  const CODES = ["pts", "reb", "ast", "3pm", "pra", "stl", "blk"];
+  const SHORT = { pts: "PTS", reb: "REB", ast: "AST", "3pm": "3PM", pra: "PRA", stl: "STL", blk: "BLK" };
+  const PAGE = 30;
+  const esc = (text) => String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const state = { game: "all", code: "all", side: "over", query: "", shown: PAGE };
+  let slate = null;
+
+  const timeOf = (iso) => (iso ? new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "");
+  const gameLabel = (rows) => {
+    const r = rows[0];
+    const opp = r.opp || (r.matchup || "").split(" ").pop();
+    return String(r.matchup || "").startsWith("@") ? `${r.team} @ ${opp}` : `${opp} @ ${r.team}`;
+  };
+
+  function items() {
+    const injuries = (slate && slate.injuries) || {};
+    const out = [];
+    slate.rows.forEach((row) => {
+      if (!CODES.includes(row.code)) return;
+      if (state.code !== "all" && row.code !== state.code) return;
+      if (state.game !== "all" && String(row.gameId) !== state.game) return;
+      if (state.query && !plNameMatches(row.name, state.query)) return;
+      if (plIsInjuredOut(injuries[row.playerId])) return;
+      const games = row.w && row.w[10] ? row.w[10].games : [];
+      if (games.length < 8 || row.line === null || row.line === undefined) return;
+      const over = plStatsAtLine(games, row.line, "over");
+      const under = plStatsAtLine(games, row.line, "under");
+      const side = state.side === "both" ? (under.hitRate > over.hitRate ? "under" : "over") : state.side;
+      out.push({ row, side, stats: side === "under" ? under : over });
+    });
+    out.sort((a, b) => (new Date(a.row.tip) - new Date(b.row.tip)) || (a.row.gameId - b.row.gameId) || (b.stats.hitRate - a.stats.hitRate)
+      || (b.stats.totalGames - a.stats.totalGames) || (b.stats.streak - a.stats.streak));
+    return out;
+  }
+
+  function rowHtml({ row, side, stats }) {
+    const name = row.name.trim().split(/\s+/);
+    const first = name[0];
+    const last = name.slice(1).join(" ") || name[0];
+    const type = PROP_CODES[row.code];
+    const best = lhOdds.getOdds(row.playerId, type, row.line, side)[0];
+    const leg = { playerId: row.playerId, player: row.name, team: row.team, opp: row.opp || (row.matchup || "").split(" ").pop(), gameId: row.gameId,
+      tipoff: row.tip || null, stat: type, side, line: row.line, odds: best ? Number(best.odds) : null, book: best ? best.vendor : null, isAlt: false };
+    const hit = stats.hitRate >= 75 ? "lh-hr-hi" : stats.hitRate >= 50 ? "lh-hr-md" : "lh-hr-lo";
+    return `
+      <div class="lh-hbp-row">
+        ${typeof playerAvatarHtml === "function" ? playerAvatarHtml({ first, last, team: row.team, className: "lh-bd-avatar" }) : ""}
+        <div class="lh-hbp-who"><small>${esc(first)}</small><b>${esc(last)}</b><span>${esc(row.matchup)}${row.tip ? ` · ${timeOf(row.tip)}` : ""}</span></div>
+        <div class="lh-hbp-pick is-${side}"><b>${side === "under" ? "Under" : "Over"} ${lineText(row.line)} ${SHORT[row.code]}</b>
+          <span><i class="${hit}">${stats.hits}/${stats.totalGames}</i> L10 · avg ${formatStatValue(stats.average)}</span></div>
+        <span class="lh-hbp-odds${best ? "" : " is-none"}">${best ? `${best.odds > 0 ? "+" : "−"}${Math.abs(best.odds)} <small>${esc(lhHunts.bookLabel(best.vendor))}</small>` : "no odds"}</span>
+        ${best ? huntButtonHtml(leg, { labelOut: "Add to builder", labelIn: "Added", iconFirst: true, className: "lh-hbp-add" })
+          : `<button type="button" class="lh-hbp-add" disabled aria-disabled="true" title="No odds posted for this prop"><i class="lh-add-icon bi bi-plus-lg" aria-hidden="true"></i> Add to builder</button>`}
+      </div>`;
+  }
+
+  function drawGames() {
+    const byGame = {};
+    slate.rows.forEach((row) => { (byGame[row.gameId] = byGame[row.gameId] || []).push(row); });
+    const games = Object.entries(byGame).sort((a, b) => new Date(a[1][0].tip) - new Date(b[1][0].tip));
+    document.getElementById("hbpGames").innerHTML = `<button type="button" class="lh-hbp-chip${state.game === "all" ? " is-on" : ""}" data-game="all">All games<small>${games.length} games</small></button>`
+      + games.map(([id, rows]) => `<button type="button" class="lh-hbp-chip${state.game === id ? " is-on" : ""}" data-game="${id}">${esc(gameLabel(rows))}<small>${timeOf(rows[0].tip)}</small></button>`).join("");
+    document.getElementById("hbpProps").innerHTML = ["all", ...CODES].map((c) =>
+      `<li class="nav-item"><button type="button" class="nav-link${state.code === c ? " active" : ""}" data-code="${c}">${c === "all" ? "All" : SHORT[c]}</button></li>`).join("");
+    document.getElementById("hbpSide").innerHTML = [["over", "Over"], ["under", "Under"], ["both", "Both"]].map(([v, l]) =>
+      `<button type="button" class="btn btn-ghost${state.side === v ? " active" : ""}" data-side="${v}" aria-pressed="${state.side === v}">${l}</button>`).join("");
+  }
+
+  function render() {
+    list.removeAttribute("aria-busy");
+    if (!slate) return;
+    const found = items();
+    const shown = found.slice(0, state.shown);
+    document.getElementById("hbpCount").textContent = `${found.length} prop${found.length === 1 ? "" : "s"}`;
+    if (!found.length) {
+      list.innerHTML = `<div class="lh-top-message text-muted">${state.query ? `No players match “${esc(state.query)}”.` : "No props for these filters."}</div>`;
+    } else {
+      let lastGame = null;
+      list.innerHTML = shown.map((item) => {
+        let head = "";
+        if (state.game === "all" && item.row.gameId !== lastGame) {
+          lastGame = item.row.gameId;
+          head = `<div class="lh-hbp-game">${esc(gameLabel([item.row]))} · ${timeOf(item.row.tip)}</div>`;
+        }
+        return head + rowHtml(item);
+      }).join("");
+    }
+    document.getElementById("hbpMore").hidden = found.length <= shown.length;
+  }
+
+  document.addEventListener("lh-top-slate", (event) => {
+    const detail = event.detail || {};
+    if (detail.message) { list.innerHTML = `<div class="lh-top-message text-muted">${detail.message}</div>`; return; }
+    if (!detail.slate) return;
+    slate = detail.slate;
+    if (state.game !== "all" && !slate.rows.some((r) => String(r.gameId) === state.game)) state.game = "all";
+    const date = document.getElementById("hbpDate");
+    if (date && slate.date && typeof slateDateLabel === "function") date.textContent = slateDateLabel(slate.date);
+    drawGames();
+    render();
+  });
+  document.addEventListener("lh-odds-ready", () => { if (slate) render(); });
+
+  document.getElementById("huntsPicker").addEventListener("click", (event) => {
+    const game = event.target.closest("[data-game]");
+    const code = event.target.closest("[data-code]");
+    const side = event.target.closest("[data-side]");
+    if (game) state.game = game.dataset.game;
+    else if (code) state.code = code.dataset.code;
+    else if (side) state.side = side.dataset.side;
+    else if (event.target.closest("#hbpMore")) { state.shown += PAGE; render(); return; }
+    else return;
+    state.shown = PAGE;
+    drawGames();
+    render();
+  });
+  document.getElementById("hbpSearch").addEventListener("input", (event) => { state.query = event.target.value; state.shown = PAGE; render(); });
+})();
