@@ -46,7 +46,16 @@
       <div class="st-rail">
         <div class="st-sec"><h3><b>1</b>Source</h3><div id="stSources"></div>
           <div id="stPlayerWrap"><div class="st-lbl">Player card</div><select class="st-select" id="stPlayerPick"></select></div>
-          <div id="stWinWrap" hidden><div class="st-lbl">Games window</div><div class="st-seg" id="stWin"></div></div></div>
+          <div id="stWinWrap" hidden><div class="st-lbl">Games window</div><div class="st-seg" id="stWin"></div></div>
+          <div id="stResWrap" hidden>
+            <div class="st-lbl">Player</div>
+            <div class="st-res-find"><input class="st-in" id="stResSearch" placeholder="Search any NBA player" autocomplete="off" spellcheck="false"><div class="st-res-list" id="stResList" hidden></div></div>
+            <div class="st-lbl" id="stResWho"></div>
+            <div class="st-lbl">Games</div><div class="st-seg" id="stResRange"></div>
+            <div class="st-lbl">Stats on the card (tap to add or remove; the order follows your taps)</div><div class="st-chips" id="stResStats"></div>
+            <div class="st-lbl">Big number</div><select class="st-select" id="stResHero"></select>
+            <div class="st-lbl" id="stResMsg"></div>
+          </div></div>
         <div class="st-sec" id="stRowsSec"><h3><b>2</b>Rows <small id="stRowsCount"></small></h3><div id="stRows"></div>
           <div class="st-chips" style="margin-top:10px"><button class="st-chip" id="stAddRow" type="button">+ Add a row</button></div></div>
         <div class="st-sec"><h3><b>3</b>Design</h3>

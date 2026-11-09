@@ -202,3 +202,11 @@ html,body{background:var(--st-bg)}
 .sa-foot .st-site,.sc-foot .st-site,.sd-foot .st-site,.sp-foot .st-site{position:absolute;right:0;top:4px;font-family:var(--f-head),sans-serif;font-size:24px;font-weight:600;color:var(--c-accent)}
 .sb-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex:none}
 .sb-foot .st-site{font-family:var(--f-head),sans-serif;font-size:22px;font-weight:600;color:var(--c-ink)}
+
+/* Research source: player search */
+.st-res-find{position:relative}
+.st-res-list{position:absolute;left:0;right:0;top:100%;z-index:20;margin-top:4px;background:var(--st-panel);border:1px solid var(--st-rule);border-radius:8px;overflow:hidden}
+.st-res-list button{display:flex;justify-content:space-between;width:100%;padding:9px 12px;background:none;border:0;border-top:1px solid var(--st-rule);color:var(--st-ink);font:14px Satoshi,sans-serif;cursor:pointer;text-align:left}
+.st-res-list button:first-child{border-top:0}.st-res-list button:hover{background:var(--st-sel)}
+.st-res-list small{color:var(--st-mut)}.st-res-none{padding:10px 12px;color:var(--st-mut);font-size:13px}
+#stResWho b{color:var(--st-ink)}

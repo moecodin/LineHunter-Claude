@@ -33,7 +33,7 @@ const STYLE0 = () => ({ fontHead: "", fontBody: "", fw: "", ls: null, upper: fal
 const ADJ0 = () => ({ zoom: 100, fx: null, fy: null, bright: 100, mode: "", tint: 100, flip: false });
 
 const S = {
-  slate: null, groups: [], source: null, rows: [], win: 10, players: [],
+  slate: null, groups: [], res: null, localPhotos: [], source: null, rows: [], win: 10, players: [],
   design: "night-poster", designByKind: { list: "night-poster", player: "player-card" }, size: "post",
   photoId: "none", fields: {}, photos: [], uploads: [],
   style: STYLE0(), edits: {}, photoAdj: {},
@@ -161,9 +161,9 @@ function chooseSource(item, keepFields) {
       subtitle: [item.row.matchup, date, tipLabel(item.row.tip)].filter(Boolean).join(" · "), footer: item.footer, kicker: "Tonight's research" };
     S.fields = keepFields ? { ...fresh, ...pick(S.fields, ["name", "subtitle", "footer"]) } : fresh;
   } else {
-    S.rows = sourceRows(item).map((r, i) => ({ ...r, id: i, on: i < 7 }));
-    const fresh = { hero: item.heroFn ? item.heroFn(S.win) : item.hero || "100%", title: item.title, subtitle: [date, item.sub].filter(Boolean).join(" · "), footer: item.footer || FOOT_STREAK, kicker: "Tonight's research" };
-    S.fields = keepFields ? { ...fresh, ...pick(S.fields, ["title", "subtitle", "footer", "kicker"]) } : fresh;
+    S.rows = sourceRows(item).map((r, i) => ({ ...r, id: i, on: item.research || i < 7 }));
+    const fresh = item.research ? resFields() : { hero: item.heroFn ? item.heroFn(S.win) : item.hero || "100%", title: item.title, subtitle: [date, item.sub].filter(Boolean).join(" · "), footer: item.footer || FOOT_STREAK, kicker: "Tonight's research" };
+    S.fields = keepFields && !item.research ? { ...fresh, ...pick(S.fields, ["title", "subtitle", "footer", "kicker"]) } : fresh;
   }
   if (kindOf() !== prevKind || !designsForKind(kindOf()).some((d) => d.id === S.design)) {
     const want = S.designByKind[kindOf()];
@@ -175,14 +175,135 @@ function chooseSource(item, keepFields) {
 }
 const pick = (o, keys) => keys.reduce((a, k) => { if (o && o[k] != null) a[k] = o[k]; return a; }, {});
 
+// ---------- Research source: any player's numbers, no lines ----------
+// One source ("Player stats") for research-mode posts: search any active player, pick the games (last game, L5 / L10 / L20, season),
+// the stats on the card (in tap order) and the big number. Every row and field stays editable like any other source.
+const RES_STATS = [
+  { k: "pts", label: "Points", code: "PTS" }, { k: "reb", label: "Rebounds", code: "REB" }, { k: "ast", label: "Assists", code: "AST" },
+  { k: "fg3m", label: "Threes made", code: "3PM" }, { k: "pra", label: "Pts + reb + ast", code: "PRA", sum: ["pts", "reb", "ast"] },
+  { k: "stl", label: "Steals", code: "STL" }, { k: "blk", label: "Blocks", code: "BLK" }, { k: "turnover", label: "Turnovers", code: "TOV" },
+  { k: "oreb", label: "Offensive rebounds", code: "OREB" }, { k: "min", label: "Minutes", code: "MIN" },
+  { k: "fg", label: "Field goals", code: "FG", made: "fgm", att: "fga" }, { k: "fg3", label: "Threes", code: "3PT", made: "fg3m", att: "fg3a" },
+  { k: "ft", label: "Free throws", code: "FT", made: "ftm", att: "fta" },
+  { k: "fg_pct", label: "Field goal %", code: "FG%", pct: ["fgm", "fga"] }, { k: "fg3_pct", label: "Three-point %", code: "3P%", pct: ["fg3m", "fg3a"] },
+  { k: "ft_pct", label: "Free throw %", code: "FT%", pct: ["ftm", "fta"] },
+];
+const RES_RANGES = [["last", "Last game"], [5, "L5"], [10, "L10"], [20, "L20"], ["season", "Season"]];
+const RES0 = () => ({ id: null, name: "", team: "", stats: ["pts", "reb", "ast", "fg3m", "fg_pct", "min"], hero: "pts", range: 10 });
+const resStat = (k) => RES_STATS.find((s) => s.k === k);
+const resMinutes = (log) => String(log.min || "0").split(":").reduce((a, p, i) => a + (Number(p) || 0) / (i ? 60 : 1), 0);
+const seasonName = (y) => `${y}-${String(y + 1).slice(2)} season`;
+function saveRes() { const { entry, ...keep } = S.res; store.set("lh-studio-res", keep); }
+// The games the card covers, newest first, and how to say it ("Last 10 games", "2026-27 season").
+function resGames() {
+  const e = S.res.entry; if (!e) return { games: [], label: "" };
+  const cur = e.current.filter(playedInGame), prev = e.previous.filter(playedInGame), r = S.res.range;
+  if (r === "season") return cur.length ? { games: cur, label: seasonName(currentSeasonYear()) } : { games: prev, label: seasonName(currentSeasonYear() - 1) };
+  const all = cur.concat(prev);
+  if (r === "last") return { games: all.slice(0, 1), label: "Last game" };
+  const g = all.slice(0, r);
+  return { games: g, label: `Last ${g.length} games${g.length > cur.length && cur.length ? " (incl. last season)" : !cur.length ? " (last season)" : ""}` };
+}
+// One stat over those games: the game's number for one game, else per game; made-attempted as "9-18"; percentages pooled.
+function resValue(st, games) {
+  if (!st || !games.length) return "–";
+  const n = games.length, one = n === 1;
+  const sum = (key) => games.reduce((a, g) => a + (key === "min" ? resMinutes(g) : Number(g[key]) || 0), 0);
+  if (st.pct) { const att = sum(st.pct[1]); return att ? `${((sum(st.pct[0]) / att) * 100).toFixed(1)}%` : "–"; }
+  if (st.made) return one ? `${sum(st.made)}-${sum(st.att)}` : `${(sum(st.made) / n).toFixed(1)}-${(sum(st.att) / n).toFixed(1)}`;
+  const v = st.sum ? st.sum.reduce((a, k) => a + sum(k), 0) : sum(st.k);
+  return one ? String(Math.round(v)) : (v / n).toFixed(1);
+}
+function resRows() {
+  const { games } = resGames(); if (!games.length) return [];
+  return S.res.stats.map(resStat).filter(Boolean).map((st) => ({ full: S.res.name, n: st.label, t: "", hideTeam: true, stat: st.made ? "made-att" : "", rec: resValue(st, games) }));
+}
+function resFields() {
+  const base = { footer: FOOT_RESEARCH, kicker: "Player research" };
+  const { games, label } = resGames();
+  if (!S.res.name) return { ...base, hero: "–", title: "Pick a player", subtitle: "Search any NBA player above" };
+  if (!games.length) return { ...base, hero: "–", title: S.res.name, subtitle: S.res.entry ? "No games played yet" : "Loading games…" };
+  const h = resStat(S.res.hero) || resStat(S.res.stats[0]) || resStat("pts"), g = games[0];
+  let sub;
+  if (S.res.range === "last") {
+    const home = g.isHome, mine = home ? g.game.home_team_score : g.game.visitor_team_score, theirs = home ? g.game.visitor_team_score : g.game.home_team_score;
+    const result = mine && theirs ? ` · ${mine > theirs ? "W" : "L"} ${mine}-${theirs}` : "";
+    sub = `${h.label} ${home ? "vs" : "@"} ${g.opponent} · ${dateLabel(String(g.game.date).slice(0, 10))}${result}`;
+  } else sub = `${h.label}${h.pct || h.made ? "" : " per game"} · ${label}`;
+  return { ...base, hero: resValue(h, games), title: S.res.name, subtitle: sub };
+}
+function researchSource() {
+  return { id: "research", kind: "list", label: "Player stats", research: true, footer: FOOT_RESEARCH, get teams() { return S.res.team ? [S.res.team] : []; }, build: () => resRows() };
+}
+const researchGroup = () => ({ label: "Research", items: [researchSource()] });
+async function resLoad(player) {
+  S.res = { ...S.res, id: player.id, name: player.name, team: player.team || "", entry: null }; saveRes();
+  $("stResMsg").textContent = `Loading ${player.name}'s games…`;
+  if (S.source && S.source.research) chooseSource(S.source);
+  const want = player.id;
+  try {
+    const out = await loadPlayerGameLogs([want], 20);
+    if (S.res.id !== want) return;
+    S.res.entry = out.logsByPlayer[want];
+    const newest = S.res.entry.current.concat(S.res.entry.previous)[0];
+    if (newest && newest.team && newest.team.abbreviation) S.res.team = newest.team.abbreviation;
+    saveRes(); $("stResMsg").textContent = "";
+  } catch (e) { if (S.res.id === want) $("stResMsg").textContent = "Couldn't load this player's games. Try again in a moment."; }
+  if (S.source && S.source.research) chooseSource(S.source);
+}
+let resTimer = 0, resToken = 0;
+async function resSearch(text) {
+  const words = norm(text).split(/\s+/).filter(Boolean), list = $("stResList");
+  if (!words.length) { list.hidden = true; return; }
+  const token = ++resToken, longest = words.reduce((a, b) => (b.length > a.length ? b : a));
+  try {
+    const res = await fetch(`/api/bdl/v1/players/active?search=${encodeURIComponent(longest)}&per_page=50`);
+    if (!res.ok) throw new Error(res.status);
+    const json = await res.json(); if (token !== resToken) return;
+    const hits = json.data.filter((p) => words.every((w) => norm(`${p.first_name} ${p.last_name}`).includes(w))).slice(0, 8);
+    list.innerHTML = hits.length ? hits.map((p) => `<button type="button" data-resp="${p.id}" data-name="${esc(`${p.first_name} ${p.last_name}`)}" data-team="${esc((p.team && p.team.abbreviation) || "")}">${esc(`${p.first_name} ${p.last_name}`)} <small>${esc((p.team && p.team.abbreviation) || "")}</small></button>`).join("") : `<div class="st-res-none">No active player matches</div>`;
+    list.hidden = false;
+  } catch (e) { if (token === resToken) { list.innerHTML = `<div class="st-res-none">Search is unavailable right now.</div>`; list.hidden = false; } }
+}
+function renderResearchUi() {
+  const on = !!(S.source && S.source.research); $("stResWrap").hidden = !on; if (!on) return;
+  $("stResWho").innerHTML = S.res.name ? `<b>${esc(S.res.name)}</b>${S.res.team ? ` · ${esc(S.res.team)}` : ""}` : "No player picked yet";
+  $("stResRange").innerHTML = RES_RANGES.map(([v, l]) => `<button type="button" class="${String(S.res.range) === String(v) ? "on" : ""}" data-rrange="${v}">${l}</button>`).join("");
+  $("stResStats").innerHTML = RES_STATS.map((s) => { const i = S.res.stats.indexOf(s.k); return chip(i >= 0 ? `${i + 1} · ${s.code}` : s.code, i >= 0, `data-rstat="${s.k}" title="${esc(s.label)}"`); }).join("");
+  $("stResHero").innerHTML = S.res.stats.map(resStat).filter(Boolean).map((s) => `<option value="${s.k}"${s.k === S.res.hero ? " selected" : ""}>${esc(s.label)}</option>`).join("");
+}
+function bindResearch() {
+  $("stResSearch").addEventListener("input", (e) => { clearTimeout(resTimer); const v = e.target.value; resTimer = setTimeout(() => resSearch(v), 250); });
+  $("stResSearch").addEventListener("keydown", (e) => { if (e.key === "Escape") { $("stResList").hidden = true; e.target.value = ""; } });
+  $("stResWrap").addEventListener("click", (e) => {
+    const t = e.target.closest("[data-resp],[data-rrange],[data-rstat]"); if (!t) return;
+    const ds = t.dataset;
+    if (ds.resp) { $("stResList").hidden = true; $("stResSearch").value = ""; return resLoad({ id: +ds.resp, name: ds.name, team: ds.team }); }
+    if (ds.rrange) S.res.range = /^\d+$/.test(ds.rrange) ? +ds.rrange : ds.rrange;
+    if (ds.rstat) {
+      const i = S.res.stats.indexOf(ds.rstat);
+      if (i >= 0) { if (S.res.stats.length > 1) S.res.stats.splice(i, 1); } else S.res.stats.push(ds.rstat);
+      if (!S.res.stats.includes(S.res.hero)) S.res.hero = S.res.stats[0];
+    }
+    saveRes(); chooseSource(S.source);
+  });
+  $("stResHero").onchange = (e) => { S.res.hero = e.target.value; saveRes(); chooseSource(S.source); };
+}
+
 // ---------- Photos ----------
 async function loadPhotos() {
   try { const res = await fetch("studio/photos/credits.json", { cache: "no-cache" }); S.photos = res.ok ? await res.json() : []; } catch (e) { S.photos = []; }
+  // Local test photos (localhost only): studio/photos/local/local.json, written by studio/tools/local-photos.sh from a folder you pick.
+  S.localPhotos = [];
+  if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) {
+    try { const res = await fetch("studio/photos/local/local.json", { cache: "no-cache" }); if (res.ok) S.localPhotos = await res.json(); } catch (e) { /* none */ }
+  }
   S.uploads = await idbAll();
 }
 let uploadUrls = {};
 function allPhotos() {
   return [...S.photos.map((p) => ({ id: "lib:" + p.file, player: p.player, url: "studio/photos/" + p.file, credit: `Photo: ${p.photographer} / ${p.license}`, sa: p.shareAlike })),
+    ...(S.localPhotos || []).map((p) => ({ id: "loc:" + p.file, player: p.player, url: "studio/photos/local/" + encodeURIComponent(p.file), credit: p.credit ? `Photo: ${p.credit}` : "", local: true })),
     ...S.uploads.map((u) => ({ id: "up:" + u.id, player: u.player, url: uploadUrls[u.id] || (uploadUrls[u.id] = URL.createObjectURL(u.blob)), credit: u.credit ? `Photo: ${u.credit}` : "", mine: true }))];
 }
 function leadName() { if (kindOf() === "player") return S.source.row.name; const lead = S.rows.find((r) => r.on); return lead ? lead.full || lead.n : ""; }
@@ -348,8 +469,8 @@ async function renderAll() {
   if (S.sel) { const s = host.querySelector(`[data-el="${S.sel}"]`); if (s) s.classList.add("st-sel"); else S.sel = null; }
   const cap = design.capacity(data, data);
   $("stMeta").textContent = kindOf() === "player"
-    ? `${data.w} × ${data.h} · last ${S.win} games · data for ${dateLabel(S.slate.date)}`
-    : `${data.w} × ${data.h} · ${data.rows.length} rows (this design fits ${cap} at this size) · data for ${dateLabel(S.slate.date)}`;
+    ? `${data.w} × ${data.h} · last ${S.win} games · ${S.slate ? `data for ${dateLabel(S.slate.date)}` : "player research"}`
+    : `${data.w} × ${data.h} · ${data.rows.length} rows (this design fits ${cap} at this size) · ${S.slate ? `data for ${dateLabel(S.slate.date)}` : "player research"}`;
   renderEditBar(); writeCaption(); pushHistory();
   clearTimeout(thumbTimer); thumbTimer = setTimeout(renderThumbs, 350);
 }
@@ -490,6 +611,14 @@ function captionText(plat) {
   const f = S.fields, rows = S.rows.filter((r) => r.on), tags = plat === "x" ? "#NBA #PlayerProps" : "#NBA #NBAProps #PlayerProps #NBAStats #LineHunter";
   const legal = plat === "x" ? "21+ | 1-800-GAMBLER" : "Based on past results, not guarantees. 21+. Gambling problem? Call 1-800-GAMBLER.";
   let lines;
+  if (S.source && S.source.research) {
+    const rtags = plat === "x" ? "#NBA #NBAStats" : "#NBA #NBAStats #NBATwitter #Basketball #LineHunter";
+    const body = [f.title, f.subtitle, "", ...rows.map((r) => `${plat === "x" ? "" : "• "}${r.n}: ${r.rec}${r.stat ? " " + r.stat : ""}`)];
+    const rtail = ["", plat === "x" ? "Free NBA research: linehunterapp.com" : "Free NBA research every night at linehunterapp.com", "", legal, "", rtags];
+    let out = [...body, ...rtail].join("\n");
+    while (plat === "x" && out.length > 280 && body.length > 4) { body.pop(); out = [...body, ...rtail].join("\n"); }
+    return out;
+  }
   if (kindOf() === "player") {
     const p = playerData(S.source.row, S.win);
     lines = [`${f.name}: ${f.title} in ${f.hero} of his last ${p.total} (avg ${p.avg.toFixed(1)} ${p.code}).`, f.subtitle];
@@ -549,13 +678,13 @@ function renderControls() {
   $("stDesigns").innerHTML = designsForKind(kind).map((d) => `<button type="button" class="st-th${S.design === d.id ? " on" : ""}" data-design="${d.id}"><div class="st-tw" data-thumb="${d.id}"></div>${esc(d.name)}</button>`).join("");
   const ph = allPhotos();
   $("stPhotos").innerHTML = `<button type="button" class="st-ph${S.photoId === "none" ? " on" : ""}" data-photo="none"><span style="padding:30px 5px;text-align:center">No photo</span></button>` +
-    ph.map((p) => `<button type="button" class="st-ph${S.photoId === p.id ? " on" : ""}" data-photo="${esc(p.id)}" title="${esc(p.player)} — ${esc(p.credit || "no credit")}"><img src="${p.url}" alt=""><span>${esc(p.player)}${p.sa ? " · SA" : ""}${p.mine ? " · mine" : ""}</span></button>`).join("");
+    ph.map((p) => `<button type="button" class="st-ph${S.photoId === p.id ? " on" : ""}" data-photo="${esc(p.id)}" title="${esc(p.player)} — ${esc(p.credit || "no credit")}"><img src="${p.url}" alt=""><span>${esc(p.player)}${p.sa ? " · SA" : ""}${p.mine ? " · mine" : ""}${p.local ? " · local" : ""}</span></button>`).join("");
   const sel = ph.find((p) => p.id === S.photoId);
   $("stPhotoInfo").innerHTML = sel ? `<b>${esc(sel.player)}</b><br><span style="color:var(--st-mut)">${esc(sel.credit || "No credit")}${sel.sa ? " · share-alike: the edited image has to carry the same license" : ""}</span>` : `<span style="color:var(--st-mut)">No photo on the card.</span>`;
   $("stDelPhoto").hidden = !(sel && sel.mine);
   $("stCapPlat").innerHTML = [["x", "X"], ["ig", "Instagram"]].map(([k, l]) => `<button type="button" class="${S.cap.plat === k ? "on" : ""}" data-plat="${k}">${l}</button>`).join("");
   $("stEditToggle").classList.toggle("on", S.editing); $("stEditToggle").textContent = S.editing ? "Done editing" : "Edit on card";
-  syncFieldsUi(); syncPhotoUi(); syncStyleUi(); syncUndo();
+  renderResearchUi(); syncFieldsUi(); syncPhotoUi(); syncStyleUi(); syncUndo();
 }
 function syncFieldsUi() {
   $("stNameWrap").hidden = kindOf() !== "player";
@@ -635,7 +764,7 @@ function bind() {
   $("stCapText").addEventListener("input", () => { S.cap.dirty = true; countCaption(); });
   $("stCapRewrite").onclick = () => writeCaption(true);
   $("stCapCopy").onclick = async () => { try { await navigator.clipboard.writeText($("stCapText").value); $("stCapCopy").textContent = "Copied"; setTimeout(() => { $("stCapCopy").textContent = "Copy"; }, 1500); } catch (e) { $("stCapText").select(); } };
-  bindCardEditing();
+  bindCardEditing(); bindResearch();
   let rt = 0; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderAll, 150); });
 }
 
@@ -644,19 +773,23 @@ function onSlate(event) {
   const slate = event.detail && event.detail.slate;
   if (!slate) { $("stStatus").textContent = (event.detail && event.detail.message ? "No slate yet. " : "") + "Waiting for tonight's games…"; return; }
   if (S.slate === slate) return;
-  S.slate = slate; S.groups = buildSources(slate);
+  S.slate = slate; S.groups = [...buildSources(slate), researchGroup()];
   addBbqSource(slate);
-  if (!S.groups.length && !S.players.length) { $("stStatus").textContent = "No cards have enough qualifying props for this slate yet."; return; }
   $("stStatus").hidden = true; $("stApp").hidden = false;
   const keep = S.source && allSources().find((i) => i.id === S.source.id);
   if (keep) chooseSource(keep, true);
-  else if (S.groups.length) chooseSource(S.groups[0].items[0]);
+  else if (S.groups.length > 1) chooseSource(S.groups[0].items[0]);
+  else if (!S.players.length) chooseSource(S.groups[0].items[0]);
   else chooseSource(playerSource(S.players[0]));
 }
 let started = false;
 async function startStudio() {
   if (started) return; started = true;
   await loadPhotos();
+  S.res = { ...RES0(), ...store.get("lh-studio-res", {}) };
+  // The Research source works without a slate (a night with no games, or games already started): show it right away.
+  if (!S.slate) { S.groups = [researchGroup()]; $("stStatus").hidden = true; $("stApp").hidden = false; chooseSource(S.groups[0].items[0]); }
+  if (S.res.id) resLoad({ id: S.res.id, name: S.res.name, team: S.res.team });
   document.addEventListener("lh-top-slate", onSlate);
   if (window.__lhPendingSlate) onSlate(window.__lhPendingSlate);
 }

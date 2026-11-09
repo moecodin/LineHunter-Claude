@@ -17,3 +17,6 @@ dev/snapshots/
 dev/hunt-grade.txt
 # dev/hunt-games.js output
 dev/hunt-games.txt
+
+# Studio: local test photos (studio/tools/local-photos.sh)
+studio/photos/local/
