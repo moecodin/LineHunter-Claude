@@ -13,7 +13,26 @@ const STREAK_SOURCES = [
   { id: "s-3pm", label: "3PM", title: "Threes streaks", stat: "3+ 3PM", pick: (p) => p.streaks.fg3m },
 ];
 
-const S = { slate: null, groups: [], source: null, rows: [], design: "night-poster", size: "post", photoId: "none", fields: {}, photos: [], uploads: [] };
+const S = { slate: null, groups: [], source: null, rows: [], design: "night-poster", size: "post", photoId: "none", fields: {}, photos: [], uploads: [],
+  style: { fontHead: "", fontBody: "", hero: 100, title: 100, rows: 100, colors: {}, off: {} } };
+const HEAD_FONTS = ["Clash Display", "General Sans", "Cabinet Grotesk", "Switzer", "Boska", "Zodiak", "Gambetta", "Bebas Neue", "Satoshi"];
+const BODY_FONTS = ["Satoshi", "General Sans", "Switzer", "Cabinet Grotesk", "Zodiak"];
+const hexRgb = (hex) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ""); const n = m ? parseInt(m[1], 16) : 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+function loadStyle() { try { const v = JSON.parse(localStorage.getItem("lh-studio-style") || "null"); if (v) S.style = { ...S.style, ...v, colors: v.colors || {}, off: v.off || {} }; } catch (e) { /* ok */ } }
+function saveStyle() { try { localStorage.setItem("lh-studio-style", JSON.stringify(S.style)); } catch (e) { /* ok */ } }
+function tokensFor(design) { return { ...design.tokens, ...(S.style.colors[design.id] || {}) }; }
+// The CSS variables the designs read: colors, fonts. Set on a wrapper around the card (preview, thumbnails and export all use it).
+function themeVars(design) {
+  const t = tokensFor(design), st = S.style, bg = hexRgb(t.bg), ac = hexRgb(t.accent), ink = hexRgb(t.ink);
+  const q = (f) => `'${f}'`;
+  return `--c-bg:${t.bg};--c-ink:${t.ink};--c-mut:${t.mut};--c-accent:${t.accent};--c-good:${t.good || t.accent};--c-rule:${t.rule};--c-bg-rgb:${bg};--c-accent-rgb:${ac};--c-ink-rgb:${ink};--f-head:${q(st.fontHead || (design.id === "night-poster" ? "Clash Display" : "Clash Display"))};--f-body:${q(st.fontBody || "Satoshi")}`;
+}
+function themed(design, html, data) { return `<div class="st-theme" style="${themeVars(design)};width:${data.w}px;height:${data.h}px">${html}</div>`; }
+async function ensureFonts(design) {
+  if (!document.fonts) return;
+  const heads = [S.style.fontHead || "Clash Display", S.style.fontBody || "Satoshi"];
+  await Promise.all(heads.flatMap((f) => ["400", "500", "600", "700", "800"].map((w) => document.fonts.load(`${w} 40px "${f}"`).catch(() => null))));
+}
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const norm = (s) => String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -100,13 +119,13 @@ async function rasterLogo(url) {
 }
 function loadImg(url) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; }); }
 // "duotone": grayscale mapped from the page color to indigo, drawn on a canvas (html2canvas can't blend, so it is baked in here).
-async function processPhoto(url, mode) {
-  const key = url + "|" + mode; if (photoCache[key]) return photoCache[key];
+async function processPhoto(url, mode, tint) {
+  const key = url + "|" + mode + "|" + (tint ? tint.join(",") : ""); if (photoCache[key]) return photoCache[key];
   if (mode !== "duotone") return (photoCache[key] = url);
   const img = await loadImg(url); const k = Math.min(1, 1600 / Math.max(img.width, img.height));
   const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
   const g = c.getContext("2d"); g.drawImage(img, 0, 0, c.width, c.height);
-  const d = g.getImageData(0, 0, c.width, c.height), px = d.data, lo = [10, 14, 40], hi = [154, 147, 255];
+  const d = g.getImageData(0, 0, c.width, c.height), px = d.data, lo = tint ? [Math.round(tint[0][0] * 1.4 + 4), Math.round(tint[0][1] * 1.4 + 4), Math.round(tint[0][2] * 1.8 + 18)] : [10, 14, 40], hi = tint ? tint[1] : [154, 147, 255];
   for (let i = 0; i < px.length; i += 4) {
     let l = (0.3 * px[i] + 0.59 * px[i + 1] + 0.11 * px[i + 2]) / 255; l = Math.min(1, Math.max(0, (l - 0.08) * 1.25));
     px[i] = lo[0] + (hi[0] - lo[0]) * l * 0.85; px[i + 1] = lo[1] + (hi[1] - lo[1]) * l * 0.85; px[i + 2] = lo[2] + (hi[2] - lo[2]) * l * 0.85;
@@ -119,17 +138,20 @@ async function cardData() {
   const design = STUDIO_DESIGNS.find((d) => d.id === S.design), size = SIZES[S.size];
   const sel = allPhotos().find((p) => p.id === S.photoId);
   let photo = null;
-  if (sel) { try { photo = { url: await processPhoto(sel.url, design.photo), credit: sel.credit, player: sel.player }; } catch (e) { photo = null; } }
-  const f = S.fields;
-  return { design, data: { w: size.w, h: size.h, rows: S.rows.filter((r) => r.on), hero: f.hero, title: f.title, subtitle: f.subtitle, footer: f.footer, kicker: f.kicker, note: STUDIO_NOTE, photo, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT) } };
+  if (sel) { try { photo = { url: await processPhoto(sel.url, design.photo, tintFor(design)), credit: sel.credit, player: sel.player }; } catch (e) { photo = null; } }
+  const f = S.fields; await ensureFonts(design);
+  const off = S.style.off[design.id] || {};
+  return { design, data: { w: size.w, h: size.h, rows: S.rows.filter((r) => r.on), hero: f.hero, title: f.title, subtitle: f.subtitle, footer: f.footer, kicker: f.kicker, note: STUDIO_NOTE, photo, logo: await rasterLogo(LOGO_DARK), logoLight: await rasterLogo(LOGO_LIGHT),
+    style: { hero: S.style.hero / 100, title: S.style.title / 100, rows: S.style.rows / 100, showLogo: off.showLogo !== true, showSub: off.showSub !== true, showPips: off.showPips !== true, showKicker: off.showKicker !== true } } };
 }
+const tintFor = (design) => { const t = tokensFor(design); return [hexRgb(t.bg), hexRgb(t.accent)]; };
 function fitInto(el, host, w, h) { const k = host.clientWidth / w; host.style.height = Math.round(h * k) + "px"; el.style.transform = `scale(${k})`; }
 let renderToken = 0;
 async function renderAll() {
   if (!S.source) return; const token = ++renderToken;
   const { design, data } = await cardData(); if (token !== renderToken) return;
   data.rows = data.rows.slice(0, design.capacity(data, data));
-  const host = $("stPv"); host.innerHTML = `<div class="st-scale" id="stScale">${design.render(data)}</div>`; fitInto($("stScale"), host, data.w, data.h);
+  const host = $("stPv"); host.innerHTML = `<div class="st-scale" id="stScale">${themed(design, design.render(data), data)}</div>`; fitInto($("stScale"), host, data.w, data.h);
   $("stScale").style.position = "absolute";
   $("stMeta").textContent = `${data.w} × ${data.h} · ${data.rows.length} rows (this design fits ${design.capacity(data, data)} at this size) · data for ${dateLabel(S.slate.date)}`;
   renderThumbs();
@@ -139,8 +161,8 @@ async function renderThumbs() {
   for (const d of STUDIO_DESIGNS) {
     const box = document.querySelector(`[data-thumb="${d.id}"]`); if (!box) continue;
     const { data } = await cardData(); const dd = { ...data }; dd.photo = data.photo && (d.photo === "duotone" ? data.photo : data.photo);
-    const sel = allPhotos().find((p) => p.id === S.photoId); if (sel) { try { dd.photo = { url: await processPhoto(sel.url, d.photo), credit: sel.credit, player: sel.player }; } catch (e) { /* none */ } }
-    dd.rows = dd.rows.slice(0, d.capacity(dd, dd)); box.innerHTML = `<div class="st-scale">${d.render(dd)}</div>`;
+    const sel = allPhotos().find((p) => p.id === S.photoId); if (sel) { try { dd.photo = { url: await processPhoto(sel.url, d.photo, tintFor(d)), credit: sel.credit, player: sel.player }; } catch (e) { /* none */ } }
+    dd.rows = dd.rows.slice(0, d.capacity(dd, dd)); box.innerHTML = `<div class="st-scale">${themed(d, d.render(dd), dd)}</div>`;
     const k = box.clientWidth / size.w; box.style.height = Math.round(size.h * k) + "px"; box.firstChild.style.transform = `scale(${k})`;
   }
 }
@@ -148,7 +170,7 @@ async function exportPng(share) {
   const btn = $(share ? "stShare" : "stDownload"); btn.disabled = true; const old = btn.textContent; btn.textContent = "Drawing…";
   try {
     const { design, data } = await cardData(); data.rows = data.rows.slice(0, design.capacity(data, data));
-    const stage = document.createElement("div"); stage.style.cssText = `position:fixed;left:-20000px;top:0;width:${data.w}px;height:${data.h}px`; stage.innerHTML = design.render(data); document.body.appendChild(stage);
+    const stage = document.createElement("div"); stage.style.cssText = `position:fixed;left:-20000px;top:0;width:${data.w}px;height:${data.h}px`; stage.innerHTML = themed(design, design.render(data), data); document.body.appendChild(stage);
     const [h2c] = await Promise.all([loadHtml2Canvas(), document.fonts ? document.fonts.ready : null]);
     await Promise.all([...stage.querySelectorAll("img")].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; })));
     const canvas = await h2c(stage.firstElementChild, { width: data.w, height: data.h, scale: 1, useCORS: true, backgroundColor: null, logging: false });
@@ -177,7 +199,20 @@ function renderControls() {
   $("stPhotoInfo").innerHTML = sel ? `<b>${esc(sel.player)}</b><br><span style="color:var(--st-mut)">${esc(sel.credit)}${sel.sa ? " · share-alike: the edited image has to carry the same license" : ""}</span>` : `<span style="color:var(--st-mut)">No photo on the card.</span>`;
   $("stDelPhoto").hidden = !(sel && sel.mine);
   ["hero", "title", "subtitle", "footer"].forEach((k) => { if ($("stF_" + k) !== document.activeElement) $("stF_" + k).value = S.fields[k] || ""; });
+  syncStyleUi();
 }
+function syncStyleUi() {
+  const design = STUDIO_DESIGNS.find((d) => d.id === S.design), st = S.style, t = tokensFor(design);
+  const fill = (id, list, cur, def) => { const el = $(id); if (!el.options.length) el.innerHTML = `<option value="">${def} (design)</option>` + list.map((f) => `<option>${f}</option>`).join(""); el.value = cur || ""; };
+  fill("stS_fontHead", HEAD_FONTS, st.fontHead, "Clash Display"); fill("stS_fontBody", BODY_FONTS, st.fontBody, "Satoshi");
+  ["hero", "title", "rows"].forEach((k) => { $("stS_" + k).value = st[k]; $("stO_" + k).textContent = st[k] + "%"; });
+  ["bg", "ink", "accent", "good"].forEach((k) => { if ($("stC_" + k) !== document.activeElement) $("stC_" + k).value = t[k] || t.accent; });
+  const hasGood = !!design.tokens.good; $("stC_good").hidden = !hasGood; $("stC_goodLbl").hidden = !hasGood;
+  const off = st.off[design.id] || {};
+  $("stToggles").innerHTML = Object.entries(design.toggles || {}).map(([k, label]) => `<label class="st-chip${off[k] ? "" : " on"}" style="cursor:pointer"><input type="checkbox" data-tog="${k}" ${off[k] ? "" : "checked"} hidden>${esc(label)}</label>`).join("");
+}
+let styleRaf = 0;
+function styleChanged() { saveStyle(); cancelAnimationFrame(styleRaf); styleRaf = requestAnimationFrame(() => { syncStyleUi(); renderAll(); }); }
 function bind() {
   $("stUnlock").onclick = unlock; $("stPass").onkeydown = (e) => { if (e.key === "Enter") unlock(); };
   $("stGen").onclick = generatePass; $("stLockBtn").onclick = () => { try { localStorage.removeItem("lh-studio-ok"); } catch (e) { /* ok */ } setLocked(true); };
@@ -193,6 +228,12 @@ function bind() {
   });
   document.addEventListener("change", (e) => { if (e.target.dataset && e.target.dataset.row != null) { S.rows[+e.target.dataset.row].on = e.target.checked; autoPhotoIfNone(); renderControls(); renderAll(); } });
   ["hero", "title", "subtitle", "footer"].forEach((k) => $("stF_" + k).addEventListener("input", (e) => { S.fields[k] = e.target.value; renderAll(); }));
+  $("stS_fontHead").onchange = (e) => { S.style.fontHead = e.target.value; styleChanged(); };
+  $("stS_fontBody").onchange = (e) => { S.style.fontBody = e.target.value; styleChanged(); };
+  ["hero", "title", "rows"].forEach((k) => $("stS_" + k).addEventListener("input", (e) => { S.style[k] = +e.target.value; styleChanged(); }));
+  ["bg", "ink", "accent", "good"].forEach((k) => $("stC_" + k).addEventListener("input", (e) => { (S.style.colors[S.design] = S.style.colors[S.design] || {})[k] = e.target.value; styleChanged(); }));
+  $("stToggles").addEventListener("change", (e) => { const k = e.target.dataset.tog; if (!k) return; (S.style.off[S.design] = S.style.off[S.design] || {})[k] = !e.target.checked; styleChanged(); });
+  $("stStyleReset").onclick = () => { S.style = { fontHead: "", fontBody: "", hero: 100, title: 100, rows: 100, colors: {}, off: {} }; styleChanged(); };
   $("stDownload").onclick = () => exportPng(false); $("stShare").onclick = () => exportPng(true);
   $("stUpSave").onclick = saveUpload;
   $("stDelPhoto").onclick = async () => { if (S.photoId.startsWith("up:") && confirm("Delete this uploaded photo from this device?")) { await idbDelete(S.photoId.slice(3)); S.uploads = await idbAll(); S.photoId = "none"; renderControls(); renderAll(); } };
@@ -220,7 +261,7 @@ async function startStudio() {
 function bind2() { /* controls are bound once at load */ }
 document.addEventListener("lh-top-slate", (e) => { window.__lhPendingSlate = e; });
 addEventListener("DOMContentLoaded", async () => {
-  bind();
+  loadStyle(); bind();
   let ok = false; try { ok = localStorage.getItem("lh-studio-ok") === window.STUDIO_PASS_HASH; } catch (e) { /* ok */ }
   if (ok) { setLocked(false); startStudio(); } else setLocked(true);
 });

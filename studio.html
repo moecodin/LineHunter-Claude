@@ -9,6 +9,13 @@
   <link rel="preconnect" href="https://api.fontshare.com">
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=boska@500,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=zodiak@400,700&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=gambetta@500,600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=bebas-neue@400&display=swap" rel="stylesheet">
   <link href="studio/studio.css" rel="stylesheet">
 </head>
 <body class="st-body">
@@ -57,6 +64,19 @@
           <div class="st-lbl">Subtitle</div><input class="st-in" id="stF_subtitle">
           <div class="st-lbl">Footer</div><input class="st-in" id="stF_footer">
           <div class="st-lbl" style="color:var(--st-teal)">✓ The 1-800-GAMBLER disclaimer is always on</div></div>
+        <div class="st-sec"><h3><b>5</b>Style <small>fonts, sizes, colors</small></h3>
+          <div class="st-ctl"><span>Heading font</span><select id="stS_fontHead"></select>
+            <span>Body font</span><select id="stS_fontBody"></select>
+            <span>Big number size</span><span><input type="range" id="stS_hero" min="50" max="140" step="5"><output id="stO_hero"></output></span>
+            <span>Title size</span><span><input type="range" id="stS_title" min="50" max="150" step="5"><output id="stO_title"></output></span>
+            <span>Row size</span><span><input type="range" id="stS_rows" min="70" max="130" step="5"><output id="stO_rows"></output></span>
+            <span>Background</span><input type="color" id="stC_bg">
+            <span>Text</span><input type="color" id="stC_ink">
+            <span>Accent</span><input type="color" id="stC_accent">
+            <span id="stC_goodLbl">Highlight</span><input type="color" id="stC_good"></div>
+          <div class="st-tog" id="stToggles"></div>
+          <div class="st-chips" style="margin-top:12px"><button class="st-chip" id="stStyleReset" type="button">Reset style</button></div>
+          <div class="st-lbl">Your style is remembered on this device. The photo credit and the disclaimer can't be switched off.</div></div>
       </div>
       <div class="st-stage"><div class="st-pv" id="stPv"></div>
         <div class="st-acts"><button class="st-btn pri" id="stDownload" type="button">Download PNG</button><button class="st-btn" id="stShare" type="button">Share</button></div>
