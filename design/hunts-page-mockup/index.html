@@ -76,7 +76,9 @@
     .dots i { width: 14px; height: 14px; background: var(--over); }
     .dots i.m { background: var(--under); }
     .stake { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-    .stake input { width: 5rem; background: var(--panel2); border: 1px solid var(--rule); color: var(--strong); padding: 5px 8px; font: inherit; text-align: right; }
+    .stake input { width: 2.6rem; background: none; border: 0; color: var(--strong); padding: 0; font: inherit; font-weight: 600; text-align: right; outline: 0; }
+    .stake { gap: 2px; border: 1px solid var(--rule); background: var(--panel2); padding: 3px 8px; color: var(--mist); }
+    .stake:focus-within { border-color: var(--selEdge); }
     .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
     .btns button, .books a { background: none; border: 1px solid var(--rule); color: var(--strong); padding: 8px; font: inherit; font-weight: 600; font-size: .85rem; cursor: pointer; border-radius: 8px; text-align: center; text-decoration: none; display: block; }
     .btns .wide { grid-column: 1 / -1; }
@@ -142,7 +144,7 @@
       <div class="sum">
         <div class="big"><span>Combined odds</span><b>+168</b></div>
         <div><span>Implied chance</span><b>37.4%</b></div>
-        <div><span>Stake</span><b><span class="stake" style="display:inline-flex;margin:0">$<input value="10" aria-label="Stake"></span></b></div>
+        <div><span>Stake</span><b><span class="stake" style="display:inline-flex;margin:0">$<input value="10" inputmode="decimal" aria-label="Stake"></span></b></div>
         <div><span>To win</span><b style="color:var(--over-text)">$16.77</b></div>
       </div>
       <div class="hit">
