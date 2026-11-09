@@ -107,6 +107,20 @@ const CONFIG = {
   l10Games: 10,                                // the record quoted in the first "why" sentence
   minGamesTotal: 5,                            // fewer games than this (this + last season) = prop skipped
   topHunts: { max: 5, minScore: 65 },
+  // The nightly "top five" (js: topFive in the answer): the five best-scoring sides after the filters below. Fewer than five when fewer
+  // qualify: it never pads the list. Ranked by score, never by edge (edge has not predicted results: dev/hunt-under-check.js).
+  topFive: {
+    max: 5, minScore: 60,
+    perGame: 2, perStat: 2,                    // spread the picks: at most 2 from one game and 2 of the same stat
+    // skip a side whose chance is more than this many points above the book's fair chance: on the first six graded nights, candidates
+    // within 10 won 60.7% (84) and those further out 47.6% (82), the biggest gaps about 38%. Chosen AFTER seeing those nights, so it is
+    // unproven: check it on the nights since Nov 9 (dev/hunt-topfive-record.js) before trusting it.
+    maxGap: 10,
+    minOdds: -250,                             // skip prices shorter than this (-810 pays almost nothing and one miss erases many wins)
+    minGames: 8,                               // games this season behind the numbers (the spread factor's `games`)
+    // shown with every pick; update from dev/hunt-calibrate.js when the numbers change
+    note: "A score is the model's own chance, and it has run high: through Nov 7, scores of 65 and up won about 57% of the time, not 65%. This is research, not advice.",
+  },
   why: { paceTop: 5, b2bMinGames: 3, b2bMinDiff: 0.5, minutesMention: 2, smallSample: 8 },
   retries: 3,                                  // tries after a 429 / 5xx / dropped connection (dev scripts raise it)
   debug: false,                                // dev/hunt-whatif.js only: role games and past results at the line in the answer
@@ -260,7 +274,12 @@ async function loadLines(games) {
       return own ? { odds: Number(own.market[key]), vendor: own.vendor } : null;
     };
     const prices = { over: price("over_odds"), under: price("under_odds") };
-    return { ...entry, priced: { over: Boolean(prices.over), under: Boolean(prices.under) }, prices };
+    // every book that prices each side at this line, for "best price" (the top five shows them)
+    const books = { over: [], under: [] };
+    [entry, ...same.filter((prop) => prop !== entry)].forEach((prop) => {
+      ["over", "under"].forEach((side) => { if (hasPrice(prop.market[`${side}_odds`])) books[side].push({ vendor: prop.vendor, odds: Number(prop.market[`${side}_odds`]) }); });
+    });
+    return { ...entry, priced: { over: Boolean(prices.over), under: Boolean(prices.under) }, prices, books };
   });
 }
 
@@ -946,7 +965,7 @@ function runSteps(prop, line, info, ctx) {
   });
 
   const projection = simulate(runs, input, line, true);
-  return { base, steps, projection };
+  return { base, steps, projection, input, runs }; // input + runs: the top five re-asks the same simulation at other lines
 }
 
 function scoreSide(side, sim) {
@@ -1063,6 +1082,136 @@ function writeWhy(side, prop, line, info, scored, sim, ctx) {
   return [s1, s2, s3];
 }
 
+// ---------- the top five: selection + the written case ----------
+
+// The five best-scoring sides after the filters in CONFIG.topFive: not injured, 8+ games behind the numbers, one per player, at most
+// 2 per game and 2 per stat. Works on any list of scored sides (live ones, or the ones dev/hunt-snapshot.js saved), so the record of
+// past top fives can be rebuilt from the snapshots. Fewer than five when fewer qualify.
+const gamesBehind = (p) => { const spread = (p.factors || []).find((factor) => factor.key === "spread"); return spread && Number.isFinite(spread.games) ? spread.games : 0; };
+function selectTopFive(sides) {
+  const T = CONFIG.topFive;
+  const ranked = sides.filter((p) => !p.injured && p.score >= T.minScore && gamesBehind(p) >= T.minGames && !(Number.isFinite(p.odds) && p.odds < T.minOdds) && !(Number.isFinite(p.edge) && p.edge > T.maxGap))
+    .sort((a, b) => (b.score - a.score) || (b.chance - a.chance));
+  const players = new Set();
+  const perGame = {};
+  const perStat = {};
+  const picked = [];
+  for (const p of ranked) {
+    if (picked.length >= T.max) break;
+    if (players.has(p.playerId) || (perGame[p.gameId] || 0) >= T.perGame || (perStat[p.stat] || 0) >= T.perStat) continue;
+    players.add(p.playerId);
+    perGame[p.gameId] = (perGame[p.gameId] || 0) + 1;
+    perStat[p.stat] = (perStat[p.stat] || 0) + 1;
+    picked.push(p);
+  }
+  return picked;
+}
+
+const VENDOR_NAMES = { draftkings: "DraftKings", fanduel: "FanDuel", betrivers: "BetRivers", caesars: "Caesars", betparx: "betPARX", ballybet: "Bally Bet", fanatics: "Fanatics", betmgm: "BetMGM", espnbet: "ESPN BET" };
+const vendorName = (vendor) => VENDOR_NAMES[String(vendor).toLowerCase()] || String(vendor);
+const americanText = (odds) => (odds > 0 ? `+${odds}` : `${odds}`);
+// every book's price for a side, best payout first: [{ vendor, name, odds }]
+function bookList(list) {
+  return (list || []).slice().sort((a, b) => (b.odds > 0 ? b.odds : 10000 / -b.odds) - (a.odds > 0 ? a.odds : 10000 / -a.odds))
+    .map((book) => ({ vendor: book.vendor, name: vendorName(book.vendor), odds: book.odds }));
+}
+const STAT_LABEL = { pts: "PTS", reb: "REB", ast: "AST", "3pm": "3PM", pra: "PRA" };
+
+// The written case for one pick: what supports it, what could go wrong, what would change it. Every number comes from the engine's own
+// inputs; sentences name the player by last name and never use a pronoun (same rule as `why`).
+function buildAnalysis(item, d) {
+  const { prop, line, info, ctx, sim, scored, books } = d;
+  const over = item.side === "over";
+  const sideWord = over ? "over" : "under";
+  const word = prop.word;
+  const last = ctx.lastName;
+  const opp = ctx.oppLabel;
+  const f = Object.fromEntries(scored.factors.map((factor) => [factor.key, factor]));
+  const p = sim.projection;
+  const input = sim.input;
+  const hitsOf = (values) => values.filter((v) => (over ? v > line : v < line)).length;
+  const cur = info.cur.map((g) => g.v);
+  const season = { hit: hitsOf(cur), n: cur.length, avg: round1(average(cur)) };
+  const l10 = { hit: hitsOf(info.l10), n: info.l10.length, avg: round1(info.l10Avg) };
+  const label = `${STAT_LABEL[prop.code]}`;
+
+  // ----- the case -----
+  const caseFor = [];
+  caseFor.push(`${last} has ${over ? "gone over" : "stayed under"} ${line} in ${l10.hit} of the last ${l10.n} games (averaging ${l10.avg}) and ${season.hit} of ${season.n} games this season (average ${season.avg}).`);
+  caseFor.push(`The simulation projects ${p.mean} ${word} (most games ${p.p10} to ${p.p90}), a ${scored.chance}% chance of going ${sideWord}. The book's price implies about ${item.fair}%.`);
+  const minutes = round1(input.minutes);
+  if (f.role && Math.abs(f.role.minutes - f.role.from) >= 1) caseFor.push(`With ${f.role.out} out, ${last} projects to about ${f.role.minutes} minutes (${f.role.from} otherwise), based on ${f.role.games} past games without ${f.role.out}.`);
+  else if (f.role) caseFor.push(`With ${f.role.out} out, ${last}'s role is adjusted using ${f.role.games} past games without ${f.role.out}; the minutes stay near ${minutes}.`);
+  else caseFor.push(`${last} projects to about ${minutes} minutes${f.minutes && Math.abs(f.minutes.now - f.minutes.base) >= CONFIG.why.minutesMention ? `, ${f.minutes.now > f.minutes.base ? "up" : "down"} from ${f.minutes.base} on the season` : ""}.`);
+  if (f.opponent) {
+    const o = f.opponent;
+    const extreme = o.rank <= 8 || o.rank > o.of - 8;
+    const allowsMost = o.rank <= o.of / 2;
+    caseFor.push(`${opp} ranks ${ordinal(o.rank)} of ${o.of} in ${word} allowed per game (${o.perGame}).${extreme ? (allowsMost === over ? " That helps this pick." : " That works against this pick.") : " That is close to the middle of the league, so it moves little."}`);
+  }
+  if (f.pace && (f.pace.rank <= CONFIG.why.paceTop || f.pace.rank > f.pace.of - CONFIG.why.paceTop)) {
+    const fast = f.pace.rank <= CONFIG.why.paceTop;
+    caseFor.push(`${opp} plays at ${fast ? "one of the fastest" : "one of the slowest"} paces in the league (${ordinal(f.pace.rank)} of ${f.pace.of}), which ${fast === over ? "helps" : "works against"} this pick.`);
+  }
+  if (f.zone && Math.abs(f.zone.points) >= 1) caseFor.push(`The shot-zone matchup ${f.zone.points > 0 ? "helps" : "hurts"} this pick by about ${Math.abs(f.zone.points)} points of score.`);
+  if (books && books.length) {
+    const sorted = bookList(books);
+    caseFor.push(`Best price: ${sorted[0].name} ${americanText(sorted[0].odds)}${sorted.length > 1 ? ` (${sorted.slice(1, 4).map((b) => `${b.name} ${americanText(b.odds)}`).join(", ")})` : ""}.`);
+  }
+
+  // ----- what could go wrong -----
+  const wrong = [];
+  wrong.push(`This is not a lock: about ${100 - scored.chance}% of the simulated games went the other way.`);
+  const perMinute = input.rate * input.mult;
+  const needed = perMinute > 0 && !(prop.code === "3pm" && line < 2.5) && line >= 3.5 ? Math.round(line / perMinute) : null;
+  const needsOk = needed && needed >= 8 && needed <= 46;
+  const recentMinutes = info.cur.slice(0, 10).map((g) => g.m);
+  if (needsOk && recentMinutes.length >= 5) {
+    wrong.push(`Minutes are the main swing: at ${perMinute < 1 ? Math.round(perMinute * 100) / 100 : round1(perMinute)} ${word} a minute, ${last} needs about ${needed} minutes to reach ${line}. The last ${recentMinutes.length} games ranged from ${Math.round(Math.min(...recentMinutes))} to ${Math.round(Math.max(...recentMinutes))}.`);
+  }
+  if (line <= 2.5 && (prop.code === "3pm" || prop.code === "ast" || prop.code === "reb")) wrong.push(`On a line this small one or two ${prop.code === "3pm" ? "makes" : "plays"} decide it, so a single hot night can flip it.`);
+  if (scored.chance - item.fair >= 10) wrong.push(`Our chance (${scored.chance}%) is well above what the book's price implies (${item.fair}%). So far a gap that big has not been a reliable sign: on the nights we have graded, the biggest gaps did not win more often.`);
+  if (item.fair - scored.chance >= 3) wrong.push(`The book is more confident than the simulation: its price implies about ${item.fair}% against our ${scored.chance}%.`);
+  if (Number.isFinite(item.odds) && item.odds <= -200) wrong.push(`At ${americanText(item.odds)} a win pays little and a miss costs a lot.`);
+  if (ctx.gtd) wrong.push(`${last} is listed ${ctx.injuryStatus}. The pick assumes normal minutes if cleared.`);
+  if (f.role && f.role.points >= 2) wrong.push(`Part of this rests on ${f.role.out} being out: without that boost the score would be about ${Math.round(item.score - f.role.points)}.`);
+  if (info.cur.length < 15) wrong.push(`Only ${info.cur.length} games this season behind the numbers${info.usePrev ? ", so last season fills in part of the picture" : ""}.`);
+  if (info.lastAvg !== null && p.mean >= 3 && Math.abs(info.lastAvg - p.mean) / p.mean > 0.15) wrong.push(`The last 3 games averaged ${round1(info.lastAvg)}, away from the projection of ${p.mean}.`);
+  if (ctx.backToBack) {
+    const cost = info.b2bSplit && info.b2bSplit.games >= 3 ? info.b2bSplit.restAvg - info.b2bSplit.b2bAvg : 0;
+    wrong.push(`This is the second night of a back-to-back${cost >= CONFIG.why.b2bMinDiff ? `, which has cost ${last} about ${round1(cost)} ${word} a game` : ""}.`);
+  }
+  scored.factors.filter((factor) => factor.points <= -2 && ["opponent", "pace", "zone", "form", "minutes"].includes(factor.key) && !(factor.key === "opponent" && f.opponent && f.opponent.rank <= f.opponent.of / 2 !== over)).slice(0, 2)
+    .forEach((factor) => wrong.push(`${FACTOR_WORD[factor.key].replace(/^./, (c) => c.toUpperCase())} works against this pick (${round1(factor.points)} points of score).`));
+  if (minutes >= 24) wrong.push(over ? `A blowout can cut ${last}'s minutes in the fourth quarter.` : `A close game or overtime adds minutes and chances.`);
+
+  // ----- what would change it -----
+  const change = [];
+  if (needsOk) change.push(over
+    ? `If ${last} plays under about ${needed} minutes, the over is out of reach at this rate.`
+    : `If ${last} plays well over about ${needed} minutes, the under is in danger; the line is reachable at this rate once the minutes pass ${needed}.`);
+  const against = over ? line + 1 : line - 1;
+  const toward = over ? line - 1 : line + 1;
+  const chanceAt = (l) => Math.round(simulate(sim.runs, input, l, false)[item.side] * 100);
+  const moves = [];
+  if (against > 0) moves.push(`if the line moves a point against this pick (${against}), the chance drops to about ${chanceAt(against)}%`);
+  if (toward > 0) moves.push(`a point in its favor (${toward}) lifts it to about ${chanceAt(toward)}%`);
+  if (moves.length) change.push(`${moves.join("; ").replace(/^./, (c) => c.toUpperCase())}.`);
+  if (f.role && f.role.points >= 2) change.push(`If ${f.role.out} is ruled in, the Role step goes away and the score falls to about ${Math.round(item.score - f.role.points)}.`);
+  change.push("Late news (an injury, a rest day, a lineup change) is not in these numbers until the next refresh. Check the injury report near tip-off.");
+
+  const nameLine = `${item.player} ${over ? "Over" : "Under"} ${line} ${label}`;
+  return {
+    headline: `${nameLine} ${item.home ? "vs" : "@"} ${item.opp}`,
+    summary: `${scored.chance}% in the simulation; ${over ? "over" : "under"} in ${l10.hit} of the last ${l10.n} games.`,
+    numbers: { score: item.score, chance: scored.chance, fair: item.fair, projection: p.mean, p10: p.p10, p90: p.p90, projectedMinutes: minutes, perMinute: round1(perMinute), minutesNeeded: needed },
+    record: { last10: l10, season: { ...season, label: info.seasonLabel }, last3Avg: info.lastAvg === null ? null : round1(info.lastAvg) },
+    case: caseFor,
+    couldGoWrong: wrong,
+    whatWouldChange: change,
+  };
+}
+
 // ---------- the handler ----------
 
 function reply(statusCode, body, headers = {}) {
@@ -1074,7 +1223,7 @@ const warmCache = {}; // date -> { savedAt, body }: a warm function answers repe
 
 async function computeHunts(date) {
   skipped = [];
-  const empty = { date, updatedAt: new Date().toISOString(), props: [], topHunts: [] };
+  const empty = { date, updatedAt: new Date().toISOString(), props: [], topHunts: [], topFive: [] };
   const games = await loadSlate(date);
   if (!games.length) return empty;
 
@@ -1117,6 +1266,7 @@ async function computeHunts(date) {
   const rotationByTeam = buildRotation(playerIds, players, currentLogs, previousLogs, season);
 
   const out = [];
+  const detailOf = new WeakMap(); // each scored side -> the numbers behind it (for the top five's write-up)
   lines.forEach((entry) => {
     const prop = PROPS[entry.prop_type];
     const player = players[entry.player_id];
@@ -1159,7 +1309,7 @@ async function computeHunts(date) {
     const fair = fairChances(entry.prices);
     ["over", "under"].filter((side) => entry.priced[side]).forEach((side) => {
       const scored = scoreSide(side, sim);
-      out.push({
+      const item = {
         playerId: entry.player_id,
         player: `${player.first_name} ${player.last_name}`,
         team: player.team.abbreviation,
@@ -1186,7 +1336,9 @@ async function computeHunts(date) {
         injuryStatus: status,
         gameId: game.id,
         tipoff: game.datetime || null,
-      });
+      };
+      out.push(item);
+      detailOf.set(item, { prop, line, info, ctx, sim, scored, entry, books: entry.books ? entry.books[side] : [], game });
     });
   });
 
@@ -1199,7 +1351,9 @@ async function computeHunts(date) {
     seen.add(prop.playerId);
     topHunts.push(prop);
   }
-  return { date, updatedAt: new Date().toISOString(), props: out, topHunts, ...(skipped.length ? { partial: skipped.length, skipped: skipped.slice(0, 5) } : {}) };
+  const chosen = selectTopFive(out);
+  const topFive = chosen.map((item, i) => ({ rank: i + 1, ...item, books: bookList(detailOf.get(item).books), analysis: buildAnalysis(item, detailOf.get(item)) }));
+  return { date, updatedAt: new Date().toISOString(), props: out, topHunts, topFive, topFiveNote: CONFIG.topFive.note, ...(skipped.length ? { partial: skipped.length, skipped: skipped.slice(0, 5) } : {}) };
 }
 
 exports.handler = async (event) => {
@@ -1211,7 +1365,7 @@ exports.handler = async (event) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) return reply(400, { error: "date must look like 2026-10-20." }, { "Cache-Control": "no-store" });
 
   const cacheHeaders = { "Cache-Control": "public, s-maxage=600", "Netlify-CDN-Cache-Control": "public, s-maxage=600, stale-while-revalidate=600" };
-  if (date > todayET) return reply(200, { date, updatedAt: new Date().toISOString(), props: [], topHunts: [] }, cacheHeaders); // future dates: an empty list
+  if (date > todayET) return reply(200, { date, updatedAt: new Date().toISOString(), props: [], topHunts: [], topFive: [] }, cacheHeaders); // future dates: an empty list
 
   const warm = warmCache[date];
   if (warm && Date.now() - warm.savedAt < CONFIG.cacheMinutes * 60 * 1000) return reply(200, warm.body, cacheHeaders);
@@ -1226,6 +1380,7 @@ exports.handler = async (event) => {
 };
 
 exports.CONFIG = CONFIG; // for dev/hunt-compare.js
+exports.selectTopFive = selectTopFive; // for dev/hunt-topfive-record.js
 // For dev/hunt-whatif.js: extra multiplier steps for one prop, run inside the real simulation. Never set on the site.
 // For dev/hunt-snapshot.js and dev/hunt-grade.js: score a date while recording the inputs, or from saved inputs (no cache).
 exports.computeWith = async (date, { record = false, replay = null } = {}) => {
