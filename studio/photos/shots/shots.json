@@ -1,0 +1,107 @@
+[
+ {
+  "player": "App · The Board (desktop)",
+  "file": "board-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · The Board, row open (desktop)",
+  "file": "board-open-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · The Board, row open (phone)",
+  "file": "board-open-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · The Board (phone)",
+  "file": "board-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Top picks deck (phone)",
+  "file": "deck-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Game page (desktop)",
+  "file": "game-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Game page (phone)",
+  "file": "game-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Hit List (desktop)",
+  "file": "hit-list-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Hit List (phone)",
+  "file": "hit-list-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Home (desktop)",
+  "file": "home-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Home (phone)",
+  "file": "home-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Hunts builder (desktop)",
+  "file": "hunts-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Hunts builder (phone)",
+  "file": "hunts-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Matchup Analyzer (desktop)",
+  "file": "matchup-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Matchup Analyzer (phone)",
+  "file": "matchup-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Player page (desktop)",
+  "file": "player-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Player page (phone)",
+  "file": "player-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Research mode: Hot players (phone)",
+  "file": "research-board-phone.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Standings (desktop)",
+  "file": "standings-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Today (desktop)",
+  "file": "today-desktop.png",
+  "credit": ""
+ },
+ {
+  "player": "App · Today (phone)",
+  "file": "today-phone.png",
+  "credit": ""
+ }
+]

@@ -363,9 +363,9 @@ async function loadPhotos() {
   S.localPhotos = [];
   if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) {
     try { const res = await fetch("studio/photos/local/local.json", { cache: "no-cache" }); if (res.ok) S.localPhotos = await res.json(); } catch (e) { /* none */ }
-    // App screenshots from the marketing kit (node marketing/shots.js): same picker, under studio/photos/shots/.
-    try { const res = await fetch("studio/photos/shots/shots.json", { cache: "no-cache" }); if (res.ok) S.localPhotos = S.localPhotos.concat((await res.json()).map((x) => ({ ...x, file: "../shots/" + x.file }))); } catch (e) { /* none */ }
   }
+  // App screenshots from the marketing kit (node marketing/shots.js): committed, so they load on the live site too.
+  try { const res = await fetch("studio/photos/shots/shots.json", { cache: "no-cache" }); if (res.ok) S.localPhotos = S.localPhotos.concat((await res.json()).map((x) => ({ ...x, file: "../shots/" + x.file }))); } catch (e) { /* none */ }
   S.uploads = await idbAll();
 }
 let uploadUrls = {};

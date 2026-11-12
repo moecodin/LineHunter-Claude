@@ -20,7 +20,6 @@ dev/hunt-games.txt
 
 # Studio: local test photos (studio/tools/local-photos.sh)
 studio/photos/local/
-# Marketing screenshot kit output and its local packages
-studio/photos/shots/
+# Marketing kit: local packages (the screenshots in studio/photos/shots/ are committed so the live Studio has them)
 marketing/node_modules/
 marketing/out/
