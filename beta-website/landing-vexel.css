@@ -1,0 +1,112 @@
+/* Landing example 1: Vexel layout in Line Hunter's logo, fonts and colors.
+   Every size in the hero scales from a 1280x800 frame through --u. */
+.vx {
+  --u: min(100vh / 800, max(100vw / 1280, min(100vw / 640, .75px)));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: calc(100vh - 2rem);
+  min-height: 34rem;
+  overflow: hidden;
+  background: linear-gradient(90deg, #00061a 0%, #01071b 22%, #01071a 45%, #010718 62%, #010614 80%, #020511 100%);
+  text-align: center;
+}
+@supports (height: 100dvh) {
+  .vx { --u: min(100dvh / 800, max(100vw / 1280, min(100vw / 640, .75px))); height: calc(100svh - 2rem); }
+}
+.vx a { text-decoration: none; }
+.vx a:focus-visible { outline: 2px solid var(--lift); outline-offset: 4px; }
+
+.vx-mast { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; padding-top: calc(28 * var(--u)); }
+.vx-logo { height: max(calc(38 * var(--u)), 30px); }
+.vx-rule { width: max(calc(350 * var(--u)), 310px); height: 1px; margin-top: calc(14 * var(--u)); background: rgb(216 223 245 / .22); transform-origin: center; }
+.vx-nav { display: flex; justify-content: space-between; width: max(calc(350 * var(--u)), 310px); margin-top: calc(16 * var(--u)); padding-inline: calc(6 * var(--u)); }
+.vx-nav a { font-size: max(calc(15 * var(--u)), 13px); color: var(--ice); transition: color .15s; }
+@media (hover: hover) and (pointer: fine) { .vx-nav a:hover { color: var(--lift); } }
+
+.vx-gap { flex: 82.98 1 0; min-height: calc(24 * var(--u)); }
+
+.vx-copy { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+.vx h1 { margin: 0; font: 600 max(calc(72 * var(--u)), 34px)/1 var(--display); letter-spacing: -.01em; color: #fff; }
+.vx .l { display: block; overflow: hidden; padding-bottom: .12em; margin-bottom: -.12em; white-space: nowrap; }
+.vx .li { display: block; }
+.vx-sub { margin-top: calc(20 * var(--u)); font-size: max(calc(21 * var(--u)), 15px); color: var(--haze, #c3cce9); text-wrap: balance; }
+.vx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max(calc(216 * var(--u)), 196px);
+  height: max(calc(46 * var(--u)), 44px);
+  margin-top: calc(26 * var(--u));
+  background: var(--ice);
+  border-radius: max(calc(5 * var(--u)), 4px);
+  color: var(--ink);
+  font-size: max(calc(17 * var(--u)), 15px);
+  font-weight: 700;
+  transition: background-color .15s, box-shadow .2s;
+}
+.vx a.vx-btn:focus-visible { outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .vx-btn:hover { background: #fff; box-shadow: 0 0 0 calc(4 * var(--u)) rgb(154 147 255 / .2); } }
+.vx-more { display: inline-flex; align-items: center; gap: .5em; margin-top: calc(18 * var(--u)); padding: 4px; font-size: max(calc(15 * var(--u)), 13px); color: var(--ice); }
+.vx-more svg { width: .68em; height: .85em; fill: none; stroke: currentColor; stroke-width: 1.45; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s cubic-bezier(.16, 1, .3, 1); }
+@media (hover: hover) and (pointer: fine) { .vx-more:hover svg { transform: translateY(.12em); } }
+
+/* The video's horizon sits just above the bottom of the copy */
+.vx-field { position: relative; z-index: 1; flex: 318.68 1 0; width: 100%; min-height: calc(160 * var(--u)); container-type: size; }
+.vx-field video {
+  --h: max(100cqw * 971 / 1619, (100cqh + 36.4 * var(--u)) / .49537 + 1px);
+  position: absolute;
+  left: 50%;
+  top: calc(-36.4 * var(--u) - .50463 * var(--h));
+  width: auto;
+  height: var(--h);
+  max-width: none;
+  transform: translateX(-50%);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 4%);
+  mask-image: linear-gradient(transparent, #000 4%);
+}
+.vx::after { content: ""; position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; height: 18%; background: linear-gradient(transparent, var(--ink)); pointer-events: none; }
+
+@media (min-width: 600px) and (max-width: 1099.98px) and (min-height: 541px) {
+  .vx { --u: min(100vh / 800, 1px, max(100vw / 1280, 100vh / 1190, .86px)); }
+  .vx-field { max-height: 48%; }
+}
+@media (max-width: 599.98px) {
+  .vx { --u: min(100vh / 800, max(100vw / 1280, min(100vw / 640, .75px))); padding-inline: 1.5rem; }
+  .vx h1 { font-size: max(32px, min(calc(72 * var(--u)), (100vw - 48px) / 8)); }
+  .vx-sub { font-size: 1rem; line-height: 1.3; }
+  .vx-rule, .vx-nav { width: min(350px, 100vw - 32px); }
+  .vx-nav a { padding-block: .85rem; margin-block: -.65rem; }
+  .vx-more { padding: .75rem; margin-top: .25rem; }
+  .vx-field { max-height: 48%; width: 100vw; }
+}
+@media (max-height: 539.98px) and (orientation: landscape) {
+  .vx { min-height: 25rem; }
+  .vx h1 { font-size: 28px; }
+  .vx-sub { margin-top: .4rem; font-size: 13px; }
+  .vx-btn { width: 170px; height: 40px; margin-top: .6rem; font-size: 13px; }
+  .vx-more { margin-top: .1rem; font-size: 12px; }
+  .vx-nav a { font-size: 12px; }
+  .vx-logo { height: 24px; }
+  .vx-rule, .vx-nav { width: 260px; }
+}
+
+/* Entrance, once per load. Everything rests fully visible if motion is off. */
+@media (prefers-reduced-motion: no-preference) {
+  .vx-logo { animation: vx-drop 900ms cubic-bezier(.22, 1, .36, 1) 60ms both; }
+  .vx-rule { animation: vx-draw 1000ms cubic-bezier(.7, 0, .2, 1) 180ms both; }
+  .vx-nav a { animation: vx-drop 700ms cubic-bezier(.22, 1, .36, 1) 490ms both; }
+  .vx-nav a:nth-child(2) { animation-delay: 420ms; }
+  .vx .l:first-child .li { animation: vx-mask 1100ms cubic-bezier(.16, 1, .3, 1) 200ms both; }
+  .vx .l:last-child .li { animation: vx-mask 1100ms cubic-bezier(.16, 1, .3, 1) 290ms both; }
+  .vx-sub { animation: vx-rise 850ms cubic-bezier(.22, 1, .36, 1) 700ms both; }
+  .vx-btn { animation: vx-btn 900ms cubic-bezier(.16, 1, .3, 1) 860ms both; }
+  .vx-more { animation: vx-rise 700ms cubic-bezier(.22, 1, .36, 1) 1040ms both; }
+}
+@keyframes vx-drop { from { opacity: 0; transform: translateY(-6px); } }
+@keyframes vx-draw { from { transform: scaleX(0); } }
+@keyframes vx-mask { from { transform: translateY(104%); } }
+@keyframes vx-rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes vx-btn { from { opacity: 0; transform: translateY(12px) scale(.975); } }

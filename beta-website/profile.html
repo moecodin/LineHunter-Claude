@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="auth.js" data-page="account"></script>
+  <title>Line Hunter | Your Profile</title>
+  <meta name="description" content="Your Line Hunter profile and previous hunts.">
+  <link rel="icon" href="assets/logo-mark.png">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="transition.css">
+  <link rel="stylesheet" href="discord.css">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="hunt-list.css">
+  <link rel="stylesheet" href="profile.css">
+  <script src="transition.js"></script>
+</head>
+<body>
+  <p class="sample-strip">Design preview. Accounts aren't real yet, and your details stay in this browser.</p>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a href="index.html" aria-label="Line Hunter home"><img class="logo" src="assets/logo-lockup.png" alt="Line Hunter" width="396" height="72"></a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="streak-board.html" data-wipe>Streak Board</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="pf wrap">
+    <div class="pf-head">
+      <span class="pf-avatar" id="pf-avatar" aria-hidden="true"></span>
+      <h1 id="pf-title">Your profile</h1>
+    </div>
+
+    <div class="pf-side">
+      <div class="pf-tabs" role="tablist" aria-label="Profile sections" aria-orientation="vertical">
+        <button type="button" role="tab" id="t-account" data-tab="account" aria-controls="p-account">Account</button>
+        <button type="button" role="tab" id="t-password" data-tab="password" aria-controls="p-password">Password</button>
+        <button type="button" role="tab" id="t-settings" data-tab="settings" aria-controls="p-settings">Settings</button>
+        <button type="button" role="tab" id="t-connectors" data-tab="connectors" aria-controls="p-connectors">Connectors</button>
+        <button type="button" role="tab" id="t-hunts" data-tab="hunts" aria-controls="p-hunts">Previous hunts</button>
+      </div>
+      <button type="button" class="pf-ghost pf-out" id="pf-out">Sign out</button>
+    </div>
+
+    <section class="pf-panel" role="tabpanel" id="p-account" aria-labelledby="t-account" tabindex="0">
+      <h2>Account</h2>
+      <form id="pf-name-form" class="pf-form" novalidate>
+        <label class="si-field"><span>Your name</span><input id="pf-name" type="text" autocomplete="name" maxlength="60"></label>
+        <button class="si-submit" type="submit">Save name</button>
+        <p class="si-msg" id="pf-name-msg" role="status"></p>
+      </form>
+      <div>
+        <span class="pf-label">Email, hidden for privacy</span>
+        <div class="pf-email">
+          <span class="pf-email-value" id="pf-email"></span>
+          <button type="button" class="pf-ghost" id="pf-email-toggle">Show</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="pf-panel" role="tabpanel" id="p-password" aria-labelledby="t-password" tabindex="0" hidden>
+      <h2>Change password</h2>
+      <form id="pf-pass-form" class="pf-form" novalidate>
+        <label class="si-field"><span>Current password</span><input id="pf-pass-now" type="password" autocomplete="current-password"></label>
+        <label class="si-field"><span>New password, 8 or more characters</span><input id="pf-pass-new" type="password" autocomplete="new-password"></label>
+        <label class="si-field"><span>Confirm new password</span><input id="pf-pass-again" type="password" autocomplete="new-password"></label>
+        <p class="si-msg" id="pf-pass-msg" role="status"></p>
+        <div class="pf-actions">
+          <button class="si-submit" type="submit">Change password</button>
+          <button type="button" class="si-link" id="pf-forgot">Forgot password?</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="pf-panel" role="tabpanel" id="p-settings" aria-labelledby="t-settings" tabindex="0" hidden>
+      <h2>Settings</h2>
+      <div class="pf-form">
+        <label class="si-field"><span>Default book for your Hunt List</span><select class="pf-select" id="pf-default-book"></select></label>
+        <p class="si-msg" id="pf-settings-msg" role="status"></p>
+      </div>
+    </section>
+
+    <section class="pf-panel" role="tabpanel" id="p-connectors" aria-labelledby="t-connectors" tabindex="0" hidden>
+      <h2>Connectors</h2>
+      <p class="pf-sub">Connect a book so you can export your Hunt List to it.</p>
+      <div id="pf-connectors">
+        <h3>Sportsbooks</h3>
+        <ul class="pf-conns" id="pf-conn-books"></ul>
+        <h3 style="margin-top:1rem">Markets</h3>
+        <ul class="pf-conns" id="pf-conn-markets"></ul>
+      </div>
+      <p class="pf-note">Design preview: nothing is actually linked, and you won't be asked for a book's password.</p>
+    </section>
+
+    <section class="pf-panel" role="tabpanel" id="p-hunts" aria-labelledby="t-hunts" tabindex="0" hidden>
+      <h2>Previous hunts</h2>
+      <p class="pf-sub">Picks from your Hunt List land here once their game is over. Past results don't predict future games.</p>
+      <h3 id="pf-sample-note"></h3>
+      <ul class="pf-hunts" id="pf-history"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Line Hunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+      <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="discord.js"></script>
+  <script src="auth-ui.js"></script>
+  <script src="hunt-list.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+/* Player research screen. Base tokens, header and footer come from streak-board.css. */
+:root {
+  --slate: #5f6da3;      /* disabled controls, quiet outlines */
+  --slate-edge: #6573a8; /* quiet outlines */
+  --haze: #c3cce9;       /* secondary text on navy */
+  --lilac: #d3d0ff;      /* secondary text on the wedge */
+  --hit-low: #f2969f;    /* hit rate 49 and below */
+  --hit-mid: #ecc86f;    /* hit rate 50 to 74 */
+  --hit-high: #7fdcc0;   /* hit rate 75 and up */
+}
+.rs-page { width: min(100% - 2rem, 1560px); margin-inline: auto; padding-block: 1rem 3rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+.rs-page button, .rs-dock button { cursor: pointer; }
+
+.rs-skip { position: absolute; left: 1rem; top: -4rem; z-index: 20; padding: .625rem 1rem; background: var(--ice); border-radius: .5rem; color: var(--ink); font-weight: 600; }
+.rs-skip:focus { top: .5rem; }
+#research:focus { outline: none; }
+html { scroll-padding-top: 5rem; }
+.rs-page h2 { margin: 0; }
+
+.rs-panel { background: var(--panel); border: 1px solid var(--rule); border-radius: .75rem; }
+
+/* Bar across the top: who, and the bet being researched */
+.rs-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; padding: .75rem 1rem; background: var(--panel); border: 1px solid var(--rule); border-radius: .75rem; }
+.rs-back { display: grid; place-items: center; width: 2.25rem; height: 2.75rem; margin-left: -.5rem; }
+.rs-back:hover .rs-chevron { border-color: var(--ice); }
+.rs-chevron { display: inline-block; width: .55rem; height: .55rem; border-left: 2px solid var(--mist); border-bottom: 2px solid var(--mist); transform: rotate(45deg); transition: transform .15s cubic-bezier(.23, 1, .32, 1); }
+.rs-chevron-down { margin-left: .75rem; transform: rotate(-45deg) translate(1px, -1px); flex: none; }
+details[open] > summary .rs-chevron-down { transform: rotate(135deg) translate(-1px, 1px); }
+.rs-avatar { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; flex: none; background: var(--navy); border-radius: 50%; font: 600 0.99rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.rs-who h1 { margin: 0; font: 600 1.537rem/1.1 var(--display); white-space: nowrap; }
+.rs-who p { font-size: .8125rem; color: var(--mist); }
+
+.rs-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-left: auto; }
+.rs-select select { height: 2.75rem; padding: 0 2rem 0 .75rem; background: var(--ink); border: 1px solid var(--rule); border-radius: .5rem; font-size: .9375rem; font-weight: 500; cursor: pointer; }
+.rs-stepper { display: flex; align-items: center; height: 2.75rem; background: var(--ink); border: 1px solid var(--rule); border-radius: .5rem; }
+.rs-stepper button { width: 2.5rem; height: 100%; background: none; border: 0; font-size: 1.25rem; color: var(--mist); }
+.rs-stepper button:hover:not([aria-disabled="true"]) { color: var(--ice); }
+.rs-stepper button[aria-disabled="true"] { color: var(--slate); cursor: default; }
+.rs-stepper output { min-width: 3rem; text-align: center; font: 600 1.21rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.rs-seg { display: flex; height: 2.75rem; padding: 3px; background: var(--ink); border: 1px solid var(--rule); border-radius: .5rem; }
+.rs-seg button { padding: 0 .9rem; background: none; border: 0; border-radius: .3rem; color: var(--mist); font-weight: 600; font-size: .9375rem; }
+.rs-seg button:hover { color: var(--ice); }
+.rs-seg button[aria-checked="true"] { background: var(--navy); box-shadow: inset 0 0 0 1px var(--lift); color: var(--ice); }
+.rs-books { display: flex; gap: 1rem; margin: 0; padding: 0 0 0 .5rem; list-style: none; }
+.rs-books li { display: grid; justify-items: center; align-content: center; height: 2.75rem; white-space: nowrap; }
+.rs-books span { font-size: .6875rem; color: var(--mist); line-height: 1.2; }
+.rs-books b { font-size: .875rem; font-weight: 600; line-height: 1.2; }
+.rs-books .is-best span { color: var(--lift); font-weight: 600; }
+
+.rs-layout { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: .75rem; align-items: start; }
+.rs-main, .rs-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: .75rem; min-width: 0; }
+
+/* The line ladder: the peak of the screen */
+.rs-ladder { display: flex; flex-direction: column; overflow: hidden; }
+/* Changes what the chart and ladder are based on, between the two */
+.rs-sample-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .625rem 1.25rem; padding: .625rem 1.25rem; border-block: 1px solid var(--rule); }
+.rs-ladder-head { position: relative; isolation: isolate; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem 2.5rem; padding: 1.125rem 1.25rem; background: var(--navy); }
+.rs-ladder-head::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--indigo); clip-path: polygon(62% 0, 100% 0, 100% 100%, 54% 100%); }
+.rs-ladder-head h2 { margin: 0; font: 600 calc(clamp(2rem, 3.4vw, 3.25rem) * 0.82)/1.1 var(--display); text-wrap: balance; }
+.rs-bet-out { margin-top: .3rem; color: var(--ice); font-weight: 600; font-size: .9375rem; }
+.rs-bet-out:empty { display: none; }
+.rs-bet-matchup { margin-top: .1rem; color: var(--haze); font-size: .9375rem; }
+@media (min-width: 721px) { .rs-spread { min-height: 2.7em; } }
+.rs-spread { margin-top: .25rem; color: var(--ice); font-weight: 600; font-variant-numeric: tabular-nums; }
+.rs-matchup-warn { color: var(--ice); font-weight: 600; }
+
+/* Says what the ladder is based on, right where the ladder starts */
+.rs-sample p { flex: 1; min-width: 0; }
+.rs-sample { display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; gap: .5rem 1rem; padding: .625rem 1.25rem; border-bottom: 1px solid var(--rule); font-size: .9375rem; }
+.rs-match { min-width: 13.5rem; min-height: 2.75rem; padding: 0 1rem; background: none; border: 1px solid var(--slate); border-radius: .5rem; color: var(--ice); font-weight: 600; font-size: .9375rem; white-space: nowrap; transition: background-color .15s; }
+.rs-match small { display: block; font-size: .75rem; font-weight: 500; line-height: 1.2; color: var(--mist); }
+.rs-match.is-on { background: var(--navy); border-color: var(--lift); }
+@media (hover: hover) and (pointer: fine) { .rs-match:hover { background: var(--navy); } }
+.rs-price { max-width: 24rem; font-size: .9375rem; line-height: 1.35; color: var(--lilac); }
+.rs-price p { margin-top: .375rem; text-wrap: pretty; }
+/* The answer, as three numbers: how often, how often it needs to, and the difference */
+.rs-readout { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0 1.25rem; margin: 0; }
+.rs-readout dt { font-size: .75rem; line-height: 1.2; }
+.rs-readout dd { margin: 0; font-size: .75rem; line-height: 1.25; white-space: nowrap; }
+.rs-readout dd.rs-readout-num { font: 600 1.76rem/1.1 var(--display); font-variant-numeric: tabular-nums; color: #fff; }
+.rs-readout dd.rs-pct.rs-pct-low { color: var(--hit-low); }
+.rs-readout dd.rs-pct.rs-pct-mid { color: var(--hit-mid); }
+.rs-readout dd.rs-pct.rs-pct-high { color: var(--hit-high); }
+/* Smaller on a small sample, in the same line box so nothing moves */
+.rs-readout dd.rs-readout-num.is-soft { font-size: 1.125rem; line-height: 1.936rem; }
+.rs-past { margin-top: .1rem; font-size: .8125rem; color: var(--haze); }
+
+.rs-rungs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: clamp(2px, .5vw, 6px); padding: .75rem clamp(.5rem, 1.5vw, 1.25rem) .25rem; }
+.rs-rung { display: grid; justify-items: center; gap: .1rem; min-width: 0; padding: .25rem 0 .5rem; background: none; border: 1px solid transparent; border-radius: .5rem; color: var(--mist); transition: background-color .15s, border-color .15s; }
+.rs-rung[aria-checked="true"] { background: var(--navy); border-color: var(--lift); color: var(--ice); }
+@media (hover: hover) and (pointer: fine) { .rs-rung:not([aria-checked="true"]):hover { border-color: var(--miss); color: var(--ice); } }
+.rs-rung-tag { height: 1rem; font-size: .6875rem; font-weight: 600; line-height: 1rem; }
+/* The slant from the logo moves here, where it can't touch the data */
+.rs-rung-tag:not(:empty) { padding-inline: .35rem; background: var(--lift); color: var(--ink); clip-path: polygon(.25rem 0, 100% 0, calc(100% - .25rem) 100%, 0 100%); }
+.rs-rung-plot { position: relative; width: 100%; height: clamp(7.5rem, 17vh, 10rem); }
+/* Flat ends: the distance from the break-even line is the message, so nothing blurs it */
+.rs-rung-fill { position: absolute; left: 50%; width: min(68%, 4.5rem); margin-left: calc(min(68%, 4.5rem) / -2); background: var(--slate); }
+.rs-rung-fill.is-above { bottom: 50%; transform-origin: bottom; background: var(--bar-hit-1); }
+.rs-rung-fill.is-below { top: 50%; transform-origin: top; background: var(--bar-miss-1); }
+.rs-rung-axis { position: absolute; left: 0; font-size: .75rem; line-height: 1.2; color: var(--mist); }
+.rs-rung-axis.is-above { bottom: calc(50% + .375rem); }
+.rs-rung-axis.is-below { top: calc(50% + .375rem); }
+/* Outline only: too few games to count as a result */
+.rs-rung.is-thin .rs-rung-fill { background: none; }
+.rs-rung.is-thin .rs-rung-fill.is-above { box-shadow: inset 0 0 0 1px var(--bar-hit-1); }
+.rs-rung.is-thin .rs-rung-fill.is-below { box-shadow: inset 0 0 0 1px var(--bar-miss-1); }
+/* Reaches past each column so break-even reads as one line across the ladder */
+.rs-rung-zero { position: absolute; left: calc(-1px - clamp(1px, .25vw, 3px)); right: calc(-1px - clamp(1px, .25vw, 3px)); top: 50%; height: 2px; margin-top: -1px; background: #fff; }
+.rs-rungs.is-empty .rs-rung-zero { display: none; }
+.rs-rung-key { display: flex; flex-wrap: wrap; gap: .25rem .875rem; margin-bottom: .25rem; }
+.rs-rung-key span { display: inline-flex; align-items: center; gap: .375rem; }
+.rs-key-below { background: var(--slate); }
+.rs-key-thin { box-shadow: inset 0 0 0 1px var(--slate); }
+.rs-rung-line { margin-top: .3rem; font: 600 calc(clamp(1.125rem, 2vw, 1.625rem) * 0.88)/1 var(--display); font-variant-numeric: tabular-nums; color: var(--ice); }
+.rs-rung-pct { font-size: .9375rem; font-weight: 600; line-height: 1.2; }
+.rs-rung-odds { font-size: .75rem; line-height: 1.2; white-space: nowrap; }
+/* Row labels, in step with the rows of each bar. Phones go without them to keep the bars wide. */
+.rs-rung-labels { display: none; }
+@media (min-width: 721px) {
+  .rs-rungs { grid-template-columns: 3.25rem; }
+  .rs-rung-labels { display: grid; justify-items: start; gap: .1rem; padding: .25rem 0 .5rem; border: 1px solid transparent; font-size: .75rem; line-height: 1.2; color: var(--mist); }
+  .rs-rung-labels .rs-rung-plot { border: 0; width: 100%; }
+  .rs-rung-labels .rs-rung-line { display: flex; align-items: center; height: clamp(1.125rem, 2vw, 1.625rem); margin-top: .3rem; font: 400 .75rem/1 var(--body, inherit); color: var(--mist); }
+  .rs-rung-label.is-dots { height: .9rem; line-height: .9rem; }
+  .rs-rung-label.is-pct { min-height: 1.125rem; }
+}
+/* L10, L20 and All against this line's price: filled clears it, hollow doesn't, a dash means too few games */
+.rs-dots { display: inline-flex; align-items: center; gap: 3px; height: .9rem; }
+.rs-dots i { width: .4375rem; height: .4375rem; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--slate); }
+.rs-dots i.yes { background: var(--ice); box-shadow: none; }
+.rs-dots i.none { height: 2px; border-radius: 0; background: var(--slate); box-shadow: none; }
+.rs-rung.is-pinned { border: 1px dashed var(--ice); }
+.rs-rung.is-pinned .rs-rung-tag { background: var(--ice); }
+/* Pin and compare */
+.rs-pin-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0 1rem; padding: 0 clamp(.5rem, 1.5vw, 1.25rem); }
+.rs-line-note { margin: 0; padding-bottom: .375rem; font-size: .875rem; color: var(--haze); }
+@media (min-width: 721px) { .rs-line-note { padding-bottom: 0; } }
+.rs-line-note:empty { display: none; }
+.rs-compare { border-block: 1px solid var(--rule); }
+.rs-compare[hidden] { display: none; }
+.rs-compare table { width: 100%; border-collapse: collapse; font-size: .9375rem; font-variant-numeric: tabular-nums; }
+.rs-compare th, .rs-compare td { padding: .4rem 1.25rem; border-bottom: 1px solid var(--rule); text-align: right; }
+.rs-compare tbody tr:last-child th, .rs-compare tbody tr:last-child td { border-bottom: 0; }
+.rs-compare tbody th { font-weight: 400; color: var(--mist); text-align: left; }
+.rs-compare thead th { font: 600 1.025rem/1.1 var(--display); }
+.rs-compare thead small { display: block; font: 500 .75rem var(--body); text-transform: none; color: var(--mist); }
+.rs-compare-diff { font-size: .8125rem; color: var(--mist); }
+.rs-compare-note { padding: .625rem 1.25rem; font-size: .9375rem; color: var(--haze); }
+/* The value signal: neutral, and stronger than the price above it */
+.rs-rung-gap { margin-top: .1rem; font-size: .8125rem; font-weight: 600; line-height: 1.2; color: var(--ice); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Under 5 games the record leads and the percent stands back */
+.rs-rung-small { font-size: .75rem; font-weight: 400; line-height: 1.2; }
+.rs-rung-need { display: none; font-style: normal; }
+@media (min-width: 1280px) { .rs-rung-need { display: inline; } }
+/* What the marks on the bars mean, right above them */
+.rs-ladder-key { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem 1.5rem; padding: .625rem clamp(.5rem, 1.5vw, 1.25rem) 0; font-size: .8125rem; color: var(--mist); }
+.rs-ladder-key:empty, #tick-note:empty { display: none; }
+.rs-ladder-key .rs-rung-key { margin: 0; }
+.rs-define[open] { flex: 1 1 100%; }
+.rs-ladder .rs-ladder-foot { justify-content: flex-start; }
+.rs-ladder-foot > div:empty { display: none; }
+.rs-page .rs-define summary { display: inline-flex; padding: 0; color: var(--lift); font-size: .875rem; text-decoration: underline; text-underline-offset: 3px; }
+.rs-keys { display: grid; gap: .25rem; margin: 0; padding-bottom: .5rem; font-size: .875rem; color: var(--ice); }
+.rs-keys div { display: grid; grid-template-columns: 4.5rem 1fr; align-items: center; }
+.rs-keys dd { margin: 0; }
+.rs-keys kbd { display: inline-block; min-width: 1.5em; padding: 0 .3em; border: 1px solid var(--slate); border-radius: .25rem; font: 600 .8125rem var(--body); text-align: center; }
+.rs-keys-note { margin: 0; font-size: .8125rem; color: var(--mist); }
+.rs-keys-off { display: inline-flex; align-items: center; gap: .375rem; min-height: 2.75rem; font-size: .875rem; color: var(--mist); cursor: pointer; }
+/* Single-key shortcuts mean nothing without a keyboard */
+@media (hover: none) { .rs-shortcuts { display: none; } }
+.rs-define p { max-width: 62ch; padding-bottom: .5rem; font-size: .875rem; color: var(--ice); }
+.rs-ladder-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .25rem 1.5rem; padding: .25rem 1.25rem .75rem; font-size: .8125rem; color: var(--mist); }
+.rs-ladder-foot p { max-width: 62ch; text-wrap: pretty; }
+.rs-reset { min-height: 2.75rem; padding: 0; background: none; border: 0; color: var(--lift); font-size: .875rem; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.rs-reset[hidden] { display: none; }
+
+/* Filters */
+.rs-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; padding-top: .25rem; }
+.rs-filter-panel[open] { flex: 1 1 100%; }
+.rs-page .rs-filter-panel summary { padding: 0; font-size: .9375rem; font-weight: 500; color: var(--ice); }
+.rs-page .rs-filter-panel summary .rs-chevron { margin-left: .5rem; }
+.rs-chips { display: flex; flex-wrap: wrap; gap: .375rem; }
+.rs-chips button { min-height: 2.25rem; padding: 0 .75rem; background: none; border: 1px solid var(--rule); border-radius: 2rem; color: var(--mist); font-size: .875rem; font-weight: 500; }
+.rs-chips button:hover { color: var(--ice); border-color: var(--miss); }
+.rs-chip-count { margin-left: .125rem; font-size: .8125rem; opacity: .85; }
+.rs-chips button[aria-disabled="true"], .rs-chips button[aria-disabled="true"]:hover { border-color: var(--rule); border-style: dashed; color: var(--slate); cursor: default; }
+.rs-chips button[aria-pressed="true"] { background: var(--navy); border-color: var(--lift); color: var(--ice); }
+.rs-clear { min-height: 2.25rem; margin-left: auto; padding: 0 .5rem; background: none; border: 0; color: var(--lift); font-size: .875rem; text-decoration: underline; }
+.rs-clear[hidden] { display: none; }
+
+/* Hit rate and chart */
+.rs-chart-panel { padding: 1rem 1.25rem; }
+/* Part of the research panel, so it takes no card of its own */
+.rs-ladder > .rs-chart-panel { min-width: 0; background: none; border: 0; border-radius: 0; }
+.rs-chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem 1.5rem; }
+.rs-page .rs-hit-label { font-size: .75rem; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; color: var(--mist); }
+.rs-hit-rate { display: flex; align-items: baseline; gap: .6rem; }
+.rs-hit-rate strong { font: 600 2.86rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.rs-hit-rate span { font-size: 1rem; color: var(--mist); }
+.rs-hit-rate strong.is-thin { font-size: 2.25rem; color: var(--mist); }
+.rs-hit-sentence { margin-top: .25rem; max-width: 46ch; font-size: .9375rem; text-wrap: pretty; }
+.rs-hit-sub { margin-top: .15rem; font-size: .875rem; color: var(--mist); }
+.rs-ranges { display: flex; align-self: flex-start; flex-wrap: wrap; gap: 2px; padding: 3px; background: var(--ink); border: 1px solid var(--rule); border-radius: .5rem; }
+.rs-ranges button { display: grid; justify-items: center; min-width: 3rem; min-height: 2.75rem; align-content: center; padding: 0 .5rem; background: none; border: 0; border-radius: .3rem; color: var(--mist); }
+.rs-ranges button span { font-size: .8125rem; font-weight: 600; line-height: 1.2; }
+.rs-ranges button small { font-size: .75rem; line-height: 1.2; }
+.rs-ranges button:hover { color: var(--ice); }
+.rs-ranges button.is-thin small:not(.rs-pct) { order: 1; color: var(--ice); font-weight: 600; }
+.rs-ranges button.is-thin small.rs-pct { order: 2; font-weight: 400; text-decoration: underline dotted; text-underline-offset: 2px; }
+.rs-ranges button[aria-checked="true"] { background: var(--navy); box-shadow: inset 0 0 0 1px var(--lift); color: var(--ice); }
+
+/* Hit rate colors. Doubled class so they win over each panel's text color. */
+.rs-pct.rs-pct-low { color: var(--hit-low); }
+.rs-pct.rs-pct-mid { color: var(--hit-mid); }
+.rs-pct.rs-pct-high { color: var(--hit-high); }
+.rs-range-menu { display: none; }
+.rs-key { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .375rem 1rem; margin-top: .75rem; font-size: .8125rem; color: var(--mist); }
+.rs-legend, .rs-overlays { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .875rem; }
+.rs-legend span { display: inline-flex; align-items: center; gap: .375rem; }
+.rs-overlays label { display: inline-flex; align-items: center; gap: .375rem; min-height: 1.75rem; cursor: pointer; }
+.rs-overlays input { width: 1rem; height: 1rem; accent-color: var(--lift); }
+.rs-swatch { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; }
+.rs-swatch-miss { background: var(--bar-miss-1); }
+.rs-swatch-line { width: 1rem; height: 0; border-radius: 0; border-top: 2px dashed var(--ice); }
+
+/* Stacked parts: brightest for the main stat. */
+.rs-seg-0 { background: var(--bar-hit-1); color: var(--ink); }
+.rs-seg-1 { background: var(--bar-hit-2); color: var(--ink); }
+.rs-seg-2 { background: var(--bar-hit-3); color: #fff; }
+.is-miss .rs-seg-0 { background: var(--bar-miss-1); }
+.is-miss .rs-seg-1 { background: var(--bar-miss-2); color: #fff; }
+.is-miss .rs-seg-2 { background: var(--bar-miss-3); color: #fff; }
+/* In the game-by-game chart, hits and misses for the chosen side (Over or Under) are both bright, so every game pops */
+.rs-col:not(.is-miss) .rs-seg-0, .rs-legend .rs-seg-0 { background: #62e0b6; }
+.rs-col:not(.is-miss) .rs-seg-1, .rs-legend .rs-seg-1 { background: #47c99e; }
+.rs-col:not(.is-miss) .rs-seg-2, .rs-legend .rs-seg-2 { background: #33ad86; color: var(--ink); }
+.rs-legend .rs-swatch-miss { background: #ff6b7d; }
+.rs-col.is-miss .rs-seg-0 { background: #ff6b7d; color: var(--ink); }
+.rs-col.is-miss .rs-seg-1 { background: #ea5a6d; color: var(--ink); }
+.rs-col.is-miss .rs-seg-2 { background: #d24d60; color: var(--ink); }
+.rs-col .rs-total, .rs-col.is-miss .rs-total { color: #fff; }
+
+.rs-chart-scroll { margin-top: .75rem; padding-bottom: .625rem; overflow-x: auto; }
+.rs-chart { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); grid-template-rows: clamp(16rem, 42vh, 24rem) auto; column-gap: .375rem; min-width: calc(var(--n, 10) * 2.6rem + 2.75rem); }
+.rs-chart[hidden] { display: none; }
+/* Stays pinned while the bars scroll sideways on small screens */
+.rs-y { position: sticky; left: 0; z-index: 4; display: flex; flex-direction: column; justify-content: space-between; padding-right: .25rem; background: var(--panel); text-align: right; font-size: .75rem; color: var(--mist); }
+.rs-y span { line-height: 1; }
+.rs-plot { position: relative; isolation: isolate; border-bottom: 1px solid var(--miss); }
+.rs-gridline { position: absolute; inset-inline: 0; border-top: 1px solid var(--rule); }
+.rs-bars { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+.rs-col { display: flex; align-items: flex-end; justify-content: center; padding-inline: clamp(2px, .5vw, 6px); min-width: 0; }
+.rs-stack { position: relative; display: flex; flex-direction: column; width: 100%; max-width: 6.5rem; }
+/* Marks where last season's games end when a range spans both */
+.rs-col.is-new-season { position: relative; }
+.rs-col.is-new-season::before { content: "2026-27"; position: absolute; top: 0; bottom: 0; left: 0; z-index: 1; padding-left: 4px; border-left: 1px dashed var(--mist); color: var(--mist); font-size: .6875rem; line-height: 1; white-space: nowrap; pointer-events: none; }
+.rs-seg-part { min-height: 1px; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: .75rem; font-weight: 600; line-height: 1; white-space: nowrap; }
+.rs-seg-part + .rs-seg-part { border-top: 1px solid var(--panel); } /* parts of a bar stay separate even in close colors */
+.rs-stack > :nth-child(2) { border-radius: 3px 3px 0 0; }
+/* Above the dashed line, with a backing so a total close to the line stays readable */
+.rs-total { position: absolute; z-index: 2; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); padding: 1px 4px; background: var(--panel); border-radius: 3px; font: 700 1.0625rem/1 var(--display); }
+/* Green for a hit, red for a miss, so each game reads at a glance */
+.is-miss .rs-total { color: var(--mist); }
+@media (hover: hover) and (pointer: fine) { .rs-col:hover .rs-stack { filter: brightness(1.12); } }
+.rs-col { cursor: pointer; }
+.rs-log tr.is-target { outline: 2px solid var(--lift); outline-offset: -2px; }
+.is-dense .rs-total { font-size: .9375rem; }
+
+/* The line stays visible on any bar color */
+.rs-line { position: absolute; inset-inline: 0; z-index: 1; height: 2px; background: repeating-linear-gradient(90deg, #fff 0 6px, var(--ink) 6px 12px); pointer-events: none; }
+/* Sits in the pinned axis, so it never covers a bar and never scrolls away */
+.rs-line-tag { position: absolute; left: 0; width: 2rem; padding-block: 1px; transform: translateY(50%); background: var(--ice); border-radius: 3px; color: var(--ink); font-size: .6875rem; font-weight: 600; text-align: center; }
+
+.rs-xs { grid-column: 2; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); padding-top: .4rem; }
+.rs-x { display: grid; justify-items: center; min-width: 0; font-size: .75rem; line-height: 1.3; white-space: nowrap; }
+.rs-x b { font-weight: 600; }
+.rs-x span { color: var(--mist); }
+/* Minutes and usage get their own labeled numbers, not a line that borrows the stat's axis */
+.rs-metric-label { position: sticky; left: 0; z-index: 4; grid-column: 1; margin-top: .375rem; padding: .25rem .25rem 0 0; background: var(--panel); border-top: 1px solid var(--rule); font-size: .75rem; color: var(--mist); text-align: right; }
+.rs-metric-row { grid-column: 2; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); margin-top: .375rem; padding-top: .25rem; border-top: 1px solid var(--rule); font-size: .8125rem; text-align: center; }
+.rs-scroll-hint { margin-top: .5rem; font-size: .8125rem; color: var(--mist); }
+.rs-scroll-hint[hidden], .rs-key[hidden] { display: none; }
+.rs-log .rs-back-row td { padding-block: .125rem; text-align: left; }
+.rs-empty { padding: 4rem 1rem; text-align: center; color: var(--mist); }
+.rs-empty[hidden] { display: none; }
+.rs-empty-clear { min-height: 2.75rem; padding: 0 .25rem; background: none; border: 0; color: var(--lift); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.rs-log table[hidden] { display: none; }
+
+/* Collapsible panels */
+.rs-page summary { display: flex; align-items: center; gap: .625rem; min-height: 2.75rem; padding: .5rem 1rem; list-style: none; cursor: pointer; }
+.rs-page summary::-webkit-details-marker { display: none; }
+.rs-page .rs-summary-title { font-weight: 600; font-size: .9375rem; }
+.rs-summary-hint { font-size: .8125rem; color: var(--mist); }
+.rs-page summary .rs-chevron { margin-left: auto; }
+
+/* Game log */
+.rs-table-scroll { overflow-x: auto; border-top: 1px solid var(--rule); }
+.rs-log table { width: 100%; min-width: 46rem; border-collapse: collapse; font-size: .875rem; }
+.rs-log th, .rs-log td { padding: .4rem .625rem; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.rs-log thead th { font-size: .75rem; font-weight: 500; color: var(--mist); }
+.rs-log tbody th { font-weight: 500; text-align: left; }
+.rs-log .rs-left { text-align: left; }
+.rs-log .is-hot { color: var(--ice); font-weight: 600; background: rgb(154 147 255 / .1); }
+.rs-avg th, .rs-avg td { background: var(--navy); font-weight: 600; }
+.rs-avg .is-hot { background: var(--navy); }
+.rs-log tbody tr.is-miss:not(.rs-avg) th, .rs-log tbody tr.is-miss td { color: var(--mist); }
+.rs-result b { font-weight: 600; margin-right: .25rem; }
+.rs-log tbody tr:last-child th, .rs-log tbody tr:last-child td { border-bottom: 0; }
+/* Only used on phones, where the wide columns collapse into a detail row */
+.rs-toggle-cell, .rs-row-more { display: none; }
+.rs-row-more td { color: var(--mist); font-size: .8125rem; line-height: 1.5; text-align: left; white-space: normal; }
+
+/* Side panels */
+.rs-defense { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin: 0; padding: .25rem 1rem 1rem; }
+.rs-defense-main { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; padding-bottom: .625rem; border-bottom: 1px solid var(--rule); }
+.rs-defense dt { font-size: .75rem; color: var(--mist); }
+.rs-defense dd { margin: 0; font-weight: 600; }
+.rs-defense .rs-defense-num { font: 600 1.98rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.rs-defense-rank { text-align: right; }
+.rs-defense-rank dt { font-size: .875rem; color: var(--ice); font-weight: 500; }
+.rs-defense-rank dd { font: 400 .8125rem var(--body); color: var(--mist); }
+.rs-defense .is-hot dt { color: var(--ice); font-weight: 600; }
+.rs-defense > div:not(.rs-defense-main):not(.is-hot) dd { color: var(--mist); font-weight: 500; }
+.rs-news, .rs-list { margin: 0; padding: 0 1rem .875rem; list-style: none; font-size: .875rem; }
+.rs-news li + li { margin-top: .625rem; padding-top: .625rem; border-top: 1px solid var(--rule); }
+.rs-news time { display: block; font-size: .75rem; color: var(--mist); }
+.rs-list li { display: flex; justify-content: space-between; gap: 1rem; padding-block: .375rem; }
+.rs-list li + li { border-top: 1px solid var(--rule); }
+.rs-list li span:last-child { color: var(--mist); }
+.rs-injuries { padding-bottom: .5rem; }
+.rs-injuries h3 { margin: 0; padding: .375rem 1rem 0; font-size: .75rem; font-weight: 600; letter-spacing: .06em; color: var(--mist); }
+.rs-injuries .rs-list { padding-bottom: .375rem; }
+.rs-none { padding: .25rem 1rem .5rem; font-size: .875rem; color: var(--mist); }
+.rs-list .rs-status { flex: none; padding: 1px .5rem; border-radius: .25rem; font-size: .75rem; font-weight: 600; }
+.rs-list li span.rs-status-out { background: var(--ice); color: var(--ink); }
+.rs-list li span.rs-status-questionable { border: 1px solid var(--lift); color: var(--ice); }
+
+@media (max-width: 1100px) {
+  .rs-layout { grid-template-columns: minmax(0, 1fr); }
+  .rs-side { grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); align-items: start; }
+}
+
+@media (max-width: 720px) {
+  /* Name and stat share a row; the other controls wrap below */
+  .rs-controls { display: contents; }
+  .rs-select { flex: 1 1 8rem; min-width: 0; }
+  .rs-select select { width: 100%; padding: 0 1.375rem 0 .5rem; font-size: .875rem; }
+  .rs-stepper { flex: 1 1 100%; justify-content: space-between; }
+  .rs-game-menu { order: 1; }
+  .rs-bar > .rs-controls .rs-seg { order: 2; }
+  .rs-bar > .rs-controls .rs-stepper { order: 3; }
+  .rs-seg { flex: 1 1 auto; }
+  .rs-seg button { flex: 1; }
+  .rs-books { flex: 1 1 100%; }
+  .rs-books li { flex: 1; }
+  .rs-sample { padding-inline: 1rem; }
+  .rs-chart { min-width: calc(var(--n, 10) * 3.25rem + 2.25rem); }
+}
+
+/* Touch sizing wherever the pointer is a finger, whatever the screen width */
+@media (pointer: coarse), (max-width: 720px) {
+  .rs-back { width: 2.75rem; }
+  .rs-stepper { height: auto; }
+  .rs-stepper button { width: 2.75rem; min-height: 2.75rem; }
+  .site-header > a:first-of-type { display: inline-flex; align-items: center; min-height: 2.75rem; }
+  .rs-seg { height: auto; }
+  .rs-seg button { min-height: 2.75rem; }
+  .rs-chips button, .rs-clear { min-height: 2.75rem; }
+  .rs-overlays label { min-height: 2.75rem; }
+  .site-nav a { min-height: 2.75rem; }
+}
+
+.rs-dock {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 4rem;
+  transform: translate(-50%, -100%);
+  visibility: hidden;
+  transition: transform .2s cubic-bezier(.23, 1, .32, 1), visibility .2s;
+}
+.rs-dock.is-shown { transform: translate(-50%, 0); visibility: visible; }
+.rs-dock p { display: flex; align-items: baseline; gap: .75rem; white-space: nowrap; }
+.rs-dock b { font-weight: 600; font-size: .9375rem; }
+.rs-dock span { font-size: .8125rem; color: var(--haze); }
+.rs-dock .rs-seg { flex: none; }
+.rs-dock .rs-seg button { min-width: 2.75rem; padding: 0 .5rem; }
+.rs-dock .rs-seg span { font: inherit; color: inherit; }
+.rs-dock .rs-stepper { flex: none; }
+.rs-dock .rs-stepper button { width: 2.75rem; }
+
+@media (max-width: 1000px) {
+  html { scroll-padding-bottom: 5rem; }
+  body { padding-bottom: 5.5rem; }
+  .rs-dock {
+    top: auto;
+    inset: auto 0 0;
+    justify-content: space-between;
+    gap: .75rem;
+    height: auto;
+    padding: .5rem 1rem max(.5rem, env(safe-area-inset-bottom));
+    background: var(--navy);
+    border-top: 1px solid var(--lift);
+    transform: translateY(100%);
+  }
+  .rs-dock.is-shown { transform: none; }
+  .rs-dock p { display: block; min-width: 0; white-space: normal; }
+  .rs-dock b { display: block; line-height: 1.25; }
+}
+
+@media (max-width: 720px) {
+  /* The bet bar replaces a sticky brand header on this page */
+  .site-header { position: static; }
+
+  /* A shorter top, so the ladder arrives sooner */
+  .rs-wide-only { display: none; }
+  .rs-avatar { display: none; }
+  .rs-bar { gap: .5rem; padding: .5rem .75rem; }
+  .rs-who h1 { font-size: 1.25rem; }
+  .rs-books { display: grid; grid-template-columns: 1fr 1fr; gap: .125rem .75rem; padding: 0 .25rem; } /* four books in two rows */
+  .rs-books li { grid-auto-flow: column; justify-content: space-between; gap: .3rem; height: 2rem; align-items: center; }
+  .rs-rung-plot { height: 6rem; }
+  .rs-rung-tag:not(:empty) { padding-inline: .2rem; }
+  .rs-compare th, .rs-compare td { padding-inline: .75rem; }
+  .rs-compare thead th { font-size: .875rem; }
+  .rs-ladder-head { gap: .5rem; padding: .75rem 1rem; }
+  .rs-ladder-head h2 { font-size: 1.4375rem; }
+  .rs-bet-matchup, .rs-bet-out { font-size: .875rem; }
+  .rs-price { position: relative; isolation: isolate; max-width: none; width: 100%; padding-top: .25rem; font-size: .875rem; }
+  /* The slant sits above the numbers here, so it never cuts through text */
+  .rs-ladder-head::before { display: none; }
+  .rs-price::before { content: ""; position: absolute; inset: -.5rem -1rem -.75rem; z-index: -1; background: var(--indigo); clip-path: polygon(0 .625rem, 100% 0, 100% 100%, 0 100%); }
+  .rs-readout dd.rs-readout-num { font-size: 1.4375rem; }
+  .rs-readout dd.rs-readout-num.is-soft { font-size: 1rem; line-height: 1.58rem; }
+  .rs-ladder-foot > div { width: 100%; }
+  .rs-ladder-foot .rs-books { margin-top: .25rem; }
+  .rs-dock { gap: .5rem; padding-inline: .75rem; }
+  .rs-spread { min-height: 1.35em; }
+  .rs-sample { display: flow-root; padding-block: .5rem; font-size: .875rem; }
+  .rs-match { float: right; min-width: 0; margin: 0 0 .25rem .75rem; width: 9.5rem; padding: .25rem .75rem; line-height: 1.2; white-space: normal; text-wrap: balance; }
+
+  /* Seven ranges don't fit a phone row, so they become a drop menu */
+  .rs-ranges { display: none; }
+  .rs-range-menu { display: grid; gap: .25rem; width: 100%; font-size: .8125rem; color: var(--mist); }
+  .rs-sample-controls .rs-range-menu { flex: 1 1 100%; }
+  .rs-range-menu select { width: 100%; color: var(--ice); font-size: 1rem; }
+  .rs-sample-controls, .rs-chart-panel { padding-inline: 1rem; }
+  .rs-rung-gap { font-size: .75rem; }
+  .rs-filters { width: 100%; }
+
+  /* Matchup and injuries move up, ahead of the long game log */
+  .rs-layout { display: flex; flex-direction: column; align-items: stretch; }
+  .rs-main, .rs-side { display: contents; }
+  .rs-layout .rs-panel { min-width: 0; }
+
+  /* Phone game log: Date, Opp, Value and Result, with the rest one tap away */
+  .rs-log table { min-width: 0; }
+  .rs-log .rs-wide { display: none; }
+  .rs-toggle-cell { display: table-cell; width: 2.75rem; padding: 0 !important; }
+  .rs-row-more { display: table-row; }
+  .rs-row-more[hidden] { display: none; }
+  .rs-row-toggle { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; background: none; border: 0; }
+  .rs-row-toggle[aria-expanded="true"] .rs-chevron-down { transform: rotate(135deg) translate(-1px, 1px); }
+  .rs-row-toggle .rs-chevron-down { margin: 0; }
+}
+
+/* Tablets and small laptops: the bet and its numbers stay side by side, and the slant
+   is measured from the right so it stays in the gap between them */
+@media (min-width: 721px) and (max-width: 1279px) {
+  .rs-ladder-head { flex-wrap: nowrap; gap: 1.25rem; }
+  .rs-ladder-head::before { clip-path: polygon(calc(100% - 23.5rem) 0, 100% 0, 100% 100%, calc(100% - 24.5rem) 100%); }
+  .rs-ladder-head > div:first-child { flex: 1; min-width: 0; }
+  .rs-ladder-head h2 { font-size: clamp(1.4375rem, 3.1vw, 2.0625rem); }
+  .rs-price { flex: none; width: 22rem; max-width: 22rem; }
+}
+/* Tablets: defense and injuries pair up above the closed game log */
+@media (min-width: 721px) and (max-width: 1100px) {
+  .rs-main { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .rs-main > * { grid-column: 1 / -1; }
+  .rs-main > details:has(#defense), .rs-main > details:has(#injuries) { grid-column: auto; }
+}
+
+/* Short laptop screens: tighter top and bars, so the whole ladder fits */
+@media (min-width: 721px) and (max-height: 820px) {
+  .rs-page { padding-top: .5rem; gap: .5rem; }
+  .rs-bar { padding-block: .375rem; }
+  .rs-ladder-head { padding-block: .75rem; }
+  .rs-rung-plot { height: 6.5rem; }
+}
+
+/* Very narrow phones */
+@media (max-width: 360px) {
+  .rs-readout dd.rs-readout-num { font-size: 1.25rem; }
+  body { padding-bottom: 8rem; }
+  .rs-rungs { gap: 1px; padding-inline: .25rem; }
+  .rs-rung-tag:not(:empty) { padding-inline: .1rem; font-size: .625rem; }
+  .rs-rung-pct { font-size: .8125rem; }
+}
+
+/* Phones on their side: little height, so the header stops following and the bars shorten */
+@media (max-height: 500px) {
+  html { scroll-padding-top: 1rem; }
+  .site-header { position: static; }
+  .rs-rung-plot { height: 5.5rem; }
+  .rs-chart { grid-template-rows: 11rem auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-chevron, .rs-dock { transition: none; }
+}
+
+/* A link to a player who isn't in the sample data */
+.rs-missing { display: grid; justify-items: start; gap: .75rem; padding: 2rem 1.25rem; }
+.rs-missing h1 { margin: 0; font: 600 1.75rem/1.1 var(--display); }

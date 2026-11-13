@@ -1,0 +1,101 @@
+/* Game page: tonight's matchup, its props and its context. Builds on player.css. */
+.gm-page { gap: .75rem; }
+.gm-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .25rem 1rem; }
+.gm-back, .gm-switch a { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; color: var(--mist); font-size: .9375rem; text-decoration: none; }
+.gm-switch { display: flex; gap: 1.25rem; }
+.gm-next { transform: rotate(225deg); }
+@media (hover: hover) and (pointer: fine) { .gm-back:hover, .gm-switch a:hover { color: var(--ice); } }
+
+/* Grows out of the game card on the home page: same colors, same slanted seam */
+.gm-hero { position: relative; overflow: hidden; background: var(--panel); border: 1px solid var(--rule); border-radius: .75rem; view-transition-name: game-card; }
+.gm-time { padding: .625rem 1.25rem; font-size: .9375rem; font-weight: 500; text-align: center; color: var(--ice); background: var(--navy); }
+.gm-teams { position: relative; isolation: isolate; display: flex; justify-content: space-between; align-items: flex-end; min-height: clamp(9rem, 20vw, 13rem); padding: 1.25rem clamp(1.25rem, 4vw, 3rem); background: var(--away); color: var(--away-text); }
+.gm-teams::before, .gm-teams::after { content: ""; position: absolute; inset: 0; z-index: -1; }
+.gm-teams::before { background: var(--home); clip-path: polygon(56% 0, 100% 0, 100% 100%, 44% 100%); }
+.gm-teams::after { background: var(--ice); clip-path: polygon(55.75% 0, 56.25% 0, 44.25% 100%, 43.75% 100%); }
+.gm-team { flex: 1; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: space-between; gap: .75rem; }
+.gm-team h1 { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0; font: 600 clamp(2.5rem, 7.5vw, 5.25rem)/1 var(--display); }
+.gm-at { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; margin: -1.375rem 0 0 -1.375rem; background: var(--ink); border-radius: 50%; color: var(--ice); font: 500 1rem/1 var(--body); }
+.gm-home-name { color: var(--home-text); }
+.gm-line { display: flex; flex-direction: column; gap: .1rem; font-size: .9375rem; font-variant-numeric: tabular-nums; }
+.gm-line b { font-size: 1.25rem; font-weight: 700; }
+.gm-line-home { position: absolute; right: clamp(1.25rem, 4vw, 3rem); bottom: 1.25rem; align-items: flex-end; color: var(--home-text); }
+
+/* Props */
+.gm-props-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem 1.5rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--rule); }
+.gm-props-head h2 { margin: 0; font: 600 1.5rem/1.1 var(--display); }
+.gm-props-head p { margin-top: .25rem; font-size: .875rem; color: var(--mist); }
+.gm-tabs button { display: inline-flex; align-items: baseline; gap: .375rem; }
+.gm-tabs button small { font-size: .75rem; color: var(--mist); font-variant-numeric: tabular-nums; }
+.gm-tabs button[aria-pressed="true"] { background: var(--navy); box-shadow: inset 0 0 0 1px var(--lift); color: var(--ice); }
+.gm-tabs button[aria-disabled="true"] { color: var(--slate); cursor: not-allowed; }
+.gm-untracked { padding: .75rem 1.25rem 1rem; border-top: 1px solid var(--rule); font-size: .875rem; color: var(--mist); }
+.gm-player[hidden] { display: none; }
+.gm-player + .gm-player { border-top: 1px solid var(--rule); }
+.gm-player-head { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.25rem .5rem; }
+.gm-player-head h3 { margin: 0; font: 600 1.25rem/1.15 var(--display); }
+.gm-player-head h3 a { color: var(--ice); text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .gm-player-head h3 a:hover { text-decoration: underline; text-underline-offset: 3px; } }
+.gm-player-head p { margin-top: .1rem; font-size: .8125rem; color: var(--mist); }
+.gm-table { padding: 0 .5rem .5rem; }
+.gm-table table { width: 100%; border-collapse: collapse; font-size: .9375rem; font-variant-numeric: tabular-nums; }
+.gm-table thead th { padding: .375rem .75rem; font-size: .75rem; font-weight: 400; text-align: right; color: var(--mist); white-space: nowrap; }
+.gm-table thead th:first-child { text-align: left; }
+.gm-table tbody tr { position: relative; border-top: 1px solid var(--rule); }
+.gm-table tbody th, .gm-table tbody td { height: 3.25rem; padding: .375rem .75rem; text-align: right; font-weight: 600; }
+.gm-table tbody th { font-weight: 500; text-align: left; }
+.gm-table tbody th a { color: var(--ice); text-decoration: none; }
+/* The whole row is the link */
+.gm-table tbody th a::after { content: ""; position: absolute; inset: 0; border-radius: .375rem; }
+.gm-table tbody th a:focus-visible { outline: none; }
+.gm-table tbody th a:focus-visible::after { outline: 2px solid var(--lift); outline-offset: -2px; }
+@media (hover: hover) and (pointer: fine) { .gm-table tbody tr:hover { background: var(--navy); } }
+.gm-table small { display: block; font-size: .75rem; font-weight: 400; color: var(--mist); }
+.gm-table .gm-wide { font-weight: 400; color: var(--haze); }
+.gm-go { width: 1.75rem; padding-inline: 0 .5rem !important; color: var(--mist); }
+.gm-go .rs-chevron { display: inline-block; transform: rotate(225deg); }
+.gm-gap { white-space: nowrap; }
+.gm-gap > span:last-child { display: inline-block; min-width: 4em; }
+/* Above break-even grows right from the white line, below grows left */
+.gm-bar { position: relative; display: inline-block; width: 5rem; height: .75rem; margin-right: .625rem; vertical-align: -1px; }
+.gm-bar::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: #fff; }
+.gm-bar i { position: absolute; top: 0; bottom: 0; }
+.gm-bar i.is-above { left: 50%; background: var(--bar-hit-1); }
+.gm-bar i.is-below { right: 50%; background: var(--bar-miss-1); }
+
+/* Side panels */
+.gm-matchup { padding: 0 1rem 1rem; }
+.gm-matchup table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.gm-matchup thead th { font: 600 1.125rem/1.2 var(--display); padding-bottom: .25rem; }
+.gm-matchup tbody th { font-size: .8125rem; font-weight: 400; color: var(--mist); text-align: center; }
+.gm-matchup td, .gm-matchup tbody th { padding-block: .375rem; border-top: 1px solid var(--rule); }
+.gm-matchup thead td { border: 0; }
+.gm-matchup .num { width: 28%; font-weight: 600; }
+.gm-matchup .num:first-child { text-align: left; }
+.gm-matchup .num:last-child { text-align: right; }
+.gm-meetings { padding: 0 1rem 1rem; }
+.gm-meetings b { font-weight: 700; }
+.gm-meetings li span:first-child { color: var(--mist); }
+
+@media (pointer: coarse), (max-width: 720px) {
+  .gm-player-head h3 a { position: relative; }
+  .gm-player-head h3 a::after { content: ""; position: absolute; inset: -.65rem -.25rem; }
+}
+
+@media (max-width: 720px) {
+  .gm-switch-name { display: none; }
+  .gm-switch a { justify-content: center; min-width: 2.75rem; }
+  .gm-teams { min-height: 9rem; padding: 1rem; }
+  .gm-team h1 { font-size: clamp(2.25rem, 13vw, 3rem); }
+  .gm-at { width: 2.25rem; height: 2.25rem; margin: -1.125rem 0 0 -1.125rem; font-size: .875rem; }
+  .gm-line-home { right: 1rem; bottom: 1rem; }
+  .gm-line b { font-size: 1.0625rem; }
+  .gm-props-head, .gm-player-head { padding-inline: 1rem; }
+  .gm-tabs { width: 100%; }
+  .gm-tabs button { flex: 1; justify-content: center; }
+  .gm-table { padding-inline: .25rem; }
+  .gm-table .gm-wide, .gm-bar { display: none; }
+  .gm-table thead th, .gm-table tbody th, .gm-table tbody td { padding-inline: .5rem; }
+  .gm-gap > span:last-child { min-width: 0; }
+  .gm-go { width: 1.25rem; padding-right: .25rem !important; }
+}

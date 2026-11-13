@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="auth.js" data-page="signin"></script>
+  <title>Line Hunter | Sign In</title>
+  <meta name="description" content="Sign in or sign up for Line Hunter, NBA player prop stats and streaks.">
+  <link rel="icon" href="assets/logo-mark.png">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="signin.css?v=3">
+  <link rel="stylesheet" href="discord.css">
+</head>
+<body>
+  <p class="sample-strip">Design preview. All players, games, lines, odds and results on this page are made up.</p>
+
+  <main class="wl">
+    <div class="wl-photo" aria-hidden="true">
+      <video id="wl-wave" muted loop playsinline preload="none" poster="assets/wave-still.jpg" tabindex="-1" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260818_072341_50851634-bbc3-4c33-9acc-7647d4db44aa.mp4"></video>
+    </div>
+    <div class="wl-top">
+      <div class="wl-brand"><img class="wl-logo" src="assets/logo-lockup.png" alt="Line Hunter" width="396" height="72"></div>
+      <nav class="wl-nav" aria-label="Take a look">
+        <a class="wl-btn" href="tonight.html">Tonight's games</a>
+        <a class="wl-btn" href="featured.html">Featured players</a>
+        <a class="wl-btn" href="streak-board.html">Streak Board</a>
+      </nav>
+    </div>
+
+    <div class="wl-hero">
+      <div class="wl-copy">
+        <button type="button" class="wl-discord" data-discord-open><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg> Join the Discord</button>
+        <h1 style="--d:.06s">Read the line, not the hype.</h1>
+        <p class="wl-sub" style="--d:.12s">We give you the Streak Board, hit rates, game logs and matchups for NBA player props. You make the call. <b>Join the hunt.</b></p>
+        <button type="button" class="si-submit wl-start" style="--d:.18s" data-get-started>Get started</button>
+      </div>
+
+      <div class="wl-stage">
+        <div class="wl-plane">
+          <figure class="wl-shot">
+            <div class="wl-frame">
+              <picture>
+                <source media="(max-width: 720px)" srcset="assets/preview-marcus-phone.png" width="1000" height="2000">
+                <img src="assets/preview-marcus-sheet.png" width="1560" height="1836" draggable="false" alt="Preview of a Line Hunter stat page for sample player Marcus Vale: Over 38.5 points, rebounds and assists, a 55 percent hit rate over 20 games, and a game by game bar chart against the line.">
+              </picture>
+            </div>
+          </figure>
+          <div class="rl-col" aria-hidden="true"><div class="rl-track rl-up" id="rl-a"></div></div>
+          <div class="rl-col" aria-hidden="true"><div class="rl-track rl-down" id="rl-b"></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Line Hunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+      <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+  <script src="signin-reel.js?v=4"></script>
+  <script src="auth-ui.js"></script>
+  <script src="discord.js"></script>
+</body>
+</html>

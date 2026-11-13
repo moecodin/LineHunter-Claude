@@ -1,0 +1,128 @@
+/* Sign-in pieces shared by every page: the form parts, the pop-up, the header button and the guest preview. */
+
+/* Sign in / Sign up: the darker block slides under the two labels */
+.si-modes { position: relative; isolation: isolate; display: grid; grid-template-columns: 1fr 1fr; padding: 3px; background: var(--ink); border: 1px solid var(--miss); border-radius: .5rem; }
+.si-thumb { position: absolute; z-index: -1; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); background: var(--navy); border-radius: .3rem; transition: transform .28s cubic-bezier(.32, .72, 0, 1); }
+.si-modes[data-mode="up"] .si-thumb { transform: translateX(100%); }
+.si-modes button { min-height: 2.375rem; padding: 0 .875rem; background: none; border: 0; border-radius: .3rem; color: var(--mist); font-size: .9375rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: color .2s; }
+.si-modes button[aria-pressed="true"] { color: var(--ice); }
+
+.si-field { display: block; min-width: 0; }
+.si-field span { display: block; margin-bottom: .2rem; font-size: .8125rem; color: var(--haze, #c3cce9); }
+.si-field input { display: block; width: 100%; height: 2.75rem; padding: 0 .75rem; background: var(--ink); border: 1px solid #6573a8; border-radius: .5rem; color: var(--ice); font-size: 1rem; }
+.si-field input:focus-visible { outline: 2px solid var(--lift); outline-offset: 1px; }
+.si-field input[aria-invalid="true"] { border-color: #f2969f; }
+.si-submit { min-height: 2.75rem; padding: 0 1.5rem; background: var(--indigo); border: 0; border-radius: .5rem; color: #fff; font: inherit; font-weight: 700; white-space: nowrap; cursor: pointer; transition: background-color .15s, transform .12s cubic-bezier(.23, 1, .32, 1); }
+.si-submit:active { transform: scale(.97); }
+@media (hover: hover) and (pointer: fine) { .si-submit:hover { background: #3a1fc4; } }
+.si-msg { margin: .5rem 0 0; font-size: .875rem; color: #f2969f; }
+.si-msg.is-info { color: #d3d0ff; }
+.si-msg:empty { display: none; }
+.si-stay { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.25rem; font-size: .875rem; color: var(--ice); cursor: pointer; }
+.si-stay input { width: 1.125rem; height: 1.125rem; margin: 0; accent-color: var(--lift); }
+.si-note { margin: 0; color: var(--mist); font-size: .8125rem; }
+.si-link { display: inline-flex; align-items: center; min-height: 2.25rem; padding: 0; background: none; border: 0; color: var(--lift); font: inherit; font-size: .875rem; font-weight: 500; cursor: pointer; }
+.si-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* The pop-up */
+.am { width: min(100vw - 2rem, 26rem); max-height: calc(100dvh - 2rem); padding: 1.5rem; overflow-y: auto; background: var(--panel); border: 1px solid var(--miss); border-radius: 1rem; color: var(--ice); box-shadow: 0 1.5rem 4rem rgb(3 7 20 / .8); font: 400 1rem/1.5 var(--body); }
+.am::backdrop { background: rgb(3 7 20 / .72); }
+.am[open] { animation: am-in .24s cubic-bezier(.16, 1, .3, 1) both; }
+.am[open]::backdrop { animation: am-fade .2s ease-out both; }
+.am-view { display: flex; flex-direction: column; gap: .75rem; }
+.am-view[hidden] { display: none; }
+.am-why { margin: 0; padding-right: 2.25rem; font-size: .9375rem; color: var(--ice); text-wrap: pretty; }
+.am-why[hidden] { display: none; }
+.am-why a { color: var(--lift); font-weight: 700; }
+.am h2 { margin: 0; padding-right: 2.25rem; font: 600 1.5rem/1.15 var(--display); }
+.am-sub { margin: -.375rem 0 0; font-size: .9375rem; color: var(--haze, #c3cce9); text-wrap: pretty; }
+.am-close { position: absolute; top: .625rem; right: .625rem; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; background: none; border: 0; border-radius: .5rem; color: var(--mist); cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .am-close:hover { background: var(--navy); color: var(--ice); } }
+.am-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 1rem; margin-block: -.25rem; }
+.am .si-msg { margin: 0; }
+.am-submit { width: 100%; }
+.am-back { align-self: center; }
+@keyframes am-in { from { opacity: 0; transform: translateY(.75rem) scale(.98); } }
+@keyframes am-fade { from { opacity: 0; } }
+
+/* Header: profile at the top left, sign-in for guests */
+.lh-brand { display: flex; align-items: center; gap: .625rem; min-width: 0; }
+.lh-brand .logo { margin-left: 0; }
+.lh-me { flex: none; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; background: var(--navy); border: 1px solid var(--miss); border-radius: 50%; color: var(--ice); font: 600 .9375rem/1 var(--display); text-decoration: none; transition: border-color .15s; }
+.lh-me[aria-current] { border-color: var(--lift); }
+@media (hover: hover) and (pointer: fine) { .lh-me:hover { border-color: var(--lift); } }
+.lh-signin { display: flex; align-items: center; min-height: 2.5rem; margin-left: .25rem; padding: 0 .85rem; background: var(--indigo); border: 0; border-radius: .5rem; color: #fff; font: inherit; font-weight: 700; white-space: nowrap; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .lh-signin:hover { background: #3a1fc4; } }
+@media (max-width: 720px) {
+  .lh-me { position: relative; width: 2rem; height: 2rem; }
+  .lh-me::after { content: ""; position: absolute; inset: -.375rem; }
+  .lh-brand { gap: .5rem; }
+  .lh-signin { padding: 0 .6rem; }
+}
+@media (pointer: coarse), (max-width: 720px) { .lh-signin { min-height: 2.75rem; } }
+@media (max-width: 400px) {
+  .site-nav { gap: 0; }
+  .site-nav a { padding-inline: .3rem; font-size: .75rem; }
+}
+
+/* Beta, beside the logo */
+.site-header a:has(.logo) { display: inline-flex; align-items: center; gap: .375rem; text-decoration: none; }
+.lh-beta { color: #fff; font: italic 500 .75rem/1 var(--body); }
+.wl-brand .lh-beta { position: absolute; left: calc(100% - .125rem); top: 50%; transform: translateY(-50%); font-size: .8125rem; line-height: 1; }
+
+/* Guests: blurred numbers, and a sign-in block over anything past their free prop */
+.lh-locked { position: relative; min-height: 18rem; }
+.is-guest .fp-avg, .is-guest .fp-prop,
+.is-guest #rows .c-prop, .is-guest #rows .c-streak, .is-guest #rows .c-chart, .is-guest #rows .c-stat,
+.is-guest .wheel-detail,
+.is-guest .card .odds, .is-guest .card .prop, .is-guest .card .chart, .is-guest #panel,
+.is-guest .gm-table td:not(.gm-go), .is-guest #game .rs-side,
+.is-guest:not(.fl-open) .lh-locked > .rs-layout,
+.is-guest:not(.fl-open) .rs-books { filter: blur(6px); user-select: none; -webkit-user-select: none; }
+.is-guest:not(.fl-open) .rs-dock { display: none; }
+.is-guest #rows .c-chev { display: none; }
+.lh-gate[hidden] { display: none; }
+.lh-gate-card a { color: var(--lift); font-weight: 500; }
+
+/* The big numbers need more blur to stay unreadable */
+.is-guest .fp-avg { filter: blur(9px); }
+.is-guest:not(.fl-open) .lh-locked > .rs-layout { filter: blur(10px); }
+
+/* Guest notice under the header: what the free prop is, and the way in */
+.lh-free { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .25rem 1rem; padding: .5rem 1rem; background: var(--navy); border-bottom: 1px solid var(--rule); color: var(--ice); font-size: .875rem; text-align: center; }
+.lh-free[hidden] { display: none; }
+.lh-free p { margin: 0; text-wrap: balance; }
+.lh-free a { color: #fff; font-weight: 700; text-underline-offset: 3px; }
+.lh-free b { font-weight: 700; color: #fff; }
+.lh-free-in { min-height: 2.25rem; padding: 0; background: none; border: 0; color: #d3d0ff; font: inherit; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.lh-free-in:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Guest header: logo and sign-in, with the three pages beside them, or on their own row on phones */
+.is-guest .lh-signin { order: 2; margin-left: .75rem; }
+.is-guest .site-nav { margin-left: auto; }
+@media (max-width: 860px) {
+  .is-guest .site-header, .is-guest .header-inner { flex-wrap: wrap; height: auto; }
+  .is-guest .site-header { padding-block: .25rem; }
+  .is-guest .lh-signin { order: 0; margin-left: auto; }
+  .is-guest .site-nav { order: 1; width: 100%; margin-left: 0; }
+  .is-guest .site-nav a { flex: 1; justify-content: center; padding-inline: .25rem; font-size: .8125rem; white-space: nowrap; }
+}
+
+.lh-gate { position: absolute; inset: 0; z-index: 4; display: flex; justify-content: center; align-items: flex-start; padding: 3.5rem 1rem 1rem; pointer-events: none; }
+.lh-gate-card { position: sticky; top: 6rem; width: min(100%, 24rem); padding: 1.5rem; background: rgb(11 18 41 / .96); border: 1px solid var(--miss); border-radius: .875rem; box-shadow: 0 1.25rem 3rem rgb(3 7 20 / .75); text-align: center; pointer-events: auto; }
+.lh-gate-card h2 { margin: 0; font: 600 1.375rem/1.15 var(--display); color: var(--ice); }
+.lh-gate-card p { margin: .375rem 0 1rem; font-size: .9375rem; color: var(--haze, #c3cce9); }
+.lh-gate-card .si-submit { width: 100%; }
+@media (max-width: 720px) { .lh-gate { padding-top: 2rem; } .lh-gate-card { top: 5rem; padding: 1.25rem; } }
+
+/* Saving a pick on the player page */
+.rs-hunt { flex: none; display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 1rem; background: var(--indigo); border: 0; border-radius: .5rem; color: #fff; font: inherit; font-size: .9375rem; font-weight: 700; text-decoration: none; white-space: nowrap; cursor: pointer; transition: background-color .15s; }
+@media (hover: hover) and (pointer: fine) { .rs-hunt:hover { background: #3a1fc4; } }
+.rs-hunt.is-saved { background: var(--navy); box-shadow: inset 0 0 0 1px var(--lift); }
+
+@media (prefers-reduced-motion: reduce) {
+  .si-thumb { transition: none; }
+  .am[open], .am[open]::backdrop { animation: none; }
+}
+
+.si-link[hidden] { display: none; }

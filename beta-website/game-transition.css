@@ -1,0 +1,15 @@
+/* The home page's front game card grows into the top of the game page, and shrinks back.
+   Loaded by index.html and game.html only, so every other page keeps the logo wipe. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+
+  ::view-transition-group(game-card) { overflow: clip; border-radius: .75rem; animation-duration: 280ms; animation-timing-function: cubic-bezier(.16, 1, .3, 1); }
+  ::view-transition-old(game-card), ::view-transition-new(game-card) {
+    height: 100%;
+    object-fit: cover;
+    overflow: clip;
+    animation-duration: 280ms;
+    animation-timing-function: cubic-bezier(.16, 1, .3, 1);
+  }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 200ms; }
+}

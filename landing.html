@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Theme: same key and default as the rest of the site (localStorage lh-theme, default dark) -->
+  <script>try { document.documentElement.setAttribute("data-bs-theme", localStorage.getItem("lh-theme") === "light" ? "light" : "dark"); } catch (error) { document.documentElement.setAttribute("data-bs-theme", "dark"); }</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>LineHunter</title>
+  <meta name="description" content="LineHunter puts NBA prop history, head to head matchups, the Hunt Score model and odds from 10 US sportsbooks on one screen. Reserve your free account before launch.">
+  <meta property="og:title" content="LineHunter: hunt the line">
+  <meta property="og:description" content="NBA prop history, head to head matchups, model picks and best odds across US sportsbooks. Free at launch.">
+  <meta property="og:url" content="https://linehunterapp.com/landing.html">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://linehunterapp.com/landing.html">
+  <link rel="icon" type="image/svg+xml" href="assets/img/lh-mark.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/lh-mark-32.png">
+  <link rel="apple-touch-icon" href="assets/img/lh-mark-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+  /* Pre-launch landing page. Swiss look from design/README.md: one typeface, square corners,
+     hairline rules instead of cards, teal / coral as the only loud colors. Self-contained so it
+     does not pull in the app's styles.css, nav.js or API calls. */
+  :root, [data-bs-theme="dark"] {
+    color-scheme: dark;
+    --bg: #000000; --ink: #f2ebdd; --muted: #9a9284; --rule: #26231e; --rule-strong: #3a362e;
+    --raise: #0d0c0a; --over: #1d9e75; --under: #d85a30; --over-text: #5dcaa5; --under-text: #f0997b;
+    --on-ink: #000000; --nav-bg: rgba(0,0,0,.78); --word-muted: rgba(242,235,221,.28);
+  }
+  [data-bs-theme="light"] {
+    color-scheme: light;
+    --bg: #f2ebdd; --ink: #052350; --muted: #4a5878; --rule: #dcd2be; --rule-strong: #c4b89f;
+    --raise: #ebe2d0; --over: #1d9e75; --under: #d85a30; --over-text: #0b6e50; --under-text: #b4441e;
+    --on-ink: #f2ebdd; --nav-bg: rgba(242,235,221,.82); --word-muted: rgba(5,35,80,.25);
+  }
+  :root {
+    --font: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px;
+  }
+  * { box-sizing: border-box; border-radius: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 24px; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; transition: background-color 300ms var(--ease), color 300ms var(--ease); }
+  h1, h2, h3, p { margin: 0; }
+  h1, h2, h3 { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
+  a { color: inherit; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .kicker { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .display { font-weight: 800; text-transform: uppercase; letter-spacing: -0.035em; line-height: .9; }
+  .title { font-size: 36px; line-height: 40px; font-weight: 700; letter-spacing: -0.02em; }
+  .lead { font-size: 18px; line-height: 28px; color: var(--muted); max-width: 640px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; line-height: 20px; }
+  .tiny { font-size: 12px; line-height: 16px; }
+  .over { color: var(--over-text); } .under { color: var(--under-text); }
+  .skip { position: absolute; left: 16px; top: -100px; z-index: 100; background: var(--ink); color: var(--on-ink); padding: 8px 12px; text-decoration: none; font-weight: 600; }
+  .skip:focus { top: calc(env(safe-area-inset-top, 0px) + 16px); }
+
+  /* Buttons: the ink is the fill, like the app */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); padding: 12px 20px; border: 1px solid var(--ink); background: var(--ink); color: var(--on-ink); font: inherit; font-size: 14px; line-height: 20px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; cursor: pointer; white-space: nowrap; transition: transform 300ms var(--ease), opacity 300ms var(--ease); }
+  .btn:hover { opacity: .88; transform: translateY(-1px); }
+  .btn:active { transform: scale(.98); }
+  .btn-ghost { background: transparent; color: var(--ink); border-color: var(--rule-strong); }
+  .btn-ghost:hover { opacity: 1; border-color: var(--ink); }
+  .btn-sm { padding: 8px 12px; font-size: 12px; line-height: 16px; }
+  .btn[aria-busy="true"] { opacity: .6; pointer-events: none; }
+
+  /* Nav */
+  .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: var(--nav-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--rule); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--bg); }
+  .nav-in { display: flex; align-items: center; gap: var(--s5); height: 64px; }
+  .brand { display: flex; align-items: center; margin-right: auto; }
+  .brand img { height: 30px; width: auto; display: block; }
+  .logo-light { display: none !important; }
+  [data-bs-theme="light"] .logo-light { display: block !important; }
+  [data-bs-theme="light"] .logo-dark { display: none !important; }
+  .nav-links { display: flex; gap: var(--s5); list-style: none; margin: 0; padding: 0; }
+  .nav-links a { text-decoration: none; font-size: 14px; font-weight: 600; color: var(--muted); padding-block: 6px; border-bottom: 1px solid transparent; transition: color 300ms var(--ease), border-color 300ms var(--ease); }
+  .nav-links a:hover, .nav-links a[aria-current="true"] { color: var(--ink); border-color: var(--ink); }
+  .icon-btn { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink); cursor: pointer; font-size: 16px; transition: border-color 300ms var(--ease); }
+  .icon-btn:hover { border-color: var(--ink); }
+  .theme-btn .bi-sun { display: none; }
+  [data-bs-theme="light"] .theme-btn .bi-sun { display: inline; }
+  [data-bs-theme="light"] .theme-btn .bi-moon-stars { display: none; }
+
+  /* Hero */
+  .hero { padding-block: var(--s8) var(--s9); border-bottom: 1px solid var(--rule); }
+  .hero-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--s6); align-items: end; }
+  .hero-copy { grid-column: span 7; display: flex; flex-direction: column; gap: var(--s5); min-width: 0; }
+  .hero h1 { font-size: clamp(64px, 11vw, 148px); }
+  .hero h1 .soft { color: var(--muted); }
+  .status { display: inline-flex; align-items: center; gap: var(--s2); }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--over); animation: pulse 2s var(--ease) infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  .cta-row { display: flex; flex-wrap: wrap; gap: var(--s4); align-items: center; }
+  .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--ink); margin-top: var(--s4); }
+  .facts div { padding: var(--s4) var(--s4) 0 0; display: flex; flex-direction: column; gap: 2px; }
+  .facts b { font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.02em; }
+
+  /* Hunt Score sample */
+  .score { grid-column: span 5; border-top: 1px solid var(--ink); padding-top: var(--s4); display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+  .score-head { display: flex; justify-content: space-between; gap: var(--s4); align-items: baseline; }
+  .tag { display: inline-block; padding: 2px 8px; border: 1px solid var(--rule-strong); font-size: 11px; line-height: 16px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .score-main { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s5); align-items: center; }
+  .big { font-size: 120px; line-height: 96px; font-weight: 800; letter-spacing: -0.05em; color: var(--over-text); }
+  .pick { border-left: 3px solid var(--over); padding-left: var(--s3); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .pick .who { font-size: 20px; line-height: 28px; font-weight: 700; }
+  .pick .who span { font-weight: 300; color: var(--muted); }
+  .why { list-style: none; margin: 0; padding: 0; }
+  .why li { padding-block: var(--s2); border-top: 1px solid var(--rule); color: var(--muted); font-size: 14px; line-height: 20px; }
+  .why li b { color: var(--ink); font-weight: 600; }
+  .bars { position: relative; height: 88px; display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; align-items: end; border-bottom: 1px solid var(--rule-strong); }
+  .bars i { display: block; background: var(--under); }
+  .bars i.o { background: var(--over); }
+  .bars .ln { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--ink); opacity: .7; }
+  .bars .ln span { position: absolute; right: 0; top: -18px; font-size: 11px; line-height: 16px; font-weight: 600; }
+  .bars-foot { display: flex; justify-content: space-between; gap: var(--s4); }
+
+  /* Sections */
+  section { padding-block: var(--s9); border-bottom: 1px solid var(--rule); }
+  .sec-head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--s6); margin-bottom: var(--s7); }
+  .sec-head .kicker { grid-column: span 3; padding-top: 10px; }
+  .sec-head > div { grid-column: span 9; display: flex; flex-direction: column; gap: var(--s4); }
+
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s6); }
+  .vs > div { border-top: 1px solid var(--ink); padding-top: var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
+  .list { list-style: none; margin: 0; padding: 0; }
+  .list li { display: flex; gap: var(--s3); padding-block: var(--s3); border-top: 1px solid var(--rule); color: var(--muted); }
+  .list li:first-child { border-top: 0; }
+  .list .bi { color: var(--ink); flex: none; }
+  .list .bi-x-lg { color: var(--under-text); }
+  .list .bi-check-lg { color: var(--over-text); }
+
+  .tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--s6); }
+  .tool { border-top: 1px solid var(--ink); padding-block: var(--s5) var(--s7); display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: var(--s4); }
+  .tool .bi { font-size: 28px; line-height: 32px; }
+  .tool > div { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
+  .tool h3 { font-size: 24px; line-height: 32px; font-weight: 700; letter-spacing: -0.01em; display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; }
+  .tool p { color: var(--muted); }
+  .tool .meta { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: var(--s2); }
+
+  .books { display: flex; flex-wrap: wrap; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+  .books span { flex: 1 1 160px; padding: var(--s4); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-weight: 600; text-align: center; }
+
+  .tagline p { font-size: clamp(36px, 6vw, 72px); line-height: 1; font-weight: 800; letter-spacing: -0.035em; text-transform: uppercase; max-width: 1000px; }
+  .tagline .w { color: var(--word-muted); transition: color 600ms var(--ease); }
+  .tagline .w.on { color: var(--ink); }
+  .tagline .w.hl.on { color: var(--over-text); }
+
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s6); list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  .steps li { border-top: 1px solid var(--ink); padding-top: var(--s4); display: flex; flex-direction: column; gap: var(--s2); counter-increment: s; }
+  .steps li::before { content: counter(s); font-size: 64px; line-height: 64px; font-weight: 800; letter-spacing: -0.04em; color: var(--muted); }
+  .steps h3 { font-size: 20px; line-height: 28px; font-weight: 700; }
+  .steps p { color: var(--muted); }
+
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s6); }
+  .plan { border-top: 3px solid var(--ink); padding-top: var(--s5); display: flex; flex-direction: column; gap: var(--s4); }
+  .plan.later { border-top-style: dashed; border-top-width: 1px; }
+  .plan-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s4); }
+  .price { font-size: 72px; line-height: 72px; font-weight: 800; letter-spacing: -0.04em; }
+  .plan .btn { align-self: flex-start; margin-top: auto; }
+  .ph { font-family: ui-monospace, Menlo, monospace; font-size: .85em; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--under-text); background: var(--raise); padding: 0 4px; }
+
+  .socials { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s6); }
+  .social { border-top: 1px solid var(--ink); padding-top: var(--s4); display: flex; flex-direction: column; gap: var(--s2); }
+  .social .bi { font-size: 24px; }
+  .social h3 { font-size: 18px; line-height: 28px; font-weight: 700; }
+
+  .faq-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--s6); }
+  .faq-grid .sec-side { grid-column: span 4; display: flex; flex-direction: column; gap: var(--s4); }
+  .faq { grid-column: span 8; border-top: 1px solid var(--ink); }
+  .faq details { border-bottom: 1px solid var(--rule); }
+  .faq summary { cursor: pointer; list-style: none; padding-block: var(--s4); display: flex; justify-content: space-between; align-items: center; gap: var(--s4); font-weight: 600; font-size: 18px; line-height: 28px; transition: opacity 300ms var(--ease); }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary:hover { opacity: .75; }
+  .faq summary .bi { transition: transform 500ms var(--ease); color: var(--muted); }
+  .faq details[open] summary .bi { transform: rotate(45deg); }
+  .faq details p { padding-bottom: var(--s5); color: var(--muted); max-width: 680px; }
+
+  .signup-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--s6); align-items: start; }
+  .signup-copy { grid-column: span 6; display: flex; flex-direction: column; gap: var(--s4); }
+  .signup-copy h2 { font-size: clamp(48px, 7vw, 96px); }
+  form { grid-column: 8 / span 5; border-top: 3px solid var(--ink); padding-top: var(--s5); display: flex; flex-direction: column; gap: var(--s4); }
+  .field { display: flex; flex-direction: column; gap: var(--s2); }
+  .field label { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .field input, .field select { font: inherit; font-size: 16px; color: var(--ink); background: transparent; border: 0; border-bottom: 1px solid var(--rule-strong); padding: var(--s2) 0; transition: border-color 300ms var(--ease); }
+  .field select option { background: var(--bg); color: var(--ink); }
+  .field input:hover, .field select:hover { border-color: var(--muted); }
+  .field input:focus-visible, .field select:focus-visible { outline: none; border-color: var(--ink); box-shadow: 0 1px 0 0 var(--ink); }
+  .field [aria-invalid="true"] { border-color: var(--under); }
+  .err { color: var(--under-text); min-height: 16px; font-size: 12px; line-height: 16px; }
+  .check { display: flex; gap: var(--s2); align-items: flex-start; color: var(--muted); font-size: 14px; line-height: 20px; }
+  .check input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--over); flex: none; }
+  form .btn { width: 100%; }
+  .form-status { border-left: 3px solid var(--over); padding: var(--s2) var(--s3); font-size: 14px; line-height: 20px; }
+  .form-status.is-error { border-color: var(--under); }
+  .hp { position: absolute; left: -9999px; }
+
+  footer { padding-block: var(--s7); }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s5); }
+  .foot-links { display: flex; flex-wrap: wrap; gap: var(--s5); list-style: none; margin: 0; padding: 0; font-size: 14px; }
+  .foot-links a { color: var(--muted); text-decoration: none; transition: color 300ms var(--ease); }
+  .foot-links a:hover { color: var(--ink); }
+  .foot-links [aria-disabled="true"] { color: var(--muted); opacity: .6; cursor: not-allowed; }
+  .rg { margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--rule); color: var(--muted); font-size: 12px; line-height: 18px; display: flex; flex-direction: column; gap: var(--s2); }
+  .rg b { color: var(--ink); }
+
+  .js .reveal { opacity: 0; transform: translateY(32px); transition: opacity 700ms var(--ease), transform 700ms var(--ease); }
+  .js .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 991px) {
+    .hero-copy, .score { grid-column: span 12; }
+    .sec-head .kicker, .sec-head > div, .faq-grid .sec-side, .faq, .signup-copy, form { grid-column: span 12; }
+    .sec-head { gap: var(--s3); }
+    .socials { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .nav-links { display: none; }
+  }
+  @media (max-width: 720px) {
+    section { padding-block: var(--s8); }
+    .hero { padding-block: var(--s7) var(--s8); }
+    .tools, .vs, .plans, .steps { grid-template-columns: minmax(0, 1fr); }
+    .title { font-size: 30px; line-height: 36px; }
+    .big { font-size: 88px; line-height: 72px; }
+    .facts b { font-size: 24px; line-height: 32px; }
+    .nav .btn { display: none; }
+    .tool { padding-block: var(--s4) var(--s6); }
+  }
+  @media (max-width: 420px) {
+    .socials { grid-template-columns: minmax(0, 1fr); }
+    .facts { grid-template-columns: minmax(0, 1fr); }
+    .facts div { flex-direction: row; justify-content: space-between; align-items: baseline; padding-right: 0; border-bottom: 1px solid var(--rule); padding-bottom: var(--s2); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition-property: opacity, color, background-color, border-color !important; }
+    .js .reveal { transform: none; }
+    .tagline .w { color: var(--ink); }
+    .tagline .w.hl { color: var(--over-text); }
+  }
+  </style>
+</head>
+
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <nav class="nav" aria-label="Primary">
+    <div class="wrap nav-in">
+      <a class="brand" href="#top" aria-label="LineHunter home">
+        <img class="logo-dark" src="assets/img/lh-lockup-on-dark.svg" alt="LineHunter" width="173" height="30">
+        <img class="logo-light" src="assets/img/lh-lockup-on-light.svg" alt="LineHunter" width="173" height="30">
+      </a>
+      <ul class="nav-links">
+        <li><a href="#tools">Tools</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <button class="icon-btn theme-btn" type="button" id="themeBtn" aria-label="Switch to light mode"><i class="bi bi-moon-stars" aria-hidden="true"></i><i class="bi bi-sun" aria-hidden="true"></i></button>
+      <a class="btn btn-sm" href="#signup">Reserve your free account</a>
+    </div>
+  </nav>
+
+  <main id="main">
+    <header class="hero" id="top">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <span class="kicker status"><span class="dot" aria-hidden="true"></span>NBA research tool · launching soon</span>
+          <h1 class="display">Hunt the<br><span class="soft">line.</span></h1>
+          <p class="lead">Prop history, head to head matchups, our Hunt Score model and odds from 10 US sportsbooks, all on one screen. Built for bettors, stat nerds and anyone who yells at the TV.</p>
+          <div class="cta-row">
+            <a class="btn" href="#signup">Reserve your free account <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <span class="small muted">Free at launch. Just your email.</span>
+          </div>
+          <div class="facts">
+            <div><b>30</b><span class="tiny muted">NBA teams</span></div>
+            <div><b>10</b><span class="tiny muted">US sportsbooks</span></div>
+            <div><b>5</b><span class="tiny muted">Seasons of H2H</span></div>
+          </div>
+        </div>
+
+        <figure class="score" style="margin:0" aria-label="Example Hunt Score with sample data">
+          <div class="score-head"><span class="kicker">Hunt Score · tonight</span><span class="tag">Sample data</span></div>
+          <div class="score-main">
+            <span class="big">78</span>
+            <div class="pick">
+              <span class="who"><span>J.</span> Brunson</span>
+              <span class="small"><b class="over">Over 26.5 PTS</b> · vs PHI</span>
+              <span class="small muted">63.4% chance · best −108 FD</span>
+            </div>
+          </div>
+          <div>
+            <div class="bars" id="bars" role="img" aria-label="Points in the last 10 games: 29, 24, 31, 27, 33, 22, 28, 30, 26, 32. Line 26.5. Over in 7 of 10."></div>
+            <div class="bars-foot tiny muted" style="margin-top:6px"><span>Last 10 games</span><span><b class="over">7/10</b> over</span></div>
+          </div>
+          <ul class="why">
+            <li><b>Form.</b> Over the line in 7 of his last 10 games.</li>
+            <li><b>Matchup.</b> PHI allows the 8th most points to guards.</li>
+            <li><b>Minutes.</b> 36.2 a game over his last 5, up from 34.8.</li>
+          </ul>
+        </figure>
+      </div>
+    </header>
+
+    <section class="reveal" aria-labelledby="problem-h">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="kicker">Problem</span>
+          <div>
+            <h2 class="title" id="problem-h">One bet shouldn't take five tabs</h2>
+            <p class="lead">A stats site, a box score, an injury report, three sportsbook apps and a group chat. By the time it's lined up, the number moved.</p>
+          </div>
+        </div>
+        <div class="vs">
+          <div>
+            <span class="kicker">The old way</span>
+            <ul class="list">
+              <li><i class="bi bi-x-lg" aria-hidden="true"></i>Game logs here, defensive ranks over there</li>
+              <li><i class="bi bi-x-lg" aria-hidden="true"></i>Hit rate math on the back of a napkin</li>
+              <li><i class="bi bi-x-lg" aria-hidden="true"></i>Opening every book to find the best price</li>
+            </ul>
+          </div>
+          <div>
+            <span class="kicker">The LineHunter way</span>
+            <ul class="list">
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>History, matchup and odds on the same page</li>
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>Hit rates against tonight's line, already counted</li>
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>The best price across 10 books, side by side</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tools" class="reveal" aria-labelledby="tools-h">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="kicker">Tools</span>
+          <div>
+            <h2 class="title" id="tools-h">Simple on game night. Deep when you want it.</h2>
+            <p class="lead">Every tool works for a casual fan in ten seconds and for the bettor who lives in the numbers.</p>
+          </div>
+        </div>
+        <div class="tools">
+          <article class="tool">
+            <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
+            <div>
+              <h3>Player prop history</h3>
+              <p>See how often a player clears tonight's number over the last 5, 10, 20 games or the full season, split home and away, with or without a teammate, and with an alt line you can slide.</p>
+              <span class="meta">PTS · REB · AST · 3PM · PRA</span>
+            </div>
+          </article>
+          <article class="tool">
+            <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+            <div>
+              <h3>Head to head matchups</h3>
+              <p>Every past meeting over five seasons, even after a trade. Plus how the opponent defends his position and his shooting zones, and who he lines up against tonight.</p>
+              <span class="meta">H2H · Same position · Zone matchup</span>
+            </div>
+          </article>
+          <article class="tool">
+            <i class="bi bi-cpu" aria-hidden="true"></i>
+            <div>
+              <h3>Hunt Score model <span class="tag">In training</span></h3>
+              <p>Our engine scores every prop from 0 to 100 using form, minutes, matchup, pace and the book line, then shows exactly how it got there. It also projects the score, spread and total for every game.</p>
+              <span class="meta">Score build-up · Spread and total picks</span>
+            </div>
+          </article>
+          <article class="tool">
+            <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+            <div>
+              <h3>Lines and best odds</h3>
+              <p>See the line at every book for every prop and grab the best price before you place it. Ready-made slips from the Hit List show combined odds in one tap.</p>
+              <span class="meta">The Board · Hit List · My Hunts</span>
+            </div>
+          </article>
+        </div>
+        <p class="kicker" style="margin-block: var(--s5) var(--s4)">Odds from</p>
+        <div class="books small">
+          <span>DraftKings</span><span>FanDuel</span><span>BetMGM</span><span>Caesars</span><span>ESPN BET</span><span>Fanatics</span><span>BetRivers</span><span>Hard Rock</span><span>BetParx</span><span>Bally Bet</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="tagline" aria-label="Our approach">
+      <div class="wrap">
+        <p id="tagline" data-hl="numbers">The book sets the line. LineHunter shows you the numbers behind it.</p>
+      </div>
+    </section>
+
+    <section id="how" class="reveal" aria-labelledby="how-h">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="kicker">How it works</span>
+          <div><h2 class="title" id="how-h">From the launch list to your first checked prop</h2></div>
+        </div>
+        <ol class="steps">
+          <li><h3>Reserve your free account</h3><p>Drop your email below. That's the whole form.</p></li>
+          <li><h3>Get your invite at launch</h3><p>We email you the day LineHunter opens, with a link to finish setting up.</p></li>
+          <li><h3>Pick a game, check the line</h3><p>Open tonight's slate and see history, matchup, model and odds in one place.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="pricing" class="reveal" aria-labelledby="pricing-h">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="kicker">Pricing</span>
+          <div>
+            <h2 class="title" id="pricing-h">Free to start. Pro when you want more.</h2>
+            <p class="lead">Everything at launch is free. Advanced tools and strategies come later as a paid upgrade, and you'll never be charged without choosing it.</p>
+          </div>
+        </div>
+        <div class="plans">
+          <article class="plan">
+            <div class="plan-top"><span class="kicker">Free</span><span class="tag">At launch</span></div>
+            <span class="price">$0</span>
+            <ul class="list">
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>Player prop history and charts</li>
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>Head to head matchups</li>
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>Lines and best odds across 10 books</li>
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>Hunt Score <span class="ph">{{free limit, if any}}</span></li>
+            </ul>
+            <a class="btn" href="#signup">Reserve your free account</a>
+          </article>
+          <article class="plan later">
+            <div class="plan-top"><span class="kicker">Pro</span><span class="tag">Coming later</span></div>
+            <span class="price"><span class="ph">{{price}}</span></span>
+            <ul class="list">
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>Everything in Free</li>
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i>Advanced tools and betting strategies</li>
+              <li><i class="bi bi-check-lg" aria-hidden="true"></i><span class="ph">{{Pro feature}}</span></li>
+            </ul>
+            <span class="small muted" style="margin-top:auto">Join the launch list and you'll hear first when Pro opens.</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal" aria-labelledby="community-h">
+      <div class="wrap">
+        <div class="sec-head">
+          <span class="kicker">Follow the build</span>
+          <div>
+            <h2 class="title" id="community-h">Watch us tune the model before launch</h2>
+            <p class="lead">We're testing the Hunt Score against real NBA results and posting what we learn. Come argue about it with us.</p>
+          </div>
+        </div>
+        <div class="socials">
+          <div class="social"><i class="bi bi-discord" aria-hidden="true"></i><h3>Discord</h3><span class="small muted">Talk props and test features early</span><span class="tiny ph">{{invite link}}</span></div>
+          <div class="social"><i class="bi bi-youtube" aria-hidden="true"></i><h3>YouTube</h3><span class="small muted">Breakdowns and build updates</span><span class="tiny ph">{{@handle}}</span></div>
+          <div class="social"><i class="bi bi-tiktok" aria-hidden="true"></i><h3>TikTok</h3><span class="small muted">Quick hits on tonight's slate</span><span class="tiny ph">{{@handle}}</span></div>
+          <div class="social"><i class="bi bi-instagram" aria-hidden="true"></i><h3>Instagram</h3><span class="small muted">Reels and stat cards</span><span class="tiny ph">{{@handle}}</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="reveal" aria-labelledby="faq-h">
+      <div class="wrap faq-grid">
+        <div class="sec-side">
+          <span class="kicker">FAQ</span>
+          <h2 class="title" id="faq-h">Questions before you sign up</h2>
+          <p class="muted">Anything else, ask us at <span class="ph">{{support email}}</span> or in the Discord.</p>
+        </div>
+        <div class="faq">
+          <details><summary>When does LineHunter launch?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>We're finishing the Hunt Score model now. Everyone on the launch list gets an email the day we open. <span class="ph">{{launch window}}</span></p></details>
+          <details><summary>Is it really free?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>Yes. Everything available at launch is free and needs no card. A paid Pro plan comes later for advanced tools and strategies, and it will always be optional.</p></details>
+          <details><summary>Can I place bets on LineHunter?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>No. LineHunter is a research tool, not a sportsbook. We show stats, model scores and odds; any bet you place happens with your sportsbook.</p></details>
+          <details><summary>Which sportsbooks do you show?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>DraftKings, FanDuel, BetMGM, Caesars, ESPN BET, Fanatics, BetRivers, Hard Rock, BetParx and Bally Bet, where each one posts a line.</p></details>
+          <details><summary>How does the Hunt Score work?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>It starts from the player's season baseline, then adds or takes away points for minutes, recent form, the matchup, position matchup, pace and the book line. You see every step in the score build-up. It's still in training, and we're testing it against past NBA results.</p></details>
+          <details><summary>What does a hit rate mean?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>How many recent games a player went over tonight's line. 7/10 on 26.5 points means he scored 27 or more in seven of his last ten games.</p></details>
+          <details><summary>Do I need to download an app?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>No. LineHunter runs in your browser at linehunterapp.com, on your laptop or your phone.</p></details>
+          <details><summary>Which sports are covered?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>The NBA, all 30 teams. The NFL is next.</p></details>
+          <details><summary>Is LineHunter available outside the US?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>Not yet. LineHunter is built for users in the United States who are 21 or older.</p></details>
+          <details><summary>Do you guarantee winning picks?<i class="bi bi-plus-lg" aria-hidden="true"></i></summary><p>No, and nobody honest can. We give you better numbers; the decision is yours. Only bet what you can afford to lose.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="signup" class="reveal" aria-labelledby="signup-h">
+      <div class="wrap signup-grid">
+        <div class="signup-copy">
+          <span class="kicker">Launch list</span>
+          <h2 class="display" id="signup-h">Get in before tipoff.</h2>
+          <p class="lead">Reserve your free account now and we'll email you the moment LineHunter opens.</p>
+          <ul class="list">
+            <li><i class="bi bi-check-lg" aria-hidden="true"></i>Free at launch, no card required</li>
+            <li><i class="bi bi-check-lg" aria-hidden="true"></i>One email at launch, no spam</li>
+            <li><i class="bi bi-check-lg" aria-hidden="true"></i>Unsubscribe with one click</li>
+          </ul>
+        </div>
+        <!-- Netlify Forms: Netlify detects this form at deploy and stores submissions under Forms in the dashboard. -->
+        <form id="form" name="launch-list" method="POST" data-netlify="true" netlify-honeypot="company" novalidate>
+          <input type="hidden" name="form-name" value="launch-list">
+          <p class="hp"><label>Leave this empty <input name="company" tabindex="-1" autocomplete="off"></label></p>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" aria-describedby="email-err" required>
+            <span class="err" id="email-err" aria-live="polite"></span>
+          </div>
+          <div class="field">
+            <label for="fan">I'm mostly a</label>
+            <select id="fan" name="fan">
+              <option value="bettor">Sports bettor</option>
+              <option value="analytics">Analytics fan</option>
+              <option value="fan">NBA fan</option>
+            </select>
+          </div>
+          <label class="check" for="age"><input id="age" name="age" type="checkbox" value="yes" required aria-describedby="age-err"> I'm 21 or older, live in the US and agree to the Terms and Privacy Policy.</label>
+          <span class="err" id="age-err" aria-live="polite"></span>
+          <button class="btn" type="submit" id="submit">Reserve your free account</button>
+          <div class="form-status" id="status" role="status" hidden></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot">
+        <img class="logo-dark" src="assets/img/lh-lockup-on-dark.svg" alt="LineHunter" height="24" style="height:24px;width:auto">
+        <img class="logo-light" src="assets/img/lh-lockup-on-light.svg" alt="LineHunter" height="24" style="height:24px;width:auto">
+        <ul class="foot-links">
+          <li><a href="#tools">Tools</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><span aria-disabled="true" title="Add your privacy policy link">Privacy policy</span></li>
+          <li><span aria-disabled="true" title="Add your terms link">Terms</span></li>
+        </ul>
+      </div>
+      <div class="rg">
+        <span><b>21+ and US only.</b> LineHunter is a sports research tool and does not accept wagers. Odds and model scores are for information only and can change at any time.</span>
+        <span>LineHunter is not affiliated with, endorsed by or sponsored by the NBA or any sportsbook.</span>
+        <span>Gambling problem? Call <b>1‑800‑GAMBLER</b>.</span>
+        <span>© 2026 LineHunter · linehunterapp.com</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    var root = document.documentElement;
+    root.classList.add("js");
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Theme toggle: same key as js/components/nav.js so the choice carries into the app
+    var themeBtn = document.getElementById("themeBtn");
+    function syncTheme() { themeBtn.setAttribute("aria-label", root.getAttribute("data-bs-theme") === "light" ? "Switch to dark mode" : "Switch to light mode"); }
+    themeBtn.addEventListener("click", function () {
+      var next = root.getAttribute("data-bs-theme") === "light" ? "dark" : "light";
+      root.setAttribute("data-bs-theme", next);
+      try { localStorage.setItem("lh-theme", next); } catch (e) {}
+      syncTheme();
+    });
+    syncTheme();
+
+    // Sample chart, one scale from 0 to 40 points
+    var pts = [29, 24, 31, 27, 33, 22, 28, 30, 26, 32], line = 26.5, max = 40, bars = document.getElementById("bars");
+    pts.forEach(function (p) { var b = document.createElement("i"); if (p > line) b.className = "o"; b.style.height = (p / max * 100) + "%"; bars.appendChild(b); });
+    var ln = document.createElement("div"); ln.className = "ln"; ln.style.bottom = (line / max * 100) + "%"; ln.innerHTML = "<span>26.5</span>"; bars.appendChild(ln);
+
+    if (!("IntersectionObserver" in window)) { root.classList.remove("js"); }
+    else {
+      // Sections rise in once
+      var ro = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); ro.unobserve(e.target); } }); }, { rootMargin: "0px 0px -10% 0px" });
+      document.querySelectorAll(".reveal").forEach(function (s) { if (s.getBoundingClientRect().top < innerHeight) s.classList.add("in"); else ro.observe(s); });
+      // Current nav item
+      var map = {}; document.querySelectorAll(".nav-links a").forEach(function (a) { map[a.getAttribute("href").slice(1)] = a; });
+      var no = new IntersectionObserver(function (es) { es.forEach(function (e) { var a = map[e.target.id]; if (a && e.isIntersecting) { Object.keys(map).forEach(function (k) { map[k].removeAttribute("aria-current"); }); a.setAttribute("aria-current", "true"); } }); }, { rootMargin: "-45% 0px -50% 0px" });
+      Object.keys(map).forEach(function (id) { var el = document.getElementById(id); if (el) no.observe(el); });
+    }
+
+    // Tagline lights up word by word
+    var tl = document.getElementById("tagline"), hl = tl.dataset.hl;
+    tl.innerHTML = tl.textContent.split(/(\s+)/).map(function (w) { return /\S/.test(w) ? '<span class="w' + (w.replace(/\W/g, "") === hl ? " hl" : "") + '">' + w + "</span>" : w; }).join("");
+    var words = tl.querySelectorAll(".w");
+    if (reduce || !("IntersectionObserver" in window)) words.forEach(function (w) { w.classList.add("on"); });
+    else {
+      var wo = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("on"); wo.unobserve(e.target); } }); }, { rootMargin: "0px 0px -40% 0px" });
+      words.forEach(function (w) { wo.observe(w); });
+    }
+
+    // Launch list form: validate, then post to Netlify Forms
+    var form = document.getElementById("form"), email = document.getElementById("email"), age = document.getElementById("age"), status = document.getElementById("status"), submit = document.getElementById("submit");
+    function setErr(input, id, msg) { document.getElementById(id).textContent = msg; input.setAttribute("aria-invalid", msg ? "true" : "false"); return !msg; }
+    function vEmail() { var v = email.value.trim(); return setErr(email, "email-err", !v ? "Enter your email address." : (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? "That email looks incomplete. Check for a missing @ or domain." : "")); }
+    function vAge() { return setErr(age, "age-err", age.checked ? "" : "Confirm you're 21 or older and in the US to join."); }
+    function show(msg, isError) { status.hidden = false; status.textContent = msg; status.classList.toggle("is-error", !!isError); }
+    email.addEventListener("blur", vEmail);
+    age.addEventListener("change", vAge);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (![vEmail(), vAge()].every(Boolean)) { var f = form.querySelector('[aria-invalid="true"]'); if (f) f.focus(); return; }
+      submit.setAttribute("aria-busy", "true"); submit.textContent = "Saving";
+      fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(new FormData(form)).toString() })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.status);
+          show("You're on the list. We'll email " + email.value.trim() + " the day LineHunter opens.");
+          form.reset();
+        })
+        .catch(function () { show("Couldn't save your email just now. Check your connection and try again in a minute.", true); })
+        .then(function () { submit.removeAttribute("aria-busy"); submit.textContent = "Reserve your free account"; });
+    });
+  })();
+  </script>
+</body>
+</html>

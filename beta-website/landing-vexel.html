@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Line Hunter | Every line has a history</title>
+  <meta name="description" content="Streaks, hit rates and game logs for tonight's NBA player props.">
+  <meta name="theme-color" content="#060a16">
+  <link rel="icon" href="assets/logo-mark.png">
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="transition.css">
+  <link rel="stylesheet" href="game-transition.css">
+  <link rel="stylesheet" href="landing.css">
+  <link rel="stylesheet" href="landing-vexel.css">
+  <link rel="expect" href="#page-ready" blocking="render">
+  <script src="transition.js"></script>
+</head>
+<body>
+  <p class="sample-strip">Design preview. All players, games, lines, odds and results on this page are made up.</p>
+
+  <section class="vx" aria-labelledby="vx-title">
+    <header class="vx-mast">
+      <a class="vx-logo-link" href="#" aria-label="Line Hunter home"><img class="lp-logo vx-logo" src="assets/logo-lockup.png" alt="Line Hunter" width="396" height="72"></a>
+      <span class="vx-rule" aria-hidden="true"></span>
+      <nav class="vx-nav" aria-label="Main">
+        <a href="#tonight">Tonight's games</a>
+        <a href="#featured-players">Featured</a>
+        <a href="#streaks">Streak Board</a>
+      </nav>
+    </header>
+    <div class="vx-gap"></div>
+    <div class="vx-copy">
+      <h1 id="vx-title">
+        <span class="l"><span class="li">Every line</span></span>
+        <span class="l"><span class="li">has a history.</span></span>
+      </h1>
+      <p class="vx-sub">Streaks, hit rates and game logs for tonight's NBA player props.</p>
+      <a class="vx-btn" href="#tonight">See tonight's games</a>
+      <a class="vx-more" href="#streaks">Streak Board
+        <svg viewBox="0 0 11 12.6" aria-hidden="true"><path d="M5.5 .4V12M1 7.5L5.5 12L10 7.5"/></svg>
+      </a>
+    </div>
+    <div class="vx-field" aria-hidden="true">
+      <video autoplay muted loop playsinline tabindex="-1" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261005_182549_18378239-da8f-48a7-9666-d6e0a6a88561.mp4"></video>
+    </div>
+  </section>
+
+  <main>
+    <section class="hero" id="tonight" aria-labelledby="hero-title">
+      <div class="hero-head wrap">
+        <p class="eyebrow" id="games-date"></p>
+        <h2 class="lp-games-title" id="hero-title">Tonight's games</h2>
+      </div>
+      <div class="wheel" id="wheel" role="group" aria-roledescription="carousel" aria-label="Tonight's games. Use the left and right arrow keys to spin." tabindex="0"></div>
+      <div class="wheel-foot wrap">
+        <p class="wheel-detail" id="wheel-detail" aria-live="polite"></p>
+        <div class="wheel-controls">
+          <span class="wheel-hint">Drag to spin. Select the front game to open it.</span>
+          <button type="button" class="wheel-btn" id="wheel-prev" aria-label="Previous game"><span class="arrow arrow-left" aria-hidden="true"></span></button>
+          <span class="wheel-count" id="wheel-count"></span>
+          <button type="button" class="wheel-btn" id="wheel-next" aria-label="Next game"><span class="arrow arrow-right" aria-hidden="true"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="featured wrap" id="featured-players" aria-labelledby="featured-title">
+      <p class="eyebrow">On tonight's slate</p>
+      <h2 id="featured-title">Featured players</h2>
+      <p class="board-note">Superstars and players to watch.</p>
+      <ul class="fp-grid" id="featured"></ul>
+    </section>
+
+    <section class="board wrap" id="streaks" aria-labelledby="board-title">
+      <div class="board-head">
+        <div>
+          <p class="eyebrow">Past week &middot; Oct 28 &ndash; Nov 3</p>
+          <h2 id="board-title"><a href="streak-board.html" data-wipe>Streak Board &rarr;</a></h2>
+          <p class="board-note">The <span class="count-wide">10</span><span class="count-phone">5</span> longest active streaks.</p>
+        </div>
+        <p class="legend" aria-label="Chart legend">
+          <span><i class="key key-streak"></i>Current streak</span>
+          <span><i class="key key-hit"></i>Earlier hit</span>
+          <span><i class="key key-miss"></i>Miss</span>
+          <span><i class="key key-line"></i>The line</span>
+        </p>
+      </div>
+
+      <div class="table-head" aria-hidden="true">
+        <span>#</span><span>Player</span><span>Prop</span><span>Streak</span><span>Last 8 games</span>
+        <span class="num">Past wk</span><span class="num">L8 avg</span><span class="num">Odds</span><span></span>
+      </div>
+      <ul class="rows" id="rows"></ul>
+      <a class="see-all" id="see-all" href="streak-board.html" data-wipe></a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Line Hunter shares stats for information only. It doesn't take bets or give betting advice, and past results don't predict future games.</p>
+      <p>21+ where legal. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+  <script src="wheel.js"></script>
+  <script src="landing.js"></script>
+  <!-- Holds the first paint until the scripts above have built the page, so a game card has something to grow into -->
+  <div id="page-ready" hidden></div>
+</body>
+</html>
